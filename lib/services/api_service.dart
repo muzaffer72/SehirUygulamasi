@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'dart:io' if (dart.library.html) 'package:sikayet_var/utils/web_file.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sikayet_var/models/post.dart';
@@ -9,7 +8,7 @@ import 'package:sikayet_var/models/comment.dart';
 import 'package:sikayet_var/models/survey.dart';
 import 'package:sikayet_var/models/city.dart';
 import 'package:sikayet_var/models/district.dart';
-import 'package:sikayet_var/models/category.dart';
+import 'package:sikayet_var/models/category.dart' as app_category;
 
 class ApiService {
   static const String baseUrl = 'http://localhost:5000/api.php';
@@ -418,22 +417,22 @@ class ApiService {
   }
   
   // Categories
-  Future<List<Category>> getCategories() async {
+  Future<List<app_category.Category>> getCategories() async {
     final response = await _client.get(Uri.parse('$baseUrl/categories'));
     
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => Category.fromJson(item)).toList();
+      return data.map((item) => app_category.Category.fromJson(item)).toList();
     } else {
       throw Exception('Failed to load categories: ${response.body}');
     }
   }
   
-  Future<Category> getCategoryById(String id) async {
+  Future<app_category.Category> getCategoryById(String id) async {
     final response = await _client.get(Uri.parse('$baseUrl/categories/$id'));
     
     if (response.statusCode == 200) {
-      return Category.fromJson(jsonDecode(response.body));
+      return app_category.Category.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to load category: ${response.body}');
     }
