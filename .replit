@@ -27,6 +27,14 @@ args = "Flutter App Server"
 task = "workflow.run"
 args = "Flutter Test App"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Flutter Main App"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "ŞikayetVar Konum Test"
+
 [[workflows.workflow]]
 name = "Admin Panel Server"
 author = "agent"
@@ -86,6 +94,36 @@ task = "shell.exec"
 args = "cd . && flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0 -t test_flutter_app.dart"
 waitForPort = 5001
 
+[[workflows.workflow]]
+name = "Flutter Main App"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd . && flutter run -d web-server --web-port=5002 --web-hostname=0.0.0.0 -t lib/main.dart"
+waitForPort = 5002
+
+[[workflows.workflow]]
+name = "ŞikayetVar Konum Test"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd . && flutter run -d web-server --web-port=5002 --web-hostname=0.0.0.0 -t sikayetvar_location_test.dart"
+waitForPort = 5002
+
 [deployment]
 run = ["sh", "-c", "cd . && flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0"]
 
@@ -99,4 +137,12 @@ externalPort = 80
 
 [[ports]]
 localPort = 5001
+externalPort = 5000
+
+[[ports]]
+localPort = 5002
+externalPort = 3002
+
+[[ports]]
+localPort = 39141
 externalPort = 3000
