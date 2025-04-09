@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sikayet_var/models/post.dart';
+import 'package:sikayet_var/models/user.dart';
+import 'package:sikayet_var/models/category.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 

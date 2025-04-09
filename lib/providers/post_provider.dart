@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
+import 'package:sikayet_var/providers/api_service_provider.dart';
 
 // Post filters providers
 final cityFilterProvider = StateProvider<String?>((ref) => null);
@@ -77,7 +78,7 @@ class PostsNotifier extends StateNotifier<List<Post>> {
     state = state.map((post) {
       if (post.id == postId) {
         return post.copyWith(
-          likeCount: post.likeCount + 1,
+          likes: post.likes + 1,
         );
       }
       return post;
@@ -90,7 +91,7 @@ class PostsNotifier extends StateNotifier<List<Post>> {
     state = state.map((post) {
       if (post.id == postId) {
         return post.copyWith(
-          highlightCount: post.highlightCount + 1,
+          highlights: post.highlights + 1,
         );
       }
       return post;
