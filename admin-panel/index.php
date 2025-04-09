@@ -3,12 +3,11 @@
 
 session_start();
 
+// Database connection
+require_once 'db_config.php';
+
 // Configuration
 $config = [
-    'db_host' => 'localhost',
-    'db_user' => 'root',
-    'db_pass' => '',
-    'db_name' => 'sikayet_var',
     'admin_user' => 'admin',
     'admin_pass' => 'admin123' // In a production environment, use hashed passwords
 ];

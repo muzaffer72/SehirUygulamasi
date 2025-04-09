@@ -1,10 +1,10 @@
-import { pgTable, serial, text, varchar, boolean, integer, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, varchar, boolean, integer, timestamp } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// Enum tanımlamaları
-export const postStatusEnum = pgEnum('post_status', ['awaitingSolution', 'inProgress', 'solved', 'rejected']);
-export const postTypeEnum = pgEnum('post_type', ['problem', 'suggestion', 'announcement']);
-export const userLevelEnum = pgEnum('user_level', ['newUser', 'contributor', 'active', 'expert', 'master']);
+// Enum değerlerini basit string olarak tanımlayalım
+export type UserLevel = 'newUser' | 'contributor' | 'active' | 'expert' | 'master';
+export type PostStatus = 'awaitingSolution' | 'inProgress' | 'solved' | 'rejected';
+export type PostType = 'problem' | 'suggestion' | 'announcement';
 
 // Kategori tablosu
 export const categories = pgTable('categories', {
@@ -43,7 +43,7 @@ export const users = pgTable('users', {
   points: integer('points').default(0).notNull(),
   postCount: integer('post_count').default(0).notNull(),
   commentCount: integer('comment_count').default(0).notNull(),
-  level: userLevelEnum('level').default('newUser').notNull(),
+  level: varchar('level', { length: 20 }).default('newUser').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -56,8 +56,8 @@ export const posts = pgTable('posts', {
   categoryId: integer('category_id').notNull().references(() => categories.id),
   cityId: integer('city_id').references(() => cities.id),
   districtId: integer('district_id').references(() => districts.id),
-  status: postStatusEnum('status').default('awaitingSolution').notNull(),
-  type: postTypeEnum('type').default('problem').notNull(),
+  status: varchar('status', { length: 20 }).default('awaitingSolution').notNull(),
+  type: varchar('type', { length: 20 }).default('problem').notNull(),
   likes: integer('likes').default(0).notNull(),
   highlights: integer('highlights').default(0).notNull(),
   commentCount: integer('comment_count').default(0).notNull(),
