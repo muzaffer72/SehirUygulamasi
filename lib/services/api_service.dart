@@ -71,7 +71,7 @@ class ApiService {
   }
   
   // Posts
-  Future<List<Post>> getPosts({String? categoryId, String? cityId, String? districtId, String? status}) async {
+  Future<List<Post>> getPosts({String? categoryId, String? cityId, String? districtId, String? status, String? userId, PostType? type}) async {
     String url = '$baseUrl/posts';
     
     // Add query parameters if available
@@ -80,6 +80,8 @@ class ApiService {
     if (cityId != null) queryParams['city_id'] = cityId;
     if (districtId != null) queryParams['district_id'] = districtId;
     if (status != null) queryParams['status'] = status;
+    if (userId != null) queryParams['user_id'] = userId;
+    if (type != null) queryParams['type'] = type.toString().split('.').last;
     
     if (queryParams.isNotEmpty) {
       url += '?' + Uri(queryParameters: queryParams).query;
@@ -231,6 +233,32 @@ class ApiService {
       return Survey.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to load survey: ${response.body}');
+    }
+  }
+  
+  // Vote on a survey option
+  Future<bool> voteOnSurvey(String surveyId, String optionId) async {
+    final token = await _getToken();
+    
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+    
+    final response = await _client.post(
+      Uri.parse('$baseUrl/surveys/$surveyId/vote'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'option_id': optionId,
+      }),
+    );
+    
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception('Failed to vote on survey: ${response.body}');
     }
   }
   
