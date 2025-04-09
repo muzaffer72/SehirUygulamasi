@@ -1,0 +1,31 @@
+// Bu dosya tüm Flutter eklentileri için standart yapılandırma sağlar
+// Eklentilerin build.gradle dosyalarındaki sorunları çözmek için kullanılır
+
+ext {
+    // Android SDK versiyonları - güncel plugin gereksinimleri için güncellendi
+    compileSdkVersion = 35
+    minSdkVersion = 21
+    targetSdkVersion = 34
+    
+    // Kotlin ve Gradle sürümleri - güncel sürümlere güncellendi
+    kotlinVersion = '1.9.10'
+    gradleVersion = '8.1.3'
+    
+    // Kütüphane sürümleri - En güncel sürümlere güncellendi
+    appCompatVersion = '1.6.1'
+    androidXCoreVersion = '1.12.0'
+    androidXAnnotationVersion = '1.7.1'
+    playServicesLocationVersion = '21.1.0'
+    
+    libs = [
+        kotlin: "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion",
+        androidx: [
+            appcompat: "androidx.appcompat:appcompat:$appCompatVersion",
+            core: "androidx.core:core-ktx:$androidXCoreVersion",
+            annotation: "androidx.annotation:annotation:$androidXAnnotationVersion"
+        ],
+        playServices: [
+            location: "com.google.android.gms:play-services-location:$playServicesLocationVersion"
+        ]
+    ]
+}

@@ -2,6 +2,12 @@
   "configVersion": 2,
   "packages": [
     {
+      "name": "args",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/args-2.7.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
       "name": "async",
       "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/async-2.11.0",
       "packageUri": "lib/",
@@ -75,9 +81,15 @@
     },
     {
       "name": "dio",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/dio-4.0.6",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/dio-5.8.0+1",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "2.18"
+    },
+    {
+      "name": "dio_web_adapter",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/dio_web_adapter-2.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
     },
     {
       "name": "fake_async",
@@ -141,9 +153,15 @@
     },
     {
       "name": "flutter_lints",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/flutter_lints-2.0.3",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/flutter_lints-3.0.2",
       "packageUri": "lib/",
-      "languageVersion": "2.19"
+      "languageVersion": "3.1"
+    },
+    {
+      "name": "flutter_localization",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/flutter_localization-0.1.14",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "flutter_localizations",
@@ -165,9 +183,9 @@
     },
     {
       "name": "flutter_svg",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/flutter_svg-1.1.6",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/flutter_svg-2.0.17",
       "packageUri": "lib/",
-      "languageVersion": "2.17"
+      "languageVersion": "3.4"
     },
     {
       "name": "flutter_test",
@@ -182,40 +200,28 @@
       "languageVersion": "3.2"
     },
     {
-      "name": "geolocator",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/geolocator-9.0.2",
+      "name": "geocoding",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/geocoding-2.2.2",
       "packageUri": "lib/",
-      "languageVersion": "2.15"
+      "languageVersion": "2.17"
     },
     {
-      "name": "geolocator_android",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/geolocator_android-4.6.1",
+      "name": "geocoding_android",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/geocoding_android-3.3.1",
       "packageUri": "lib/",
-      "languageVersion": "2.15"
+      "languageVersion": "2.17"
     },
     {
-      "name": "geolocator_apple",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/geolocator_apple-2.3.9",
+      "name": "geocoding_ios",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/geocoding_ios-2.3.0",
       "packageUri": "lib/",
-      "languageVersion": "2.15"
+      "languageVersion": "2.17"
     },
     {
-      "name": "geolocator_platform_interface",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/geolocator_platform_interface-4.2.4",
+      "name": "geocoding_platform_interface",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/geocoding_platform_interface-3.2.0",
       "packageUri": "lib/",
-      "languageVersion": "2.15"
-    },
-    {
-      "name": "geolocator_web",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/geolocator_web-2.2.1",
-      "packageUri": "lib/",
-      "languageVersion": "2.15"
-    },
-    {
-      "name": "geolocator_windows",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/geolocator_windows-0.1.3",
-      "packageUri": "lib/",
-      "languageVersion": "2.15"
+      "languageVersion": "2.12"
     },
     {
       "name": "google_maps",
@@ -261,9 +267,9 @@
     },
     {
       "name": "http",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/http-0.13.6",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/http-1.3.0",
       "packageUri": "lib/",
-      "languageVersion": "2.19"
+      "languageVersion": "3.4"
     },
     {
       "name": "http_parser",
@@ -273,9 +279,9 @@
     },
     {
       "name": "image_picker",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/image_picker-0.8.9",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/image_picker-1.1.2",
       "packageUri": "lib/",
-      "languageVersion": "2.18"
+      "languageVersion": "3.3"
     },
     {
       "name": "image_picker_android",
@@ -345,7 +351,7 @@
     },
     {
       "name": "lints",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/lints-2.1.1",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/lints-3.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -384,12 +390,6 @@
       "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/path-1.9.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
-    },
-    {
-      "name": "path_drawing",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/path_drawing-1.0.1",
-      "packageUri": "lib/",
-      "languageVersion": "2.12"
     },
     {
       "name": "path_parsing",
@@ -513,9 +513,9 @@
     },
     {
       "name": "shimmer",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/shimmer-2.0.0",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/shimmer-3.0.0",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "2.17"
     },
     {
       "name": "sky_engine",
@@ -614,6 +614,24 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "vector_graphics",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/vector_graphics-1.1.18",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "vector_graphics_codec",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/vector_graphics_codec-1.1.13",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "vector_graphics_compiler",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/vector_graphics_compiler-1.1.16",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "vector_math",
       "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/vector_math-2.1.4",
       "packageUri": "lib/",
@@ -647,10 +665,10 @@
       "name": "sikayet_var",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "2.17"
+      "languageVersion": "3.0"
     }
   ],
-  "generated": "2025-04-09T20:13:32.467629Z",
+  "generated": "2025-04-09T23:19:56.488002Z",
   "generator": "pub",
   "generatorVersion": "3.4.0",
   "flutterRoot": "file:///nix/store/yk06k2xi481mkz7lbnqip2178l547ihl-flutter-wrapped-3.22.0-sdk-links",
