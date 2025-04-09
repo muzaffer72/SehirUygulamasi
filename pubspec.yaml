@@ -34,9 +34,8 @@ dependencies:
   shared_preferences: ^2.2.2
   path_provider: ^2.1.2
   
-  # Maps and location - güncel plugin sürümleriyle uyumlu
+  # Maps and location - Android SDK 35 ile uyumlu
   google_maps_flutter: ^2.5.0
-  flutter_localization: ^0.1.14
   geocoding: ^2.1.1  # adres ve koordinat dönüşümleri için
   
   # Analytics and services (commented out for now)

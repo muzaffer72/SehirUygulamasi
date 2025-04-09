@@ -158,12 +158,6 @@
       "languageVersion": "3.1"
     },
     {
-      "name": "flutter_localization",
-      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/flutter_localization-0.1.14",
-      "packageUri": "lib/",
-      "languageVersion": "2.12"
-    },
-    {
       "name": "flutter_localizations",
       "rootUri": "file:///nix/store/yk06k2xi481mkz7lbnqip2178l547ihl-flutter-wrapped-3.22.0-sdk-links/packages/flutter_localizations",
       "packageUri": "lib/",
@@ -668,7 +662,7 @@
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2025-04-09T23:37:10.945038Z",
+  "generated": "2025-04-09T23:44:46.903872Z",
   "generator": "pub",
   "generatorVersion": "3.4.0",
   "flutterRoot": "file:///nix/store/yk06k2xi481mkz7lbnqip2178l547ihl-flutter-wrapped-3.22.0-sdk-links",
