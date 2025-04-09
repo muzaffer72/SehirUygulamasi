@@ -23,6 +23,10 @@ args = "Database Setup"
 task = "workflow.run"
 args = "Flutter App Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Flutter Test App"
+
 [[workflows.workflow]]
 name = "Admin Panel Server"
 author = "agent"
@@ -67,8 +71,27 @@ task = "shell.exec"
 args = "cd . && flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0"
 waitForPort = 5001
 
+[[workflows.workflow]]
+name = "Flutter Test App"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd . && flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0 -t test_flutter_app.dart"
+waitForPort = 5001
+
 [deployment]
 run = ["sh", "-c", "cd . && flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0"]
+
+[[ports]]
+localPort = 3000
+externalPort = 3001
 
 [[ports]]
 localPort = 5000
