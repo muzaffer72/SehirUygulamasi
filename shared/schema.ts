@@ -5,6 +5,7 @@ import { relations } from 'drizzle-orm';
 export type UserLevel = 'newUser' | 'contributor' | 'active' | 'expert' | 'master';
 export type PostStatus = 'awaitingSolution' | 'inProgress' | 'solved' | 'rejected';
 export type PostType = 'problem' | 'suggestion' | 'announcement';
+export type ScopeType = 'general' | 'city' | 'district';
 
 // Kategori tablosu
 export const categories = pgTable('categories', {
@@ -90,12 +91,15 @@ export const surveys = pgTable('surveys', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description').notNull(),
+  scopeType: varchar('scope_type', { length: 20 }).default('general').notNull(),
   cityId: integer('city_id').references(() => cities.id),
+  districtId: integer('district_id').references(() => districts.id),
   categoryId: integer('category_id').notNull().references(() => categories.id),
   isActive: boolean('is_active').default(true).notNull(),
   startDate: timestamp('start_date').notNull(),
   endDate: timestamp('end_date').notNull(),
   totalVotes: integer('total_votes').default(0).notNull(),
+  sortOrder: integer('sort_order').default(0).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -104,6 +108,17 @@ export const surveyOptions = pgTable('survey_options', {
   id: serial('id').primaryKey(),
   surveyId: integer('survey_id').notNull().references(() => surveys.id, { onDelete: 'cascade' }),
   text: text('text').notNull(),
+  voteCount: integer('vote_count').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Bölgesel anket sonuçları tablosu
+export const surveyRegionalResults = pgTable('survey_regional_results', {
+  id: serial('id').primaryKey(),
+  surveyId: integer('survey_id').notNull().references(() => surveys.id, { onDelete: 'cascade' }),
+  optionId: integer('option_id').notNull().references(() => surveyOptions.id, { onDelete: 'cascade' }),
+  cityId: integer('city_id').references(() => cities.id),
+  districtId: integer('district_id').references(() => districts.id),
   voteCount: integer('vote_count').default(0).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
@@ -169,13 +184,39 @@ export const surveysRelations = relations(surveys, ({ one, many }) => ({
     fields: [surveys.cityId],
     references: [cities.id]
   }),
-  options: many(surveyOptions)
+  district: one(districts, {
+    fields: [surveys.districtId],
+    references: [districts.id]
+  }),
+  options: many(surveyOptions),
+  regionalResults: many(surveyRegionalResults)
 }));
 
-export const surveyOptionsRelations = relations(surveyOptions, ({ one }) => ({
+export const surveyOptionsRelations = relations(surveyOptions, ({ one, many }) => ({
   survey: one(surveys, {
     fields: [surveyOptions.surveyId],
     references: [surveys.id]
+  }),
+  regionalResults: many(surveyRegionalResults, { relationName: 'optionResults' })
+}));
+
+export const surveyRegionalResultsRelations = relations(surveyRegionalResults, ({ one }) => ({
+  survey: one(surveys, {
+    fields: [surveyRegionalResults.surveyId],
+    references: [surveys.id]
+  }),
+  option: one(surveyOptions, {
+    fields: [surveyRegionalResults.optionId],
+    references: [surveyOptions.id],
+    relationName: 'optionResults'
+  }),
+  city: one(cities, {
+    fields: [surveyRegionalResults.cityId],
+    references: [cities.id]
+  }),
+  district: one(districts, {
+    fields: [surveyRegionalResults.districtId],
+    references: [districts.id]
   })
 }));
 
