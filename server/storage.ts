@@ -3,7 +3,7 @@ import {
   surveys, surveyOptions, media, bannedWords
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, like, and, or, desc, asc } from "drizzle-orm";
+import { eq, like, and, or, desc, asc, sql } from "drizzle-orm";
 
 // Interface tanımlamaları (Flutter uygulamasında da kullanılabilir)
 export interface IStorage {
@@ -37,7 +37,7 @@ export interface IStorage {
   getDistrictsByCityId(cityId: number): Promise<any[]>;
 }
 
-// Veritabanı tabanlı depolama sınıfı
+// PostgreSQL veritabanı tabanlı depolama sınıfı
 export class DatabaseStorage implements IStorage {
   // Kullanıcı işlemleri
   async getUsers(): Promise<any[]> {
@@ -45,27 +45,23 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserById(id: number): Promise<any | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    const results = await db.select().from(users).where(eq(users.id, id));
+    return results.length > 0 ? results[0] : undefined;
   }
   
   async getUserByUsername(email: string): Promise<any | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    const results = await db.select().from(users).where(eq(users.email, email));
+    return results.length > 0 ? results[0] : undefined;
   }
   
   async createUser(user: any): Promise<any> {
-    const [newUser] = await db.insert(users).values(user).returning();
-    return newUser;
+    const result = await db.insert(users).values(user).returning();
+    return result[0];
   }
   
   async updateUser(id: number, data: any): Promise<any> {
-    const [updatedUser] = await db
-      .update(users)
-      .set(data)
-      .where(eq(users.id, id))
-      .returning();
-    return updatedUser;
+    const result = await db.update(users).set(data).where(eq(users.id, id)).returning();
+    return result[0];
   }
   
   // Paylaşım işlemleri
@@ -105,9 +101,10 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getPostById(id: number): Promise<any | undefined> {
-    const [post] = await db.select().from(posts).where(eq(posts.id, id));
+    const results = await db.select().from(posts).where(eq(posts.id, id));
     
-    if (post) {
+    if (results.length > 0) {
+      const post = results[0];
       // Görselleri getir
       const mediaItems = await db.select().from(media).where(eq(media.postId, id));
       
@@ -125,7 +122,8 @@ export class DatabaseStorage implements IStorage {
     const { imageUrls, videoUrl, ...post } = postData;
     
     // Önce paylaşımı oluştur
-    const [newPost] = await db.insert(posts).values(post).returning();
+    const result = await db.insert(posts).values(post).returning();
+    const newPost = result[0];
     
     // Görselleri ekle
     if (imageUrls && imageUrls.length > 0) {
@@ -150,7 +148,9 @@ export class DatabaseStorage implements IStorage {
     // Kullanıcının paylaşım sayısını güncelle
     await db
       .update(users)
-      .set({ postCount: users.postCount + 1 })
+      .set({ 
+        postCount: sql`${users.postCount} + 1` 
+      })
       .where(eq(users.id, post.userId));
     
     return this.getPostById(newPost.id);
@@ -160,11 +160,10 @@ export class DatabaseStorage implements IStorage {
     const { imageUrls, videoUrl, ...updateData } = data;
     
     // Paylaşımı güncelle
-    const [updatedPost] = await db
+    await db
       .update(posts)
       .set(updateData)
-      .where(eq(posts.id, id))
-      .returning();
+      .where(eq(posts.id, id));
     
     // Medya güncellemesi varsa
     if (imageUrls !== undefined || videoUrl !== undefined) {
@@ -197,13 +196,16 @@ export class DatabaseStorage implements IStorage {
   
   async deletePost(id: number): Promise<void> {
     // Paylaşıma ait tüm yorum ve medyalar cascade ile silinecek
-    const [post] = await db.select().from(posts).where(eq(posts.id, id));
+    const results = await db.select().from(posts).where(eq(posts.id, id));
     
-    if (post) {
+    if (results.length > 0) {
+      const post = results[0];
       // Kullanıcının paylaşım sayısını azalt
       await db
         .update(users)
-        .set({ postCount: users.postCount - 1 })
+        .set({ 
+          postCount: sql`${users.postCount} - 1` 
+        })
         .where(eq(users.id, post.userId));
     }
     
@@ -221,21 +223,24 @@ export class DatabaseStorage implements IStorage {
   
   async addComment(comment: any): Promise<any> {
     // Yorumu ekle
-    const [newComment] = await db.insert(comments).values(comment).returning();
+    const result = await db.insert(comments).values(comment).returning();
+    const newComment = result[0];
     
     // Kullanıcının yorum sayısını ve puanını artır
     await db
       .update(users)
       .set({ 
-        commentCount: users.commentCount + 1,
-        points: users.points + 5 // Her yorum 5 puan kazandırır
+        commentCount: sql`${users.commentCount} + 1`,
+        points: sql`${users.points} + 5` // Her yorum 5 puan kazandırır
       })
       .where(eq(users.id, comment.userId));
     
     // Paylaşımın yorum sayısını artır
     await db
       .update(posts)
-      .set({ commentCount: posts.commentCount + 1 })
+      .set({ 
+        commentCount: sql`${posts.commentCount} + 1` 
+      })
       .where(eq(posts.id, comment.postId));
     
     return newComment;
@@ -286,9 +291,10 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getSurveyById(id: number): Promise<any | undefined> {
-    const [survey] = await db.select().from(surveys).where(eq(surveys.id, id));
+    const results = await db.select().from(surveys).where(eq(surveys.id, id));
     
-    if (survey) {
+    if (results.length > 0) {
+      const survey = results[0];
       const options = await db
         .select()
         .from(surveyOptions)
@@ -329,11 +335,11 @@ export class DatabaseStorage implements IStorage {
   
   async addBannedWord(word: string): Promise<any> {
     try {
-      const [newWord] = await db
+      const result = await db
         .insert(bannedWords)
         .values({ word })
         .returning();
-      return newWord;
+      return result[0];
     } catch (error) {
       // Muhtemelen kelime zaten var
       return null;

@@ -19,6 +19,10 @@ args = "Flutter App Server"
 task = "workflow.run"
 args = "Admin Panel Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Database Setup"
+
 [[workflows.workflow]]
 name = "Flutter App Server"
 author = "agent"
@@ -48,6 +52,20 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "cd admin-panel && php -S 0.0.0.0:5000"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Database Setup"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx ts-node push-db.ts"
 
 [deployment]
 run = ["sh", "-c", "flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0"]

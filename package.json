@@ -17,7 +17,10 @@
     "@neondatabase/serverless": "^1.0.0",
     "drizzle-kit": "^0.30.6",
     "drizzle-orm": "^0.41.0",
+    "mysql2": "^3.14.0",
     "pg": "^8.14.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
     "ws": "^8.18.1"
   }
 }
