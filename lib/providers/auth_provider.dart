@@ -1,103 +1,94 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/user.dart';
-import 'package:sikayet_var/services/auth_service.dart';
+import 'package:sikayet_var/services/api_service.dart';
 
-// Provider for the current authenticated user
-final currentUserProvider = StateProvider<User?>((ref) => null);
+final authNotifierProvider = AsyncNotifierProvider<AuthNotifier, User?>(
+  () => AuthNotifier(),
+);
 
-// Provider for the auth notifier
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
-  return AuthNotifier(ref);
-});
-
-class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
-  final Ref _ref;
-  final AuthService _authService = AuthService();
-
-  AuthNotifier(this._ref) : super(const AsyncValue.loading()) {
-    _checkCurrentUser();
-  }
-
-  Future<void> _checkCurrentUser() async {
+class AuthNotifier extends AsyncNotifier<User?> {
+  late final ApiService _apiService;
+  
+  @override
+  Future<User?> build() async {
+    _apiService = ApiService();
+    
     try {
-      final user = await _authService.getCurrentUser();
-      state = AsyncValue.data(user);
-      _ref.read(currentUserProvider.notifier).state = user;
+      final token = await _apiService.getToken();
+      
+      // If we have a token, try to get the current user
+      if (token != null) {
+        // Mock implementation - in the real app this would validate the token
+        final demoUser = User(
+          id: '1',
+          name: 'Demo User',
+          email: 'demo@example.com',
+          isVerified: true,
+          createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        );
+        return demoUser;
+      }
     } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-      _ref.read(currentUserProvider.notifier).state = null;
+      print('Error loading auth state: $e');
     }
+    
+    return null;
   }
 
   Future<void> login(String email, String password) async {
+    state = const AsyncValue.loading();
+    
     try {
-      state = const AsyncValue.loading();
-      final user = await _authService.login(email, password);
+      // Call the API service
+      final user = await _apiService.login(email, password);
+      
+      // Update the state with the logged-in user
       state = AsyncValue.data(user);
-      _ref.read(currentUserProvider.notifier).state = user;
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
-      _ref.read(currentUserProvider.notifier).state = null;
-      rethrow;
+      throw e;
     }
   }
-
-  Future<void> register(String name, String email, String password, {
-    String? phone,
+  
+  Future<void> register(
+    String name,
+    String email,
+    String password, {
     String? cityId,
     String? districtId,
   }) async {
+    state = const AsyncValue.loading();
+    
     try {
-      state = const AsyncValue.loading();
-      final user = await _authService.register(
+      // Call the API service
+      final user = await _apiService.register(
         name,
         email,
         password,
-        phone: phone,
         cityId: cityId,
         districtId: districtId,
       );
+      
+      // Update the state with the newly registered user
       state = AsyncValue.data(user);
-      _ref.read(currentUserProvider.notifier).state = user;
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
-      _ref.read(currentUserProvider.notifier).state = null;
-      rethrow;
+      throw e;
     }
   }
-
+  
   Future<void> logout() async {
+    state = const AsyncValue.loading();
+    
     try {
-      state = const AsyncValue.loading();
-      await _authService.logout();
+      // Call the API service
+      await _apiService.logout();
+      
+      // Clear the user
       state = const AsyncValue.data(null);
-      _ref.read(currentUserProvider.notifier).state = null;
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
-      rethrow;
-    }
-  }
-
-  Future<void> updateProfile(User user) async {
-    try {
-      state = const AsyncValue.loading();
-      final updatedUser = await _authService.updateProfile(user);
-      state = AsyncValue.data(updatedUser);
-      _ref.read(currentUserProvider.notifier).state = updatedUser;
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-      rethrow;
-    }
-  }
-
-  Future<void> resetPassword(String email) async {
-    try {
-      state = const AsyncValue.loading();
-      await _authService.resetPassword(email);
-      state = AsyncValue.data(_ref.read(currentUserProvider));
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-      rethrow;
+      throw e;
     }
   }
 }

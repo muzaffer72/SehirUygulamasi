@@ -1,237 +1,627 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sikayet_var/models/city.dart';
+import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/providers/post_provider.dart';
-import 'package:sikayet_var/screens/profile/edit_profile_screen.dart';
-import 'package:sikayet_var/widgets/post_card.dart';
-import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
+import 'package:sikayet_var/services/api_service.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
-    final postsAsync = ref.watch(postsProvider);
-    
-    if (user == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text('Kullanıcı oturumu bulunamadı'),
-        ),
-      );
-    }
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTickerProviderStateMixin {
+  final ApiService _apiService = ApiService();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  
+  bool _isLoggingIn = true;
+  bool _isLoading = false;
+  
+  String? _selectedCityId;
+  String? _selectedDistrictId;
+  
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authNotifierProvider);
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profilim'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditProfileScreen(user: user),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await ref.read(authControllerProvider.notifier).signOut();
-            },
-          ),
-        ],
+        title: const Text('Profil'),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.read(postsProvider.notifier).loadPosts();
+      body: authState.when(
+        data: (user) {
+          if (user == null) {
+            return _buildAuthForm();
+          } else {
+            return _buildProfileView(user);
+          }
         },
-        child: CustomScrollView(
-          slivers: [
-            // Profile header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Avatar
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: user.avatar != null
-                          ? NetworkImage(user.avatar!)
-                          : null,
-                      child: user.avatar == null
-                          ? const Icon(Icons.person, size: 50)
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Username
-                    Text(
-                      user.username,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    
-                    // Location
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${user.cityId}, ${user.districtId}', // Would show actual city and district names
-                            style: const TextStyle(
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    // Bio
-                    if (user.bio != null && user.bio!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          user.bio!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      
-                    // Anonymous name if set
-                    if (user.hiddenName != null && user.hiddenName!.isNotEmpty)
-                      Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.masks, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Gizli Adınız: ${user.hiddenName}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 40,
               ),
-            ),
-            
-            // Tabs for posts
-            SliverPersistentHeader(
-              delegate: _SliverAppBarDelegate(
-                TabBar(
-                  tabs: const [
-                    Tab(text: 'Gönderilerim'),
-                    Tab(text: 'Yorumlarım'),
-                  ],
-                  labelColor: Theme.of(context).primaryColor,
-                  unselectedLabelColor: Colors.grey,
-                  indicatorColor: Theme.of(context).primaryColor,
-                ),
+              const SizedBox(height: 16),
+              Text(
+                'Bir hata oluştu: $error',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
               ),
-              pinned: true,
-            ),
-            
-            // User's posts
-            postsAsync.when(
-              data: (posts) {
-                // Filter posts by user
-                final userPosts = posts.where((post) => post.userId == user.id).toList();
-                
-                if (userPosts.isEmpty) {
-                  return const SliverFillRemaining(
-                    child: Center(
-                      child: Text('Henüz gönderi paylaşmadınız'),
-                    ),
-                  );
-                }
-                
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final post = userPosts[index];
-                      return PostCard(
-                        post: post,
-                        onTap: () {
-                          ref.read(selectedPostProvider.notifier).state = post;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PostDetailScreen(post: post),
-                            ),
-                          );
-                        },
-                        onLike: () {
-                          ref.read(postsProvider.notifier).likePost(post.id);
-                        },
-                        onHighlight: () {
-                          ref.read(postsProvider.notifier).highlightPost(post.id);
-                        },
-                      );
-                    },
-                    childCount: userPosts.length,
-                  ),
-                );
-              },
-              loading: () => const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  ref.refresh(authNotifierProvider);
+                },
+                child: const Text('Tekrar Dene'),
               ),
-              error: (error, stackTrace) => SliverFillRemaining(
-                child: Center(
-                  child: Text('Gönderiler yüklenirken hata: $error'),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
-}
-
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
-
-  _SliverAppBarDelegate(this._tabBar);
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height;
   
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Colors.white,
-      child: _tabBar,
+  Widget _buildAuthForm() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 24),
+          
+          // App Logo or Icon
+          Center(
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.report_problem_outlined,
+                color: Colors.white,
+                size: 60,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // App Name
+          Center(
+            child: Text(
+              'ŞikayetVar',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          
+          // App Slogan
+          Center(
+            child: Text(
+              'Sesini duyur, değişime katkı sağla',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          
+          // Auth Tabs
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _isLoggingIn = true;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: _isLoggingIn
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      'Giriş Yap',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: _isLoggingIn ? FontWeight.bold : FontWeight.normal,
+                        color: _isLoggingIn
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _isLoggingIn = false;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: !_isLoggingIn
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      'Kayıt Ol',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: !_isLoggingIn ? FontWeight.bold : FontWeight.normal,
+                        color: !_isLoggingIn
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Form Fields
+          if (!_isLoggingIn) ... [
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Ad Soyad',
+                prefixIcon: Icon(Icons.person),
+              ),
+              keyboardType: TextInputType.name,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 16),
+          ],
+          
+          TextFormField(
+            controller: _emailController,
+            decoration: const InputDecoration(
+              labelText: 'E-posta',
+              prefixIcon: Icon(Icons.email),
+            ),
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          
+          TextFormField(
+            controller: _passwordController,
+            decoration: const InputDecoration(
+              labelText: 'Şifre',
+              prefixIcon: Icon(Icons.lock),
+            ),
+            obscureText: true,
+            textInputAction: _isLoggingIn ? TextInputAction.done : TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          
+          if (!_isLoggingIn) ... [
+            // City selection
+            FutureBuilder<List<City>>(
+              future: _apiService.getCities(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Text('Şehir verisi bulunamadı');
+                }
+                
+                final cities = snapshot.data!;
+                
+                return DropdownButtonFormField<String>(
+                  value: _selectedCityId,
+                  decoration: const InputDecoration(
+                    labelText: 'Şehir',
+                    prefixIcon: Icon(Icons.location_city),
+                  ),
+                  items: cities.map((city) {
+                    return DropdownMenuItem<String>(
+                      value: city.id,
+                      child: Text(city.name),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedCityId = newValue;
+                      _selectedDistrictId = null; // Reset district when city changes
+                    });
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            // District selection (only if city is selected)
+            if (_selectedCityId != null)
+              FutureBuilder<List<District>>(
+                future: _apiService.getDistrictsByCityId(_selectedCityId!),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Text('İlçe verisi bulunamadı');
+                  }
+                  
+                  final districts = snapshot.data!;
+                  
+                  return DropdownButtonFormField<String>(
+                    value: _selectedDistrictId,
+                    decoration: const InputDecoration(
+                      labelText: 'İlçe',
+                      prefixIcon: Icon(Icons.location_on),
+                    ),
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('İlçe seçin (İsteğe bağlı)'),
+                      ),
+                      ...districts.map((district) {
+                        return DropdownMenuItem<String>(
+                          value: district.id,
+                          child: Text(district.name),
+                        );
+                      }).toList(),
+                    ],
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedDistrictId = newValue;
+                      });
+                    },
+                  );
+                },
+              ),
+              
+            if (_selectedCityId != null)
+              const SizedBox(height: 16),
+          ],
+          
+          // Submit Button
+          SizedBox(
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _submitAuthForm,
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : Text(_isLoggingIn ? 'Giriş Yap' : 'Kayıt Ol'),
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Demo Login
+          if (_isLoggingIn)
+            TextButton(
+              onPressed: _isLoading
+                  ? null
+                  : () {
+                      _emailController.text = 'test@example.com';
+                      _passwordController.text = 'password';
+                    },
+              child: const Text('Demo hesabı kullan'),
+            ),
+        ],
+      ),
     );
   }
-
-  @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return false;
+  
+  Future<void> _submitAuthForm() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('E-posta ve şifre gereklidir'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    if (!_isLoggingIn) {
+      final name = _nameController.text.trim();
+      if (name.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ad Soyad alanı gereklidir'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+    
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      if (_isLoggingIn) {
+        await ref.read(authNotifierProvider.notifier).login(email, password);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Giriş başarılı!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        final name = _nameController.text.trim();
+        
+        await ref.read(authNotifierProvider.notifier).register(
+          name,
+          email,
+          password,
+          cityId: _selectedCityId,
+          districtId: _selectedDistrictId,
+        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Kayıt başarılı! Giriş yapıldı.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Bir hata oluştu: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+  
+  Widget _buildProfileView(user) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 24),
+          
+          // Profile picture
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            child: user.profileImageUrl != null
+                ? null
+                : Text(
+                    user.name.substring(0, 1).toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 30,
+                      color: Colors.white,
+                    ),
+                  ),
+            backgroundImage: user.profileImageUrl != null
+                ? NetworkImage(user.profileImageUrl!)
+                : null,
+          ),
+          const SizedBox(height: 16),
+          
+          // User name
+          Text(
+            user.name,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          
+          // User email
+          Text(
+            user.email,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
+          ),
+          
+          // Verification badge
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: user.isVerified ? Colors.green : Colors.orange,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  user.isVerified ? Icons.verified_user : Icons.warning,
+                  color: Colors.white,
+                  size: 14,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  user.isVerified ? 'Doğrulanmış Hesap' : 'Doğrulanmamış',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          const Divider(),
+          
+          // User location
+          if (user.cityId != null)
+            FutureBuilder<List<dynamic>>(
+              future: Future.wait([
+                _apiService.getCityById(user.cityId!),
+                if (user.districtId != null)
+                  _apiService.getDistrictById(user.districtId!)
+                else
+                  Future.value(null),
+              ]),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const ListTile(
+                    leading: Icon(Icons.location_on_outlined),
+                    title: Text('Konum yükleniyor...'),
+                  );
+                }
+                
+                final city = snapshot.data![0];
+                final district = snapshot.data!.length > 1 && snapshot.data![1] != null
+                    ? snapshot.data![1]
+                    : null;
+                
+                final locationText = district != null
+                    ? '${district.name}, ${city.name}'
+                    : city.name;
+                
+                return ListTile(
+                  leading: const Icon(Icons.location_on_outlined),
+                  title: const Text('Konum'),
+                  subtitle: Text(locationText),
+                );
+              },
+            ),
+          
+          // User stats
+          ListTile(
+            leading: const Icon(Icons.description_outlined),
+            title: const Text('Gönderiler'),
+            subtitle: const Text('15 gönderi'),
+            trailing: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Text(
+                '15',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.check_circle_outline),
+            title: const Text('Çözülen Sorunlar'),
+            subtitle: const Text('7 şikayet çözüldü'),
+            trailing: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Text(
+                '7',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+            ),
+          ),
+          
+          const Divider(),
+          
+          // Settings
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Ayarlar'),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Ayarlar yakında eklenecek')),
+              );
+            },
+          ),
+          
+          ListTile(
+            leading: const Icon(Icons.help_outline),
+            title: const Text('Yardım'),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Yardım sayfası yakında eklenecek')),
+              );
+            },
+          ),
+          
+          // Logout button
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.exit_to_app),
+                label: const Text('Çıkış Yap'),
+                onPressed: () async {
+                  await ref.read(authNotifierProvider.notifier).logout();
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
