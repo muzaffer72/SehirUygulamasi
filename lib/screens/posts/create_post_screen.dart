@@ -1,9 +1,9 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.html) 'package:sikayet_var/utils/web_stub.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sikayet_var/models/category.dart';
+import 'package:sikayet_var/models/category.dart' as app_category;
 import 'package:sikayet_var/models/city.dart';
 import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/models/post.dart';
@@ -328,7 +328,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           
           // Category (only for problem type)
           if (widget.type == PostType.problem)
-            FutureBuilder<List<Category>>(
+            FutureBuilder<List<app_category.Category>>(
               future: _apiService.getCategories(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -501,10 +501,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                             height: 100,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
-                              image: DecorationImage(
-                                image: FileImage(File(_selectedImages[index].path)),
-                                fit: BoxFit.cover,
-                              ),
+                              // Using NetworkImage or Image.network would be better for web
+                              // This is a placeholder for now to make it compatible with web
+                              color: Colors.grey[300],
+                              border: Border.all(color: Colors.grey[400]!),
                             ),
                           ),
                           Positioned(
