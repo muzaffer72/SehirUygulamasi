@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sikayet_var/models/category.dart';
+import 'package:sikayet_var/models/city.dart';
+import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/models/survey.dart';
 import 'package:sikayet_var/providers/survey_provider.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
@@ -43,7 +46,7 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
                           children: [
                             const Text('Anketler konum bilginize göre filtreleniyor:'),
                             const SizedBox(height: 12),
-                            if (user.cityId != null) FutureBuilder(
+                            if (user.cityId != null) FutureBuilder<City>(
                               future: _apiService.getCityById(user.cityId!),
                               builder: (context, snapshot) {
                                 if (snapshot.hasData) {
@@ -52,7 +55,7 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
                                 return const Text('Şehir: Yükleniyor...');
                               },
                             ),
-                            if (user.districtId != null) FutureBuilder(
+                            if (user.districtId != null) FutureBuilder<District>(
                               future: _apiService.getDistrictById(user.districtId!),
                               builder: (context, snapshot) {
                                 if (snapshot.hasData) {
