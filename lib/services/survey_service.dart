@@ -46,6 +46,17 @@ class SurveyService {
   }
   
   // Vote on a survey
+  Future<bool> voteOnSurvey(String surveyId, String optionId) async {
+    try {
+      await voteSurvey(surveyId, optionId);
+      return true;
+    } catch (e) {
+      print('Error voting on survey: $e');
+      return false;
+    }
+  }
+  
+  // Vote on a survey (internal implementation)
   Future<void> voteSurvey(String surveyId, String optionId) async {
     try {
       final prefs = await SharedPreferences.getInstance();

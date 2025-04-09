@@ -9,6 +9,7 @@ enum PostType {
   problem,
   suggestion,
   announcement,
+  general,
 }
 
 class Post {
@@ -72,6 +73,8 @@ class Post {
           return PostType.suggestion;
         case 'announcement':
           return PostType.announcement;
+        case 'general':
+          return PostType.general;
         default:
           return PostType.problem;
       }
@@ -123,6 +126,8 @@ class Post {
           return 'suggestion';
         case PostType.announcement:
           return 'announcement';
+        case PostType.general:
+          return 'general';
       }
     }
 
