@@ -7,350 +7,384 @@ import 'package:sikayet_var/services/api_service.dart';
 class SurveyDetailScreen extends ConsumerStatefulWidget {
   final Survey survey;
   
-  const SurveyDetailScreen({Key? key, required this.survey}) : super(key: key);
+  const SurveyDetailScreen({
+    Key? key,
+    required this.survey,
+  }) : super(key: key);
 
   @override
   ConsumerState<SurveyDetailScreen> createState() => _SurveyDetailScreenState();
 }
 
 class _SurveyDetailScreenState extends ConsumerState<SurveyDetailScreen> {
+  final ApiService _apiService = ApiService();
+  
   String? _selectedOptionId;
   bool _hasVoted = false;
-  bool _isVoting = false;
-  Survey? _updatedSurvey;
-  
-  @override
-  void initState() {
-    super.initState();
-    _updatedSurvey = widget.survey;
-    _checkUserVote();
-  }
-  
-  Future<void> _checkUserVote() async {
-    // TODO: Check if user has already voted on this survey
-    setState(() {
-      _hasVoted = false;
-    });
-  }
+  bool _isSubmitting = false;
   
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(currentUserProvider);
-    final survey = _updatedSurvey ?? widget.survey;
+    final currentUser = ref.watch(currentUserProvider).value;
+    final bool isLoggedIn = currentUser != null;
+    
+    // Calculate remaining days
+    final now = DateTime.now();
+    final remainingDays = widget.survey.endDate.difference(now).inDays;
     
     return Scaffold(
       appBar: AppBar(
         title: const Text('Anket Detayı'),
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Survey header
-            if (survey.imageUrl != null)
-              Container(
-                height: 200,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(survey.imageUrl!),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(
-                      Colors.black.withOpacity(0.3),
-                      BlendMode.darken,
-                    ),
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    survey.title,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              )
-            else
-              Container(
-                padding: const EdgeInsets.all(24),
-                width: double.infinity,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                child: Text(
-                  survey.title,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            
-            // Survey description
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    survey.description,
-                    style: const TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Toplam ${survey.totalVotes} oy kullanıldı',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Seçenekler',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Options list
-                  ...survey.options.map((option) => _buildSurveyOption(
-                    option,
-                    survey.totalVotes,
-                    _hasVoted,
-                  )),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Vote button
-                  if (!_hasVoted && currentUser != null)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _selectedOptionId == null || _isVoting
-                            ? null
-                            : _submitVote,
-                        child: _isVoting
-                            ? const CircularProgressIndicator()
-                            : const Text(
-                                'Oy Ver',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                      ),
-                    )
-                  else if (!_hasVoted && currentUser == null)
-                    const Center(
-                      child: Text(
-                        'Oy verebilmek için giriş yapmalısınız',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    )
-                  else
-                    const Center(
-                      child: Text(
-                        'Bu ankete zaten oy verdiniz',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  
-                  // Survey metadata
-                  const SizedBox(height: 24),
-                  _buildSurveyMeta(),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildSurveyOption(SurveyOption option, int totalVotes, bool showResults) {
-    final percentValue = option.getPercentage(totalVotes);
-    final percent = percentValue.toStringAsFixed(1);
-    
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Option selection
-          if (!_hasVoted)
-            RadioListTile<String>(
-              title: Text(option.text),
-              value: option.id,
-              groupValue: _selectedOptionId,
-              onChanged: (value) {
-                setState(() {
-                  _selectedOptionId = value;
-                });
-              },
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.only(left: 16, bottom: 8),
-              child: Text(
-                option.text,
-                style: const TextStyle(
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          
-          // Results bar
-          if (_hasVoted)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  Stack(
-                    children: [
-                      // Background bar
-                      Container(
-                        height: 24,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      
-                      // Progress bar
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 500),
-                          curve: Curves.easeOut,
-                          height: 24,
-                          width: MediaQuery.of(context).size.width * (percentValue / 100) * 0.85,
-                          color: _getOptionColor(percentValue),
-                        ),
-                      ),
-                      
-                      // Percentage text
-                      Container(
-                        height: 24,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '$percent%',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            Text(
-                              '${option.voteCount} oy',
-                              style: TextStyle(
-                                color: percentValue > 50 ? Colors.white : Colors.black87,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildSurveyMeta() {
-    final survey = _updatedSurvey ?? widget.survey;
-    final apiService = ApiService();
-    
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Anket Bilgileri',
-              style: TextStyle(
-                fontSize: 16,
+            // Survey title
+            Text(
+              widget.survey.title,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            const Divider(),
-            _buildMetaRow(
-              'Başlangıç Tarihi:',
-              '${survey.startDate.day}/${survey.startDate.month}/${survey.startDate.year}',
+            
+            // Survey metadata
+            Row(
+              children: [
+                Icon(
+                  Icons.how_to_vote,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${widget.survey.totalVotes} oy',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.timelapse,
+                  size: 16,
+                  color: remainingDays > 5 ? Colors.green : Colors.orange,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  remainingDays > 0
+                      ? '$remainingDays gün kaldı'
+                      : 'Anket sona erdi',
+                  style: TextStyle(
+                    color: remainingDays > 5 ? Colors.green : Colors.orange,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
-            _buildMetaRow(
-              'Bitiş Tarihi:',
-              '${survey.endDate.day}/${survey.endDate.month}/${survey.endDate.year}',
+            const SizedBox(height: 16),
+            
+            // Survey image
+            if (widget.survey.imageUrl != null)
+              Container(
+                height: 200,
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  image: DecorationImage(
+                    image: NetworkImage(widget.survey.imageUrl!),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            
+            // Survey description
+            Text(
+              widget.survey.description,
+              style: const TextStyle(
+                fontSize: 16,
+              ),
             ),
-            _buildMetaRow(
-              'Durum:',
-              survey.isActive ? 'Aktif' : 'Sona Erdi',
+            const SizedBox(height: 24),
+            
+            // Survey options
+            const Text(
+              'Seçenekler',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            if (survey.cityId != null)
-              FutureBuilder(
-                future: apiService.getCityById(survey.cityId!),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const SizedBox.shrink();
-                  }
+            const SizedBox(height: 16),
+            
+            if (_hasVoted || !isLoggedIn || !widget.survey.isActive)
+              // Results view
+              Column(
+                children: widget.survey.options.map((option) {
+                  final percent = option.getPercentage(widget.survey.totalVotes);
+                  final isSelected = option.id == _selectedOptionId;
                   
-                  final city = snapshot.data!;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                option.text,
+                                style: TextStyle(
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${percent.toStringAsFixed(1)}%',
+                              style: TextStyle(
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Stack(
+                          children: [
+                            // Background
+                            Container(
+                              height: 12,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            // Progress
+                            Container(
+                              height: 12,
+                              width: MediaQuery.of(context).size.width * (percent / 100) * 0.8, // Consider padding
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${option.voteCount} oy',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              )
+            else
+              // Voting view
+              Column(
+                children: widget.survey.options.map((option) {
+                  final isSelected = option.id == _selectedOptionId;
                   
-                  return Column(
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: RadioListTile<String>(
+                      title: Text(option.text),
+                      value: option.id,
+                      groupValue: _selectedOptionId,
+                      onChanged: (String? value) {
+                        setState(() {
+                          _selectedOptionId = value;
+                        });
+                      },
+                      activeColor: Theme.of(context).colorScheme.primary,
+                      selected: isSelected,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey[300]!,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            
+            const SizedBox(height: 16),
+            
+            if (!isLoggedIn)
+              // Login prompt
+              Center(
+                child: Column(
+                  children: [
+                    const Text(
+                      'Oy vermek için giriş yapın',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Navigate back - user needs to log in
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Giriş Yap'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_hasVoted)
+              // Already voted message
+              const Center(
+                child: Text(
+                  'Bu ankette oy kullandınız',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              )
+            else if (!widget.survey.isActive)
+              // Survey ended message
+              const Center(
+                child: Text(
+                  'Bu anket sona erdi',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+              )
+            else
+              // Vote button
+              Center(
+                child: SizedBox(
+                  width: 200,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _selectedOptionId == null || _isSubmitting
+                        ? null
+                        : _submitVote,
+                    child: _isSubmitting
+                        ? const CircularProgressIndicator()
+                        : const Text(
+                            'Oy Ver',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                  ),
+                ),
+              ),
+            
+            const SizedBox(height: 24),
+            
+            // Survey location
+            if (widget.survey.cityId != null)
+              Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
                     children: [
-                      _buildMetaRow('Şehir:', city.name),
-                      if (survey.districtId != null)
-                        FutureBuilder(
-                          future: apiService.getDistrictById(survey.districtId!),
+                      const Icon(Icons.location_on),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FutureBuilder(
+                          future: Future.wait([
+                            _apiService.getCityById(widget.survey.cityId!),
+                            if (widget.survey.districtId != null)
+                              _apiService.getDistrictById(widget.survey.districtId!)
+                            else
+                              Future.value(null),
+                          ]),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {
-                              return const SizedBox.shrink();
+                              return const Text('Konum yükleniyor...');
                             }
                             
-                            final district = snapshot.data!;
+                            final city = snapshot.data![0];
+                            final district = snapshot.data!.length > 1 && snapshot.data![1] != null
+                                ? snapshot.data![1]
+                                : null;
                             
-                            return _buildMetaRow('İlçe:', district.name);
+                            final locationText = district != null
+                                ? '${district.name}, ${city.name}'
+                                : city.name;
+                            
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Konum',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(locationText),
+                              ],
+                            );
                           },
                         ),
+                      ),
                     ],
-                  );
-                },
+                  ),
+                ),
               ),
-            if (survey.categoryId != null)
-              FutureBuilder(
-                future: apiService.getCategoryById(survey.categoryId!),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const SizedBox.shrink();
-                  }
-                  
-                  final category = snapshot.data!;
-                  
-                  return _buildMetaRow('Kategori:', category.name);
-                },
+            
+            // Survey category
+            if (widget.survey.categoryId != null)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.category),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FutureBuilder(
+                          future: _apiService.getCategoryById(widget.survey.categoryId!),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const Text('Kategori yükleniyor...');
+                            }
+                            
+                            final category = snapshot.data!;
+                            
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Kategori',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(category.name),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
           ],
         ),
@@ -358,69 +392,43 @@ class _SurveyDetailScreenState extends ConsumerState<SurveyDetailScreen> {
     );
   }
   
-  Widget _buildMetaRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(value),
-        ],
-      ),
-    );
-  }
-  
-  Color _getOptionColor(double percent) {
-    if (percent >= 70) {
-      return Colors.green;
-    } else if (percent >= 40) {
-      return Colors.amber;
-    } else {
-      return Colors.redAccent;
-    }
-  }
-  
   Future<void> _submitVote() async {
-    if (_selectedOptionId == null) return;
+    if (_selectedOptionId == null) {
+      return;
+    }
     
     setState(() {
-      _isVoting = true;
+      _isSubmitting = true;
     });
     
     try {
-      final apiService = ApiService();
-      await apiService.voteSurvey(widget.survey.id, _selectedOptionId!);
+      await _apiService.voteOnSurvey(
+        widget.survey.id,
+        _selectedOptionId!,
+      );
       
-      // Refresh survey data
-      final updatedSurvey = await apiService.getSurveyById(widget.survey.id);
+      setState(() {
+        _hasVoted = true;
+        _isSubmitting = false;
+      });
       
-      if (mounted) {
-        setState(() {
-          _hasVoted = true;
-          _isVoting = false;
-          _updatedSurvey = updatedSurvey;
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Oy başarıyla kaydedildi')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Oyunuz başarıyla kaydedildi'),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isVoting = false;
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: ${e.toString()}')),
-        );
-      }
+      setState(() {
+        _isSubmitting = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Oy verilirken bir hata oluştu: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 }

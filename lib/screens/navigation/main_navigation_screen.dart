@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/screens/home/home_screen.dart';
-import 'package:sikayet_var/screens/home/profile_screen.dart';
-import 'package:sikayet_var/screens/posts/create_post_screen.dart';
+import 'package:sikayet_var/models/post.dart';
+import 'package:sikayet_var/providers/auth_provider.dart';
+import 'package:sikayet_var/providers/post_provider.dart';
+import 'package:sikayet_var/screens/home/dashboard_screen.dart';
+import 'package:sikayet_var/screens/home/feed_screen.dart';
+import 'package:sikayet_var/screens/profile/profile_screen.dart';
+import 'package:sikayet_var/screens/search/search_screen.dart';
+import 'package:sikayet_var/screens/surveys/surveys_screen.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({Key? key}) : super(key: key);
@@ -14,19 +19,42 @@ class MainNavigationScreen extends ConsumerStatefulWidget {
 class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   int _currentIndex = 0;
   
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const SizedBox(), // This will be replaced by create post action
-    const ProfileScreen(),
-  ];
+  // Define screens ahead of time
+  late final List<Widget> _screens;
+  
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const FeedScreen(),
+      const SearchScreen(),
+      const SurveysScreen(),
+      const DashboardScreen(),
+      const ProfileScreen(),
+    ];
+    
+    // Load initial data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(postsProvider.notifier).loadPosts();
+    });
+  }
   
   @override
   Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider).value;
+    
     return Scaffold(
-      body: _currentIndex == 1 ? Container() : _screens[_currentIndex],
+      body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex == 1 ? 0 : _currentIndex, // Never highlight the center button
-        onTap: _onTabTapped,
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
@@ -34,8 +62,19 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             label: 'Ana Sayfa',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle, size: 32),
-            label: 'Yeni',
+            icon: Icon(Icons.search_outlined),
+            activeIcon: Icon(Icons.search),
+            label: 'Ara',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.how_to_vote_outlined),
+            activeIcon: Icon(Icons.how_to_vote),
+            label: 'Anketler',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
+            label: 'Panelim',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
@@ -44,89 +83,95 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
           ),
         ],
       ),
+      floatingActionButton: _currentIndex == 0 || _currentIndex == 3
+          ? FloatingActionButton(
+              onPressed: () {
+                _showCreatePostOptions(context);
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
   
-  void _onTabTapped(int index) {
-    if (index == 1) {
-      // This is the create post button
-      _showCreatePostModal();
-    } else {
+  void _showCreatePostOptions(BuildContext context) {
+    final currentUser = ref.read(currentUserProvider).value;
+    
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lütfen önce giriş yapın'),
+        ),
+      );
+      
+      // Switch to profile tab
       setState(() {
-        _currentIndex = index;
+        _currentIndex = 4;
       });
+      
+      return;
     }
-  }
-  
-  void _showCreatePostModal() {
+    
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Yeni Paylaşım',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    shape: BoxShape.circle,
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Ne paylaşmak istersiniz?',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: const Icon(Icons.warning_rounded, color: Colors.red),
                 ),
-                title: const Text('Şikayet'),
-                subtitle: const Text('Belediye/valilik ile ilgili bir sorun bildir'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CreatePostScreen(
-                        type: PostType.problem,
-                      ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      shape: BoxShape.circle,
                     ),
-                  );
-                },
-              ),
-              const SizedBox(height: 10),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    shape: BoxShape.circle,
+                    child: const Icon(
+                      Icons.warning_rounded,
+                      color: Colors.red,
+                    ),
                   ),
-                  child: const Icon(Icons.lightbulb_outline, color: Colors.green),
+                  title: const Text('Şikayet'),
+                  subtitle: const Text('Sorun bildirin, çözüm arayın'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/create_problem');
+                  },
                 ),
-                title: const Text('Öneri'),
-                subtitle: const Text('Belediye/valilik için bir öneri paylaş'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CreatePostScreen(
-                        type: PostType.general,
-                      ),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      shape: BoxShape.circle,
                     ),
-                  );
-                },
-              ),
-            ],
+                    child: const Icon(
+                      Icons.lightbulb_outline,
+                      color: Colors.green,
+                    ),
+                  ),
+                  title: const Text('Öneri'),
+                  subtitle: const Text('Fikir paylaşın, görüş bildirin'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/create_suggestion');
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -2,36 +2,35 @@ class User {
   final String id;
   final String name;
   final String email;
-  final String? phone;
-  final String? profilePhotoUrl;
+  final bool isVerified;
   final String? cityId;
   final String? districtId;
-  final bool isAdmin;
+  final String? profileImageUrl;
   final DateTime createdAt;
 
   User({
     required this.id,
     required this.name,
     required this.email,
-    this.phone,
-    this.profilePhotoUrl,
+    required this.isVerified,
     this.cityId,
     this.districtId,
-    required this.isAdmin,
+    this.profileImageUrl,
     required this.createdAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
+      id: json['id'].toString(),
       name: json['name'],
       email: json['email'],
-      phone: json['phone'],
-      profilePhotoUrl: json['profile_photo_url'],
-      cityId: json['city_id'],
-      districtId: json['district_id'],
-      isAdmin: json['is_admin'] ?? false,
-      createdAt: DateTime.parse(json['created_at']),
+      isVerified: json['is_verified'] ?? false,
+      cityId: json['city_id']?.toString(),
+      districtId: json['district_id']?.toString(),
+      profileImageUrl: json['profile_image_url'],
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at']) 
+          : DateTime.now(),
     );
   }
 
@@ -40,36 +39,11 @@ class User {
       'id': id,
       'name': name,
       'email': email,
-      'phone': phone,
-      'profile_photo_url': profilePhotoUrl,
+      'is_verified': isVerified,
       'city_id': cityId,
       'district_id': districtId,
-      'is_admin': isAdmin,
+      'profile_image_url': profileImageUrl,
       'created_at': createdAt.toIso8601String(),
     };
-  }
-
-  User copyWith({
-    String? id,
-    String? name,
-    String? email,
-    String? phone,
-    String? profilePhotoUrl,
-    String? cityId,
-    String? districtId,
-    bool? isAdmin,
-    DateTime? createdAt,
-  }) {
-    return User(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      phone: phone ?? this.phone,
-      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
-      cityId: cityId ?? this.cityId,
-      districtId: districtId ?? this.districtId,
-      isAdmin: isAdmin ?? this.isAdmin,
-      createdAt: createdAt ?? this.createdAt,
-    );
   }
 }
