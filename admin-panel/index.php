@@ -915,9 +915,20 @@ $page_file = "pages/{$page}.php";
                                                 </select>
                                                 <small class="form-text text-muted">
                                                     <ul class="mt-2">
-                                                        <li><strong>Genel:</strong> Tüm kullanıcılar aynı anketi görür ve ortak sonuçlar görüntülenir.</li>
-                                                        <li><strong>İl Bazlı:</strong> Her il kendi oylamasını yapar ve sadece kendi ilinin sonuçlarını görür.</li>
-                                                        <li><strong>İlçe Bazlı:</strong> Her ilçe kendi oylamasını yapar ve sadece kendi ilçesinin sonuçlarını görür.</li>
+                                                        <li><strong>Genel:</strong> Tüm kullanıcılar aynı anketi görür ve ortak sonuçlar görüntülenir. Tüm yanıtlar tek bir havuzda toplanır.</li>
+                                                        <li><strong>İl Bazlı:</strong> 
+                                                            <ul>
+                                                                <li>Belirli bir il seçilirse: Sadece o il ve ilçelerine gösterilir, o ilin kendi sonuçları hesaplanır.</li>
+                                                                <li>"Tüm Türkiye" seçilirse: Her il için ayrı anket oluşturulur. Her il kendi ve ilçelerinin toplamını görür.</li>
+                                                            </ul>
+                                                        </li>
+                                                        <li><strong>İlçe Bazlı:</strong> 
+                                                            <ul>
+                                                                <li>Her ilçe için ayrı sonuçlar hesaplanır.</li>
+                                                                <li>Bir kişi kendi ilçesinin sonuçlarını görür.</li>
+                                                                <li>İl seçildiğinde, o ilin ve ilçelerinin genel ortalaması görüntülenebilir.</li>
+                                                            </ul>
+                                                        </li>
                                                     </ul>
                                                 </small>
                                             </div>
@@ -928,6 +939,7 @@ $page_file = "pages/{$page}.php";
                                                         <label for="surveyCity" class="form-label">Şehir <span id="cityRequired" class="text-danger">*</span></label>
                                                         <select class="form-select" id="surveyCity" name="city_id">
                                                             <option value="">Seçiniz</option>
+                                                            <option value="all">Tüm Türkiye</option>
                                                             <?php foreach ($cities as $city): ?>
                                                             <option value="<?= $city['id'] ?>"><?= $city['name'] ?></option>
                                                             <?php endforeach; ?>
@@ -1305,9 +1317,28 @@ $page_file = "pages/{$page}.php";
                     // İlçe seçimini sıfırla
                     surveyDistrict.innerHTML = '<option value="">Seçiniz</option>';
                     
-                    if (selectedCityId === '') {
-                        // Şehir seçilmediyse ilçeleri gösterme
+                    if (selectedCityId === '' || selectedCityId === 'all') {
+                        // Şehir seçilmediyse veya "Tüm Türkiye" seçildiyse ilçeleri gösterme
                         surveyDistrict.disabled = true;
+                        
+                        if (selectedCityId === 'all') {
+                            // "Tüm Türkiye" seçildiyse ve il bazlı anket ise bir uyarı gösterebiliriz
+                            const scopeType = document.getElementById('surveyScopeType').value;
+                            if (scopeType === 'city') {
+                                // "Tüm Türkiye" seçildiğinde her il için ayrı sonuçlar hesaplanacağını belirten bilgi
+                                const infoEl = document.createElement('div');
+                                infoEl.className = 'alert alert-info mt-2';
+                                infoEl.id = 'turkeyInfo';
+                                infoEl.innerHTML = '<small><i class="bi bi-info-circle me-1"></i> Tüm Türkiye seçeneği ile her il için ayrı anket sonuçları hesaplanacak ve kullanıcılar kendi illerine ait sonuçları göreceklerdir.</small>';
+                                
+                                // Önceki bilgi mesajını kaldır
+                                const existingInfo = document.getElementById('turkeyInfo');
+                                if (existingInfo) existingInfo.remove();
+                                
+                                // Yeni bilgi mesajını ekle
+                                surveyCity.parentNode.appendChild(infoEl);
+                            }
+                        }
                     } else {
                         // Şehir seçildiyse ilçeleri filtrele
                         surveyDistrict.disabled = false;
@@ -1316,6 +1347,10 @@ $page_file = "pages/{$page}.php";
                                 surveyDistrict.appendChild(district.cloneNode(true));
                             }
                         });
+                        
+                        // Eğer varsa "Tüm Türkiye" bilgi mesajını kaldır
+                        const existingInfo = document.getElementById('turkeyInfo');
+                        if (existingInfo) existingInfo.remove();
                     }
                 });
             }
@@ -1323,6 +1358,10 @@ $page_file = "pages/{$page}.php";
             // Kapsam değiştiğinde gerekli alanları göster/gizle
             scopeTypeSelect.addEventListener('change', function() {
                 const selectedScope = scopeTypeSelect.value;
+                
+                // Eğer varsa "Tüm Türkiye" bilgi mesajını kaldır
+                const existingInfo = document.getElementById('turkeyInfo');
+                if (existingInfo) existingInfo.remove();
                 
                 if (selectedScope === 'general') {
                     // Genel anket - Konum seçimleri gereksiz
@@ -1337,6 +1376,18 @@ $page_file = "pages/{$page}.php";
                     if (districtRequired) districtRequired.classList.add('d-none');
                     if (surveyCity) surveyCity.required = true;
                     if (surveyDistrict) surveyDistrict.required = false;
+                    
+                    // Eğer "Tüm Türkiye" seçiliyse bilgi mesajını göster
+                    if (surveyCity && surveyCity.value === 'all') {
+                        // "Tüm Türkiye" seçildiğinde her il için ayrı sonuçlar hesaplanacağını belirten bilgi
+                        const infoEl = document.createElement('div');
+                        infoEl.className = 'alert alert-info mt-2';
+                        infoEl.id = 'turkeyInfo';
+                        infoEl.innerHTML = '<small><i class="bi bi-info-circle me-1"></i> Tüm Türkiye seçeneği ile her il için ayrı anket sonuçları hesaplanacak ve kullanıcılar kendi illerine ait sonuçları göreceklerdir.</small>';
+                        
+                        // Bilgi mesajını ekle
+                        surveyCity.parentNode.appendChild(infoEl);
+                    }
                 }
                 else if (selectedScope === 'district') {
                     // İlçe bazlı anket - Hem şehir hem ilçe gerekli
