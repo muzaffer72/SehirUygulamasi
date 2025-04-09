@@ -1,6 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/user.dart';
 import 'package:sikayet_var/services/api_service.dart';
+import 'package:sikayet_var/providers/auth_provider.dart';
+
+// Api service provider
+final apiServiceProvider = Provider<ApiService>((ref) {
+  return ApiService();
+});
+
+// Current user provider from authentication
+final currentUserProvider = Provider<AsyncValue<User?>>((ref) {
+  final authState = ref.watch(authNotifierProvider);
+  return authState;
+});
 
 final userNotifierProvider = StateNotifierProvider<UserNotifier, AsyncValue<List<User>>>(
   (ref) => UserNotifier(ApiService()),
