@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sikayet_var/services/location_service.dart';
-import 'package:flutter_localization/flutter_localization.dart';
+import 'lib/services/location_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -223,7 +222,7 @@ class _LocationTestPageState extends State<LocationTestPage> {
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     SizedBox(height: 8),
                     Text('Android SDK: 35'),
-                    Text('Flutter Location Service: Flutter Localization 0.1.14'),
+                    Text('Konum Servisi: SDK 35 özel entegrasyonu'),
                     Text('Geocoding: 2.2.2'),
                     Text('Google Maps: 2.10.1'),
                     Divider(),
