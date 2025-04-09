@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/survey.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
 import 'package:sikayet_var/services/api_service.dart';
+import 'package:sikayet_var/providers/user_provider.dart';
+import 'package:sikayet_var/providers/api_service_provider.dart';
 
 class SurveyDetailScreen extends ConsumerStatefulWidget {
   final Survey survey;
@@ -314,7 +316,7 @@ class _SurveyDetailScreenState extends ConsumerState<SurveyDetailScreen> {
                             else
                               Future.value(null),
                           ]),
-                          builder: (context, snapshot) {
+                          builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
                             if (!snapshot.hasData) {
                               return const Text('Konum yükleniyor...');
                             }
@@ -360,7 +362,7 @@ class _SurveyDetailScreenState extends ConsumerState<SurveyDetailScreen> {
                       Expanded(
                         child: FutureBuilder(
                           future: _apiService.getCategoryById(widget.survey.categoryId!),
-                          builder: (context, snapshot) {
+                          builder: (context, AsyncSnapshot<dynamic> snapshot) {
                             if (!snapshot.hasData) {
                               return const Text('Kategori yükleniyor...');
                             }

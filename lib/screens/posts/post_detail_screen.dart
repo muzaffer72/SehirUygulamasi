@@ -6,6 +6,8 @@ import 'package:sikayet_var/models/user.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:sikayet_var/providers/user_provider.dart';
+import 'package:sikayet_var/providers/api_service_provider.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
   final Post post;
@@ -65,12 +67,6 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final content = _commentController.text.trim();
     
     if (content.isEmpty) {
-      return;
-    }
-    
-    final currentUser = ref.read(currentUserProvider).value;
-    if (currentUser == null) {
-      _showErrorSnackBar('Yorum yapmak için giriş yapmalısınız');
       return;
     }
     
@@ -269,7 +265,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                             else
                               Future.value(null),
                           ]),
-                          builder: (context, snapshot) {
+                          builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
                             if (!snapshot.hasData) {
                               return Text(
                                 'Yükleniyor...',
@@ -313,11 +309,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   const SizedBox(height: 16),
                   
                   // Post images
-                  if (widget.post.imageUrls.isNotEmpty) ...[
+                  if (widget.post.imageUrls != null && widget.post.imageUrls!.isNotEmpty) ...[
                     SizedBox(
                       height: 200,
                       child: PageView.builder(
-                        itemCount: widget.post.imageUrls.length,
+                        itemCount: widget.post.imageUrls!.length,
                         itemBuilder: (context, index) {
                           return InkWell(
                             onTap: () {
@@ -328,7 +324,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
                                 image: DecorationImage(
-                                  image: NetworkImage(widget.post.imageUrls[index]),
+                                  image: NetworkImage(widget.post.imageUrls![index]),
                                   fit: BoxFit.cover,
                                 ),
                               ),
