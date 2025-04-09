@@ -737,6 +737,78 @@ $page_file = "pages/{$page}.php";
                             <h2>Anketler</h2>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSurveyModal">Yeni Anket Ekle</button>
                         </div>
+                        
+                        <!-- Anket Filtreleme -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Filtrele</h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="get" action="">
+                                    <input type="hidden" name="page" value="surveys">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label for="filter_survey_city" class="form-label">Şehir</label>
+                                            <select class="form-select" id="filter_survey_city" name="survey_city_id">
+                                                <option value="">Tümü</option>
+                                                <?php foreach ($cities as $city): ?>
+                                                <option value="<?= $city['id'] ?>"><?= $city['name'] ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filter_survey_district" class="form-label">İlçe</label>
+                                            <select class="form-select" id="filter_survey_district" name="survey_district_id">
+                                                <option value="">Tümü</option>
+                                                <?php foreach ($districts as $district): ?>
+                                                <option value="<?= $district['id'] ?>" data-city="<?= $district['city_id'] ?>"><?= $district['name'] ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filter_survey_category" class="form-label">Kategori</label>
+                                            <select class="form-select" id="filter_survey_category" name="survey_category_id">
+                                                <option value="">Tümü</option>
+                                                <?php foreach ($categories as $category): ?>
+                                                <option value="<?= $category['id'] ?>"><?= $category['name'] ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filter_survey_scope" class="form-label">Kapsam</label>
+                                            <select class="form-select" id="filter_survey_scope" name="survey_scope">
+                                                <option value="">Tümü</option>
+                                                <option value="general">Genel</option>
+                                                <option value="city">İl Bazlı</option>
+                                                <option value="district">İlçe Bazlı</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-3">
+                                            <label for="filter_survey_status" class="form-label">Durum</label>
+                                            <select class="form-select" id="filter_survey_status" name="survey_status">
+                                                <option value="">Tümü</option>
+                                                <option value="active">Aktif</option>
+                                                <option value="inactive">Kapalı</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filter_survey_date" class="form-label">Tarih</label>
+                                            <select class="form-select" id="filter_survey_date" name="survey_date_filter">
+                                                <option value="">Tümü</option>
+                                                <option value="active">Aktif Anketler</option>
+                                                <option value="upcoming">Gelecek Anketler</option>
+                                                <option value="past">Geçmiş Anketler</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 d-flex align-items-end">
+                                            <button type="submit" class="btn btn-primary w-100">Filtrele</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
 
                         <div class="row">
                             <?php foreach ($surveys as $survey): ?>
@@ -744,11 +816,34 @@ $page_file = "pages/{$page}.php";
                                 <div class="card h-100">
                                     <div class="card-header d-flex justify-content-between align-items-center">
                                         <span><?= $survey['title'] ?></span>
-                                        <?php if ($survey['is_active']): ?>
-                                            <span class="badge text-bg-success">Aktif</span>
-                                        <?php else: ?>
-                                            <span class="badge text-bg-secondary">Kapalı</span>
-                                        <?php endif; ?>
+                                        <div>
+                                            <?php 
+                                            // Kapsam türü
+                                            $scope_type = isset($survey['scope_type']) ? $survey['scope_type'] : 'general';
+                                            $scope_badge = '';
+                                            
+                                            switch($scope_type) {
+                                                case 'general':
+                                                    $scope_badge = '<span class="badge text-bg-info me-1">Genel</span>';
+                                                    break;
+                                                case 'city':
+                                                    $scope_badge = '<span class="badge text-bg-primary me-1">İl Bazlı</span>';
+                                                    break;
+                                                case 'district':
+                                                    $scope_badge = '<span class="badge text-bg-secondary me-1">İlçe Bazlı</span>';
+                                                    break;
+                                            }
+                                            
+                                            echo $scope_badge;
+                                            
+                                            // Aktif/Pasif durumu
+                                            if ($survey['is_active']): 
+                                            ?>
+                                                <span class="badge text-bg-success">Aktif</span>
+                                            <?php else: ?>
+                                                <span class="badge text-bg-secondary">Kapalı</span>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text"><?= $survey['description'] ?></p>
@@ -764,7 +859,15 @@ $page_file = "pages/{$page}.php";
                                             </ul>
                                         </div>
                                         <p>
-                                            <i class="bi bi-geo-alt text-muted"></i> <?= get_city_name($survey['city_id']) ?> |
+                                            <?php if ($scope_type == 'general'): ?>
+                                                <i class="bi bi-globe text-muted"></i> Genel Kapsam |
+                                            <?php elseif ($scope_type == 'city'): ?>
+                                                <i class="bi bi-geo-alt text-muted"></i> <?= get_city_name($survey['city_id']) ?> |
+                                            <?php elseif ($scope_type == 'district'): ?>
+                                                <i class="bi bi-geo-alt-fill text-muted"></i> <?= get_city_name($survey['city_id']) ?>, <?= get_district_name($survey['district_id']) ?> |
+                                            <?php else: ?>
+                                                <i class="bi bi-geo-alt text-muted"></i> <?= $survey['city_id'] ? get_city_name($survey['city_id']) : 'Genel' ?> |
+                                            <?php endif; ?>
                                             <i class="bi bi-tag text-muted"></i> <?= get_category_name($survey['category_id']) ?>
                                         </p>
                                         <p>
@@ -803,16 +906,46 @@ $page_file = "pages/{$page}.php";
                                                 <label for="surveyDescription" class="form-label">Açıklama</label>
                                                 <textarea class="form-control" id="surveyDescription" name="description" rows="3" required></textarea>
                                             </div>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="surveyCity" class="form-label">Şehir</label>
-                                                    <select class="form-select" id="surveyCity" name="city_id">
-                                                        <option value="">Seçiniz</option>
-                                                        <?php foreach ($cities as $city): ?>
-                                                        <option value="<?= $city['id'] ?>"><?= $city['name'] ?></option>
-                                                        <?php endforeach; ?>
-                                                    </select>
+                                            <div class="mb-3">
+                                                <label for="surveyScopeType" class="form-label">Anket Kapsamı</label>
+                                                <select class="form-select" id="surveyScopeType" name="scope_type" required>
+                                                    <option value="general">Genel (Tüm Kullanıcılar)</option>
+                                                    <option value="city">İl Bazlı (Her İl Kendi Sonuçlarını Görecek)</option>
+                                                    <option value="district">İlçe Bazlı (Her İlçe Kendi Sonuçlarını Görecek)</option>
+                                                </select>
+                                                <small class="form-text text-muted">
+                                                    <ul class="mt-2">
+                                                        <li><strong>Genel:</strong> Tüm kullanıcılar aynı anketi görür ve ortak sonuçlar görüntülenir.</li>
+                                                        <li><strong>İl Bazlı:</strong> Her il kendi oylamasını yapar ve sadece kendi ilinin sonuçlarını görür.</li>
+                                                        <li><strong>İlçe Bazlı:</strong> Her ilçe kendi oylamasını yapar ve sadece kendi ilçesinin sonuçlarını görür.</li>
+                                                    </ul>
+                                                </small>
+                                            </div>
+                                        
+                                            <div id="locationSelectors">
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="surveyCity" class="form-label">Şehir <span id="cityRequired" class="text-danger">*</span></label>
+                                                        <select class="form-select" id="surveyCity" name="city_id">
+                                                            <option value="">Seçiniz</option>
+                                                            <?php foreach ($cities as $city): ?>
+                                                            <option value="<?= $city['id'] ?>"><?= $city['name'] ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3" id="districtSelectorContainer">
+                                                        <label for="surveyDistrict" class="form-label">İlçe <span id="districtRequired" class="text-danger d-none">*</span></label>
+                                                        <select class="form-select" id="surveyDistrict" name="district_id">
+                                                            <option value="">Seçiniz</option>
+                                                            <?php foreach ($districts as $district): ?>
+                                                            <option value="<?= $district['id'] ?>" data-city="<?= $district['city_id'] ?>"><?= $district['name'] ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </div>
                                                 </div>
+                                            </div>
+                                            
+                                            <div class="row">
                                                 <div class="col-md-6 mb-3">
                                                     <label for="surveyCategory" class="form-label">Kategori</label>
                                                     <select class="form-select" id="surveyCategory" name="category_id" required>
@@ -822,7 +955,13 @@ $page_file = "pages/{$page}.php";
                                                         <?php endforeach; ?>
                                                     </select>
                                                 </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="surveySortOrder" class="form-label">Görüntüleme Sırası</label>
+                                                    <input type="number" class="form-control" id="surveySortOrder" name="sort_order" value="0" min="0">
+                                                    <small class="form-text text-muted">Yüksek değerler üstte gösterilir</small>
+                                                </div>
                                             </div>
+                                            
                                             <div class="row">
                                                 <div class="col-md-6 mb-3">
                                                     <label for="surveyStartDate" class="form-label">Başlangıç Tarihi</label>
@@ -1079,10 +1218,10 @@ $page_file = "pages/{$page}.php";
         });
     </script>
     
-    <!-- Şehir ve İlçe Filtreleri İçin JavaScript -->
+    <!-- Filtre JavaScript'leri -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Şehir seçildiğinde ilçeleri filtrele
+        // Şehir seçildiğinde ilçeleri filtrele (Postlar için)
         const citySelect = document.getElementById('filter_city');
         const districtSelect = document.getElementById('filter_district');
         
@@ -1112,6 +1251,107 @@ $page_file = "pages/{$page}.php";
                     });
                 }
             });
+        }
+        
+        // Anket şehir seçildiğinde ilçeleri filtrele
+        const surveyCitySelect = document.getElementById('filter_survey_city');
+        const surveyDistrictSelect = document.getElementById('filter_survey_district');
+        
+        if (surveyCitySelect && surveyDistrictSelect) {
+            // Tüm ilçe seçeneklerini sakla
+            const allSurveyDistricts = Array.from(surveyDistrictSelect.options);
+            
+            surveyCitySelect.addEventListener('change', function() {
+                const selectedCityId = surveyCitySelect.value;
+                
+                // İlçe seçimini sıfırla
+                surveyDistrictSelect.innerHTML = '<option value="">Tümü</option>';
+                
+                if (selectedCityId === '') {
+                    // Eğer "Tümü" seçildiyse, tüm ilçeleri göster
+                    allSurveyDistricts.forEach(function(district) {
+                        if (district.value !== '') {
+                            surveyDistrictSelect.appendChild(district.cloneNode(true));
+                        }
+                    });
+                } else {
+                    // Seçilen şehre ait ilçeleri filtrele
+                    allSurveyDistricts.forEach(function(district) {
+                        if (district.value !== '' && district.dataset.city === selectedCityId) {
+                            surveyDistrictSelect.appendChild(district.cloneNode(true));
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Anket Ekleme Formunda Kapsam Değiştiğinde
+        const scopeTypeSelect = document.getElementById('surveyScopeType');
+        const surveyCity = document.getElementById('surveyCity');
+        const surveyDistrict = document.getElementById('surveyDistrict');
+        const cityRequired = document.getElementById('cityRequired');
+        const districtRequired = document.getElementById('districtRequired');
+        const locationSelectors = document.getElementById('locationSelectors');
+        const districtSelectorContainer = document.getElementById('districtSelectorContainer');
+        
+        if (scopeTypeSelect && locationSelectors) {
+            // İlçeleri şehre göre filtrele
+            if (surveyCity && surveyDistrict) {
+                const allSurveyFormDistricts = Array.from(surveyDistrict.options);
+                
+                surveyCity.addEventListener('change', function() {
+                    const selectedCityId = surveyCity.value;
+                    
+                    // İlçe seçimini sıfırla
+                    surveyDistrict.innerHTML = '<option value="">Seçiniz</option>';
+                    
+                    if (selectedCityId === '') {
+                        // Şehir seçilmediyse ilçeleri gösterme
+                        surveyDistrict.disabled = true;
+                    } else {
+                        // Şehir seçildiyse ilçeleri filtrele
+                        surveyDistrict.disabled = false;
+                        allSurveyFormDistricts.forEach(function(district) {
+                            if (district.value !== '' && district.dataset.city === selectedCityId) {
+                                surveyDistrict.appendChild(district.cloneNode(true));
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Kapsam değiştiğinde gerekli alanları göster/gizle
+            scopeTypeSelect.addEventListener('change', function() {
+                const selectedScope = scopeTypeSelect.value;
+                
+                if (selectedScope === 'general') {
+                    // Genel anket - Konum seçimleri gereksiz
+                    if (cityRequired) cityRequired.classList.add('d-none');
+                    if (districtRequired) districtRequired.classList.add('d-none');
+                    if (surveyCity) surveyCity.required = false;
+                    if (surveyDistrict) surveyDistrict.required = false;
+                } 
+                else if (selectedScope === 'city') {
+                    // İl bazlı anket - Şehir gerekli, ilçe gereksiz
+                    if (cityRequired) cityRequired.classList.remove('d-none');
+                    if (districtRequired) districtRequired.classList.add('d-none');
+                    if (surveyCity) surveyCity.required = true;
+                    if (surveyDistrict) surveyDistrict.required = false;
+                }
+                else if (selectedScope === 'district') {
+                    // İlçe bazlı anket - Hem şehir hem ilçe gerekli
+                    if (cityRequired) cityRequired.classList.remove('d-none');
+                    if (districtRequired) districtRequired.classList.remove('d-none');
+                    if (surveyCity) surveyCity.required = true;
+                    if (surveyDistrict) surveyDistrict.required = true;
+                }
+            });
+            
+            // Sayfa yüklendiğinde kapsam tipine göre form alanlarını ayarla
+            if (scopeTypeSelect.value) {
+                const event = new Event('change');
+                scopeTypeSelect.dispatchEvent(event);
+            }
         }
     });
     </script>
