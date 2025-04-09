@@ -1,179 +1,172 @@
--- ŞikayetVar Veritabanı Şeması
--- Oluşturulma Tarihi: 9 Nisan 2025
+-- ŞikayetVar Veritabanı Şeması - Version 1.0
+-- Oluşturulma tarihi: 9 Nisan 2025
 
--- Kategori Tablosu
-CREATE TABLE categories (
+-- Veritabanı şeması tabloları ve ilişkileri
+
+-- Aşağıdaki şema, ŞikayetVar uygulamasının veritabanı yapısını tanımlar.
+-- Bu şema şunları içerir:
+-- - İller ve ilçeler (Türkiye'nin tüm il ve ilçeleri)
+-- - Kullanıcılar ve seviye sistemi
+-- - Paylaşımlar (şikayetler, öneriler, duyurular)
+-- - Yorumlar ve etkileşimler
+-- - Anketler ve anket sonuçları (bölgesel)
+-- - Yasaklı kelimeler listesi (içerik filtreleme için)
+
+-- Kategoriler tablosu
+CREATE TABLE IF NOT EXISTS categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    icon_name VARCHAR(50),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE
 );
 
--- Şehir Tablosu
-CREATE TABLE cities (
+-- İller tablosu
+CREATE TABLE IF NOT EXISTS cities (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE
 );
 
--- İlçe Tablosu
-CREATE TABLE districts (
+-- İlçeler tablosu
+CREATE TABLE IF NOT EXISTS districts (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
     city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE
 );
 
--- Kullanıcı Tablosu
-CREATE TABLE users (
+-- Kullanıcılar tablosu
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    username VARCHAR(100) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    profile_image_url TEXT,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
     bio TEXT,
+    profile_picture VARCHAR(255),
+    points INTEGER DEFAULT 0,
+    level VARCHAR(50) DEFAULT 'newUser',
     city_id INTEGER REFERENCES cities(id),
     district_id INTEGER REFERENCES districts(id),
-    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
-    points INTEGER NOT NULL DEFAULT 0,
-    post_count INTEGER NOT NULL DEFAULT 0,
-    comment_count INTEGER NOT NULL DEFAULT 0,
-    level VARCHAR(20) NOT NULL DEFAULT 'newUser',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    is_admin BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE
 );
 
--- Paylaşım (Şikayet/Öneri) Tablosu
-CREATE TABLE posts (
+-- Paylaşımlar tablosu (şikayetler, öneriler, duyurular)
+CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
+    post_type VARCHAR(50) NOT NULL,
+    status VARCHAR(50) DEFAULT 'awaitingSolution',
+    visibility VARCHAR(50) DEFAULT 'public',
+    scope_type VARCHAR(50) DEFAULT 'general',
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    category_id INTEGER NOT NULL REFERENCES categories(id),
+    category_id INTEGER REFERENCES categories(id),
     city_id INTEGER REFERENCES cities(id),
     district_id INTEGER REFERENCES districts(id),
-    status VARCHAR(20) NOT NULL DEFAULT 'awaitingSolution',
-    type VARCHAR(20) NOT NULL DEFAULT 'problem',
-    likes INTEGER NOT NULL DEFAULT 0,
-    highlights INTEGER NOT NULL DEFAULT 0,
-    comment_count INTEGER NOT NULL DEFAULT 0,
-    is_anonymous BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    votes_up INTEGER DEFAULT 0,
+    votes_down INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE
 );
 
--- Medya Tablosu (Paylaşımlara Eklenen Görseller)
-CREATE TABLE media (
+-- Medya tablosu (görseller, videolar)
+CREATE TABLE IF NOT EXISTS media (
     id SERIAL PRIMARY KEY,
-    post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    url TEXT NOT NULL,
-    type VARCHAR(20) NOT NULL, -- image, video
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
--- Yorum Tablosu
-CREATE TABLE comments (
-    id SERIAL PRIMARY KEY,
-    post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
-    like_count INTEGER NOT NULL DEFAULT 0,
-    is_hidden BOOLEAN NOT NULL DEFAULT FALSE,
-    is_anonymous BOOLEAN NOT NULL DEFAULT FALSE,
-    parent_id INTEGER REFERENCES comments(id),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+    comment_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+    media_type VARCHAR(50) NOT NULL,
+    media_url VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Anket Tablosu
-CREATE TABLE surveys (
+-- Yorumlar tablosu
+CREATE TABLE IF NOT EXISTS comments (
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+    votes_up INTEGER DEFAULT 0,
+    votes_down INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Anketler tablosu
+CREATE TABLE IF NOT EXISTS surveys (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    scope_type VARCHAR(20) NOT NULL DEFAULT 'general',
+    description TEXT,
+    scope_type VARCHAR(50) NOT NULL,
+    start_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id),
     city_id INTEGER REFERENCES cities(id),
     district_id INTEGER REFERENCES districts(id),
-    category_id INTEGER NOT NULL REFERENCES categories(id),
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    start_date TIMESTAMP NOT NULL,
-    end_date TIMESTAMP NOT NULL,
-    total_votes INTEGER NOT NULL DEFAULT 0,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE
 );
 
--- Anket Seçenekleri Tablosu
-CREATE TABLE survey_options (
+-- Anket seçenekleri tablosu
+CREATE TABLE IF NOT EXISTS survey_options (
     id SERIAL PRIMARY KEY,
     survey_id INTEGER NOT NULL REFERENCES surveys(id) ON DELETE CASCADE,
-    text TEXT NOT NULL,
-    vote_count INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    option_text VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Bölgesel Anket Sonuçları Tablosu
-CREATE TABLE survey_regional_results (
+-- Anket bölgesel sonuçları tablosu
+CREATE TABLE IF NOT EXISTS survey_regional_results (
     id SERIAL PRIMARY KEY,
     survey_id INTEGER NOT NULL REFERENCES surveys(id) ON DELETE CASCADE,
     option_id INTEGER NOT NULL REFERENCES survey_options(id) ON DELETE CASCADE,
     city_id INTEGER REFERENCES cities(id),
     district_id INTEGER REFERENCES districts(id),
-    vote_count INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    vote_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE
 );
 
--- Küfür Filtreleme Tablosu
-CREATE TABLE banned_words (
+-- Yasaklı kelimeler tablosu (içerik filtreleme için)
+CREATE TABLE IF NOT EXISTS banned_words (
     id SERIAL PRIMARY KEY,
     word VARCHAR(100) NOT NULL UNIQUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Örnek Veri Ekleme İşlemleri
--- Kategoriler
-INSERT INTO categories (name, icon_name) VALUES 
-('Altyapı', 'construction'),
-('Ulaşım', 'directions_bus'),
-('Çevre', 'nature'),
-('Güvenlik', 'security'),
-('Sağlık', 'local_hospital'),
-('Eğitim', 'school'),
-('Kültür & Sanat', 'theater_comedy'),
-('Sosyal Hizmetler', 'people'),
-('Diğer', 'more_horiz');
+-- Örnek kategori verileri
+INSERT INTO categories (name, description) VALUES
+('Altyapı', 'Su, elektrik, doğalgaz, kanalizasyon gibi temel altyapı hizmetleri'),
+('Ulaşım', 'Toplu taşıma, yollar, trafik düzenlemeleri'),
+('Çevre', 'Parklar, yeşil alanlar, çevre temizliği'),
+('Güvenlik', 'Asayiş, güvenlik önlemleri'),
+('Sağlık', 'Sağlık hizmetleri ve tesisleri'),
+('Eğitim', 'Okullar, kütüphaneler, eğitim faaliyetleri'),
+('Kültür ve Sanat', 'Festivaller, etkinlikler, kültürel tesisler'),
+('Spor', 'Spor tesisleri, aktiviteler'),
+('Belediye Hizmetleri', 'Çöp toplama, temizlik, zabıta');
 
--- Şehirler (Örnek olarak birkaç büyük şehir)
-INSERT INTO cities (name) VALUES 
-('İstanbul'),
-('Ankara'),
-('İzmir'),
-('Bursa'),
-('Antalya');
+-- Örnek admin kullanıcısı
+INSERT INTO users (username, email, password, first_name, last_name, is_admin, level) 
+VALUES ('admin', 'admin@sikayetvar.com', '$2y$10$8KOI.iXxmZOA2sdlvxuBXuLQUvKLvJiYVmH.pVuYr1qRIKO4hXUIm', 'Admin', 'User', TRUE, 'master');
+-- Not: Şifre admin123 (bcrypt ile hashlendi)
 
--- İlçeler (İstanbul için örnek)
-INSERT INTO districts (name, city_id) VALUES 
-('Kadıköy', 1),
-('Beşiktaş', 1),
-('Üsküdar', 1),
-('Bakırköy', 1),
-('Fatih', 1);
-
--- İlçeler (Ankara için örnek)
-INSERT INTO districts (name, city_id) VALUES 
-('Çankaya', 2),
-('Keçiören', 2),
-('Yenimahalle', 2);
-
--- İlçeler (İzmir için örnek)
-INSERT INTO districts (name, city_id) VALUES 
-('Konak', 3),
-('Karşıyaka', 3),
-('Bornova', 3);
-
--- Admin Kullanıcısı
-INSERT INTO users (name, email, password, is_verified, level) VALUES 
-('Admin', 'admin@example.com', '$2b$10$k55g2qPRBM6SCcW8BM3l1OkTEQoiL.Vgab21jzv8x2ZHIV5uC1Pqe', TRUE, 'master');
-
--- Yasaklı Kelimeler (Örnek)
-INSERT INTO banned_words (word) VALUES 
+-- Yasaklı kelimeler için örnek veriler
+INSERT INTO banned_words (word) VALUES
 ('küfür'),
 ('hakaret'),
-('argo'),
-('Amcık');
+('sövmek'),
+('ahmak'),
+('aptal'),
+('gerizekalı'),
+('salak'),
+('dümbük');
