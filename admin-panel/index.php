@@ -276,6 +276,13 @@ foreach ($users as $user) {
 
 // Get current page
 $page = $_GET['page'] ?? 'dashboard';
+
+// Check if page file exists in pages directory
+$page_file = "pages/{$page}.php";
+if (isset($_SESSION['user']) && file_exists($page_file)) {
+    include($page_file);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="tr">
@@ -421,6 +428,9 @@ $page = $_GET['page'] ?? 'dashboard';
                         </a>
                         <a href="?page=settings" class="<?= $page === 'settings' ? 'active' : '' ?>">
                             <i class="bi bi-gear"></i> Ayarlar
+                        </a>
+                        <a href="?page=profanity_filter" class="<?= $page === 'profanity_filter' ? 'active' : '' ?>">
+                            <i class="bi bi-shield-exclamation"></i> Küfür Filtresi
                         </a>
                         <a href="?logout=1" class="mt-5">
                             <i class="bi bi-box-arrow-right"></i> Çıkış Yap

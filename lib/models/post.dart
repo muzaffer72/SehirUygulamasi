@@ -5,6 +5,12 @@ enum PostStatus {
   rejected,
 }
 
+enum PostType {
+  problem,
+  suggestion,
+  announcement,
+}
+
 class Post {
   final String id;
   final String title;
@@ -14,10 +20,14 @@ class Post {
   final String? cityId;
   final String? districtId;
   final PostStatus status;
+  final PostType type;
   final int likes;
   final int highlights;
+  final int commentCount;
+  final bool isAnonymous;
   final DateTime createdAt;
   final List<String>? imageUrls;
+  final String? videoUrl;
 
   Post({
     required this.id,
@@ -28,10 +38,14 @@ class Post {
     this.cityId,
     this.districtId,
     required this.status,
+    this.type = PostType.problem,
     required this.likes,
     required this.highlights,
+    this.commentCount = 0,
+    this.isAnonymous = false,
     required this.createdAt,
     this.imageUrls,
+    this.videoUrl,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -49,6 +63,19 @@ class Post {
           return PostStatus.awaitingSolution;
       }
     }
+    
+    PostType parseType(String? type) {
+      switch (type) {
+        case 'problem':
+          return PostType.problem;
+        case 'suggestion':
+          return PostType.suggestion;
+        case 'announcement':
+          return PostType.announcement;
+        default:
+          return PostType.problem;
+      }
+    }
 
     return Post(
       id: json['id'].toString(),
@@ -59,14 +86,18 @@ class Post {
       cityId: json['city_id']?.toString(),
       districtId: json['district_id']?.toString(),
       status: parseStatus(json['status']),
+      type: parseType(json['type']),
       likes: json['likes'] ?? 0,
       highlights: json['highlights'] ?? 0,
+      commentCount: json['comment_count'] ?? 0,
+      isAnonymous: json['is_anonymous'] ?? false,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
       imageUrls: json['image_urls'] != null
           ? List<String>.from(json['image_urls'])
           : null,
+      videoUrl: json['video_url'],
     );
   }
 
@@ -83,6 +114,17 @@ class Post {
           return 'rejected';
       }
     }
+    
+    String typeToString(PostType type) {
+      switch (type) {
+        case PostType.problem:
+          return 'problem';
+        case PostType.suggestion:
+          return 'suggestion';
+        case PostType.announcement:
+          return 'announcement';
+      }
+    }
 
     return {
       'id': id,
@@ -93,10 +135,14 @@ class Post {
       'city_id': cityId,
       'district_id': districtId,
       'status': statusToString(status),
+      'type': typeToString(type),
       'likes': likes,
       'highlights': highlights,
+      'comment_count': commentCount,
+      'is_anonymous': isAnonymous,
       'created_at': createdAt.toIso8601String(),
       'image_urls': imageUrls,
+      'video_url': videoUrl,
     };
   }
 
@@ -109,10 +155,14 @@ class Post {
     String? cityId,
     String? districtId,
     PostStatus? status,
+    PostType? type,
     int? likes,
     int? highlights,
+    int? commentCount,
+    bool? isAnonymous,
     DateTime? createdAt,
     List<String>? imageUrls,
+    String? videoUrl,
   }) {
     return Post(
       id: id ?? this.id,
@@ -123,10 +173,14 @@ class Post {
       cityId: cityId ?? this.cityId,
       districtId: districtId ?? this.districtId,
       status: status ?? this.status,
+      type: type ?? this.type,
       likes: likes ?? this.likes,
       highlights: highlights ?? this.highlights,
+      commentCount: commentCount ?? this.commentCount,
+      isAnonymous: isAnonymous ?? this.isAnonymous,
       createdAt: createdAt ?? this.createdAt,
       imageUrls: imageUrls ?? this.imageUrls,
+      videoUrl: videoUrl ?? this.videoUrl,
     );
   }
 }
