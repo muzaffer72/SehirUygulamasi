@@ -16,6 +16,12 @@ class ApiService {
   // HTTP client
   final http.Client _client = http.Client();
   
+  // Get auth token from shared preferences
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(apiToken);
+  }
+  
   // Authentication
   Future<User> login(String email, String password) async {
     final response = await _client.post(
@@ -189,9 +195,18 @@ class ApiService {
     ];
   }
   
-  Future<Comment> addComment(String postId, String userId, String content) async {
+  Future<Comment> addComment(String postId, String content, {bool isAnonymous = false}) async {
     // Simulate API call
     await Future.delayed(const Duration(milliseconds: 500));
+    
+    // Get user ID from token
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+    
+    // In a real app, this would be extracted from the token or provided by the API
+    const userId = "1"; 
     
     return Comment(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -199,6 +214,7 @@ class ApiService {
       userId: userId,
       content: content,
       likeCount: 0,
+      isAnonymous: isAnonymous,
       createdAt: DateTime.now(),
     );
   }

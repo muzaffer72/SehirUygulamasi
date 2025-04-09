@@ -75,7 +75,7 @@ export const media = pgTable('media', {
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
-// Yorum tablosu
+// Yorum tablosu - declare without self-referencing first
 export const comments = pgTable('comments', {
   id: serial('id').primaryKey(),
   postId: integer('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
@@ -83,6 +83,8 @@ export const comments = pgTable('comments', {
   content: text('content').notNull(),
   likeCount: integer('like_count').default(0).notNull(),
   isHidden: boolean('is_hidden').default(false).notNull(),
+  isAnonymous: boolean('is_anonymous').default(false).notNull(),
+  parentId: integer('parent_id'),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -157,7 +159,7 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   media: many(media)
 }));
 
-export const commentsRelations = relations(comments, ({ one }) => ({
+export const commentsRelations = relations(comments, ({ one, many }) => ({
   post: one(posts, {
     fields: [comments.postId],
     references: [posts.id]
@@ -165,7 +167,12 @@ export const commentsRelations = relations(comments, ({ one }) => ({
   user: one(users, {
     fields: [comments.userId],
     references: [users.id]
-  })
+  }),
+  parent: one(comments, {
+    fields: [comments.parentId],
+    references: [comments.id]
+  }),
+  replies: many(comments)
 }));
 
 export const mediaRelations = relations(media, ({ one }) => ({

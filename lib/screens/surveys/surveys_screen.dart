@@ -7,6 +7,7 @@ import 'package:sikayet_var/models/survey.dart';
 import 'package:sikayet_var/providers/survey_provider.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
 import 'package:sikayet_var/services/api_service.dart';
+import 'package:sikayet_var/providers/user_provider.dart';
 
 class SurveysScreen extends ConsumerStatefulWidget {
   const SurveysScreen({Key? key}) : super(key: key);

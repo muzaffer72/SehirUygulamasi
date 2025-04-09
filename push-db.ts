@@ -106,9 +106,12 @@ async function main() {
         content TEXT NOT NULL,
         like_count INTEGER DEFAULT 0 NOT NULL,
         is_hidden BOOLEAN DEFAULT FALSE NOT NULL,
+        is_anonymous BOOLEAN DEFAULT FALSE NOT NULL,
+        parent_id INTEGER,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
       );
     `;
 
@@ -117,14 +120,18 @@ async function main() {
         id SERIAL PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
         description TEXT NOT NULL,
+        scope_type VARCHAR(20) DEFAULT 'general' NOT NULL,
         city_id INTEGER,
+        district_id INTEGER,
         category_id INTEGER NOT NULL,
         is_active BOOLEAN DEFAULT TRUE NOT NULL,
         start_date TIMESTAMP WITH TIME ZONE NOT NULL,
         end_date TIMESTAMP WITH TIME ZONE NOT NULL,
         total_votes INTEGER DEFAULT 0 NOT NULL,
+        sort_order INTEGER DEFAULT 0 NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
         FOREIGN KEY (city_id) REFERENCES cities(id),
+        FOREIGN KEY (district_id) REFERENCES districts(id),
         FOREIGN KEY (category_id) REFERENCES categories(id)
       );
     `;
@@ -137,6 +144,22 @@ async function main() {
         vote_count INTEGER DEFAULT 0 NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
         FOREIGN KEY (survey_id) REFERENCES surveys(id) ON DELETE CASCADE
+      );
+    `;
+    
+    await sql`
+      CREATE TABLE IF NOT EXISTS survey_regional_results (
+        id SERIAL PRIMARY KEY,
+        survey_id INTEGER NOT NULL,
+        option_id INTEGER NOT NULL,
+        city_id INTEGER,
+        district_id INTEGER,
+        vote_count INTEGER DEFAULT 0 NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        FOREIGN KEY (survey_id) REFERENCES surveys(id) ON DELETE CASCADE,
+        FOREIGN KEY (option_id) REFERENCES survey_options(id) ON DELETE CASCADE,
+        FOREIGN KEY (city_id) REFERENCES cities(id),
+        FOREIGN KEY (district_id) REFERENCES districts(id)
       );
     `;
 

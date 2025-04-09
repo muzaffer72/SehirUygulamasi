@@ -214,11 +214,41 @@ export class DatabaseStorage implements IStorage {
   
   // Yorum işlemleri
   async getCommentsByPostId(postId: number): Promise<any[]> {
-    return db
+    // First get the top-level comments (ones without parentId)
+    const topLevelComments = await db
       .select()
       .from(comments)
-      .where(eq(comments.postId, postId))
+      .where(and(
+        eq(comments.postId, postId),
+        sql`${comments.parentId} IS NULL` // Only get top-level comments
+      ))
       .orderBy(asc(comments.createdAt));
+    
+    // Get all replies for this post
+    const replies = await db
+      .select()
+      .from(comments)
+      .where(and(
+        eq(comments.postId, postId),
+        sql`${comments.parentId} IS NOT NULL` // Only get replies
+      ))
+      .orderBy(asc(comments.createdAt));
+    
+    // Group replies by their parent comment
+    const repliesByParentId = replies.reduce((acc, reply) => {
+      const parentId = reply.parentId;
+      if (!acc[parentId]) {
+        acc[parentId] = [];
+      }
+      acc[parentId].push(reply);
+      return acc;
+    }, {} as Record<number, any[]>);
+    
+    // Attach replies to their parent comments
+    return topLevelComments.map(comment => ({
+      ...comment,
+      replies: repliesByParentId[comment.id] || []
+    }));
   }
   
   async addComment(comment: any): Promise<any> {
