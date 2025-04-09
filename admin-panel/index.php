@@ -278,10 +278,6 @@ $page = $_GET['page'] ?? 'dashboard';
 
 // Check if page file exists in pages directory
 $page_file = "pages/{$page}.php";
-if (isset($_SESSION['user']) && file_exists($page_file)) {
-    include($page_file);
-    exit;
-}
 ?>
 <!DOCTYPE html>
 <html lang="tr">
@@ -447,50 +443,11 @@ if (isset($_SESSION['user']) && file_exists($page_file)) {
                     <?php endif; ?>
 
                     <?php if ($page === 'dashboard'): ?>
-                        <!-- Dashboard Page -->
-                        <h2 class="mb-4">Dashboard</h2>
-                        
-                        <!-- Stats Cards -->
-                        <div class="row">
-                            <div class="col-md-3 mb-4">
-                                <div class="card stat-card stat-card-primary">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Toplam Şikayetler</h5>
-                                        <p class="stat-value"><?= $total_posts ?></p>
-                                        <p class="mb-0"><small>Son 30 günde 18 yeni şikayet</small></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <div class="card stat-card stat-card-success">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Çözülen Şikayetler</h5>
-                                        <p class="stat-value"><?= $solved_posts ?></p>
-                                        <p class="mb-0"><small>Çözüm oranı: <?= round(($solved_posts / $total_posts) * 100) ?>%</small></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <div class="card stat-card stat-card-warning">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Aktif Anketler</h5>
-                                        <p class="stat-value"><?= $active_surveys ?></p>
-                                        <p class="mb-0"><small>Toplam <?= count($surveys) ?> anket</small></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-4">
-                                <div class="card stat-card stat-card-info">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Doğrulanmış Kullanıcılar</h5>
-                                        <p class="stat-value"><?= $verified_users ?></p>
-                                        <p class="mb-0"><small>Toplam <?= count($users) ?> kullanıcı</small></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Recent Posts -->
+                        <?php include($page_file); ?>
+                    <?php elseif ($page === 'profanity_filter'): ?>
+                        <?php include($page_file); ?>
+                    <?php elseif (isset($_SESSION['user']) && file_exists($page_file)): ?>
+                        <?php include($page_file); ?>
                         <div class="card mb-4">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <span>Son Şikayetler</span>
