@@ -1,61 +1,201 @@
 <?php
-// İstatistik verileri (gerçek uygulamada veritabanından çekilecek)
+// PostgreSQL veritabanından veri çekme
+require_once __DIR__ . '/../db_config.php';
+
+// İstatistik verilerini hesapla
+// Bugünün tarihi
+$today = new DateTime();
+$todayDate = $today->format('Y-m-d');
+$thirtyDaysAgo = (clone $today)->modify('-30 days')->format('Y-m-d');
+
+// Günlük istatistikler - gerçek veri yoksa varsayılan değerleri kullan
+try {
+    // Günlük yeni paylaşımlar
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE DATE(created_at) = CURRENT_DATE");
+    $stmt->execute();
+    $dailyNewPosts = $stmt->fetchColumn() ?: 0;
+    
+    // Günlük yeni yorumlar
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM comments WHERE DATE(created_at) = CURRENT_DATE");
+    $stmt->execute();
+    $dailyNewComments = $stmt->fetchColumn() ?: 0;
+    
+    // Günlük yeni kullanıcılar
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURRENT_DATE");
+    $stmt->execute();
+    $dailyNewUsers = $stmt->fetchColumn() ?: 0;
+    
+    // Günlük çözülen sorunlar
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE DATE(created_at) = CURRENT_DATE AND status = 'solved'");
+    $stmt->execute();
+    $dailyResolvedIssues = $stmt->fetchColumn() ?: 0;
+    
+    // Aylık istatistikler
+    // Aylık yeni paylaşımlar
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE created_at >= :thirtyDaysAgo");
+    $stmt->bindParam(':thirtyDaysAgo', $thirtyDaysAgo);
+    $stmt->execute();
+    $monthlyNewPosts = $stmt->fetchColumn() ?: 0;
+    
+    // Aylık yeni yorumlar
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM comments WHERE created_at >= :thirtyDaysAgo");
+    $stmt->bindParam(':thirtyDaysAgo', $thirtyDaysAgo);
+    $stmt->execute();
+    $monthlyNewComments = $stmt->fetchColumn() ?: 0;
+    
+    // Aylık yeni kullanıcılar
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE created_at >= :thirtyDaysAgo");
+    $stmt->bindParam(':thirtyDaysAgo', $thirtyDaysAgo);
+    $stmt->execute();
+    $monthlyNewUsers = $stmt->fetchColumn() ?: 0;
+    
+    // Aylık çözülen sorunlar
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE created_at >= :thirtyDaysAgo AND status = 'solved'");
+    $stmt->bindParam(':thirtyDaysAgo', $thirtyDaysAgo);
+    $stmt->execute();
+    $monthlyResolvedIssues = $stmt->fetchColumn() ?: 0;
+} catch (PDOException $e) {
+    // Hata durumunda varsayılan değerler
+    $dailyNewPosts = 0;
+    $dailyNewComments = 0;
+    $dailyNewUsers = 0;
+    $dailyResolvedIssues = 0;
+    $monthlyNewPosts = 0;
+    $monthlyNewComments = 0;
+    $monthlyNewUsers = 0;
+    $monthlyResolvedIssues = 0;
+}
+
 $dailyStats = [
-    'new_posts' => 12,
-    'new_comments' => 32,
-    'new_users' => 5,
-    'resolved_issues' => 3
+    'new_posts' => $dailyNewPosts,
+    'new_comments' => $dailyNewComments,
+    'new_users' => $dailyNewUsers,
+    'resolved_issues' => $dailyResolvedIssues
 ];
 
 $monthlyStats = [
-    'new_posts' => 176,
-    'new_comments' => 528,
-    'new_users' => 63,
-    'resolved_issues' => 47
+    'new_posts' => $monthlyNewPosts,
+    'new_comments' => $monthlyNewComments,
+    'new_users' => $monthlyNewUsers,
+    'resolved_issues' => $monthlyResolvedIssues
 ];
 
 // Son 7 günlük veriler
-$lastWeekPostData = [5, 8, 12, 7, 10, 15, 12];
-$lastWeekCommentData = [15, 22, 32, 18, 25, 38, 32];
-$lastWeekUserData = [3, 2, 5, 1, 4, 2, 5];
+$lastWeekPostData = [];
+$lastWeekCommentData = [];
+$lastWeekUserData = [];
 $lastWeekDates = [];
-$today = new DateTime();
 
-// Son 7 günün tarihlerini oluştur
-for ($i = 6; $i >= 0; $i--) {
-    $date = clone $today;
-    $date->modify("-$i day");
-    $lastWeekDates[] = $date->format('d.m');
+try {
+    // Son 7 günün tarihlerini oluştur
+    for ($i = 6; $i >= 0; $i--) {
+        $date = clone $today;
+        $date->modify("-$i day");
+        $lastWeekDates[] = $date->format('d.m');
+        
+        $dayDate = $date->format('Y-m-d');
+        
+        // Günlük paylaşımlar
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE DATE(created_at) = :dayDate");
+        $stmt->bindParam(':dayDate', $dayDate);
+        $stmt->execute();
+        $lastWeekPostData[] = $stmt->fetchColumn() ?: 0;
+        
+        // Günlük yorumlar
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM comments WHERE DATE(created_at) = :dayDate");
+        $stmt->bindParam(':dayDate', $dayDate);
+        $stmt->execute();
+        $lastWeekCommentData[] = $stmt->fetchColumn() ?: 0;
+        
+        // Günlük kullanıcılar
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE DATE(created_at) = :dayDate");
+        $stmt->bindParam(':dayDate', $dayDate);
+        $stmt->execute();
+        $lastWeekUserData[] = $stmt->fetchColumn() ?: 0;
+    }
+} catch (PDOException $e) {
+    // Hata durumunda varsayılan 7 günlük veriler
+    $lastWeekPostData = [0, 0, 0, 0, 0, 0, 0];
+    $lastWeekCommentData = [0, 0, 0, 0, 0, 0, 0];
+    $lastWeekUserData = [0, 0, 0, 0, 0, 0, 0];
 }
 
-// Şehirlere göre aktif şikayet dağılımı (mock veri)
-$cityData = [
-    ['name' => 'İstanbul', 'count' => 42],
-    ['name' => 'Ankara', 'count' => 28],
-    ['name' => 'İzmir', 'count' => 21],
-    ['name' => 'Bursa', 'count' => 15],
-    ['name' => 'Antalya', 'count' => 14],
-    ['name' => 'Adana', 'count' => 12],
-];
+// Şehirlere göre aktif şikayet dağılımı
+try {
+    $stmt = $pdo->query("SELECT c.name, COUNT(p.id) as count 
+                         FROM posts p 
+                         JOIN cities c ON p.city_id = c.id 
+                         WHERE p.status = 'awaitingSolution' OR p.status = 'inProgress'
+                         GROUP BY c.name 
+                         ORDER BY count DESC 
+                         LIMIT 6");
+    $cityData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if (empty($cityData)) {
+        // Eğer veri yoksa default veriler
+        $cityData = [
+            ['name' => 'İstanbul', 'count' => 0],
+            ['name' => 'Ankara', 'count' => 0],
+            ['name' => 'İzmir', 'count' => 0],
+            ['name' => 'Bursa', 'count' => 0],
+            ['name' => 'Antalya', 'count' => 0]
+        ];
+    }
+} catch (PDOException $e) {
+    // Hata durumunda varsayılan şehir verileri
+    $cityData = [
+        ['name' => 'İstanbul', 'count' => 0],
+        ['name' => 'Ankara', 'count' => 0],
+        ['name' => 'İzmir', 'count' => 0],
+        ['name' => 'Bursa', 'count' => 0],
+        ['name' => 'Antalya', 'count' => 0]
+    ];
+}
 
-// En aktif kullanıcılar (mock veri)
-$activeUsers = [
-    ['id' => 1, 'name' => 'Ahmet Yılmaz', 'points' => 1850, 'level' => 'Şehir Uzmanı'],
-    ['id' => 2, 'name' => 'Ayşe Demir', 'points' => 1230, 'level' => 'Şehir Aşığı'],
-    ['id' => 3, 'name' => 'Mehmet Kaya', 'points' => 980, 'level' => 'Şehir Sevdalısı'],
-    ['id' => 4, 'name' => 'Zeynep Şahin', 'points' => 760, 'level' => 'Şehir Sevdalısı'],
-    ['id' => 5, 'name' => 'Mustafa Öztürk', 'points' => 425, 'level' => 'Şehrini Seven'],
-];
+// En aktif kullanıcılar
+try {
+    $stmt = $pdo->query("SELECT id, name, points, level FROM users ORDER BY points DESC LIMIT 5");
+    $activeUsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if (empty($activeUsers)) {
+        // Eğer veri yoksa en az admin kullanıcısı var
+        $stmt = $pdo->query("SELECT id, name, points, level FROM users LIMIT 1");
+        $adminUser = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($adminUser) {
+            $activeUsers = [$adminUser];
+        } else {
+            $activeUsers = [['id' => 0, 'name' => 'Henüz Kullanıcı Yok', 'points' => 0, 'level' => 'N/A']];
+        }
+    }
+} catch (PDOException $e) {
+    // Hata durumunda varsayılan kullanıcılar
+    $activeUsers = [['id' => 0, 'name' => 'Veri Yüklenemedi', 'points' => 0, 'level' => 'N/A']];
+}
 
-// Kategori dağılımı (mock veri)
-$categoryData = [
-    ['name' => 'Altyapı', 'count' => 35],
-    ['name' => 'Çevre Temizliği', 'count' => 28],
-    ['name' => 'Ulaşım', 'count' => 23],
-    ['name' => 'Park ve Bahçeler', 'count' => 17],
-    ['name' => 'Güvenlik', 'count' => 14],
-    ['name' => 'Diğer', 'count' => 10],
-];
+// Kategori dağılımı
+try {
+    $stmt = $pdo->query("SELECT c.name, COUNT(p.id) as count 
+                         FROM posts p 
+                         JOIN categories c ON p.category_id = c.id 
+                         GROUP BY c.name 
+                         ORDER BY count DESC 
+                         LIMIT 6");
+    $categoryData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if (empty($categoryData)) {
+        // Eğer veri yoksa mevcut kategorileri göster (0 sayısı ile)
+        $stmt = $pdo->query("SELECT name, 0 as count FROM categories LIMIT 6");
+        $categoryData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (empty($categoryData)) {
+            $categoryData = [['name' => 'Veri Yok', 'count' => 0]];
+        }
+    }
+} catch (PDOException $e) {
+    // Hata durumunda varsayılan kategoriler
+    $categoryData = [['name' => 'Veri Yüklenemedi', 'count' => 0]];
+}
 
 // JSON formatında verileri hazırla
 $weeklyPostsJson = json_encode($lastWeekPostData);

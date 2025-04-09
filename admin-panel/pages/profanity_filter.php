@@ -1,15 +1,22 @@
 <?php
 // Küfür ve hakaret filtresi sayfası
 
-// Yasaklı kelimeleri veritabanından çek (örnek veri)
-$bannedWords = [
-    'küfür1',
-    'hakaret1',
-    'küfür2',
-    'hakaret2',
-    'kötüsöz1',
-    'yasaklıkelime1',
-];
+// Veritabanı bağlantısını yükle
+require_once __DIR__ . '/../db_config.php';
+
+// Yasaklı kelimeleri veritabanından çek
+try {
+    $stmt = $pdo->query("SELECT word FROM banned_words ORDER BY word");
+    $bannedWordsResult = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $bannedWords = [];
+    foreach ($bannedWordsResult as $row) {
+        $bannedWords[] = $row['word'];
+    }
+} catch (PDOException $e) {
+    // Veritabanı bağlantı hatası - boş array ile devam et
+    $bannedWords = [];
+}
 
 // Form gönderildi mi kontrolü
 $message = '';
@@ -20,14 +27,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Yeni kelime ekleme
         $newWord = trim($_POST['new_word']);
         if (!empty($newWord)) {
-            if (!in_array($newWord, $bannedWords)) {
-                // Gerçek uygulamada, bu kelimeyi veritabanına ekle
-                $bannedWords[] = $newWord;
-                $message = "\"$newWord\" yasaklı kelimeler listesine eklendi.";
-                $type = 'success';
-            } else {
-                $message = "\"$newWord\" zaten yasaklı kelimeler listesinde bulunuyor.";
-                $type = 'warning';
+            try {
+                // Önce varsa kontrol et
+                $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM banned_words WHERE word = ?");
+                $checkStmt->execute([$newWord]);
+                $wordExists = $checkStmt->fetchColumn() > 0;
+                
+                if (!$wordExists) {
+                    // Kelimeyi veritabanına ekle
+                    $insertStmt = $pdo->prepare("INSERT INTO banned_words (word) VALUES (?)");
+                    $insertStmt->execute([$newWord]);
+                    
+                    // Kelimeyi listeye de ekle (sayfa yenilenmeden önce görmek için)
+                    $bannedWords[] = $newWord;
+                    
+                    $message = "\"$newWord\" yasaklı kelimeler listesine eklendi.";
+                    $type = 'success';
+                } else {
+                    $message = "\"$newWord\" zaten yasaklı kelimeler listesinde bulunuyor.";
+                    $type = 'warning';
+                }
+            } catch (PDOException $e) {
+                $message = "Veritabanı hatası: " . $e->getMessage();
+                $type = 'error';
             }
         } else {
             $message = "Lütfen bir kelime girin.";
@@ -38,21 +60,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $selectedWords = $_POST['selected_words'];
         $removedCount = 0;
         
-        // Gerçek uygulamada burada veritabanından silme işlemi yapılır
-        $tempBannedWords = [];
-        foreach ($bannedWords as $word) {
-            if (!in_array($word, $selectedWords)) {
-                $tempBannedWords[] = $word;
-            } else {
-                $removedCount++;
+        if (!empty($selectedWords)) {
+            try {
+                // Seçilen kelimeleri veritabanından sil
+                foreach ($selectedWords as $word) {
+                    $stmt = $pdo->prepare("DELETE FROM banned_words WHERE word = ?");
+                    $stmt->execute([$word]);
+                    $removedCount += $stmt->rowCount();
+                }
+                
+                // Kelimeyi listeden de kaldır (sayfa yenilenmeden önce görmek için)
+                $bannedWords = array_diff($bannedWords, $selectedWords);
+                
+                if ($removedCount > 0) {
+                    $message = "$removedCount kelime yasaklı listeden kaldırıldı.";
+                    $type = 'success';
+                } else {
+                    $message = "Hiçbir kelime listeden kaldırılamadı.";
+                    $type = 'warning';
+                }
+            } catch (PDOException $e) {
+                $message = "Veritabanı hatası: " . $e->getMessage();
+                $type = 'error';
             }
-        }
-        
-        $bannedWords = $tempBannedWords;
-        
-        if ($removedCount > 0) {
-            $message = "$removedCount kelime yasaklı listeden kaldırıldı.";
-            $type = 'success';
         } else {
             $message = "Hiçbir kelime seçilmedi.";
             $type = 'warning';
