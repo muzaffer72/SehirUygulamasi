@@ -514,61 +514,221 @@ $page_file = "pages/{$page}.php";
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h2>Şikayetler</h2>
                             <div>
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-outline-primary">Filtrele</button>
-                                    <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
-                                        <span class="visually-hidden">Toggle Dropdown</span>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#">Tümü</a></li>
-                                        <li><a class="dropdown-item" href="#">Çözüm Bekleyen</a></li>
-                                        <li><a class="dropdown-item" href="#">İşleme Alınan</a></li>
-                                        <li><a class="dropdown-item" href="#">Çözülenler</a></li>
-                                        <li><a class="dropdown-item" href="#">Reddedilenler</a></li>
-                                    </ul>
-                                </div>
                                 <button class="btn btn-primary" type="button">Rapor Oluştur</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Geliştirilmiş Filtreleme Alanı -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Filtrele</h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="get" action="">
+                                    <input type="hidden" name="page" value="posts">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label for="filter_city" class="form-label">Şehir</label>
+                                            <select class="form-select" id="filter_city" name="city_id">
+                                                <option value="">Tümü</option>
+                                                <?php foreach ($cities as $city): ?>
+                                                <option value="<?= $city['id'] ?>"><?= $city['name'] ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filter_district" class="form-label">İlçe</label>
+                                            <select class="form-select" id="filter_district" name="district_id">
+                                                <option value="">Tümü</option>
+                                                <?php foreach ($districts as $district): ?>
+                                                <option value="<?= $district['id'] ?>" data-city="<?= $district['city_id'] ?>"><?= $district['name'] ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filter_category" class="form-label">Kategori</label>
+                                            <select class="form-select" id="filter_category" name="category_id">
+                                                <option value="">Tümü</option>
+                                                <?php foreach ($categories as $category): ?>
+                                                <option value="<?= $category['id'] ?>"><?= $category['name'] ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filter_status" class="form-label">Durum</label>
+                                            <select class="form-select" id="filter_status" name="status">
+                                                <option value="">Tümü</option>
+                                                <option value="awaitingSolution">Çözüm Bekleyen</option>
+                                                <option value="inProgress">İşleme Alınan</option>
+                                                <option value="solved">Çözüldü</option>
+                                                <option value="rejected">Reddedildi</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row g-3 mt-2">
+                                        <div class="col-md-3">
+                                            <label for="filter_type" class="form-label">İçerik Tipi</label>
+                                            <select class="form-select" id="filter_type" name="post_type">
+                                                <option value="">Tümü</option>
+                                                <option value="problem">Şikayetler</option>
+                                                <option value="suggestion">Öneriler</option>
+                                                <option value="announcement">Duyurular</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filter_media" class="form-label">Medya</label>
+                                            <select class="form-select" id="filter_media" name="media_type">
+                                                <option value="">Tümü</option>
+                                                <option value="image">Resimli Paylaşımlar</option>
+                                                <option value="video">Videolu Paylaşımlar</option>
+                                                <option value="none">Medyasız Paylaşımlar</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filter_date" class="form-label">Tarih</label>
+                                            <select class="form-select" id="filter_date" name="date_filter">
+                                                <option value="">Tümü</option>
+                                                <option value="today">Bugün</option>
+                                                <option value="week">Bu Hafta</option>
+                                                <option value="month">Bu Ay</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 d-flex align-items-end">
+                                            <button type="submit" class="btn btn-primary w-100">Filtrele</button>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                         </div>
 
                         <div class="row">
-                            <?php foreach ($posts as $post): ?>
-                            <div class="col-md-6 mb-4">
-                                <div class="card post-card h-100">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h5 class="card-title"><?= $post['title'] ?></h5>
-                                            <?= get_status_label($post['status']) ?>
-                                        </div>
-                                        <h6 class="card-subtitle mb-2 text-muted">
-                                            <i class="bi bi-person"></i> <?= get_user_name($post['user_id']) ?> |
-                                            <i class="bi bi-geo-alt"></i> <?= get_city_name($post['city_id']) ?>, <?= get_district_name($post['district_id']) ?> |
-                                            <i class="bi bi-tag"></i> <?= get_category_name($post['category_id']) ?>
-                                        </h6>
-                                        <p class="card-text"><?= $post['content'] ?></p>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="text-muted">
-                                                <i class="bi bi-heart"></i> <?= $post['likes'] ?> |
-                                                <i class="bi bi-star"></i> <?= $post['highlights'] ?>
-                                            </small>
-                                            <small class="text-muted"><?= date('d.m.Y H:i', strtotime($post['created_at'])) ?></small>
-                                        </div>
-                                    </div>
-                                    <div class="card-footer bg-white">
-                                        <form method="post" class="d-flex">
-                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                            <select name="status" class="form-select me-2">
-                                                <option value="awaitingSolution" <?= $post['status'] === 'awaitingSolution' ? 'selected' : '' ?>>Çözüm Bekliyor</option>
-                                                <option value="inProgress" <?= $post['status'] === 'inProgress' ? 'selected' : '' ?>>İşleme Alındı</option>
-                                                <option value="solved" <?= $post['status'] === 'solved' ? 'selected' : '' ?>>Çözüldü</option>
-                                                <option value="rejected" <?= $post['status'] === 'rejected' ? 'selected' : '' ?>>Reddedildi</option>
-                                            </select>
-                                            <button type="submit" name="update_post_status" class="btn btn-primary">Güncelle</button>
-                                        </form>
+                            <?php 
+                            // Filtreleme işlemleri
+                            $filtered_posts = $posts;
+                            
+                            // Şehir filtreleme
+                            if (isset($_GET['city_id']) && $_GET['city_id'] !== '') {
+                                $city_id = intval($_GET['city_id']);
+                                $filtered_posts = array_filter($filtered_posts, function($post) use ($city_id) {
+                                    return $post['city_id'] == $city_id;
+                                });
+                            }
+                            
+                            // İlçe filtreleme
+                            if (isset($_GET['district_id']) && $_GET['district_id'] !== '') {
+                                $district_id = intval($_GET['district_id']);
+                                $filtered_posts = array_filter($filtered_posts, function($post) use ($district_id) {
+                                    return $post['district_id'] == $district_id;
+                                });
+                            }
+                            
+                            // Kategori filtreleme
+                            if (isset($_GET['category_id']) && $_GET['category_id'] !== '') {
+                                $category_id = intval($_GET['category_id']);
+                                $filtered_posts = array_filter($filtered_posts, function($post) use ($category_id) {
+                                    return $post['category_id'] == $category_id;
+                                });
+                            }
+                            
+                            // Durum filtreleme
+                            if (isset($_GET['status']) && $_GET['status'] !== '') {
+                                $status = $_GET['status'];
+                                $filtered_posts = array_filter($filtered_posts, function($post) use ($status) {
+                                    return $post['status'] == $status;
+                                });
+                            }
+                            
+                            // İçerik tipi filtreleme (Gerçek veri tabanında post_type alanı olmalı)
+                            if (isset($_GET['post_type']) && $_GET['post_type'] !== '') {
+                                $post_type = $_GET['post_type'];
+                                $filtered_posts = array_filter($filtered_posts, function($post) use ($post_type) {
+                                    return isset($post['post_type']) && $post['post_type'] == $post_type;
+                                });
+                            }
+                            
+                            // Medya filtreleme (Gerçek veri tabanında media_type alanı olmalı)
+                            if (isset($_GET['media_type']) && $_GET['media_type'] !== '') {
+                                $media_type = $_GET['media_type'];
+                                $filtered_posts = array_filter($filtered_posts, function($post) use ($media_type) {
+                                    // Bu kısım gerçek veritabanı yapısına göre değiştirilmeli
+                                    return isset($post['media_type']) && $post['media_type'] == $media_type;
+                                });
+                            }
+                            
+                            // Tarih filtreleme
+                            if (isset($_GET['date_filter']) && $_GET['date_filter'] !== '') {
+                                $today = date('Y-m-d');
+                                $date_filter = $_GET['date_filter'];
+                                
+                                if ($date_filter === 'today') {
+                                    $filtered_posts = array_filter($filtered_posts, function($post) use ($today) {
+                                        return date('Y-m-d', strtotime($post['created_at'])) == $today;
+                                    });
+                                } else if ($date_filter === 'week') {
+                                    $week_ago = date('Y-m-d', strtotime('-7 days'));
+                                    $filtered_posts = array_filter($filtered_posts, function($post) use ($week_ago) {
+                                        return date('Y-m-d', strtotime($post['created_at'])) >= $week_ago;
+                                    });
+                                } else if ($date_filter === 'month') {
+                                    $month_ago = date('Y-m-d', strtotime('-30 days'));
+                                    $filtered_posts = array_filter($filtered_posts, function($post) use ($month_ago) {
+                                        return date('Y-m-d', strtotime($post['created_at'])) >= $month_ago;
+                                    });
+                                }
+                            }
+                            
+                            // Sonuçları göster
+                            if (empty($filtered_posts)): 
+                            ?>
+                                <div class="col-12 text-center my-5">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i> Seçilen kriterlere uygun içerik bulunamadı.
                                     </div>
                                 </div>
-                            </div>
-                            <?php endforeach; ?>
+                            <?php else: ?>
+                                <?php foreach ($filtered_posts as $post): ?>
+                                <div class="col-md-4 col-sm-6 mb-3">
+                                    <div class="card post-card h-100 shadow-sm">
+                                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                            <h6 class="card-title mb-0 text-truncate" title="<?= $post['title'] ?>">
+                                                <?= strlen($post['title']) > 25 ? substr($post['title'], 0, 22) . '...' : $post['title'] ?>
+                                            </h6>
+                                            <?= get_status_label($post['status']) ?>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            <p class="card-subtitle mb-2 text-muted small">
+                                                <i class="bi bi-person"></i> <?= get_user_name($post['user_id']) ?><br>
+                                                <i class="bi bi-geo-alt"></i> <?= get_city_name($post['city_id']) ?>, <?= get_district_name($post['district_id']) ?><br>
+                                                <i class="bi bi-tag"></i> <?= get_category_name($post['category_id']) ?>
+                                            </p>
+                                            <p class="card-text small" style="max-height: 80px; overflow: hidden;">
+                                                <?= strlen($post['content']) > 100 ? substr($post['content'], 0, 97) . '...' : $post['content'] ?>
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center small">
+                                                <span class="text-muted">
+                                                    <i class="bi bi-heart"></i> <?= $post['likes'] ?>
+                                                    <i class="bi bi-star ms-2"></i> <?= $post['highlights'] ?>
+                                                </span>
+                                                <span class="text-muted"><?= date('d.m.Y', strtotime($post['created_at'])) ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-white pt-2 pb-2">
+                                            <form method="post" class="d-flex">
+                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                                <select name="status" class="form-select form-select-sm me-1">
+                                                    <option value="awaitingSolution" <?= $post['status'] === 'awaitingSolution' ? 'selected' : '' ?>>Bekliyor</option>
+                                                    <option value="inProgress" <?= $post['status'] === 'inProgress' ? 'selected' : '' ?>>İşlemde</option>
+                                                    <option value="solved" <?= $post['status'] === 'solved' ? 'selected' : '' ?>>Çözüldü</option>
+                                                    <option value="rejected" <?= $post['status'] === 'rejected' ? 'selected' : '' ?>>Ret</option>
+                                                </select>
+                                                <button type="submit" name="update_post_status" class="btn btn-primary btn-sm">Güncelle</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
 
                     <?php elseif ($page === 'surveys'): ?>
@@ -917,6 +1077,43 @@ $page_file = "pages/{$page}.php";
                 });
             }
         });
+    </script>
+    
+    <!-- Şehir ve İlçe Filtreleri İçin JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Şehir seçildiğinde ilçeleri filtrele
+        const citySelect = document.getElementById('filter_city');
+        const districtSelect = document.getElementById('filter_district');
+        
+        if (citySelect && districtSelect) {
+            // Tüm ilçe seçeneklerini sakla
+            const allDistricts = Array.from(districtSelect.options);
+            
+            citySelect.addEventListener('change', function() {
+                const selectedCityId = citySelect.value;
+                
+                // İlçe seçimini sıfırla
+                districtSelect.innerHTML = '<option value="">Tümü</option>';
+                
+                if (selectedCityId === '') {
+                    // Eğer "Tümü" seçildiyse, tüm ilçeleri göster
+                    allDistricts.forEach(function(district) {
+                        if (district.value !== '') {
+                            districtSelect.appendChild(district.cloneNode(true));
+                        }
+                    });
+                } else {
+                    // Seçilen şehre ait ilçeleri filtrele
+                    allDistricts.forEach(function(district) {
+                        if (district.value !== '' && district.dataset.city === selectedCityId) {
+                            districtSelect.appendChild(district.cloneNode(true));
+                        }
+                    });
+                }
+            });
+        }
+    });
     </script>
 </body>
 </html>
