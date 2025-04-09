@@ -5,7 +5,7 @@ description: Belediye ve Valiliğe yönelik şikayet ve öneri paylaşım platfo
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -14,29 +14,30 @@ dependencies:
     sdk: flutter
   
   # State management
-  flutter_riverpod: ^2.1.3
+  flutter_riverpod: ^2.4.0
   
   # UI components
-  cupertino_icons: ^1.0.5
-  flutter_svg: ^1.1.6
-  cached_network_image: ^3.2.3
-  shimmer: ^2.0.0
-  timeago: ^3.3.0
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+  timeago: ^3.6.0
   
   # Forms and input
-  image_picker: ^0.8.6+1
+  image_picker: ^1.0.7
   
   # Networking
-  http: ^0.13.5
-  dio: ^4.0.6
+  http: ^1.1.0
+  dio: ^5.4.0
   
   # Storage
-  shared_preferences: ^2.0.17
-  path_provider: ^2.0.12
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.2
   
-  # Maps and location
-  google_maps_flutter: ^2.2.3
-  geolocator: ^9.0.2
+  # Maps and location - güncel plugin sürümleriyle uyumlu
+  google_maps_flutter: ^2.5.0
+  flutter_localization: ^0.1.14
+  geocoding: ^2.1.1  # adres ve koordinat dönüşümleri için
   
   # Analytics and services (commented out for now)
   # firebase_core: ^2.7.0
@@ -47,7 +48,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.1
+  flutter_lints: ^3.0.1
 
 flutter:
   uses-material-design: true

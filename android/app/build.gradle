@@ -25,12 +25,16 @@ if (flutterVersionName == null) {
 
 android {
     namespace = "com.sikayetvar.sikayet_var"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35 // En yüksek plugin gereksinimine göre ayarlandı
+    ndkVersion = "25.1.8937393" // Sabit değer tanımlıyoruz
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    
+    kotlinOptions {
+        jvmTarget = '17'
     }
 
     defaultConfig {
@@ -38,8 +42,8 @@ android {
         applicationId = "com.sikayetvar.sikayet_var"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 21
+        targetSdk = 34
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
