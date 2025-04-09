@@ -1,112 +1,133 @@
-// Validates an email address
+import 'package:sikayet_var/utils/constants.dart';
+
+// Validate email
 String? validateEmail(String? value) {
   if (value == null || value.isEmpty) {
     return 'E-posta adresi gereklidir';
   }
   
-  final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-  if (!emailRegex.hasMatch(value)) {
+  // Basic email validation pattern
+  final emailPattern = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+  
+  if (!emailPattern.hasMatch(value)) {
     return 'Geçerli bir e-posta adresi giriniz';
   }
   
   return null;
 }
 
-// Validates a password
+// Validate password
 String? validatePassword(String? value) {
   if (value == null || value.isEmpty) {
     return 'Şifre gereklidir';
   }
   
-  if (value.length < 6) {
-    return 'Şifre en az 6 karakter olmalıdır';
+  if (value.length < Constants.passwordMinLength) {
+    return 'Şifre en az ${Constants.passwordMinLength} karakter olmalıdır';
   }
   
   return null;
 }
 
-// Validates a name
+// Validate confirm password
+String? validateConfirmPassword(String? value, String password) {
+  if (value == null || value.isEmpty) {
+    return 'Şifre tekrarı gereklidir';
+  }
+  
+  if (value != password) {
+    return 'Şifreler eşleşmiyor';
+  }
+  
+  return null;
+}
+
+// Validate name
 String? validateName(String? value) {
   if (value == null || value.isEmpty) {
-    return 'Ad gereklidir';
+    return 'Ad Soyad gereklidir';
   }
   
-  if (value.length < 2) {
-    return 'Ad en az 2 karakter olmalıdır';
+  if (value.length < Constants.nameMinLength) {
+    return 'Ad Soyad en az ${Constants.nameMinLength} karakter olmalıdır';
+  }
+  
+  if (value.length > Constants.nameMaxLength) {
+    return 'Ad Soyad en fazla ${Constants.nameMaxLength} karakter olmalıdır';
   }
   
   return null;
 }
 
-// Validates a phone number
-String? validatePhone(String? value) {
+// Validate post title
+String? validatePostTitle(String? value) {
   if (value == null || value.isEmpty) {
-    return null; // Phone number is optional
+    return 'Başlık gereklidir';
   }
   
-  final phoneRegex = RegExp(r'^\+?[0-9]{10,15}$');
-  if (!phoneRegex.hasMatch(value.replaceAll(RegExp(r'\s+'), ''))) {
+  if (value.length < Constants.titleMinLength) {
+    return 'Başlık en az ${Constants.titleMinLength} karakter olmalıdır';
+  }
+  
+  if (value.length > Constants.titleMaxLength) {
+    return 'Başlık en fazla ${Constants.titleMaxLength} karakter olmalıdır';
+  }
+  
+  return null;
+}
+
+// Validate post content
+String? validatePostContent(String? value) {
+  if (value == null || value.isEmpty) {
+    return 'İçerik gereklidir';
+  }
+  
+  if (value.length < Constants.contentMinLength) {
+    return 'İçerik en az ${Constants.contentMinLength} karakter olmalıdır';
+  }
+  
+  if (value.length > Constants.contentMaxLength) {
+    return 'İçerik en fazla ${Constants.contentMaxLength} karakter olmalıdır';
+  }
+  
+  return null;
+}
+
+// Validate comment
+String? validateComment(String? value) {
+  if (value == null || value.isEmpty) {
+    return 'Yorum gereklidir';
+  }
+  
+  if (value.length > Constants.maxCommentLength) {
+    return 'Yorum en fazla ${Constants.maxCommentLength} karakter olmalıdır';
+  }
+  
+  return null;
+}
+
+// Validate phone number (optional)
+String? validatePhoneOptional(String? value) {
+  if (value == null || value.isEmpty) {
+    return null; // Phone is optional
+  }
+  
+  // Turkish phone number pattern (10 digits, starting with 5)
+  final phonePattern = RegExp(r'^0?5[0-9]{9}$');
+  
+  if (!phonePattern.hasMatch(value.replaceAll(RegExp(r'\s+'), ''))) {
     return 'Geçerli bir telefon numarası giriniz';
   }
   
   return null;
 }
 
-// Validates a post title
-String? validatePostTitle(String? value) {
+// Validate required fields
+String? validateRequired(String? value, String fieldName) {
   if (value == null || value.isEmpty) {
-    return 'Başlık gereklidir';
-  }
-  
-  if (value.length < 5) {
-    return 'Başlık en az 5 karakter olmalıdır';
-  }
-  
-  if (value.length > 100) {
-    return 'Başlık en fazla 100 karakter olmalıdır';
-  }
-  
-  return null;
-}
-
-// Validates a post content
-String? validatePostContent(String? value) {
-  if (value == null || value.isEmpty) {
-    return 'İçerik gereklidir';
-  }
-  
-  if (value.length < 20) {
-    return 'İçerik en az 20 karakter olmalıdır';
-  }
-  
-  if (value.length > 1000) {
-    return 'İçerik en fazla 1000 karakter olmalıdır';
-  }
-  
-  return null;
-}
-
-// Validates a comment
-String? validateComment(String? value) {
-  if (value == null || value.isEmpty) {
-    return 'Yorum gereklidir';
-  }
-  
-  if (value.length < 2) {
-    return 'Yorum en az 2 karakter olmalıdır';
-  }
-  
-  if (value.length > 500) {
-    return 'Yorum en fazla 500 karakter olmalıdır';
-  }
-  
-  return null;
-}
-
-// A general purpose validator that checks if a value is required
-String? validateRequired(value, String fieldName) {
-  if (value == null || (value is String && value.isEmpty)) {
-    return '$fieldName gereklidir';
+    return '$fieldName alanı gereklidir';
   }
   
   return null;

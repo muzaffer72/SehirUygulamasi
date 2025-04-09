@@ -2,56 +2,79 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/services/post_service.dart';
 
-// Post service provider
-final postServiceProvider = Provider<PostService>((ref) {
-  return PostService();
+// Provider for all posts
+final postsProvider = StateNotifierProvider<PostsNotifier, List<Post>>((ref) {
+  return PostsNotifier();
 });
 
-// Provider for the current filter options
-final postFilterProvider = StateProvider<Map<String, dynamic>>((ref) {
-  return {
-    'cityId': null,
-    'districtId': null,
-    'categoryId': null,
-    'sortBy': 'newest', // or 'popular'
-    'type': null, // PostType.problem or PostType.general
-    'status': null, // PostStatus.solved or PostStatus.awaitingSolution
-    'isFiltered': false,
-  };
+// Provider for filtered posts
+final filteredPostsProvider = StateProvider<List<Post>>((ref) {
+  return ref.watch(postsProvider);
 });
 
-// Provider for the loading state of posts
-final postsLoadingProvider = StateProvider<bool>((ref) => false);
+// Providers for filter parameters
+final cityFilterProvider = StateProvider<String?>((ref) => null);
+final districtFilterProvider = StateProvider<String?>((ref) => null);
+final categoryFilterProvider = StateProvider<String?>((ref) => null);
+final typeFilterProvider = StateProvider<PostType?>((ref) => null);
+final statusFilterProvider = StateProvider<PostStatus?>((ref) => null);
+final sortByProvider = StateProvider<String?>((ref) => 'latest');
 
-// Provider for the error state of posts
-final postsErrorProvider = StateProvider<String?>((ref) => null);
+// Provider that combines all filters
+final postFiltersProvider = Provider((ref) {
+  return PostFilters(
+    cityId: ref.watch(cityFilterProvider),
+    districtId: ref.watch(districtFilterProvider),
+    categoryId: ref.watch(categoryFilterProvider),
+    type: ref.watch(typeFilterProvider),
+    status: ref.watch(statusFilterProvider),
+    sortBy: ref.watch(sortByProvider),
+  );
+});
 
-// Posts notifier class
+class PostFilters {
+  final String? cityId;
+  final String? districtId;
+  final String? categoryId;
+  final PostType? type;
+  final PostStatus? status;
+  final String? sortBy;
+
+  PostFilters({
+    this.cityId,
+    this.districtId,
+    this.categoryId,
+    this.type,
+    this.status,
+    this.sortBy,
+  });
+
+  bool get hasFilters =>
+      cityId != null ||
+      districtId != null ||
+      categoryId != null ||
+      type != null ||
+      status != null ||
+      (sortBy != null && sortBy != 'latest');
+}
+
 class PostsNotifier extends StateNotifier<List<Post>> {
-  final PostService _postService;
-  final Ref _ref;
-  
-  PostsNotifier(this._postService, this._ref) : super([]) {
-    // Load posts when instantiated
+  final PostService _postService = PostService();
+
+  PostsNotifier() : super([]) {
     loadPosts();
   }
-  
-  // Load all posts
+
   Future<void> loadPosts() async {
-    _ref.read(postsLoadingProvider.notifier).state = true;
-    _ref.read(postsErrorProvider.notifier).state = null;
-    
     try {
       final posts = await _postService.getPosts();
       state = posts;
-      _ref.read(postsLoadingProvider.notifier).state = false;
     } catch (e) {
-      _ref.read(postsLoadingProvider.notifier).state = false;
-      _ref.read(postsErrorProvider.notifier).state = e.toString();
+      // Handle error
+      print('Error loading posts: $e');
     }
   }
-  
-  // Filter posts
+
   Future<void> filterPosts({
     String? cityId,
     String? districtId,
@@ -60,22 +83,8 @@ class PostsNotifier extends StateNotifier<List<Post>> {
     PostType? type,
     PostStatus? status,
   }) async {
-    _ref.read(postsLoadingProvider.notifier).state = true;
-    _ref.read(postsErrorProvider.notifier).state = null;
-    
-    // Update filter state
-    _ref.read(postFilterProvider.notifier).state = {
-      'cityId': cityId,
-      'districtId': districtId,
-      'categoryId': categoryId,
-      'sortBy': sortBy ?? 'newest',
-      'type': type,
-      'status': status,
-      'isFiltered': cityId != null || districtId != null || categoryId != null || type != null || status != null,
-    };
-    
     try {
-      final filteredPosts = await _postService.filterPosts(
+      final posts = await _postService.filterPosts(
         cityId: cityId,
         districtId: districtId,
         categoryId: categoryId,
@@ -83,115 +92,107 @@ class PostsNotifier extends StateNotifier<List<Post>> {
         type: type,
         status: status,
       );
-      state = filteredPosts;
-      _ref.read(postsLoadingProvider.notifier).state = false;
+      state = posts;
     } catch (e) {
-      _ref.read(postsLoadingProvider.notifier).state = false;
-      _ref.read(postsErrorProvider.notifier).state = e.toString();
+      // Handle error
+      print('Error filtering posts: $e');
     }
   }
-  
-  // Clear filters
-  Future<void> clearFilters() async {
-    _ref.read(postFilterProvider.notifier).state = {
-      'cityId': null,
-      'districtId': null,
-      'categoryId': null,
-      'sortBy': 'newest',
-      'type': null,
-      'status': null,
-      'isFiltered': false,
-    };
-    
-    await loadPosts();
+
+  Future<Post?> getPostById(String id) async {
+    try {
+      // First check if we already have this post in state
+      final existingPost = state.firstWhere(
+        (post) => post.id == id,
+        orElse: () => Post(
+          id: '',
+          userId: '',
+          title: '',
+          content: '',
+          categoryId: '',
+          type: PostType.problem,
+          imageUrls: [],
+          likeCount: 0,
+          commentCount: 0,
+          highlightCount: 0,
+          isAnonymous: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      if (existingPost.id.isNotEmpty) {
+        return existingPost;
+      }
+
+      // Otherwise fetch it
+      final post = await _postService.getPostById(id);
+      return post;
+    } catch (e) {
+      // Handle error
+      print('Error getting post: $e');
+      return null;
+    }
   }
-  
-  // Like a post
+
+  Future<void> createPost(Post post) async {
+    try {
+      final newPost = await _postService.createPost(post);
+      state = [newPost, ...state];
+    } catch (e) {
+      // Handle error
+      print('Error creating post: $e');
+    }
+  }
+
   Future<void> likePost(String postId) async {
     try {
       await _postService.likePost(postId);
       
-      // Update local state
+      // Update the post in the state
       state = state.map((post) {
         if (post.id == postId) {
-          return post.copyWith(
-            likeCount: post.likeCount + 1,
-          );
+          return post.copyWith(likeCount: post.likeCount + 1);
         }
         return post;
       }).toList();
     } catch (e) {
-      _ref.read(postsErrorProvider.notifier).state = e.toString();
+      // Handle error
+      print('Error liking post: $e');
     }
   }
-  
-  // Highlight a post
+
   Future<void> highlightPost(String postId) async {
     try {
       await _postService.highlightPost(postId);
       
-      // Update local state
+      // Update the post in the state
       state = state.map((post) {
         if (post.id == postId) {
-          return post.copyWith(
-            highlightCount: post.highlightCount + 1,
-          );
+          return post.copyWith(highlightCount: post.highlightCount + 1);
         }
         return post;
       }).toList();
     } catch (e) {
-      _ref.read(postsErrorProvider.notifier).state = e.toString();
+      // Handle error
+      print('Error highlighting post: $e');
     }
   }
-  
-  // Create a new post
-  Future<Post?> createPost(Post post) async {
-    _ref.read(postsLoadingProvider.notifier).state = true;
-    _ref.read(postsErrorProvider.notifier).state = null;
-    
-    try {
-      final newPost = await _postService.createPost(post);
-      
-      // Add to local state
-      state = [newPost, ...state];
-      
-      _ref.read(postsLoadingProvider.notifier).state = false;
-      return newPost;
-    } catch (e) {
-      _ref.read(postsLoadingProvider.notifier).state = false;
-      _ref.read(postsErrorProvider.notifier).state = e.toString();
-      return null;
-    }
-  }
-  
-  // Update post status
+
   Future<void> updatePostStatus(String postId, PostStatus status) async {
     try {
       await _postService.updatePostStatus(postId, status);
       
-      // Update local state
+      // Update the post in the state
       state = state.map((post) {
         if (post.id == postId) {
-          return post.copyWith(
-            status: status,
-          );
+          return post.copyWith(status: status);
         }
         return post;
       }).toList();
     } catch (e) {
-      _ref.read(postsErrorProvider.notifier).state = e.toString();
+      // Handle error
+      print('Error updating post status: $e');
     }
   }
 }
-
-// Posts Provider
-final postsProvider = StateNotifierProvider<PostsNotifier, List<Post>>((ref) {
-  final postService = ref.watch(postServiceProvider);
-  return PostsNotifier(postService, ref);
-});
-
-// Provider for selecting a single post by ID
-final selectedPostProvider = Provider.family<Post?, String>((ref, postId) {
-  final posts = ref.watch(postsProvider);
-  return posts.firstWhere((post) => post.id == postId, orElse: () => null);
-});

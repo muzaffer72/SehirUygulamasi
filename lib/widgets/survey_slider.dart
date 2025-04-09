@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/survey.dart';
-import 'package:sikayet_var/providers/survey_provider.dart';
+import 'package:sikayet_var/screens/surveys/survey_detail_screen.dart';
+import 'package:sikayet_var/services/api_service.dart';
 
-class SurveySlider extends ConsumerStatefulWidget {
-  final List<Survey> surveys;
-  
-  const SurveySlider({Key? key, required this.surveys}) : super(key: key);
+class SurveySlider extends StatefulWidget {
+  const SurveySlider({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<SurveySlider> createState() => _SurveySliderState();
+  State<SurveySlider> createState() => _SurveySliderState();
 }
 
-class _SurveySliderState extends ConsumerState<SurveySlider> {
-  int _currentIndex = 0;
-  final PageController _pageController = PageController();
+class _SurveySliderState extends State<SurveySlider> {
+  final ApiService _apiService = ApiService();
+  final PageController _pageController = PageController(viewportFraction: 0.9);
+  int _currentPage = 0;
   
   @override
   void dispose() {
@@ -24,184 +23,232 @@ class _SurveySliderState extends ConsumerState<SurveySlider> {
   
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 180,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              itemCount: widget.surveys.length,
-              itemBuilder: (context, index) {
-                final survey = widget.surveys[index];
-                return _buildSurveyCard(context, survey);
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Indicators
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              widget.surveys.length,
-              (index) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _currentIndex == index
-                      ? Theme.of(context).primaryColor
-                      : Colors.grey.shade300,
-                ),
+    return FutureBuilder(
+      future: _apiService.getActiveSurveys(),
+      builder: (context, AsyncSnapshot<List<Survey>> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoadingIndicator();
+        }
+        
+        if (snapshot.hasError) {
+          return _buildErrorWidget();
+        }
+        
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink(); // No surveys available
+        }
+        
+        final surveys = snapshot.data!;
+        
+        return Column(
+          children: [
+            // Survey header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Anketler',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '${_currentPage + 1}/${surveys.length}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
-      ),
+            
+            // Survey carousel
+            SizedBox(
+              height: 180,
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: surveys.length,
+                onPageChanged: (int page) {
+                  setState(() {
+                    _currentPage = page;
+                  });
+                },
+                itemBuilder: (context, index) {
+                  final survey = surveys[index];
+                  return _buildSurveyCard(survey);
+                },
+              ),
+            ),
+            
+            // Dot indicators
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(surveys.length, (index) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    height: 8,
+                    width: _currentPage == index ? 24 : 8,
+                    decoration: BoxDecoration(
+                      color: _currentPage == index
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
   
-  Widget _buildSurveyCard(BuildContext context, Survey survey) {
+  Widget _buildSurveyCard(Survey survey) {
+    final theme = Theme.of(context);
+    
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      clipBehavior: Clip.antiAlias,
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => SurveyDetailScreen(survey: survey),
+            ),
+          );
+        },
+        child: Stack(
           children: [
-            Text(
-              survey.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+            // Survey background image
+            if (survey.imageUrl != null)
+              Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: NetworkImage(survey.imageUrl!),
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(
+                      Colors.black.withOpacity(0.3),
+                      BlendMode.darken,
+                    ),
+                  ),
+                ),
+              ),
+            
+            // Survey content
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Survey title
+                  Text(
+                    survey.title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: survey.imageUrl != null ? Colors.white : theme.colorScheme.onSurface,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Survey description
+                  Text(
+                    survey.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: survey.imageUrl != null 
+                        ? Colors.white.withOpacity(0.8) 
+                        : theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const Spacer(),
+                  
+                  // Survey participation info
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.how_to_vote,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${survey.totalVotes} oy',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: survey.imageUrl != null 
+                            ? Colors.white 
+                            : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const Spacer(),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => SurveyDetailScreen(survey: survey),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text('Katıl'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              survey.question,
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: survey.options.map((option) => _buildOption(context, survey, option)).toList(),
-              ),
-            ),
-            if (survey.result != null)
-              _buildResultBadge(context, survey.result!),
           ],
         ),
       ),
     );
   }
   
-  Widget _buildOption(BuildContext context, Survey survey, SurveyOption option) {
-    return InkWell(
-      onTap: () => _vote(survey.id, option.id),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Theme.of(context).primaryColor),
-            ),
-            child: Text(
-              option.text,
-              style: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text('${option.percentage.toStringAsFixed(1)}%'),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildResultBadge(BuildContext context, SurveyResult result) {
-    Color color;
-    IconData icon;
-    
-    switch (result.type) {
-      case SurveyResultType.positive:
-        color = Colors.green;
-        icon = Icons.thumb_up;
-        break;
-      case SurveyResultType.negative:
-        color = Colors.red;
-        icon = Icons.thumb_down;
-        break;
-      case SurveyResultType.neutral:
-        color = Colors.amber;
-        icon = Icons.thumbs_up_down;
-        break;
-    }
-    
+  Widget _buildLoadingIndicator() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              result.message,
-              style: TextStyle(
-                fontSize: 12,
-                color: color,
-                fontWeight: result.isCritical ? FontWeight.bold : FontWeight.normal,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+      height: 180,
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      child: const Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
   
-  void _vote(String surveyId, String optionId) async {
-    try {
-      final voteParams = VoteParams(surveyId: surveyId, optionId: optionId);
-      await ref.read(voteSurveyProvider(voteParams).future);
-      
-      if (!mounted) return;
-      
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Oyunuz başarıyla kaydedildi')),
-      );
-      
-      // Refresh surveys
-      ref.invalidate(surveysProvider);
-    } catch (e) {
-      if (!mounted) return;
-      
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Oy verme işlemi başarısız: $e')),
-      );
-    }
+  Widget _buildErrorWidget() {
+    return Container(
+      height: 180,
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.grey, size: 40),
+            const SizedBox(height: 8),
+            Text(
+              'Anketler yüklenirken bir hata oluştu',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

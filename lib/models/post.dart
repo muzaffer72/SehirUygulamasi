@@ -1,5 +1,14 @@
-enum PostType { problem, general }
-enum PostStatus { solved, awaitingSolution }
+enum PostType {
+  problem,  // Şikayet
+  general,  // Öneri
+}
+
+enum PostStatus {
+  awaitingSolution,  // Çözüm bekliyor
+  inProgress,        // İşleme alındı
+  solved,            // Çözüldü
+  rejected,          // Reddedildi
+}
 
 class Post {
   final String id;
@@ -9,9 +18,9 @@ class Post {
   final String categoryId;
   final String? subCategoryId;
   final PostType type;
-  final PostStatus? status; // Only for problem posts
-  final String cityId;
-  final String districtId;
+  final PostStatus? status;
+  final String? cityId;
+  final String? districtId;
   final List<String> imageUrls;
   final int likeCount;
   final int commentCount;
@@ -19,7 +28,7 @@ class Post {
   final bool isAnonymous;
   final DateTime createdAt;
   final DateTime updatedAt;
-
+  
   Post({
     required this.id,
     required this.userId,
@@ -29,8 +38,8 @@ class Post {
     this.subCategoryId,
     required this.type,
     this.status,
-    required this.cityId,
-    required this.districtId,
+    this.cityId,
+    this.districtId,
     required this.imageUrls,
     required this.likeCount,
     required this.commentCount,
@@ -39,7 +48,7 @@ class Post {
     required this.createdAt,
     required this.updatedAt,
   });
-
+  
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
       id: json['id'],
@@ -48,12 +57,16 @@ class Post {
       content: json['content'],
       categoryId: json['category_id'],
       subCategoryId: json['sub_category_id'],
-      type: json['type'] == 'problem' ? PostType.problem : PostType.general,
-      status: json['status'] == null
-          ? null
-          : json['status'] == 'solved'
-              ? PostStatus.solved
-              : PostStatus.awaitingSolution,
+      type: PostType.values.firstWhere(
+        (e) => e.toString().split('.').last == json['type'],
+        orElse: () => PostType.problem,
+      ),
+      status: json['status'] != null
+          ? PostStatus.values.firstWhere(
+              (e) => e.toString().split('.').last == json['status'],
+              orElse: () => PostStatus.awaitingSolution,
+            )
+          : null,
       cityId: json['city_id'],
       districtId: json['district_id'],
       imageUrls: json['image_urls'] != null
@@ -67,7 +80,7 @@ class Post {
       updatedAt: DateTime.parse(json['updated_at']),
     );
   }
-
+  
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -76,12 +89,8 @@ class Post {
       'content': content,
       'category_id': categoryId,
       'sub_category_id': subCategoryId,
-      'type': type == PostType.problem ? 'problem' : 'general',
-      'status': status == null
-          ? null
-          : status == PostStatus.solved
-              ? 'solved'
-              : 'awaiting_solution',
+      'type': type.toString().split('.').last,
+      'status': status?.toString().split('.').last,
       'city_id': cityId,
       'district_id': districtId,
       'image_urls': imageUrls,
@@ -93,7 +102,7 @@ class Post {
       'updated_at': updatedAt.toIso8601String(),
     };
   }
-
+  
   Post copyWith({
     String? id,
     String? userId,
