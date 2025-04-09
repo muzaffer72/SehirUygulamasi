@@ -4,7 +4,7 @@ import { relations } from 'drizzle-orm';
 // Enum değerlerini basit string olarak tanımlayalım
 export type UserLevel = 'newUser' | 'contributor' | 'active' | 'expert' | 'master';
 export type PostStatus = 'awaitingSolution' | 'inProgress' | 'solved' | 'rejected';
-export type PostType = 'problem' | 'suggestion' | 'announcement';
+export type PostType = 'problem' | 'suggestion' | 'announcement' | 'general';
 export type ScopeType = 'general' | 'city' | 'district';
 
 // Kategori tablosu

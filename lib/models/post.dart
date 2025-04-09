@@ -29,6 +29,10 @@ class Post {
   final DateTime createdAt;
   final List<String>? imageUrls;
   final String? videoUrl;
+  
+  // Widget'lar için getter'lar
+  int get likeCount => likes;
+  int get highlightCount => highlights;
 
   Post({
     required this.id,

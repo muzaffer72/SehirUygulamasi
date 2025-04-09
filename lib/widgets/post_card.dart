@@ -97,18 +97,18 @@ class _PostCardState extends State<PostCard> {
             ),
             
             // Post images (if any)
-            if (widget.post.imageUrls.isNotEmpty)
+            if (widget.post.imageUrls != null && widget.post.imageUrls!.isNotEmpty)
               SizedBox(
                 height: 180,
                 child: PageView.builder(
-                  itemCount: widget.post.imageUrls.length,
+                  itemCount: widget.post.imageUrls!.length,
                   itemBuilder: (context, index) {
                     return Container(
                       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
                         image: DecorationImage(
-                          image: NetworkImage(widget.post.imageUrls[index]),
+                          image: NetworkImage(widget.post.imageUrls![index]),
                           fit: BoxFit.cover,
                         ),
                       ),
