@@ -2,20 +2,51 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sikayet_var/models/user.dart';
 import 'package:sikayet_var/utils/constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   final String baseUrl = Constants.apiBaseUrl;
   final http.Client _client = http.Client();
   
-  // Stream controller for auth state changes
-  final StreamController<User?> _authStateController = StreamController<User?>.broadcast();
-  Stream<User?> authStateChanges() => _authStateController.stream;
+  // Helper method to get authorization header
+  Future<Map<String, String>> _getHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(Constants.tokenKey);
+    
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    
+    return headers;
+  }
   
-  // Login with email and password
-  Future<User?> login(String email, String password) async {
+  // Error handling
+  Exception _handleError(http.Response response) {
+    switch (response.statusCode) {
+      case 401:
+        return Exception('Unauthorized: Geçersiz kimlik bilgileri');
+      case 403:
+        return Exception('Forbidden: Bu işlem için yetkiniz yok');
+      case 404:
+        return Exception('Not found: İstek yapılan kaynak bulunamadı');
+      case 409:
+        return Exception('Conflict: Bu e-posta adresi zaten kullanılıyor');
+      case 500:
+        return Exception('Server error: Sunucu hatası oluştu');
+      default:
+        return Exception('Unknown error: ${response.statusCode}');
+    }
+  }
+  
+  // Login
+  Future<User> login(String email, String password) async {
     try {
       final response = await _client.post(
         Uri.parse('$baseUrl/auth/login'),
@@ -27,49 +58,57 @@ class AuthService {
           'email': email,
           'password': password,
         }),
-      ).timeout(Constants.networkTimeout);
+      ).timeout(const Duration(seconds: 10));
       
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final token = data['token'];
-        final userData = data['user'];
+        final jsonData = json.decode(response.body);
         
-        // Save token to SharedPreferences
+        // Save token
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(Constants.tokenKey, token);
+        await prefs.setString(Constants.tokenKey, jsonData['token']);
         
-        // Create user object from JSON
-        final user = User.fromJson(userData);
-        
-        // Update auth state
-        _authStateController.add(user);
-        
-        return user;
+        return User.fromJson(jsonData['user']);
       } else {
-        final error = json.decode(response.body)['message'] ?? 'Login failed';
-        throw Exception(error);
+        throw _handleError(response);
       }
     } catch (e) {
-      // For development/demo purposes - create a mock user
+      // For development/demo purposes
       if (e is SocketException || e is HttpException || e is TimeoutException) {
         await Future.delayed(const Duration(seconds: 1));
-        final user = _getMockUser();
         
-        // Save a mock token to SharedPreferences
+        // Mock successful login
+        final user = User(
+          id: 'user_123',
+          name: 'Ahmet Yılmaz',
+          email: email,
+          phone: '05551234567',
+          profilePhotoUrl: null,
+          cityId: 'city_1', // İstanbul
+          districtId: 'district_1', // Kadıköy
+          isAdmin: false,
+          createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        );
+        
+        // Save mock token
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(Constants.tokenKey, 'mock_token');
-        
-        // Update auth state
-        _authStateController.add(user);
+        await prefs.setString(Constants.tokenKey, 'mock_token_${DateTime.now().millisecondsSinceEpoch}');
         
         return user;
       }
-      throw Exception('Login failed: $e');
+      
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Giriş yapılırken bir hata oluştu: $e');
     }
   }
   
-  // Register a new user
-  Future<User?> register(String name, String email, String password, String cityId, String districtId) async {
+  // Register
+  Future<User> register(String name, String email, String password, {
+    String? phone,
+    String? cityId,
+    String? districtId,
+  }) async {
     try {
       final response = await _client.post(
         Uri.parse('$baseUrl/auth/register'),
@@ -81,91 +120,74 @@ class AuthService {
           'name': name,
           'email': email,
           'password': password,
+          'phone': phone,
           'city_id': cityId,
           'district_id': districtId,
         }),
-      ).timeout(Constants.networkTimeout);
+      ).timeout(const Duration(seconds: 10));
       
       if (response.statusCode == 201) {
-        final data = json.decode(response.body);
-        final token = data['token'];
-        final userData = data['user'];
+        final jsonData = json.decode(response.body);
         
-        // Save token to SharedPreferences
+        // Save token
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(Constants.tokenKey, token);
+        await prefs.setString(Constants.tokenKey, jsonData['token']);
         
-        // Create user object from JSON
-        final user = User.fromJson(userData);
-        
-        // Update auth state
-        _authStateController.add(user);
-        
-        return user;
+        return User.fromJson(jsonData['user']);
       } else {
-        final error = json.decode(response.body)['message'] ?? 'Registration failed';
-        throw Exception(error);
+        throw _handleError(response);
       }
     } catch (e) {
-      // For development/demo purposes - create a mock user
+      // For development/demo purposes
       if (e is SocketException || e is HttpException || e is TimeoutException) {
         await Future.delayed(const Duration(seconds: 1));
+        
+        // Mock successful registration
         final user = User(
           id: 'user_${DateTime.now().millisecondsSinceEpoch}',
           name: name,
           email: email,
+          phone: phone,
+          profilePhotoUrl: null,
           cityId: cityId,
           districtId: districtId,
-          roles: ['user'],
+          isAdmin: false,
           createdAt: DateTime.now(),
-          isVerified: false,
         );
         
-        // Save a mock token to SharedPreferences
+        // Save mock token
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(Constants.tokenKey, 'mock_token');
-        
-        // Update auth state
-        _authStateController.add(user);
+        await prefs.setString(Constants.tokenKey, 'mock_token_${DateTime.now().millisecondsSinceEpoch}');
         
         return user;
       }
-      throw Exception('Registration failed: $e');
+      
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Kayıt olurken bir hata oluştu: $e');
     }
   }
   
   // Logout
   Future<void> logout() async {
     try {
+      final headers = await _getHeaders();
+      await _client.post(
+        Uri.parse('$baseUrl/auth/logout'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 10));
+      
+      // Remove token
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString(Constants.tokenKey);
-      
-      if (token != null) {
-        await _client.post(
-          Uri.parse('$baseUrl/auth/logout'),
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        ).timeout(Constants.networkTimeout);
-      }
-      
-      // Clear token from SharedPreferences
       await prefs.remove(Constants.tokenKey);
-      
-      // Update auth state
-      _authStateController.add(null);
     } catch (e) {
-      // Even if API call fails, we want to clear the local token
+      // Even if the API call fails, we still want to remove the token
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(Constants.tokenKey);
       
-      // Update auth state
-      _authStateController.add(null);
-      
-      // Only throw if it's not a connectivity issue
-      if (!(e is SocketException || e is HttpException || e is TimeoutException)) {
-        throw Exception('Logout failed: $e');
+      if (e is Exception && e is! SocketException && e is! HttpException && e is! TimeoutException) {
+        throw Exception('Çıkış yapılırken bir hata oluştu: $e');
       }
     }
   }
@@ -177,31 +199,24 @@ class AuthService {
       final token = prefs.getString(Constants.tokenKey);
       
       if (token == null) {
-        _authStateController.add(null);
         return null;
       }
       
+      final headers = await _getHeaders();
       final response = await _client.get(
         Uri.parse('$baseUrl/auth/user'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(Constants.networkTimeout);
+        headers: headers,
+      ).timeout(const Duration(seconds: 10));
       
       if (response.statusCode == 200) {
-        final userData = json.decode(response.body)['data'];
-        final user = User.fromJson(userData);
-        
-        // Update auth state
-        _authStateController.add(user);
-        
-        return user;
-      } else {
-        // Token might be invalid
+        final jsonData = json.decode(response.body);
+        return User.fromJson(jsonData['user']);
+      } else if (response.statusCode == 401) {
+        // Token is invalid or expired
         await prefs.remove(Constants.tokenKey);
-        _authStateController.add(null);
         return null;
+      } else {
+        throw _handleError(response);
       }
     } catch (e) {
       // For development/demo purposes
@@ -209,66 +224,64 @@ class AuthService {
         final prefs = await SharedPreferences.getInstance();
         final token = prefs.getString(Constants.tokenKey);
         
-        if (token != null) {
+        if (token != null && token.startsWith('mock_token_')) {
           await Future.delayed(const Duration(seconds: 1));
-          final user = _getMockUser();
           
-          // Update auth state
-          _authStateController.add(user);
-          
-          return user;
+          // Return mock user
+          return User(
+            id: 'user_123',
+            name: 'Ahmet Yılmaz',
+            email: 'ahmet@example.com',
+            phone: '05551234567',
+            profilePhotoUrl: null,
+            cityId: 'city_1', // İstanbul
+            districtId: 'district_1', // Kadıköy
+            isAdmin: false,
+            createdAt: DateTime.now().subtract(const Duration(days: 30)),
+          );
         }
+        
+        return null;
       }
       
-      // If there's an error, we return null but don't throw
-      _authStateController.add(null);
       return null;
     }
   }
   
-  // Update user profile
-  Future<User?> updateProfile(User user) async {
+  // Update profile
+  Future<User> updateProfile(User user) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString(Constants.tokenKey);
-      
-      if (token == null) {
-        throw Exception('Not authenticated');
-      }
-      
+      final headers = await _getHeaders();
       final response = await _client.put(
-        Uri.parse('$baseUrl/auth/user'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: json.encode(user.toJson()),
-      ).timeout(Constants.networkTimeout);
+        Uri.parse('$baseUrl/auth/profile'),
+        headers: headers,
+        body: json.encode({
+          'name': user.name,
+          'phone': user.phone,
+          'city_id': user.cityId,
+          'district_id': user.districtId,
+        }),
+      ).timeout(const Duration(seconds: 10));
       
       if (response.statusCode == 200) {
-        final userData = json.decode(response.body)['data'];
-        final updatedUser = User.fromJson(userData);
-        
-        // Update auth state
-        _authStateController.add(updatedUser);
-        
-        return updatedUser;
+        final jsonData = json.decode(response.body);
+        return User.fromJson(jsonData['user']);
       } else {
-        final error = json.decode(response.body)['message'] ?? 'Profile update failed';
-        throw Exception(error);
+        throw _handleError(response);
       }
     } catch (e) {
       // For development/demo purposes
       if (e is SocketException || e is HttpException || e is TimeoutException) {
         await Future.delayed(const Duration(seconds: 1));
         
-        // Update auth state
-        _authStateController.add(user);
-        
+        // Return updated user
         return user;
       }
-      throw Exception('Profile update failed: $e');
+      
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Profil güncellenirken bir hata oluştu: $e');
     }
   }
   
@@ -281,12 +294,13 @@ class AuthService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode({'email': email}),
-      ).timeout(Constants.networkTimeout);
+        body: json.encode({
+          'email': email,
+        }),
+      ).timeout(const Duration(seconds: 10));
       
       if (response.statusCode != 200) {
-        final error = json.decode(response.body)['message'] ?? 'Password reset failed';
-        throw Exception(error);
+        throw _handleError(response);
       }
     } catch (e) {
       // For development/demo purposes
@@ -294,28 +308,41 @@ class AuthService {
         await Future.delayed(const Duration(seconds: 1));
         return;
       }
-      throw Exception('Password reset failed: $e');
+      
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Şifre sıfırlama işlemi sırasında bir hata oluştu: $e');
     }
   }
   
-  // Mock user for development/demo
-  User _getMockUser() {
-    return User(
-      id: 'user_123',
-      name: 'Test User',
-      email: 'test@example.com',
-      phone: '+90 555 123 4567',
-      profilePhotoUrl: 'https://via.placeholder.com/150',
-      cityId: 'city_1', // İstanbul
-      districtId: 'district_1', // Kadıköy
-      roles: ['user'],
-      createdAt: DateTime.now().subtract(const Duration(days: 30)),
-      isVerified: true,
-    );
-  }
-  
-  // Dispose
-  void dispose() {
-    _authStateController.close();
+  // Update password
+  Future<void> updatePassword(String currentPassword, String newPassword) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await _client.post(
+        Uri.parse('$baseUrl/auth/update-password'),
+        headers: headers,
+        body: json.encode({
+          'current_password': currentPassword,
+          'new_password': newPassword,
+        }),
+      ).timeout(const Duration(seconds: 10));
+      
+      if (response.statusCode != 200) {
+        throw _handleError(response);
+      }
+    } catch (e) {
+      // For development/demo purposes
+      if (e is SocketException || e is HttpException || e is TimeoutException) {
+        await Future.delayed(const Duration(seconds: 1));
+        return;
+      }
+      
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Şifre güncellenirken bir hata oluştu: $e');
+    }
   }
 }

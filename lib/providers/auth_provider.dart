@@ -2,143 +2,102 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/user.dart';
 import 'package:sikayet_var/services/auth_service.dart';
 
-// AuthService provider
-final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService();
+// Provider for the current authenticated user
+final currentUserProvider = StateProvider<User?>((ref) => null);
+
+// Provider for the auth notifier
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
+  return AuthNotifier(ref);
 });
 
-// Stream provider for authentication state
-final authStateProvider = StreamProvider<User?>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return authService.authStateChanges();
-});
-
-// Provider for current user
-final currentUserProvider = StateProvider<User?>((ref) {
-  final authState = ref.watch(authStateProvider);
-  return authState.when(
-    data: (user) => user,
-    loading: () => null,
-    error: (_, __) => null,
-  );
-});
-
-// Auth loading state
-final authLoadingProvider = StateProvider<bool>((ref) => false);
-
-// Auth error state
-final authErrorProvider = StateProvider<String?>((ref) => null);
-
-// Auth class with notifier
 class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
-  final AuthService _authService;
   final Ref _ref;
-  
-  AuthNotifier(this._authService, this._ref) : super(const AsyncValue.loading()) {
-    // Initialize state from auth service
-    _init();
+  final AuthService _authService = AuthService();
+
+  AuthNotifier(this._ref) : super(const AsyncValue.loading()) {
+    _checkCurrentUser();
   }
-  
-  Future<void> _init() async {
-    state = const AsyncValue.loading();
+
+  Future<void> _checkCurrentUser() async {
     try {
       final user = await _authService.getCurrentUser();
       state = AsyncValue.data(user);
       _ref.read(currentUserProvider.notifier).state = user;
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
+      _ref.read(currentUserProvider.notifier).state = null;
     }
   }
-  
-  // Login with email and password
-  Future<User?> login(String email, String password) async {
-    state = const AsyncValue.loading();
-    _ref.read(authLoadingProvider.notifier).state = true;
-    _ref.read(authErrorProvider.notifier).state = null;
-    
+
+  Future<void> login(String email, String password) async {
     try {
+      state = const AsyncValue.loading();
       final user = await _authService.login(email, password);
       state = AsyncValue.data(user);
       _ref.read(currentUserProvider.notifier).state = user;
-      _ref.read(authLoadingProvider.notifier).state = false;
-      return user;
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
-      _ref.read(authLoadingProvider.notifier).state = false;
-      _ref.read(authErrorProvider.notifier).state = e.toString();
-      return null;
+      _ref.read(currentUserProvider.notifier).state = null;
+      rethrow;
     }
   }
-  
-  // Register a new user
-  Future<User?> register(String name, String email, String password, String cityId, String districtId) async {
-    state = const AsyncValue.loading();
-    _ref.read(authLoadingProvider.notifier).state = true;
-    _ref.read(authErrorProvider.notifier).state = null;
-    
+
+  Future<void> register(String name, String email, String password, {
+    String? phone,
+    String? cityId,
+    String? districtId,
+  }) async {
     try {
-      final user = await _authService.register(name, email, password, cityId, districtId);
+      state = const AsyncValue.loading();
+      final user = await _authService.register(
+        name,
+        email,
+        password,
+        phone: phone,
+        cityId: cityId,
+        districtId: districtId,
+      );
       state = AsyncValue.data(user);
       _ref.read(currentUserProvider.notifier).state = user;
-      _ref.read(authLoadingProvider.notifier).state = false;
-      return user;
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
-      _ref.read(authLoadingProvider.notifier).state = false;
-      _ref.read(authErrorProvider.notifier).state = e.toString();
-      return null;
+      _ref.read(currentUserProvider.notifier).state = null;
+      rethrow;
     }
   }
-  
-  // Logout
+
   Future<void> logout() async {
-    state = const AsyncValue.loading();
-    
     try {
+      state = const AsyncValue.loading();
       await _authService.logout();
       state = const AsyncValue.data(null);
       _ref.read(currentUserProvider.notifier).state = null;
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
-      _ref.read(authErrorProvider.notifier).state = e.toString();
+      rethrow;
     }
   }
-  
-  // Update user profile
-  Future<User?> updateProfile(User user) async {
-    state = const AsyncValue.loading();
-    
+
+  Future<void> updateProfile(User user) async {
     try {
+      state = const AsyncValue.loading();
       final updatedUser = await _authService.updateProfile(user);
       state = AsyncValue.data(updatedUser);
       _ref.read(currentUserProvider.notifier).state = updatedUser;
-      return updatedUser;
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
-      _ref.read(authErrorProvider.notifier).state = e.toString();
-      return null;
+      rethrow;
     }
   }
-  
-  // Send password reset email
-  Future<bool> resetPassword(String email) async {
-    _ref.read(authLoadingProvider.notifier).state = true;
-    _ref.read(authErrorProvider.notifier).state = null;
-    
+
+  Future<void> resetPassword(String email) async {
     try {
+      state = const AsyncValue.loading();
       await _authService.resetPassword(email);
-      _ref.read(authLoadingProvider.notifier).state = false;
-      return true;
+      state = AsyncValue.data(_ref.read(currentUserProvider));
     } catch (e) {
-      _ref.read(authLoadingProvider.notifier).state = false;
-      _ref.read(authErrorProvider.notifier).state = e.toString();
-      return false;
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
     }
   }
 }
-
-// Auth notifier provider
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return AuthNotifier(authService, ref);
-});

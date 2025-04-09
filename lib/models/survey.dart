@@ -1,71 +1,65 @@
-enum SurveyStatus { active, completed }
-
 class Survey {
   final String id;
   final String title;
-  final String question;
+  final String description;
   final List<SurveyOption> options;
   final DateTime startDate;
   final DateTime endDate;
-  final SurveyStatus status;
-  final String cityId;
+  final String? imageUrl;
+  final String? cityId;
   final String? districtId;
   final String? categoryId;
   final int totalVotes;
-  final SurveyResult? result;
-
+  final bool isActive;
+  
   Survey({
     required this.id,
     required this.title,
-    required this.question,
+    required this.description,
     required this.options,
     required this.startDate,
     required this.endDate,
-    required this.status,
-    required this.cityId,
+    this.imageUrl,
+    this.cityId,
     this.districtId,
     this.categoryId,
     required this.totalVotes,
-    this.result,
+    required this.isActive,
   });
-
+  
   factory Survey.fromJson(Map<String, dynamic> json) {
     return Survey(
       id: json['id'],
       title: json['title'],
-      question: json['question'],
+      description: json['description'],
       options: (json['options'] as List)
           .map((option) => SurveyOption.fromJson(option))
           .toList(),
       startDate: DateTime.parse(json['start_date']),
       endDate: DateTime.parse(json['end_date']),
-      status: json['status'] == 'completed'
-          ? SurveyStatus.completed
-          : SurveyStatus.active,
+      imageUrl: json['image_url'],
       cityId: json['city_id'],
       districtId: json['district_id'],
       categoryId: json['category_id'],
-      totalVotes: json['total_votes'],
-      result: json['result'] != null
-          ? SurveyResult.fromJson(json['result'])
-          : null,
+      totalVotes: json['total_votes'] ?? 0,
+      isActive: json['is_active'] ?? false,
     );
   }
-
+  
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'title': title,
-      'question': question,
+      'description': description,
       'options': options.map((option) => option.toJson()).toList(),
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
-      'status': status == SurveyStatus.completed ? 'completed' : 'active',
+      'image_url': imageUrl,
       'city_id': cityId,
       'district_id': districtId,
       'category_id': categoryId,
       'total_votes': totalVotes,
-      'result': result?.toJson(),
+      'is_active': isActive,
     };
   }
 }
@@ -74,85 +68,68 @@ class SurveyOption {
   final String id;
   final String text;
   final int voteCount;
-  final double percentage;
-
+  
   SurveyOption({
     required this.id,
     required this.text,
     required this.voteCount,
-    required this.percentage,
   });
-
+  
   factory SurveyOption.fromJson(Map<String, dynamic> json) {
     return SurveyOption(
       id: json['id'],
       text: json['text'],
-      voteCount: json['vote_count'],
-      percentage: json['percentage'].toDouble(),
+      voteCount: json['vote_count'] ?? 0,
     );
   }
-
+  
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'text': text,
       'vote_count': voteCount,
-      'percentage': percentage,
     };
+  }
+  
+  // Calculate percentage based on total votes
+  double getPercentage(int totalVotes) {
+    if (totalVotes == 0) return 0;
+    return (voteCount / totalVotes) * 100;
   }
 }
 
-enum SurveyResultType { positive, negative, neutral }
-
-class SurveyResult {
-  final SurveyResultType type;
-  final String message;
-  final bool isCritical;
-
-  SurveyResult({
-    required this.type,
-    required this.message,
-    required this.isCritical,
+class SurveyVote {
+  final String id;
+  final String surveyId;
+  final String optionId;
+  final String userId;
+  final DateTime votedAt;
+  
+  SurveyVote({
+    required this.id,
+    required this.surveyId,
+    required this.optionId,
+    required this.userId,
+    required this.votedAt,
   });
-
-  factory SurveyResult.fromJson(Map<String, dynamic> json) {
-    SurveyResultType type;
-    switch (json['type']) {
-      case 'positive':
-        type = SurveyResultType.positive;
-        break;
-      case 'negative':
-        type = SurveyResultType.negative;
-        break;
-      default:
-        type = SurveyResultType.neutral;
-    }
-
-    return SurveyResult(
-      type: type,
-      message: json['message'],
-      isCritical: json['is_critical'] ?? false,
+  
+  factory SurveyVote.fromJson(Map<String, dynamic> json) {
+    return SurveyVote(
+      id: json['id'],
+      surveyId: json['survey_id'],
+      optionId: json['option_id'],
+      userId: json['user_id'],
+      votedAt: DateTime.parse(json['voted_at']),
     );
   }
-
+  
   Map<String, dynamic> toJson() {
-    String typeString;
-    switch (type) {
-      case SurveyResultType.positive:
-        typeString = 'positive';
-        break;
-      case SurveyResultType.negative:
-        typeString = 'negative';
-        break;
-      case SurveyResultType.neutral:
-        typeString = 'neutral';
-        break;
-    }
-
     return {
-      'type': typeString,
-      'message': message,
-      'is_critical': isCritical,
+      'id': id,
+      'survey_id': surveyId,
+      'option_id': optionId,
+      'user_id': userId,
+      'voted_at': votedAt.toIso8601String(),
     };
   }
 }

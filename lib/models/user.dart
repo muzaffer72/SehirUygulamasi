@@ -4,25 +4,23 @@ class User {
   final String email;
   final String? phone;
   final String? profilePhotoUrl;
-  final String cityId;
-  final String districtId;
-  final List<String> roles;
+  final String? cityId;
+  final String? districtId;
+  final bool isAdmin;
   final DateTime createdAt;
-  final bool isVerified;
-  
+
   User({
     required this.id,
     required this.name,
     required this.email,
     this.phone,
     this.profilePhotoUrl,
-    required this.cityId,
-    required this.districtId,
-    required this.roles,
+    this.cityId,
+    this.districtId,
+    required this.isAdmin,
     required this.createdAt,
-    required this.isVerified,
   });
-  
+
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'],
@@ -32,12 +30,11 @@ class User {
       profilePhotoUrl: json['profile_photo_url'],
       cityId: json['city_id'],
       districtId: json['district_id'],
-      roles: List<String>.from(json['roles'] ?? []),
+      isAdmin: json['is_admin'] ?? false,
       createdAt: DateTime.parse(json['created_at']),
-      isVerified: json['is_verified'] ?? false,
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -47,15 +44,11 @@ class User {
       'profile_photo_url': profilePhotoUrl,
       'city_id': cityId,
       'district_id': districtId,
-      'roles': roles,
+      'is_admin': isAdmin,
       'created_at': createdAt.toIso8601String(),
-      'is_verified': isVerified,
     };
   }
-  
-  bool get isAdmin => roles.contains('admin');
-  bool get isModerator => roles.contains('moderator');
-  
+
   User copyWith({
     String? id,
     String? name,
@@ -64,9 +57,8 @@ class User {
     String? profilePhotoUrl,
     String? cityId,
     String? districtId,
-    List<String>? roles,
+    bool? isAdmin,
     DateTime? createdAt,
-    bool? isVerified,
   }) {
     return User(
       id: id ?? this.id,
@@ -76,9 +68,8 @@ class User {
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
       cityId: cityId ?? this.cityId,
       districtId: districtId ?? this.districtId,
-      roles: roles ?? this.roles,
+      isAdmin: isAdmin ?? this.isAdmin,
       createdAt: createdAt ?? this.createdAt,
-      isVerified: isVerified ?? this.isVerified,
     );
   }
 }
