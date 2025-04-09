@@ -90,33 +90,131 @@ class SurveyService {
     final now = DateTime.now();
     
     return [
+      // Genel anket - Tüm Türkiye için geçerli
       Survey(
         id: 'survey_1',
-        title: 'Park alanları hakkında',
-        description: 'Şehrimizdeki park alanlarının kullanımı hakkında görüşlerinizi paylaşın',
-        question: 'Şehrimizdeki park alanlarını ne sıklıkla kullanıyorsunuz?',
+        title: 'Ulusal bayramlar hakkında',
+        description: 'Ulusal bayramlarımızla ilgili etkinliklere katılımınızı değerlendirin',
+        question: 'Ulusal bayramlarda düzenlenen etkinliklere ne sıklıkla katılıyorsunuz?',
+        imageUrl: 'https://example.com/images/bayram.jpg',
+        scopeType: 'general', // Genel kapsam - tüm Türkiye çapında gösterilecek
         options: [
           SurveyOption(
             id: 'option_1_1',
             surveyId: 'survey_1',
-            text: 'Her gün',
-            voteCount: 156,
+            text: 'Her zaman katılırım',
+            voteCount: 356,
           ),
           SurveyOption(
             id: 'option_1_2',
             surveyId: 'survey_1',
-            text: 'Haftada birkaç kez',
-            voteCount: 287,
+            text: 'Çoğunlukla katılırım',
+            voteCount: 487,
           ),
           SurveyOption(
             id: 'option_1_3',
             surveyId: 'survey_1',
-            text: 'Ayda birkaç kez',
-            voteCount: 142,
+            text: 'Bazen katılırım',
+            voteCount: 242,
           ),
           SurveyOption(
             id: 'option_1_4',
             surveyId: 'survey_1',
+            text: 'Nadiren katılırım',
+            voteCount: 183,
+          ),
+          SurveyOption(
+            id: 'option_1_5',
+            surveyId: 'survey_1',
+            text: 'Hiç katılmam',
+            voteCount: 83,
+          ),
+        ],
+        startDate: now.subtract(const Duration(days: 10)),
+        endDate: now.add(const Duration(days: 20)),
+        isActive: true,
+        totalVotes: 1351,
+        categoryId: 'category_1', // Etkinlikler kategorisi
+      ),
+      
+      // İl bazlı anket - Tüm Türkiye seçeneği ile
+      Survey(
+        id: 'survey_2',
+        title: 'Toplu taşıma memnuniyeti',
+        description: 'Belediyelerin sunduğu toplu taşıma hizmetleri hakkında memnuniyetinizi değerlendirin',
+        question: 'Yaşadığınız şehirdeki toplu taşıma hizmetlerinden ne kadar memnunsunuz?',
+        imageUrl: 'https://example.com/images/toplu_tasima.jpg',
+        scopeType: 'city', // İl bazlı anket
+        cityId: 'all', // "Tüm Türkiye" seçeneği - her il için ayrı sonuçlar
+        options: [
+          SurveyOption(
+            id: 'option_2_1',
+            surveyId: 'survey_2',
+            text: 'Çok memnunum',
+            voteCount: 194,
+          ),
+          SurveyOption(
+            id: 'option_2_2',
+            surveyId: 'survey_2',
+            text: 'Memnunum',
+            voteCount: 341,
+          ),
+          SurveyOption(
+            id: 'option_2_3',
+            surveyId: 'survey_2',
+            text: 'Kararsızım',
+            voteCount: 187,
+          ),
+          SurveyOption(
+            id: 'option_2_4',
+            surveyId: 'survey_2',
+            text: 'Memnun değilim',
+            voteCount: 275,
+          ),
+          SurveyOption(
+            id: 'option_2_5',
+            surveyId: 'survey_2',
+            text: 'Hiç memnun değilim',
+            voteCount: 238,
+          ),
+        ],
+        startDate: now.subtract(const Duration(days: 15)),
+        endDate: now.add(const Duration(days: 15)),
+        isActive: true,
+        totalVotes: 1235,
+        categoryId: 'category_2', // Ulaşım kategorisi
+      ),
+      
+      // İl bazlı anket - Belirli bir şehre özel
+      Survey(
+        id: 'survey_3',
+        title: 'Park alanları hakkında',
+        description: 'İstanbul\'daki park alanlarının kullanımı hakkında görüşlerinizi paylaşın',
+        question: 'İstanbul\'daki park alanlarını ne sıklıkla kullanıyorsunuz?',
+        scopeType: 'city', // İl bazlı anket
+        cityId: 'city_1', // İstanbul
+        options: [
+          SurveyOption(
+            id: 'option_3_1',
+            surveyId: 'survey_3',
+            text: 'Her gün',
+            voteCount: 156,
+          ),
+          SurveyOption(
+            id: 'option_3_2',
+            surveyId: 'survey_3',
+            text: 'Haftada birkaç kez',
+            voteCount: 287,
+          ),
+          SurveyOption(
+            id: 'option_3_3',
+            surveyId: 'survey_3',
+            text: 'Ayda birkaç kez',
+            voteCount: 142,
+          ),
+          SurveyOption(
+            id: 'option_3_4',
+            surveyId: 'survey_3',
             text: 'Çok nadir',
             voteCount: 83,
           ),
@@ -124,75 +222,35 @@ class SurveyService {
         startDate: now.subtract(const Duration(days: 10)),
         endDate: now.add(const Duration(days: 5)),
         isActive: true,
-        voteCount: 668,
-        cityId: 'city_1', // İstanbul
-        districtId: null,
+        totalVotes: 668,
+        categoryId: 'category_3', // Çevre ve yeşil alanlar kategorisi
       ),
+      
+      // İlçe bazlı anket - belirli bir ilçeye özel
       Survey(
-        id: 'survey_2',
-        title: 'Toplu taşıma memnuniyeti',
-        description: 'Toplu taşıma hizmetleri hakkında memnuniyetinizi değerlendirin',
-        question: 'Belediyenin toplu taşıma hizmetlerinden ne kadar memnunsunuz?',
-        options: [
-          SurveyOption(
-            id: 'option_2_1',
-            surveyId: 'survey_2',
-            text: 'Çok memnunum',
-            voteCount: 94,
-          ),
-          SurveyOption(
-            id: 'option_2_2',
-            surveyId: 'survey_2',
-            text: 'Memnunum',
-            voteCount: 241,
-          ),
-          SurveyOption(
-            id: 'option_2_3',
-            surveyId: 'survey_2',
-            text: 'Kararsızım',
-            voteCount: 87,
-          ),
-          SurveyOption(
-            id: 'option_2_4',
-            surveyId: 'survey_2',
-            text: 'Memnun değilim',
-            voteCount: 175,
-          ),
-          SurveyOption(
-            id: 'option_2_5',
-            surveyId: 'survey_2',
-            text: 'Hiç memnun değilim',
-            voteCount: 138,
-          ),
-        ],
-        startDate: now.subtract(const Duration(days: 15)),
-        endDate: now.add(const Duration(days: 15)),
-        isActive: true,
-        voteCount: 735,
-        cityId: 'city_1', // İstanbul
-        districtId: null,
-      ),
-      Survey(
-        id: 'survey_3',
+        id: 'survey_4',
         title: 'Çöp toplama hizmetleri',
-        description: 'Kadıköy bölgesindeki çöp toplama hizmetleri hakkında anket',
+        description: 'Kadıköy ilçesindeki çöp toplama hizmetleri hakkında anket',
         question: 'Kadıköy ilçesinde çöp toplama hizmetleri hangi sıklıkta yapılmalı?',
+        scopeType: 'district', // İlçe bazlı anket
+        cityId: 'city_1', // İstanbul
+        districtId: 'district_1', // Kadıköy
         options: [
           SurveyOption(
-            id: 'option_3_1',
-            surveyId: 'survey_3',
+            id: 'option_4_1',
+            surveyId: 'survey_4',
             text: 'Günde iki kez',
             voteCount: 78,
           ),
           SurveyOption(
-            id: 'option_3_2',
-            surveyId: 'survey_3',
+            id: 'option_4_2',
+            surveyId: 'survey_4',
             text: 'Günde bir kez',
             voteCount: 192,
           ),
           SurveyOption(
-            id: 'option_3_3',
-            surveyId: 'survey_3',
+            id: 'option_4_3',
+            surveyId: 'survey_4',
             text: 'İki günde bir',
             voteCount: 35,
           ),
@@ -200,9 +258,8 @@ class SurveyService {
         startDate: now.subtract(const Duration(days: 5)),
         endDate: now.add(const Duration(days: 25)),
         isActive: true,
-        voteCount: 305,
-        cityId: 'city_1', // İstanbul
-        districtId: 'district_1', // Kadıköy
+        totalVotes: 305,
+        categoryId: 'category_4', // Temizlik hizmetleri kategorisi
       ),
     ];
   }
