@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sikayet_var/models/post.dart';
@@ -113,7 +115,15 @@ class ApiService {
     }
   }
   
-  Future<Post> createPost(String title, String content, String userId, String categoryId, {String? cityId, String? districtId}) async {
+  Future<Post> createPost(String title, String content, PostType type, {String? categoryId, String? cityId, String? districtId, List<File>? images, bool isAnonymous = false}) async {
+    // Get user ID from token
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+    
+    // In a real app, this would be extracted from the token or provided by the API
+    const userId = "1";
     final response = await _client.post(
       Uri.parse('$baseUrl/posts'),
       headers: {'Content-Type': 'application/json'},
@@ -124,6 +134,8 @@ class ApiService {
         'category_id': categoryId,
         'city_id': cityId,
         'district_id': districtId,
+        'type': type.toString().split('.').last,
+        'is_anonymous': isAnonymous,
       }),
     );
     
@@ -293,6 +305,25 @@ class ApiService {
     }
     
     return survey;
+  }
+  
+  // Get current user using stored token
+  Future<User?> getCurrentUser() async {
+    final token = await _getToken();
+    
+    if (token == null) {
+      return null;
+    }
+    
+    // In a real app, this would validate the token with the server
+    // For now, we'll return a mock user
+    return User(
+      id: '1',
+      name: 'Demo Kullanıcı',
+      email: 'demo@example.com',
+      isVerified: true,
+      createdAt: DateTime.now().subtract(const Duration(days: 30)),
+    );
   }
   
   // Users
