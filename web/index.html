@@ -18,14 +18,46 @@
 
   <script>
     // The value below is injected by flutter build, do not touch.
-    var serviceWorkerVersion = null;
+    const serviceWorkerVersion = null;
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
 </head>
 <body>
+  <style>
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+    .loader {
+      width: 48px;
+      height: 48px;
+      border: 5px solid #1976d2;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      display: inline-block;
+      box-sizing: border-box;
+      animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    } 
+  </style>
+
+  <div id="loading" class="loading">
+    <span class="loader"></span>
+  </div>
+
   <script>
     window.addEventListener('load', function(ev) {
+      var loading = document.querySelector('#loading');
+
       // Download main.dart.js
       _flutter.loader.loadEntrypoint({
         serviceWorker: {
@@ -33,6 +65,7 @@
         },
         onEntrypointLoaded: function(engineInitializer) {
           engineInitializer.initializeEngine().then(function(appRunner) {
+            loading.remove();
             appRunner.runApp();
           });
         }
