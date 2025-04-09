@@ -8,6 +8,8 @@ import 'package:sikayet_var/models/city.dart';
 import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
+import 'package:sikayet_var/providers/api_service_provider.dart';
+import 'package:sikayet_var/providers/user_provider.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:sikayet_var/utils/constants.dart';
 
@@ -28,7 +30,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
   
-  final ApiService _apiService = ApiService();
+  late final ApiService _apiService;
   final ImagePicker _picker = ImagePicker();
   
   String? _selectedCategoryId;
@@ -43,6 +45,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   @override
   void initState() {
     super.initState();
+    _apiService = ref.read(apiServiceProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserLocation();
     });

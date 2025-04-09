@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/survey.dart';
 import 'package:sikayet_var/models/user.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
+import 'package:sikayet_var/providers/user_provider.dart';
 import 'package:sikayet_var/services/survey_service.dart';
 
 final surveyServiceProvider = Provider<SurveyService>((ref) {
