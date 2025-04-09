@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/survey.dart';
+import 'package:sikayet_var/providers/survey_provider.dart';
+import 'package:sikayet_var/providers/auth_provider.dart';
 import 'package:sikayet_var/services/api_service.dart';
 
 class SurveysScreen extends ConsumerStatefulWidget {
@@ -13,58 +15,121 @@ class SurveysScreen extends ConsumerStatefulWidget {
 class _SurveysScreenState extends ConsumerState<SurveysScreen> {
   final ApiService _apiService = ApiService();
   
-  List<Survey> _surveys = [];
-  bool _isLoading = true;
-  
-  @override
-  void initState() {
-    super.initState();
-    _loadSurveys();
-  }
-  
-  Future<void> _loadSurveys() async {
-    setState(() {
-      _isLoading = true;
-    });
-    
-    try {
-      final surveys = await _apiService.getActiveSurveys();
-      
-      setState(() {
-        _surveys = surveys;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Anketler yüklenirken bir hata oluştu: $e')),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-  
   @override
   Widget build(BuildContext context) {
+    // Kullanıcının konumuna göre filtrelenmiş anketleri kullan
+    final surveysAsync = ref.watch(filteredSurveysProvider);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Anketler'),
+        actions: [
+          // Filtreleme bilgisi
+          Consumer(
+            builder: (context, ref, child) {
+              final userAsync = ref.watch(currentUserProvider);
+              if (userAsync is AsyncData && userAsync.value != null) {
+                final user = userAsync.value!;
+                return IconButton(
+                  icon: const Icon(Icons.filter_list),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Filtreleme Bilgisi'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Anketler konum bilginize göre filtreleniyor:'),
+                            const SizedBox(height: 12),
+                            if (user.cityId != null) FutureBuilder(
+                              future: _apiService.getCityById(user.cityId!),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return Text('Şehir: ${snapshot.data!.name}');
+                                }
+                                return const Text('Şehir: Yükleniyor...');
+                              },
+                            ),
+                            if (user.districtId != null) FutureBuilder(
+                              future: _apiService.getDistrictById(user.districtId!),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return Text('İlçe: ${snapshot.data!.name}');
+                                }
+                                return const Text('İlçe: Yükleniyor...');
+                              },
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Tamam'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _surveys.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _loadSurveys,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _surveys.length,
-                    itemBuilder: (context, index) {
-                      final survey = _surveys[index];
-                      return _buildSurveyCard(survey);
-                    },
+      body: surveysAsync.when(
+        data: (surveys) {
+          if (surveys.isEmpty) {
+            return _buildEmptyState();
+          }
+          
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.refresh(filteredSurveysProvider);
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: surveys.length,
+              itemBuilder: (context, index) {
+                final survey = surveys[index];
+                return _buildSurveyCard(survey);
+              },
+            ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: Colors.red,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Anketler yüklenirken bir hata oluştu',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[700],
                   ),
                 ),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.refresh(filteredSurveysProvider);
+                  },
+                  child: const Text('Tekrar Dene'),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
   
@@ -99,7 +164,9 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: _loadSurveys,
+            onPressed: () {
+              ref.refresh(filteredSurveysProvider);
+            },
             icon: const Icon(Icons.refresh),
             label: const Text('Yenile'),
           ),
