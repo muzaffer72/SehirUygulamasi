@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/models/survey.dart';
 
@@ -222,6 +224,9 @@ class CityProfile {
   final List<Post>? recentPosts;
   final List<Survey>? activeSurveyList;
   
+  // Şehir bilgileri
+  final String? region;  // Şehrin bulunduğu bölge (Marmara, Ege vb.)
+  
   // Belediye bilgileri
   final String? mayorName;
   final String? mayorImageUrl;
@@ -253,6 +258,8 @@ class CityProfile {
   
   // Aylık performans değerlendirmesi
   final Map<String, double>? monthlyPerformance;
+  final String? performanceMonth;  // Performans ayı (örn: Nisan)
+  final String? performanceYear;   // Performans yılı (örn: 2024)
   
   // Belediye ödülleri
   final bool isBestOfMonth; // Ayın en iyi belediyesi
@@ -274,6 +281,7 @@ class CityProfile {
     required this.activeSurveys,
     this.recentPosts,
     this.activeSurveyList,
+    this.region,
     this.mayorName,
     this.mayorImageUrl,
     this.mayorParty,
@@ -292,6 +300,8 @@ class CityProfile {
     this.complaintCount,
     this.priorityData,
     this.monthlyPerformance,
+    this.performanceMonth,
+    this.performanceYear,
     this.isBestOfMonth = false,
     this.awardMonth,
     this.awardScore,
@@ -366,6 +376,25 @@ class CityProfile {
       };
     }
     
+    // Şehrin performans ayı ve yılını belirle
+    String? performanceMonth;
+    String? performanceYear;
+    
+    if (json['performanceMonth'] != null) {
+      performanceMonth = json['performanceMonth'];
+    } else {
+      // Varsayılan olarak son ayı kullan
+      final now = DateTime.now();
+      final months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
+                      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+      performanceMonth = months[now.month - 1];
+      performanceYear = now.year.toString();
+    }
+    
+    if (json['performanceYear'] != null) {
+      performanceYear = json['performanceYear'];
+    }
+    
     return CityProfile(
       id: json['id'],
       name: json['name'],
@@ -380,6 +409,7 @@ class CityProfile {
       activeSurveys: json['activeSurveysCount'] ?? 0,
       recentPosts: recentPosts,
       activeSurveyList: activeSurveyList,
+      region: json['region'],
       mayorName: json['mayorName'],
       mayorImageUrl: json['mayorImageUrl'],
       mayorParty: json['mayorParty'],
@@ -398,6 +428,8 @@ class CityProfile {
       complaintCount: json['complaintCount'] ?? json['totalPosts'] ?? 0,
       priorityData: priorityData,
       monthlyPerformance: monthlyPerformance,
+      performanceMonth: performanceMonth,
+      performanceYear: performanceYear,
       isBestOfMonth: json['is_best_of_month'] ?? json['isBestOfMonth'] ?? false,
       awardMonth: json['award_month'] ?? json['awardMonth'],
       awardScore: json['award_score'] != null ? json['award_score'].toDouble() : 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart';
 import '../../models/city_profile.dart';
 import '../../widgets/best_municipality_banner.dart';
 import '../../widgets/city_priority_chart.dart';
