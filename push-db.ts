@@ -40,6 +40,17 @@ async function main() {
       CREATE TABLE IF NOT EXISTS cities (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
+        description TEXT,
+        population BIGINT,
+        latitude DOUBLE PRECISION,
+        longitude DOUBLE PRECISION,
+        image_url TEXT,
+        header_image_url TEXT,
+        mayor_name VARCHAR(255),
+        mayor_party VARCHAR(255),
+        mayor_satisfaction_rate INTEGER,
+        mayor_image_url TEXT,
+        mayor_party_logo TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
       );
     `);

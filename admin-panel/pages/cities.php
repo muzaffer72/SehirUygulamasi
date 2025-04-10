@@ -110,6 +110,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_city'])) {
         }
     }
     
+    // Güncelleme sırasında dosya kontrolü için aynı işlemleri yap
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_city']) && !empty($_FILES['mayor_image']['name'])) {
+        $target_dir = "../uploads/mayors/";
+        
+        // Klasör yoksa oluştur
+        if (!file_exists($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+        
+        $mayorImageFileName = time() . '_' . basename($_FILES['mayor_image']['name']);
+        $target_file = $target_dir . $mayorImageFileName;
+        
+        // Dosya yükleme işlemi
+        if (move_uploaded_file($_FILES['mayor_image']['tmp_name'], $target_file)) {
+            // Eski dosyayı sil
+            if (!empty($mayorImageUrl) && file_exists("../" . $mayorImageUrl)) {
+                unlink("../" . $mayorImageUrl);
+            }
+            $mayorImageUrl = 'uploads/mayors/' . $mayorImageFileName;
+        } else {
+            $error = "Belediye başkanı fotoğrafı yüklenirken bir hata oluştu.";
+        }
+    }
+    
     // Parti logosu
     if (!empty($_FILES['mayor_party_logo']['name'])) {
         $target_dir = "../uploads/parties/";
@@ -124,6 +148,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_city'])) {
         
         // Dosya yükleme işlemi
         if (move_uploaded_file($_FILES['mayor_party_logo']['tmp_name'], $target_file)) {
+            $mayorPartyLogoUrl = 'uploads/parties/' . $partyLogoFileName;
+        } else {
+            $error = "Parti logosu yüklenirken bir hata oluştu.";
+        }
+    }
+    
+    // Güncelleme sırasında parti logosu kontrolü
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_city']) && !empty($_FILES['mayor_party_logo']['name'])) {
+        $target_dir = "../uploads/parties/";
+        
+        // Klasör yoksa oluştur
+        if (!file_exists($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+        
+        $partyLogoFileName = time() . '_' . basename($_FILES['mayor_party_logo']['name']);
+        $target_file = $target_dir . $partyLogoFileName;
+        
+        // Dosya yükleme işlemi
+        if (move_uploaded_file($_FILES['mayor_party_logo']['tmp_name'], $target_file)) {
+            // Eski dosyayı sil
+            if (!empty($mayorPartyLogoUrl) && file_exists("../" . $mayorPartyLogoUrl)) {
+                unlink("../" . $mayorPartyLogoUrl);
+            }
             $mayorPartyLogoUrl = 'uploads/parties/' . $partyLogoFileName;
         } else {
             $error = "Parti logosu yüklenirken bir hata oluştu.";
@@ -242,9 +290,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_city'])) {
     
     if (empty($error)) {
         // Şehir güncelleme
-        $updateQuery = "UPDATE cities SET name = ?, description = ?, population = ?, latitude = ?, longitude = ?, image_url = ?, header_image_url = ? WHERE id = ?";
+        $updateQuery = "UPDATE cities SET name = ?, description = ?, population = ?, latitude = ?, longitude = ?, image_url = ?, 
+                        header_image_url = ?, mayor_name = ?, mayor_party = ?, mayor_satisfaction_rate = ?, 
+                        mayor_image_url = ?, mayor_party_logo = ? WHERE id = ?";
         $stmt = $conn->prepare($updateQuery);
-        $stmt->bind_param("ssdddssi", $name, $description, $population, $latitude, $longitude, $imageUrl, $headerImageUrl, $cityId);
+        $stmt->bind_param("ssdddssssisii", $name, $description, $population, $latitude, $longitude, 
+                           $imageUrl, $headerImageUrl, $mayorName, $mayorParty, $mayorSatisfactionRate, 
+                           $mayorImageUrl, $mayorPartyLogoUrl, $cityId);
         
         if ($stmt->execute()) {
             $message = "Şehir başarıyla güncellendi.";
