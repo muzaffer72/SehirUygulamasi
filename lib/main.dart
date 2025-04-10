@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/models/survey.dart';
+import 'package:sikayet_var/models/city_profile.dart';
 import 'package:sikayet_var/screens/navigation/main_navigation_screen.dart';
 import 'package:sikayet_var/screens/posts/create_post_screen.dart';
 import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
@@ -142,10 +143,20 @@ class SikayetVarApp extends StatelessWidget {
         
         if (settings.name == '/city_profile') {
           final cityId = settings.arguments as int;
+          // Bu kısmı model yapısına uygun hale getirdik
+          final mockCityProfile = CityProfile(
+            id: cityId,
+            name: "Şehir ${cityId.toString()}",
+            population: 500000,
+            latitude: 41.0082,
+            longitude: 28.9784,
+            totalPosts: 150,
+            totalSolvedIssues: 120,
+            activeSurveys: 5,
+          );
           return MaterialPageRoute(
             builder: (context) => CityProfileScreen(
-              cityId: cityId, 
-              cityName: "Şehir ${cityId.toString()}" 
+              cityProfile: mockCityProfile,
             ),
           );
         }

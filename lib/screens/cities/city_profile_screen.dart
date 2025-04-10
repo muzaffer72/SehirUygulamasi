@@ -345,9 +345,7 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
           // Performans Kartı
           if (widget.cityProfile.monthlyPerformance != null)
             MonthlyPerformanceCard(
-              performance: widget.cityProfile.monthlyPerformance!,
-              month: widget.cityProfile.performanceMonth ?? 'Nisan',
-              year: widget.cityProfile.performanceYear ?? '2024',
+              monthlyPerformance: widget.cityProfile.monthlyPerformance!,
             ),
         ],
       ),

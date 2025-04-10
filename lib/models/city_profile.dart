@@ -53,6 +53,7 @@ class CityProject {
   final String status; // planned, inProgress, completed
   final int likes;
   final int dislikes;
+  final double? budget; // Proje bütçesi
   
   CityProject({
     required this.id,
@@ -67,6 +68,7 @@ class CityProject {
     required this.status,
     required this.likes,
     required this.dislikes,
+    this.budget,
   });
   
   factory CityProject.fromJson(Map<String, dynamic> json) {
@@ -92,6 +94,11 @@ class CityProject {
       }
     }
     
+    double? budget;
+    if (json['budget'] != null) {
+      budget = json['budget'] is int ? json['budget'].toDouble() : json['budget'];
+    }
+    
     return CityProject(
       id: json['id'],
       cityId: json['cityId'],
@@ -105,6 +112,7 @@ class CityProject {
       status: json['status'],
       likes: json['likes'] ?? 0,
       dislikes: json['dislikes'] ?? 0,
+      budget: budget,
     );
   }
   
