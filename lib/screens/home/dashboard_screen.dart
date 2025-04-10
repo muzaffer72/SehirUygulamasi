@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vector_math/vector_math_64.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
 import 'package:sikayet_var/providers/current_user_provider.dart';
@@ -15,6 +16,16 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> with SingleTickerProviderStateMixin {
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<TabController>('_tabController', _tabController));
+  }
+  
+  @override
+  void activate() {
+    super.activate();
+  }
   late TabController _tabController;
   final ApiService _apiService = ApiService();
   

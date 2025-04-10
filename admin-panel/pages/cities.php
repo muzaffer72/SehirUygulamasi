@@ -17,14 +17,26 @@ $mockCities = [
     ['id' => 42, 'name' => 'Konya', 'region' => 'İç Anadolu', 'population' => 2277017, 'mayor_name' => 'Uğur İbrahim Altay'],
     ['id' => 27, 'name' => 'Gaziantep', 'region' => 'Güneydoğu Anadolu', 'population' => 2130432, 'mayor_name' => 'Fatma Şahin'],
     ['id' => 25, 'name' => 'Erzurum', 'region' => 'Doğu Anadolu', 'population' => 756893, 'mayor_name' => 'Mehmet Sekmen'],
-    ['id' => 55, 'name' => 'Samsun', 'region' => 'Karadeniz', 'population' => 1368489, 'mayor_name' => 'Mustafa Demir']
+    ['id' => 55, 'name' => 'Samsun', 'region' => 'Karadeniz', 'population' => 1368489, 'mayor_name' => 'Mustafa Demir'],
+    ['id' => 34, 'name' => 'Adana', 'region' => 'Akdeniz', 'population' => 2258718, 'mayor_name' => 'Zeydan Karalar'],
+    ['id' => 44, 'name' => 'Malatya', 'region' => 'Doğu Anadolu', 'population' => 806156, 'mayor_name' => 'Selahattin Gürkan'],
+    ['id' => 52, 'name' => 'Ordu', 'region' => 'Karadeniz', 'population' => 771932, 'mayor_name' => 'Mehmet Hilmi Güler'],
+    ['id' => 33, 'name' => 'Mersin', 'region' => 'Akdeniz', 'population' => 1868757, 'mayor_name' => 'Vahap Seçer'],
+    ['id' => 65, 'name' => 'Van', 'region' => 'Doğu Anadolu', 'population' => 1136757, 'mayor_name' => 'Mehmet Emin Bilmez'],
+    ['id' => 38, 'name' => 'Kayseri', 'region' => 'İç Anadolu', 'population' => 1421455, 'mayor_name' => 'Memduh Büyükkılıç'],
+    ['id' => 26, 'name' => 'Eskişehir', 'region' => 'İç Anadolu', 'population' => 887475, 'mayor_name' => 'Yılmaz Büyükerşen'],
+    ['id' => 10, 'name' => 'Balıkesir', 'region' => 'Marmara', 'population' => 1250610, 'mayor_name' => 'Yücel Yılmaz'],
+    ['id' => 23, 'name' => 'Elazığ', 'region' => 'Doğu Anadolu', 'population' => 591098, 'mayor_name' => 'Şahin Şerifoğulları'],
+    ['id' => 45, 'name' => 'Manisa', 'region' => 'Ege', 'population' => 1450616, 'mayor_name' => 'Cengiz Ergün']
 ];
 
 // Şehirlerin ay ödülü bilgileri
 $cityAwards = [
     ['city_id' => 35, 'month' => 'Nisan 2024', 'score' => 88.7, 'text' => 'Çevre projeleri ve şeffaf yönetimde gösterdiği başarılardan dolayı'],
     ['city_id' => 6, 'month' => 'Mart 2024', 'score' => 92.3, 'text' => 'Ulaşım hizmetleri ve sokak hayvanları projelerindeki başarısından dolayı'],
-    ['city_id' => 1, 'month' => 'Şubat 2024', 'score' => 85.1, 'text' => 'Kültür sanat etkinlikleri ve dijital belediyecilik uygulamalarındaki başarısından dolayı']
+    ['city_id' => 1, 'month' => 'Şubat 2024', 'score' => 85.1, 'text' => 'Kültür sanat etkinlikleri ve dijital belediyecilik uygulamalarındaki başarısından dolayı'],
+    ['city_id' => 16, 'month' => 'Ocak 2024', 'score' => 83.4, 'text' => 'Yeşil alan projeleri ve katılımcı belediyecilik uygulamalarındaki başarısından dolayı'],
+    ['city_id' => 34, 'month' => 'Aralık 2023', 'score' => 80.9, 'text' => 'Sosyal belediyecilik ve altyapı iyileştirme projelerindeki başarısından dolayı']
 ];
 
 // Şehir ekleme işlemi
