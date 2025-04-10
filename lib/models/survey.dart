@@ -39,6 +39,7 @@ class SurveyOption {
 class Survey {
   final String id;
   final String title;
+  final String shortTitle;  // Anasayfada gösterilecek kısa başlık
   final String description;
   final String? question;   // Anket sorusu
   final String? imageUrl;   // Anket görseli URL'i (opsiyonel)
@@ -50,11 +51,13 @@ class Survey {
   final DateTime startDate; // Başlangıç tarihi
   final DateTime endDate;   // Bitiş tarihi
   int totalVotes;           // Toplam oy sayısı
+  final int totalUsers;     // Görüntülenen toplam kullanıcı sayısı
   final List<SurveyOption> options; // Anket seçenekleri
 
   Survey({
     required this.id,
     required this.title,
+    required this.shortTitle,
     required this.description,
     this.question,
     this.imageUrl,
@@ -66,6 +69,7 @@ class Survey {
     required this.startDate,
     required this.endDate,
     required this.totalVotes,
+    required this.totalUsers,
     required this.options,
   });
 
@@ -73,6 +77,7 @@ class Survey {
     return Survey(
       id: json['id'].toString(),
       title: json['title'],
+      shortTitle: json['short_title'] ?? json['title'].toString().substring(0, json['title'].toString().length > 40 ? 40 : json['title'].toString().length),
       description: json['description'],
       question: json['question'],
       imageUrl: json['image_url'],
@@ -88,6 +93,7 @@ class Survey {
           ? DateTime.parse(json['end_date'])
           : DateTime.now().add(const Duration(days: 30)),
       totalVotes: json['total_votes'] ?? 0,
+      totalUsers: json['total_users'] ?? 1000, // Varsayılan olarak 1000 kullanıcı
       options: (json['options'] as List<dynamic>)
           .map((option) => SurveyOption.fromJson(option))
           .toList(),
@@ -98,6 +104,7 @@ class Survey {
     return {
       'id': id,
       'title': title,
+      'short_title': shortTitle,
       'description': description,
       'question': question,
       'image_url': imageUrl,
@@ -109,6 +116,7 @@ class Survey {
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
       'total_votes': totalVotes,
+      'total_users': totalUsers,
       'options': options.map((option) => option.toJson()).toList(),
     };
   }
@@ -130,6 +138,40 @@ class Survey {
         return cityId == userCityId && districtId == userDistrictId;
       default:
         return false;
+    }
+  }
+  
+  // Anket katılım oranını hesaplar (0.0 - 1.0 arası)
+  double getParticipationRate() {
+    if (totalUsers <= 0) return 0.0;
+    return totalVotes / totalUsers;
+  }
+  
+  // Kalan gün sayısını hesaplar
+  int getRemainingDays() {
+    final now = DateTime.now();
+    return endDate.difference(now).inDays;
+  }
+  
+  // Kalan süreyi saat, dakika ve saniye cinsinden hesaplar
+  String getRemainingTimeText() {
+    final now = DateTime.now();
+    final difference = endDate.difference(now);
+    
+    if (difference.isNegative) {
+      return "Anket sona erdi";
+    }
+    
+    final days = difference.inDays;
+    final hours = difference.inHours % 24;
+    final minutes = difference.inMinutes % 60;
+    
+    if (days > 0) {
+      return "$days gün kaldı";
+    } else if (hours > 0) {
+      return "$hours saat $minutes dakika";
+    } else {
+      return "$minutes dakika";
     }
   }
 }

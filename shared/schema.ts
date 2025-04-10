@@ -92,6 +92,7 @@ export const comments = pgTable('comments', {
 export const surveys = pgTable('surveys', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
+  shortTitle: varchar('short_title', { length: 40 }),
   description: text('description').notNull(),
   scopeType: varchar('scope_type', { length: 20 }).default('general').notNull(),
   cityId: integer('city_id').references(() => cities.id),
@@ -101,6 +102,7 @@ export const surveys = pgTable('surveys', {
   startDate: timestamp('start_date').notNull(),
   endDate: timestamp('end_date').notNull(),
   totalVotes: integer('total_votes').default(0).notNull(),
+  totalUsers: integer('total_users').default(0),
   sortOrder: integer('sort_order').default(0).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
