@@ -4,7 +4,6 @@ import 'package:sikayet_var/models/category.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:sikayet_var/widgets/post_card.dart';
-import 'package:sikayet_var/screens/cities/cities_list_screen.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -147,33 +146,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           if (!_hasSearched)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildTabButton(
-                      title: 'Kategoriler',
-                      index: 0,
-                      icon: Icons.category,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildTabButton(
-                      title: 'Şehirler',
-                      index: 1,
-                      icon: Icons.location_city,
-                    ),
-                  ),
-                ],
+              child: _buildTabButton(
+                title: 'Kategoriler',
+                index: 0,
+                icon: Icons.category,
+                fullWidth: true,
               ),
             ),
           
           // İçerik alanı
           if (!_hasSearched)
             Expanded(
-              child: _selectedTabIndex == 0 
-                  ? _buildCategoriesTab()
-                  : const CitiesListScreen(),
+              child: _buildCategoriesTab(),
             ),
           
           // Search results
@@ -325,6 +309,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     required String title,
     required int index,
     required IconData icon,
+    bool fullWidth = false,
   }) {
     final isSelected = _selectedTabIndex == index;
     
