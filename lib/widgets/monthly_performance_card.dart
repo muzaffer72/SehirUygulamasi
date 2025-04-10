@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 class MonthlyPerformanceCard extends StatelessWidget {
   final Map<String, double> monthlyPerformance;
