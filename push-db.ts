@@ -237,11 +237,76 @@ async function main() {
     
     if (existingCities.length === 0) {
       await db.insert(schema.cities).values([
-        { name: 'İstanbul' },
-        { name: 'Ankara' },
-        { name: 'İzmir' },
-        { name: 'Bursa' },
-        { name: 'Antalya' }
+        { 
+          name: 'İstanbul', 
+          description: 'Türkiye\'nin en kalabalık ve en önemli ticaret merkezidir. Boğaziçi ile ikiye ayrılmış, Asya ve Avrupa kıtalarını birleştiren eşsiz bir konuma sahiptir.',
+          population: 16000000,
+          latitude: '41.0082',
+          longitude: '28.9784',
+          imageUrl: '/uploads/cities/istanbul_logo.png',
+          headerImageUrl: '/uploads/cities/istanbul_header.jpg',
+          mayorName: 'Ekrem İmamoğlu',
+          mayorParty: 'CHP',
+          mayorSatisfactionRate: 78,
+          mayorImageUrl: '/uploads/mayors/istanbul_mayor.jpg',
+          mayorPartyLogo: '/uploads/parties/chp_logo.png'
+        },
+        { 
+          name: 'Ankara', 
+          description: 'Türkiye Cumhuriyeti\'nin başkenti ve İstanbul\'dan sonra en kalabalık ikinci şehridir. Türkiye\'nin merkezinde yer alan önemli bir idari merkezdir.',
+          population: 5700000,
+          latitude: '39.9334',
+          longitude: '32.8597',
+          imageUrl: '/uploads/cities/ankara_logo.png',
+          headerImageUrl: '/uploads/cities/ankara_header.jpg',
+          mayorName: 'Mansur Yavaş',
+          mayorParty: 'CHP',
+          mayorSatisfactionRate: 85,
+          mayorImageUrl: '/uploads/mayors/ankara_mayor.jpg',
+          mayorPartyLogo: '/uploads/parties/chp_logo.png'
+        },
+        { 
+          name: 'İzmir', 
+          description: 'Türkiye\'nin batı kıyısında yer alan en büyük üçüncü şehridir. Ege Denizi kıyısında yer alan canlı bir liman şehridir.',
+          population: 4350000,
+          latitude: '38.4237',
+          longitude: '27.1428',
+          imageUrl: '/uploads/cities/izmir_logo.png',
+          headerImageUrl: '/uploads/cities/izmir_header.jpg',
+          mayorName: 'Cemil Tugay',
+          mayorParty: 'CHP',
+          mayorSatisfactionRate: 72,
+          mayorImageUrl: '/uploads/mayors/izmir_mayor.jpg',
+          mayorPartyLogo: '/uploads/parties/chp_logo.png'
+        },
+        { 
+          name: 'Bursa', 
+          description: 'Marmara Bölgesi\'nin Güney Marmara bölümünde yer alan sanayi ve tarih şehridir. Osmanlı İmparatorluğu\'nun ilk başkentidir.',
+          population: 3100000,
+          latitude: '40.1885',
+          longitude: '29.0610',
+          imageUrl: '/uploads/cities/bursa_logo.png',
+          headerImageUrl: '/uploads/cities/bursa_header.jpg',
+          mayorName: 'Mustafa Bozbey',
+          mayorParty: 'CHP',
+          mayorSatisfactionRate: 75,
+          mayorImageUrl: '/uploads/mayors/bursa_mayor.jpg',
+          mayorPartyLogo: '/uploads/parties/chp_logo.png'
+        },
+        { 
+          name: 'Antalya', 
+          description: 'Türkiye\'nin güneyinde, Akdeniz\'in kıyısında bulunan turizm ve tarım merkezi olan şehirdir. "Türk Rivierası" olarak da bilinir.',
+          population: 2500000,
+          latitude: '36.8969',
+          longitude: '30.7133',
+          imageUrl: '/uploads/cities/antalya_logo.png',
+          headerImageUrl: '/uploads/cities/antalya_header.jpg',
+          mayorName: 'Muhittin Böcek',
+          mayorParty: 'CHP',
+          mayorSatisfactionRate: 76,
+          mayorImageUrl: '/uploads/mayors/antalya_mayor.jpg',
+          mayorPartyLogo: '/uploads/parties/chp_logo.png'
+        }
       ]);
       console.log('Örnek şehirler oluşturuldu');
       

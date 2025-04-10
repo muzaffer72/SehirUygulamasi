@@ -82,7 +82,7 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
             ),
             background: Stack(
               children: [
-                // Kapak Resmi
+                // Kapak Resmi - En arka planda
                 Positioned.fill(
                   child: cityProfile.coverImageUrl != null 
                     ? Image.network(
@@ -221,39 +221,37 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
           ),
         ),
         
-        // Şehir Logosu - Üste taşındı
+        // Şehir Logosu - En üste taşındı ve z-index için Material widget kullanıldı
         SliverToBoxAdapter(
           child: Transform.translate(
             offset: const Offset(0, -70), // Daha yukarıda gösteriliyor
             child: Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(4),
-                child: CircleAvatar(
-                  radius: 45, // Biraz daha büyük
-                  backgroundColor: Colors.white,
-                  child: cityProfile.imageUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            cityProfile.imageUrl!,
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => 
-                              Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
-                          ),
-                        )
-                      : Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
+              child: Material(
+                elevation: 8, // Daha fazla yükseklik (z-index) sağlıyor
+                type: MaterialType.circle,
+                color: Colors.transparent,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: CircleAvatar(
+                    radius: 45, // Biraz daha büyük
+                    backgroundColor: Colors.white,
+                    child: cityProfile.imageUrl != null
+                        ? ClipOval(
+                            child: Image.network(
+                              cityProfile.imageUrl!,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => 
+                                Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
+                            ),
+                          )
+                        : Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
+                  ),
                 ),
               ),
             ),
@@ -293,70 +291,50 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                       ),
                     ),
                   
-                  // Derecelendirme Bilgiler
+                  // Derecelendirme Bilgiler - Daha küçük ve kompakt
                   Card(
                     margin: const EdgeInsets.only(top: 16.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(12.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.star, color: Colors.amber, size: 18),
-                              const SizedBox(width: 8),
+                              const Icon(Icons.star, color: Colors.amber, size: 16),
+                              const SizedBox(width: 6),
                               Text(
                                 "ŞEHİR DEĞERLENDİRMESİ",
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey[700],
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                cityProfile.solutionRate.toStringAsFixed(1),
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                              Text(
+                                "/100",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
                                 ),
                               ),
                             ],
                           ),
                           
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  cityProfile.solutionRate.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 4.0, left: 4.0),
-                                  child: Text(
-                                    "/ 10",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  "Çok İyi",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green[700],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          const SizedBox(height: 10),
                           
-                          _buildRatingRow("Konum", cityProfile.latitude != 0 || cityProfile.longitude != 0 ? 8.2 : 0.0),
-                          const Divider(height: 1),
                           _buildRatingRow("İlçe Sayısı", cityProfile.districtCount > 0 ? 9.3 : 0.0),
                           const Divider(height: 1),
                           _buildRatingRow("Nüfus", cityProfile.population > 0 ? 9.3 : 0.0),
