@@ -284,7 +284,7 @@ if (isset($_GET['op']) && $_GET['op'] === 'edit' && isset($_GET['id'])) {
                                     <?php endif; ?>
                                 </td>
                                 <td><?php echo $city['name']; ?></td>
-                                <td><?php echo number_format($city['population'], 0, ',', '.'); ?></td>
+                                <td><?php echo isset($city['population']) && $city['population'] !== null ? number_format($city['population'], 0, ',', '.') : '0'; ?></td>
                                 <td><?php echo $city['district_count']; ?></td>
                                 <td><?php echo date('d.m.Y H:i', strtotime($city['created_at'])); ?></td>
                                 <td>
@@ -397,7 +397,7 @@ if (isset($_GET['op']) && $_GET['op'] === 'edit' && isset($_GET['id'])) {
                 <div class="col-md-4">
                     <div class="mb-3">
                         <label for="edit_population" class="form-label">Nüfus</label>
-                        <input type="number" class="form-control" id="edit_population" name="population" value="<?php echo $editCity['population']; ?>" required>
+                        <input type="number" class="form-control" id="edit_population" name="population" value="<?php echo isset($editCity['population']) && $editCity['population'] !== null ? $editCity['population'] : 0; ?>" required>
                     </div>
                 </div>
                 <div class="col-md-4">
