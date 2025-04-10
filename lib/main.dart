@@ -5,6 +5,8 @@ import 'package:sikayet_var/models/survey.dart';
 import 'package:sikayet_var/screens/navigation/main_navigation_screen.dart';
 import 'package:sikayet_var/screens/posts/create_post_screen.dart';
 import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
+import 'package:sikayet_var/screens/posts/filtered_posts_screen.dart';
+import 'package:sikayet_var/screens/cities/city_profile_screen.dart';
 import 'package:sikayet_var/screens/surveys/survey_detail_screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -126,6 +128,20 @@ class SikayetVarApp extends StatelessWidget {
           final survey = settings.arguments as Survey;
           return MaterialPageRoute(
             builder: (context) => SurveyDetailScreen(survey: survey),
+          );
+        }
+        
+        if (settings.name == '/filtered_posts') {
+          final filterData = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => FilteredPostsScreen(filterData: filterData),
+          );
+        }
+        
+        if (settings.name == '/city_profile') {
+          final cityId = settings.arguments as int;
+          return MaterialPageRoute(
+            builder: (context) => CityProfileScreen(cityId: cityId),
           );
         }
         

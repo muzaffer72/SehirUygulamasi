@@ -121,31 +121,49 @@ class _PostCardState extends State<PostCard> {
             
             // Status indicator for problem posts
             if (widget.post.type == PostType.problem && widget.post.status != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(widget.post.status!).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _getStatusIcon(widget.post.status!),
-                      color: _getStatusColor(widget.post.status!),
-                      size: 16,
+              GestureDetector(
+                onTap: () {
+                  // Filtreleme mantığı için navigator kullanarak filtreleme ekranına git
+                  Navigator.pushNamed(
+                    context,
+                    '/filtered_posts',
+                    arguments: {
+                      'filterType': 'status',
+                      'statusValue': widget.post.status,
+                      'statusText': _getStatusText(widget.post.status!),
+                    },
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(widget.post.status!).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _getStatusColor(widget.post.status!).withOpacity(0.3),
+                      width: 1,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _getStatusText(widget.post.status!),
-                      style: TextStyle(
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _getStatusIcon(widget.post.status!),
                         color: _getStatusColor(widget.post.status!),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        size: 16,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Text(
+                        _getStatusText(widget.post.status!),
+                        style: TextStyle(
+                          color: _getStatusColor(widget.post.status!),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             
@@ -209,22 +227,42 @@ class _PostCardState extends State<PostCard> {
       child: Row(
         children: [
           // Post type icon
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: widget.post.type == PostType.problem
-                  ? Colors.red.withOpacity(0.1)
-                  : Colors.green.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              widget.post.type == PostType.problem
-                  ? Icons.warning_rounded
-                  : Icons.lightbulb_outline,
-              color: widget.post.type == PostType.problem
-                  ? Colors.red
-                  : Colors.green,
-              size: 16,
+          GestureDetector(
+            onTap: () {
+              // Post tipine göre filtreleme ekranına git
+              Navigator.pushNamed(
+                context,
+                '/filtered_posts',
+                arguments: {
+                  'filterType': 'type',
+                  'typeValue': widget.post.type,
+                  'typeText': widget.post.type == PostType.problem ? 'Şikayet' : 'Öneri',
+                },
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: widget.post.type == PostType.problem
+                    ? Colors.red.withOpacity(0.1)
+                    : Colors.green.withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: widget.post.type == PostType.problem
+                      ? Colors.red.withOpacity(0.3)
+                      : Colors.green.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Icon(
+                widget.post.type == PostType.problem
+                    ? Icons.warning_rounded
+                    : Icons.lightbulb_outline,
+                color: widget.post.type == PostType.problem
+                    ? Colors.red
+                    : Colors.green,
+                size: 16,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -349,17 +387,35 @@ class _PostCardState extends State<PostCard> {
                 
                 final category = snapshot.data!;
                 
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    category.name,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[800],
+                return GestureDetector(
+                  onTap: () {
+                    // Kategori filtresi için
+                    Navigator.pushNamed(
+                      context,
+                      '/filtered_posts',
+                      arguments: {
+                        'filterType': 'category',
+                        'categoryId': category.id,
+                        'categoryName': category.name,
+                      },
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey[400]!,
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      category.name,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
                 );
