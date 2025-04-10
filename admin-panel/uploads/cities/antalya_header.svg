@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="250" viewBox="0 0 800 250">
+  <rect width="800" height="250" fill="#FF8C00"/>
+  
+  <!-- Deniz -->
+  <path d="M0 180 Q 50 185, 100 180 Q 150 175, 200 180 Q 250 185, 300 180 
+           Q 350 175, 400 180 Q 450 185, 500 180 Q 550 175, 600 180 
+           Q 650 185, 700 180 Q 750 175, 800 180 
+           L 800 250 L 0 250 Z" fill="#0088CC"/>
+           
+  <!-- Palmiyeler -->
+  <path d="M150 180 L 150 140 C 140 130, 130 140, 120 130 C 140 125, 150 135, 160 125 
+           C 145 120, 140 130, 130 115 C 155 115, 145 130, 170 115 
+           C 150 110, 140 120, 130 100 C 155 105, 150 115, 170 95" 
+        stroke="#006400" stroke-width="3" fill="none"/>
+  <path d="M300 180 L 300 140 C 290 130, 280 140, 270 130 C 290 125, 300 135, 310 125 
+           C 295 120, 290 130, 280 115 C 305 115, 295 130, 320 115 
+           C 300 110, 290 120, 280 100 C 305 105, 300 115, 320 95" 
+        stroke="#006400" stroke-width="3" fill="none"/>
+  <path d="M700 180 L 700 140 C 690 130, 680 140, 670 130 C 690 125, 700 135, 710 125 
+           C 695 120, 690 130, 680 115 C 705 115, 695 130, 720 115 
+           C 700 110, 690 120, 680 100 C 705 105, 700 115, 720 95" 
+        stroke="#006400" stroke-width="3" fill="none"/>
+           
+  <!-- Güneş -->
+  <circle cx="600" cy="50" r="30" fill="#FFCC00"/>
+  <path d="M600 10 L 600 0 M 600 90 L 600 100 M 560 50 L 550 50 M 640 50 L 650 50 
+           M 572 22 L 562 12 M 628 78 L 638 88 M 572 78 L 562 88 M 628 22 L 638 12" 
+        stroke="#FFCC00" stroke-width="5"/>
+  
+  <!-- Yat -->
+  <path d="M400 160 L 450 160 L 470 145 L 400 145 Z" fill="#FFFFFF"/>
+  <rect x="420" y="130" width="5" height="15" fill="#EEEEEE"/>
+  <path d="M395 160 L 475 160" stroke="#EEEEEE" stroke-width="2"/>
+  
+  <text x="50" y="50" font-family="Arial" font-size="30" font-weight="bold" fill="#FFFFFF">ANTALYA</text>
+</svg>

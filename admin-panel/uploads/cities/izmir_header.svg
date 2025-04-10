@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="250" viewBox="0 0 800 250">
+  <rect width="800" height="250" fill="#00BFFF"/>
+  
+  <!-- Deniz -->
+  <path d="M0 180 Q 50 185, 100 180 Q 150 175, 200 180 Q 250 185, 300 180 
+           Q 350 175, 400 180 Q 450 185, 500 180 Q 550 175, 600 180 
+           Q 650 185, 700 180 Q 750 175, 800 180 
+           L 800 250 L 0 250 Z" fill="#0088CC"/>
+           
+  <!-- Saat Kulesi -->
+  <rect x="370" y="110" width="60" height="70" fill="#EEEEEE"/>
+  <rect x="380" y="80" width="40" height="30" fill="#EEEEEE"/>
+  <rect x="385" y="60" width="30" height="20" fill="#EEEEEE"/>
+  <circle cx="400" cy="50" r="10" fill="#EEEEEE"/>
+  
+  <!-- Güneş -->
+  <circle cx="700" cy="50" r="30" fill="#FFCC00"/>
+  <path d="M700 10 L 700 0 M 700 90 L 700 100 M 660 50 L 650 50 M 740 50 L 750 50 
+           M 672 22 L 662 12 M 728 78 L 738 88 M 672 78 L 662 88 M 728 22 L 738 12" 
+        stroke="#FFCC00" stroke-width="5"/>
+  
+  <!-- Yelkenli -->
+  <path d="M150 160 L 150 120 L 180 140 L 150 140 Z" fill="#FFFFFF"/>
+  <path d="M145 160 L 155 160" stroke="#EEEEEE" stroke-width="2"/>
+  
+  <text x="50" y="50" font-family="Arial" font-size="30" font-weight="bold" fill="#FFFFFF">İZMİR</text>
+</svg>
