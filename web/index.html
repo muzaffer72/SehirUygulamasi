@@ -22,7 +22,7 @@
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
-  <meta http-equiv="Content-Type" content="text/javascript">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
 <body>
   <style>
@@ -60,9 +60,12 @@
       var loading = document.querySelector('#loading');
 
       // Download main.dart.js
-      window.flutterConfiguration = {
+      window._flutter = window._flutter || {};
+      window._flutter.loader = window._flutter.loader || {};
+      window._flutter.buildConfig = {
         canvasKitBaseUrl: "/canvaskit/"
       };
+      
       window._flutter.loader.load({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
