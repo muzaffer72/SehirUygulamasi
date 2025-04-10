@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <base href="$FLUTTER_BASE_HREF">
+
   <meta charset="UTF-8">
-  <title>ŞikayetVar</title>
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Belediye ve Valiliğe yönelik şikayet ve öneri paylaşım platformu">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -16,24 +16,38 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
+  <title>ŞikayetVar</title>
+  <link rel="manifest" href="manifest.json">
+
   <script>
     // The value below is injected by flutter build, do not touch.
     var serviceWorkerVersion = '{{flutter_service_worker_version}}';
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
 <body>
   <style>
+    body {
+      background-color: #ffffff;
+      height: 100vh;
+      width: 100vw;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
     .loading {
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
       margin: 0;
       padding: 0;
     }
+
     .loader {
       width: 48px;
       height: 48px;
@@ -51,21 +65,16 @@
     } 
   </style>
 
-  <div id="loading" class="loading">
-    <span class="loader"></span>
-  </div>
-
   <script>
     window.addEventListener('load', function(ev) {
-      var loading = document.querySelector('#loading');
-
       // Download main.dart.js
+      var loading = document.querySelector('#loading');
+      
+      // Initialize Flutter
       window._flutter = window._flutter || {};
       window._flutter.loader = window._flutter.loader || {};
-      window._flutter.buildConfig = {
-        canvasKitBaseUrl: "/canvaskit/"
-      };
       
+      // Load Flutter app
       window._flutter.loader.load({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
@@ -79,5 +88,9 @@
       });
     });
   </script>
+  
+  <div id="loading" class="loading">
+    <span class="loader"></span>
+  </div>
 </body>
 </html>
