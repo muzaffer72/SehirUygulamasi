@@ -400,7 +400,8 @@ class ApiService {
   
   // Şehir profil bilgilerini getir
   Future<CityProfile> getCityProfile(int cityId) async {
-    final response = await _client.get(Uri.parse('$baseUrl/cities/$cityId/profile'));
+    // cityId'yi string'e çeviriyoruz
+    final response = await _client.get(Uri.parse('$baseUrl/cities/${cityId.toString()}/profile'));
     
     if (response.statusCode == 200) {
       return CityProfile.fromJson(jsonDecode(response.body));
