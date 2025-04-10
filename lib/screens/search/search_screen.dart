@@ -4,6 +4,7 @@ import 'package:sikayet_var/models/category.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:sikayet_var/widgets/post_card.dart';
+import 'package:sikayet_var/screens/cities/cities_list_screen.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
