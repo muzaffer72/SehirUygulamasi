@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 class CityPriorityChart extends StatelessWidget {
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<Map<String, double>>('priorityData', priorityData));
+    properties.add(DoubleProperty('height', height));
+    properties.add(DoubleProperty('width', width));
+    properties.add(DiagnosticsProperty<bool>('showLabels', showLabels));
+  }
   final Map<String, double> priorityData;
   final double height;
   final double width;
