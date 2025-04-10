@@ -381,7 +381,7 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
             ),
             title: Text(service.name),
             subtitle: Text(service.description ?? ''),
-            trailing: service.isAvailable
+            trailing: service.type == 'active'
                 ? const Icon(Icons.check_circle, color: Colors.green)
                 : const Icon(Icons.cancel, color: Colors.red),
           ),
