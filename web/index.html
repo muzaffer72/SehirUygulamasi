@@ -18,10 +18,11 @@
 
   <script>
     // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
+    var serviceWorkerVersion = '{{flutter_service_worker_version}}';
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
+  <meta http-equiv="Content-Type" content="text/javascript">
 </head>
 <body>
   <style>
@@ -59,7 +60,10 @@
       var loading = document.querySelector('#loading');
 
       // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
+      window.flutterConfiguration = {
+        canvasKitBaseUrl: "/canvaskit/"
+      };
+      window._flutter.loader.load({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
         },

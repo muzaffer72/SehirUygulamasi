@@ -279,14 +279,14 @@ class InstagramStyleProfile extends ConsumerWidget {
       if (user.level == UserLevel.contributor) {
         badges = [UserBadge.toplumdanBiri];
       } else if (user.level == UserLevel.active) {
-        badges = [UserBadge.toplumdanBiri, UserBadge.sorunAvcısı];
+        badges = [UserBadge.toplumdanBiri, UserBadge.sorunAvcisi];
       } else if (user.level == UserLevel.expert) {
-        badges = [UserBadge.toplumdanBiri, UserBadge.sorunAvcısı, UserBadge.mahalleBekçisi];
+        badges = [UserBadge.toplumdanBiri, UserBadge.sorunAvcisi, UserBadge.mahalleBekci];
       } else if (user.level == UserLevel.master) {
         badges = [
           UserBadge.toplumdanBiri, 
-          UserBadge.sorunAvcısı,
-          UserBadge.mahalleBekçisi,
+          UserBadge.sorunAvcisi,
+          UserBadge.mahalleBekci,
           UserBadge.halkTemsilcisi
         ];
       }
