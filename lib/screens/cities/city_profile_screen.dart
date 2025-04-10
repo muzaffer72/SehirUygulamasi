@@ -176,11 +176,11 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (cityProfile.logoUrl != null)
+                    if (cityProfile.imageUrl != null)
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Image.network(
-                          cityProfile.logoUrl!,
+                          cityProfile.imageUrl!,
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
