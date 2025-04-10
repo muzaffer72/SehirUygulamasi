@@ -1486,7 +1486,6 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
       ),
     );
   }
-}
 
 // TabBar için delegate
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
