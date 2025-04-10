@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/post.dart';
+import 'package:sikayet_var/models/city_profile.dart';
 import 'package:sikayet_var/providers/post_provider.dart';
 import 'package:sikayet_var/widgets/filter_bar.dart';
 import 'package:sikayet_var/widgets/post_card.dart';
 import 'package:sikayet_var/widgets/survey_slider.dart';
+import 'package:sikayet_var/widgets/best_municipality_banner.dart';
 import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -153,13 +155,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ? _buildEmptyState(filters.hasFilters)
                       : ListView.builder(
                           controller: _scrollController,
-                          itemCount: posts.length + 1, // +1 for the survey slider
+                          itemCount: posts.length + 2, // +1 for survey, +1 for municipality banner
                           itemBuilder: (context, index) {
                             if (index == 0) {
                               return const SurveySlider();
                             }
                             
-                            final post = posts[index - 1];
+                            if (index == 1) {
+                              // Ayın Belediyesi Banner'ı
+                              return const BestMunicipalityBanner();
+                            }
+                            
+                            final post = posts[index - 2];
                             return PostCard(
                               post: post,
                               onTap: () {

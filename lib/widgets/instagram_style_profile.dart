@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/user.dart';
 import 'package:sikayet_var/providers/user_provider.dart';
+import 'package:sikayet_var/widgets/user_badge_widget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class InstagramStyleProfile extends ConsumerWidget {
@@ -46,6 +47,8 @@ class InstagramStyleProfile extends ConsumerWidget {
                 _buildUserStats(context, user),
                 const SizedBox(height: 16),
                 _buildUserLevel(context, user),
+                const SizedBox(height: 16),
+                _buildUserBadges(context, user),
               ],
             ),
           ),
@@ -263,5 +266,167 @@ class InstagramStyleProfile extends ConsumerWidget {
       case UserLevel.master:
         return 'En yüksek seviyedesiniz';
     }
+  }
+  
+  // Kullanıcı rozetleri
+  Widget _buildUserBadges(BuildContext context, User user) {
+    // Kullanıcının rozeti yoksa ve belirli bir seviyedeyse birkaç rozet ekleyelim
+    if (user.badges.isEmpty && user.level != UserLevel.newUser) {
+      // Test verileri (gerçek uygulamada API'den gelecek)
+      List<UserBadge> badges = [];
+      
+      // Kullanıcının seviyesine göre rozet ekleyelim
+      if (user.level == UserLevel.contributor) {
+        badges = [UserBadge.toplumdanBiri];
+      } else if (user.level == UserLevel.active) {
+        badges = [UserBadge.toplumdanBiri, UserBadge.sorunAvcısı];
+      } else if (user.level == UserLevel.expert) {
+        badges = [UserBadge.toplumdanBiri, UserBadge.sorunAvcısı, UserBadge.mahalleBekçisi];
+      } else if (user.level == UserLevel.master) {
+        badges = [
+          UserBadge.toplumdanBiri, 
+          UserBadge.sorunAvcısı,
+          UserBadge.mahalleBekçisi,
+          UserBadge.halkTemsilcisi
+        ];
+      }
+      
+      // Kullanıcı nesnesini rozet bilgileriyle güncelleyelim
+      final updatedUser = user.copyWith(badges: badges);
+      return _renderBadges(context, updatedUser);
+    } else if (user.badges.isNotEmpty) {
+      return _renderBadges(context, user);
+    } else {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.emoji_events_outlined, color: Colors.grey),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Henüz rozetiniz yok',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Paylaşım, yorum yaparak veya sorunların çözümüne katkıda bulunarak rozet kazanabilirsiniz.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+  
+  Widget _renderBadges(BuildContext context, User user) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Rozetler',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+            if (user.badges.length > 3)
+              TextButton(
+                onPressed: () {
+                  // Tüm rozetleri göster
+                  showDialog(
+                    context: context,
+                    builder: (context) => _buildAllBadgesDialog(context, user),
+                  );
+                },
+                child: const Text('Tümünü Gör'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        UserBadgesRow(
+          user: user,
+          showAllBadges: false,
+          showNames: true,
+          isSmall: false,
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildAllBadgesDialog(BuildContext context, User user) {
+    return AlertDialog(
+      title: const Text('Tüm Rozetler'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Wrap(
+          spacing: 12,
+          runSpacing: 16,
+          alignment: WrapAlignment.center,
+          children: user.badges.map((badge) {
+            final badgeInfo = user.getBadgeInfo(badge);
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                UserBadgeWidget(
+                  badge: badge,
+                  user: user,
+                  isSmall: false,
+                  showName: false,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  badgeInfo['name'] as String,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 2),
+                SizedBox(
+                  width: 120,
+                  child: Text(
+                    badgeInfo['description'] as String,
+                    style: const TextStyle(
+                      fontSize: 10,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Kapat'),
+        ),
+      ],
+    );
   }
 }

@@ -1087,6 +1087,29 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Belediye Öncelik Durumu Grafiği
+              const Text(
+                'Belediye Öncelik Durumu',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildPriorityChart(context, cityProfile),
+              const SizedBox(height: 24),
+              
+              // Aylık Performans Grafiği
+              const Text(
+                'Aylık Performans',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildMonthlyPerformanceChart(context, cityProfile),
+              const SizedBox(height: 24),
               // Belediye Başkanı Bilgileri
               if (cityProfile.mayorName != null) ...[
                 const Text(
@@ -1337,6 +1360,286 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
         ],
       ),
     );
+  }
+}
+
+// Belediye öncelik durumu grafiği
+Widget _buildPriorityChart(BuildContext context, CityProfile cityProfile) {
+  final priorityData = cityProfile.priorityData;
+  if (priorityData == null || priorityData.isEmpty) {
+    return const Center(
+      child: Text('Öncelik verisi bulunamadı'),
+    );
+  }
+  
+  // Toplam değeri hesapla (genellikle 100 olmalı)
+  final totalValue = priorityData.values.fold(0.0, (sum, value) => sum + value);
+  
+  return Card(
+    elevation: 2,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          for (final entry in priorityData.entries)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            _getPriorityIcon(entry.key),
+                            size: 16,
+                            color: _getPriorityColor(entry.key),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            entry.key,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '%${entry.value.toStringAsFixed(1)}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: _getPriorityColor(entry.key),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  // İlerleme çubuğu
+                  Stack(
+                    children: [
+                      // Arka plan
+                      Container(
+                        height: 8,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      // Önplan (değerlendirme)
+                      Container(
+                        height: 8,
+                        width: (MediaQuery.of(context).size.width - 64) * (entry.value / totalValue),
+                        decoration: BoxDecoration(
+                          color: _getPriorityColor(entry.key),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+// Aylık performans grafiği
+Widget _buildMonthlyPerformanceChart(BuildContext context, CityProfile cityProfile) {
+  final monthlyData = cityProfile.monthlyPerformance;
+  if (monthlyData == null || monthlyData.isEmpty) {
+    return const Center(
+      child: Text('Aylık performans verisi bulunamadı'),
+    );
+  }
+  
+  // Verileri sırala (son aydan ilk aya doğru)
+  final sortedMonths = monthlyData.keys.toList()..sort();
+  
+  // Son ayın değeri ile önceki ayı karşılaştır
+  final lastMonth = sortedMonths.last;
+  final previousMonth = sortedMonths.length > 1 ? sortedMonths[sortedMonths.length - 2] : null;
+  
+  final lastMonthValue = monthlyData[lastMonth] ?? 0.0;
+  final previousMonthValue = previousMonth != null ? monthlyData[previousMonth] ?? 0.0 : 0.0;
+  
+  // Değişim oranını hesapla
+  double changeRate = 0;
+  if (previousMonthValue > 0) {
+    changeRate = ((lastMonthValue - previousMonthValue) / previousMonthValue) * 100;
+  }
+  
+  return Card(
+    elevation: 2,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Değişim bilgisi
+          if (previousMonth != null) 
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  Icon(
+                    changeRate >= 0 ? Icons.trending_up : Icons.trending_down,
+                    color: changeRate >= 0 ? Colors.green : Colors.red,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Geçen aya göre ${changeRate.abs().toStringAsFixed(1)}% ${changeRate >= 0 ? 'artış' : 'düşüş'}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: changeRate >= 0 ? Colors.green : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          
+          // Aylık grafikler
+          for (int i = 0; i < sortedMonths.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        sortedMonths[i],
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '%${monthlyData[sortedMonths[i]]?.toStringAsFixed(1)}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: _getPerformanceColor(monthlyData[sortedMonths[i]] ?? 0),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  // İlerleme çubuğu
+                  Stack(
+                    children: [
+                      // Arka plan
+                      Container(
+                        height: 8,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      // Önplan (değerlendirme)
+                      Container(
+                        height: 8,
+                        width: (MediaQuery.of(context).size.width - 64) * ((monthlyData[sortedMonths[i]] ?? 0) / 100),
+                        decoration: BoxDecoration(
+                          color: _getPerformanceColor(monthlyData[sortedMonths[i]] ?? 0),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          
+          // Çözüm oranı açıklaması
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              '* Çözüm oranı, ay içerisinde belediyeye iletilen sorunların ne kadarının çözüldüğünü gösterir.',
+              style: TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+// Öncelik kategorisine göre renk döndürür
+Color _getPriorityColor(String priority) {
+  switch (priority.toLowerCase()) {
+    case 'altyapı':
+      return Colors.blue;
+    case 'temizlik':
+      return Colors.green;
+    case 'yeşil alan':
+      return Colors.lightGreen;
+    case 'ulaşım':
+      return Colors.amber;
+    case 'güvenlik':
+      return Colors.red;
+    case 'eğitim':
+      return Colors.purple;
+    case 'sağlık':
+      return Colors.pink;
+    default:
+      return Colors.grey;
+  }
+}
+
+// Öncelik kategorisine göre ikon döndürür
+IconData _getPriorityIcon(String priority) {
+  switch (priority.toLowerCase()) {
+    case 'altyapı':
+      return Icons.build;
+    case 'temizlik':
+      return Icons.cleaning_services;
+    case 'yeşil alan':
+      return Icons.park;
+    case 'ulaşım':
+      return Icons.directions_bus;
+    case 'güvenlik':
+      return Icons.security;
+    case 'eğitim':
+      return Icons.school;
+    case 'sağlık':
+      return Icons.local_hospital;
+    default:
+      return Icons.category;
+  }
+}
+
+// Performans değerine göre renk döndürür
+Color _getPerformanceColor(double performance) {
+  if (performance >= 80) {
+    return Colors.green;
+  } else if (performance >= 60) {
+    return Colors.lightGreen;
+  } else if (performance >= 40) {
+    return Colors.amber;
+  } else if (performance >= 20) {
+    return Colors.orange;
+  } else {
+    return Colors.red;
   }
 }
 

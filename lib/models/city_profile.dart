@@ -248,6 +248,17 @@ class CityProfile {
   final int? solvedCount;
   final int? complaintCount;
   
+  // Belediye öncelik durumu
+  final Map<String, double>? priorityData;
+  
+  // Aylık performans değerlendirmesi
+  final Map<String, double>? monthlyPerformance;
+  
+  // Belediye ödülleri
+  final bool isBestOfMonth; // Ayın en iyi belediyesi
+  final String? awardMonth; // Hangi ay için ödül aldı
+  final double? awardScore;  // Ödül puanı
+  
   CityProfile({
     required this.id,
     required this.name,
@@ -278,6 +289,11 @@ class CityProfile {
     this.statistics,
     this.solvedCount,
     this.complaintCount,
+    this.priorityData,
+    this.monthlyPerformance,
+    this.isBestOfMonth = false,
+    this.awardMonth,
+    this.awardScore,
   });
   
   factory CityProfile.fromJson(Map<String, dynamic> json) {
@@ -322,6 +338,32 @@ class CityProfile {
         json['stats'].map((x) => CityStat.fromJson(x)));
     }
     
+    Map<String, double>? priorityData;
+    if (json['priorityData'] != null) {
+      priorityData = Map<String, double>.from(json['priorityData']);
+    } else {
+      // Varsayılan örnek veri
+      priorityData = {
+        'Altyapı': 60.0,
+        'Temizlik': 10.0,
+        'Yeşil Alan': 15.0,
+        'Ulaşım': 8.0,
+        'Diğer': 7.0,
+      };
+    }
+    
+    Map<String, double>? monthlyPerformance;
+    if (json['monthlyPerformance'] != null) {
+      monthlyPerformance = Map<String, double>.from(json['monthlyPerformance']);
+    } else {
+      // Varsayılan örnek veri (son 3 ay)
+      monthlyPerformance = {
+        'Şubat': 75.0,
+        'Mart': 82.0,
+        'Nisan': 88.0,
+      };
+    }
+    
     return CityProfile(
       id: json['id'],
       name: json['name'],
@@ -352,6 +394,11 @@ class CityProfile {
       statistics: statistics,
       solvedCount: json['solvedCount'] ?? json['totalSolvedIssues'] ?? 0,
       complaintCount: json['complaintCount'] ?? json['totalPosts'] ?? 0,
+      priorityData: priorityData,
+      monthlyPerformance: monthlyPerformance,
+      isBestOfMonth: json['isBestOfMonth'] ?? false,
+      awardMonth: json['awardMonth'] ?? 'Nisan', // Varsayılan değer (mevcut ay)
+      awardScore: json['awardScore'] ?? 92.5, // Varsayılan değer
     );
   }
   
