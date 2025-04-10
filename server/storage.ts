@@ -5,36 +5,50 @@ import {
 import { db } from "./db";
 import { eq, like, and, or, desc, asc, sql } from "drizzle-orm";
 
-// Interface tanımlamaları (Flutter uygulamasında da kullanılabilir)
+// Type aliases for better code readability
+type User = typeof users.$inferSelect;
+type Post = typeof posts.$inferSelect;
+type Comment = typeof comments.$inferSelect;
+type Survey = typeof surveys.$inferSelect;
+type Category = typeof categories.$inferSelect;
+type City = typeof cities.$inferSelect;
+type District = typeof districts.$inferSelect;
+type SurveyOption = typeof surveyOptions.$inferSelect;
+
 export interface IStorage {
   // Kullanıcı işlemleri
-  getUsers(): Promise<any[]>;
-  getUserById(id: number): Promise<any | undefined>;
-  getUserByUsername(username: string): Promise<any | undefined>;
-  createUser(user: any): Promise<any>;
-  updateUser(id: number, data: any): Promise<any>;
+  getUsers(): Promise<User[]>;
+  getUserById(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: Partial<User>): Promise<User>;
+  updateUser(id: number, data: Partial<User>): Promise<User>;
   
   // Paylaşım işlemleri
-  getPosts(filters?: any): Promise<any[]>;
-  getPostById(id: number): Promise<any | undefined>;
-  createPost(post: any): Promise<any>;
-  updatePost(id: number, data: any): Promise<any>;
+  getPosts(filters?: Partial<Post>): Promise<Post[]>;
+  getPostById(id: number): Promise<Post | undefined>;
+  createPost(post: Partial<Post>): Promise<Post>;
+  updatePost(id: number, data: Partial<Post>): Promise<Post>;
   deletePost(id: number): Promise<void>;
   
   // Yorum işlemleri
-  getCommentsByPostId(postId: number): Promise<any[]>;
-  addComment(comment: any): Promise<any>;
+  getCommentsByPostId(postId: number): Promise<Comment[]>;
+  addComment(comment: Partial<Comment>): Promise<Comment>;
   
   // Anket işlemleri
-  getSurveys(filters?: any): Promise<any[]>;
-  getSurveyById(id: number): Promise<any | undefined>;
+  getSurveys(filters?: Partial<Survey>): Promise<Survey[]>;
+  getSurveyById(id: number): Promise<Survey | undefined>;
   
   // Kategori işlemleri
-  getCategories(): Promise<any[]>;
+  getCategories(): Promise<Category[]>;
   
   // Şehir ve ilçe işlemleri
-  getCities(): Promise<any[]>;
-  getDistrictsByCityId(cityId: number): Promise<any[]>;
+  getCities(): Promise<City[]>;
+  getDistrictsByCityId(cityId: number): Promise<District[]>;
+  
+  // Yasak kelimeler işlemleri
+  getBannedWords(): Promise<string[]>;
+  addBannedWord(word: string): Promise<any>;
+  removeBannedWord(word: string): Promise<void>;
 }
 
 // PostgreSQL veritabanı tabanlı depolama sınıfı
