@@ -7,7 +7,10 @@ const sourcePgConfig = {
   port: parseInt(process.env.PGPORT || '5432'),
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE
+  database: process.env.PGDATABASE,
+  ssl: {
+    rejectUnauthorized: false
+  }
 };
 
 // Hedef veritabanı bağlantı bilgileri
@@ -21,23 +24,13 @@ const targetPgConfig = {
 
 async function exportData() {
   const sourcePool = new Pool(sourcePgConfig);
-  const targetPool = new Pool({
-    ...targetPgConfig,
-    ssl: false
-  });
+  // Not: Hedef veritabanı bağlantısını çıkardık çünkü Replit dış IP'lere erişimi engelliyor
 
   try {
     // Bağlantıyı test et
     console.log('Kaynak veritabanına bağlanılıyor...');
     await sourcePool.query('SELECT 1');
     console.log('Kaynak veritabanına bağlantı başarılı.');
-
-    console.log('Hedef veritabanına bağlanılıyor...');
-    await targetPool.query('SELECT 1').catch(err => {
-      console.error('Hedef veritabanına bağlanamadı:', err.message);
-      throw new Error('Hedef veritabanına bağlanılamadı.');
-    });
-    console.log('Hedef veritabanına bağlantı başarılı.');
 
     // Tabloları al
     const tables = ['cities', 'districts', 'categories', 'users', 'banned_words'];
@@ -89,22 +82,14 @@ async function exportData() {
     fs.writeFileSync('data_export.sql', allSql);
     console.log('Tüm veriler data_export.sql dosyasına kaydedildi.');
     
-    // Hedef veritabanına aktar
-    console.log('Veriler hedef veritabanına aktarılıyor...');
-    try {
-      await targetPool.query(allSql);
-      console.log('Veri aktarımı başarıyla tamamlandı!');
-    } catch (error: any) {
-      console.error('Hedef veritabanına veri aktarımı sırasında hata oluştu:', error.message);
-      console.log('SQL komutları data_export.sql dosyasına kaydedildi. Manuel olarak çalıştırılabilir.');
-    }
+    console.log('SQL dosyası başarıyla oluşturuldu. Bu dosyayı indirip uzak veritabanınıza aktarabilirsiniz.');
+    console.log('İndirmek için: Dosyalar panelinden data_export.sql üzerine sağ tıklayıp "Download" seçeneğini kullanabilirsiniz.');
     
   } catch (error: any) {
     console.error('Veri aktarımı sırasında bir hata oluştu:', error);
   } finally {
     sourcePool.end();
-    targetPool.end();
-    console.log('Veritabanı bağlantıları kapatıldı.');
+    console.log('Veritabanı bağlantısı kapatıldı.');
   }
 }
 
