@@ -291,7 +291,7 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                       ),
                     ),
                   
-                  // Derecelendirme Bilgiler - Daha küçük ve kompakt
+                  // Derecelendirme Bilgiler - İkonlar ve yanyana dizilim
                   Card(
                     margin: const EdgeInsets.only(top: 16.0),
                     shape: RoundedRectangleBorder(
@@ -333,15 +333,48 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                             ],
                           ),
                           
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 16),
                           
-                          _buildRatingRow("İlçe Sayısı", cityProfile.districtCount > 0 ? 9.3 : 0.0),
-                          const Divider(height: 1),
-                          _buildRatingRow("Nüfus", cityProfile.population > 0 ? 9.3 : 0.0),
-                          const Divider(height: 1),
-                          _buildRatingRow("Çözüm Oranı", cityProfile.solutionRate > 0 ? 9.5 : 0.0),
-                          const Divider(height: 1),
-                          _buildRatingRow("Memnuniyet", cityProfile.mayorSatisfactionRate != null ? cityProfile.mayorSatisfactionRate! / 10.0 : 0.0),
+                          // Bilgi Simgeleri - Yatay düzende
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              // İlçe sayısı
+                              _buildInfoIcon(
+                                context, 
+                                Icons.location_city, 
+                                cityProfile.districtCount.toString(),
+                                "İlçe Sayısı"
+                              ),
+                              
+                              // Nüfus
+                              _buildInfoIcon(
+                                context, 
+                                Icons.people, 
+                                cityProfile.population > 0 
+                                  ? _formatPopulation(cityProfile.population) 
+                                  : "N/A",
+                                "Nüfus"
+                              ),
+                              
+                              // Çözüm/Şikayet
+                              _buildSolutionRatioIcon(
+                                context,
+                                cityProfile.solvedCount ?? 3,  // Örnek değer, gerçek verilerle değiştirilmeli
+                                cityProfile.complaintCount ?? 15  // Örnek değer, gerçek verilerle değiştirilmeli
+                              ),
+                              
+                              // Memnuniyet
+                              _buildInfoIcon(
+                                context, 
+                                Icons.thumb_up, 
+                                cityProfile.mayorSatisfactionRate != null 
+                                  ? "${cityProfile.mayorSatisfactionRate}%" 
+                                  : "N/A",
+                                "Memnuniyet"
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -505,6 +538,130 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
     } else {
       return Colors.red;
     }
+  }
+  
+  // Nüfus formatla (milyon, bin formatında gösterim)
+  String _formatPopulation(int population) {
+    if (population >= 1000000) {
+      return "${(population / 1000000).toStringAsFixed(1)}M";
+    } else if (population >= 1000) {
+      return "${(population / 1000).toStringAsFixed(1)}K";
+    }
+    return population.toString();
+  }
+  
+  // Tıklanabilir bilgi ikonu
+  Widget _buildInfoIcon(BuildContext context, IconData icon, String value, String label) {
+    return InkWell(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("$label: $value"),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: Theme.of(context).colorScheme.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // Çözüm/Şikayet oranı ikonu
+  Widget _buildSolutionRatioIcon(BuildContext context, int solvedCount, int complaintCount) {
+    return InkWell(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Çözüm/Şikayet: $solvedCount / $complaintCount"),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.check_circle_outline,
+              color: Theme.of(context).colorScheme.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "-$complaintCount",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.red,
+                ),
+              ),
+              Text(
+                "/",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              Text(
+                "+$solvedCount",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.green,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            "Çözüm Oranı",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
   }
   
   Widget _buildPostsTab(CityProfile cityProfile) {

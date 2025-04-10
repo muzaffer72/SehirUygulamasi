@@ -244,6 +244,10 @@ class CityProfile {
   // İstatistikler
   final Map<String, int>? statistics;
   
+  // Çözüm/Şikayet sayıları
+  final int? solvedCount;
+  final int? complaintCount;
+  
   CityProfile({
     required this.id,
     required this.name,
@@ -272,6 +276,8 @@ class CityProfile {
     this.events,
     this.stats,
     this.statistics,
+    this.solvedCount,
+    this.complaintCount,
   });
   
   factory CityProfile.fromJson(Map<String, dynamic> json) {
@@ -344,6 +350,8 @@ class CityProfile {
       events: events,
       stats: stats,
       statistics: statistics,
+      solvedCount: json['solvedCount'] ?? json['totalSolvedIssues'] ?? 0,
+      complaintCount: json['complaintCount'] ?? json['totalPosts'] ?? 0,
     );
   }
   
