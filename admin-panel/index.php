@@ -89,13 +89,16 @@ $surveys = [
     [
         'id' => 1,
         'title' => 'Yeni park projesi',
+        'short_title' => 'Park Anketi',
         'description' => 'Mahallemize yapılacak yeni park için hangisi daha uygun olur?',
         'city_id' => 34,
         'category_id' => 4,
+        'scope_type' => 'city',
         'is_active' => true,
         'start_date' => '2024-02-01',
-        'end_date' => '2024-03-01',
+        'end_date' => '2024-05-01',
         'total_votes' => 125,
+        'total_users' => 500, // Görüntülenen toplam kullanıcı sayısı
         'options' => [
             ['id' => 1, 'text' => 'Çocuk oyun alanları ağırlıklı park', 'vote_count' => 75],
             ['id' => 2, 'text' => 'Spor alanları ağırlıklı park', 'vote_count' => 35],
@@ -105,17 +108,39 @@ $surveys = [
     [
         'id' => 2,
         'title' => 'Toplu taşıma saatleri',
+        'short_title' => 'Otobüs Saatleri',
         'description' => 'Otobüs seferlerinin hangi saatlerde artırılmasını istersiniz?',
         'city_id' => 6,
         'category_id' => 3,
+        'scope_type' => 'general',
         'is_active' => true,
         'start_date' => '2024-02-15',
-        'end_date' => '2024-03-15',
+        'end_date' => '2024-06-15',
         'total_votes' => 210,
+        'total_users' => 800, // Görüntülenen toplam kullanıcı sayısı
         'options' => [
             ['id' => 1, 'text' => 'Sabah (07:00-09:00)', 'vote_count' => 95],
             ['id' => 2, 'text' => 'Öğle (12:00-14:00)', 'vote_count' => 25],
             ['id' => 3, 'text' => 'Akşam (17:00-19:00)', 'vote_count' => 90]
+        ]
+    ],
+    [
+        'id' => 3,
+        'title' => 'Şehir içi bisiklet yolları talebi',
+        'short_title' => 'Bisiklet Yolları',
+        'description' => 'Şehir içinde yeni bisiklet yolları yapılmasını istiyor musunuz?',
+        'city_id' => 34,
+        'district_id' => 4,
+        'category_id' => 3,
+        'scope_type' => 'district',
+        'is_active' => true,
+        'start_date' => '2024-03-01',
+        'end_date' => '2024-05-30',
+        'total_votes' => 85,
+        'total_users' => 350, // Görüntülenen toplam kullanıcı sayısı
+        'options' => [
+            ['id' => 1, 'text' => 'Evet, daha fazla bisiklet yolu istiyorum', 'vote_count' => 65],
+            ['id' => 2, 'text' => 'Hayır, mevcut yollar yeterli', 'vote_count' => 20]
         ]
     ]
 ];
@@ -901,10 +926,17 @@ $page_file = "pages/{$page}.php";
                                             <div class="mb-3">
                                                 <label for="surveyTitle" class="form-label">Anket Başlığı</label>
                                                 <input type="text" class="form-control" id="surveyTitle" name="title" required>
+                                                <small class="text-muted">Yönetim panelinde görüntülenecek uzun başlık</small>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="surveyShortTitle" class="form-label">Kısa Başlık</label>
+                                                <input type="text" class="form-control" id="surveyShortTitle" name="short_title" required maxlength="40">
+                                                <small class="text-muted">Anasayfada anket widget'ında görüntülenecek kısa başlık (En fazla 40 karakter)</small>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="surveyDescription" class="form-label">Açıklama</label>
                                                 <textarea class="form-control" id="surveyDescription" name="description" rows="3" required></textarea>
+                                                <small class="text-muted">Anket detayları ve açıklaması</small>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="surveyScopeType" class="form-label">Anket Kapsamı</label>
