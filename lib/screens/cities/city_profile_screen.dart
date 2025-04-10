@@ -10,6 +10,8 @@ import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
 import 'package:sikayet_var/screens/surveys/survey_detail_screen.dart';
 import 'package:sikayet_var/widgets/post_card.dart';
 import 'package:sikayet_var/widgets/survey_slider.dart';
+import 'package:sikayet_var/widgets/city_priority_chart.dart';
+import 'package:sikayet_var/widgets/monthly_performance_card.dart';
 
 class CityProfileScreen extends ConsumerStatefulWidget {
   final int cityId; // Int olarak tutuyoruz ama API'ye String olarak göndereceğiz
