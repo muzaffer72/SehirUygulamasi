@@ -89,7 +89,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
           bio: 'Bu bir test kullanıcısıdır',
           profileImageUrl: 'https://i.pravatar.cc/150?img=3',
           points: 100,
-          level: 'contributor',
+          level: UserLevel.contributor,
         );
         
         // Auth state'i güncelle
