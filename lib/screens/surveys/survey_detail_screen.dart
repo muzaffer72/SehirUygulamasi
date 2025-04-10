@@ -6,6 +6,7 @@ import 'package:sikayet_var/providers/current_user_provider.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:sikayet_var/providers/user_provider.dart';
 import 'package:sikayet_var/providers/api_service_provider.dart';
+import 'package:sikayet_var/providers/survey_provider.dart';
 
 class SurveyDetailScreen extends ConsumerStatefulWidget {
   final Survey survey;
@@ -405,10 +406,24 @@ class _SurveyDetailScreenState extends ConsumerState<SurveyDetailScreen> {
     });
     
     try {
-      await _apiService.voteOnSurvey(
-        widget.survey.id,
-        _selectedOptionId!,
+      // Riverpod kullanarak oy verme isteği gönder
+      final voteParams = VoteParams(
+        surveyId: widget.survey.id,
+        optionId: _selectedOptionId!,
       );
+      
+      await ref.read(voteSurveyProvider(voteParams).future);
+      
+      // Seçili option'ın oy sayısını artır
+      for (var option in widget.survey.options) {
+        if (option.id == _selectedOptionId) {
+          option.voteCount++;
+          break;
+        }
+      }
+      
+      // Toplam oy sayısını güncelle
+      widget.survey.totalVotes++;
       
       setState(() {
         _hasVoted = true;
