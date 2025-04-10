@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
+import 'package:sikayet_var/providers/current_user_provider.dart';
 import 'package:sikayet_var/providers/post_provider.dart';
 import 'package:sikayet_var/providers/user_provider.dart';
 import 'package:sikayet_var/screens/home/dashboard_screen.dart';

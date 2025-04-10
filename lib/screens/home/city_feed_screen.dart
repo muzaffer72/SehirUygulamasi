@@ -128,28 +128,7 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // Filtre çubuğu (sadece şehir seçimi için)
-          FilterBar(
-            onFilterApplied: (cityId, districtId, categoryId) {
-              ref.read(cityFilterProvider.notifier).state = cityId;
-              ref.read(districtFilterProvider.notifier).state = null; // İlçeyi temizle
-              ref.read(categoryFilterProvider.notifier).state = categoryId;
-              
-              ref.read(postsProvider.notifier).filterPosts(
-                cityId: cityId,
-                districtId: null, // İlçe filtresini kullanma
-                categoryId: categoryId,
-              );
-            },
-            onFilterCleared: () {
-              ref.read(cityFilterProvider.notifier).state = null;
-              ref.read(districtFilterProvider.notifier).state = null;
-              ref.read(categoryFilterProvider.notifier).state = null;
-              
-              ref.read(postsProvider.notifier).loadPosts();
-            },
-            cityOnly: true, // Sadece şehir filtresine odaklan
-          ),
+          // Filtrele kısmını gizledik
           
           // Geri kalan içerik
           Expanded(
