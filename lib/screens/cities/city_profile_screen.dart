@@ -928,7 +928,7 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
           // Şehir İstatistikleri
           if (cityProfile.stats != null && cityProfile.stats!.isNotEmpty) ...[
             for (var stat in cityProfile.stats!)
-              _buildInfoRow(stat.name, stat.value),
+              _buildInfoRow(stat.name, stat.value ?? '-'),
             const SizedBox(height: 16),
           ],
           
@@ -987,7 +987,6 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
     } else {
       return Colors.red;
     }
-  }
   }
   
   Widget _buildInfoRow(String label, String value) {
