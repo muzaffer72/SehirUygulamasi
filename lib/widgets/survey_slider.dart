@@ -186,7 +186,7 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
                   children: [
                     Expanded(
                       child: Text(
-                        survey.title,
+                        survey.shortTitle,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
