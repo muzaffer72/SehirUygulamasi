@@ -83,15 +83,19 @@ class _FilteredPostsScreenState extends ConsumerState<FilteredPostsScreen> {
           break;
         case 'type':
           final type = widget.filterData['typeValue'] as PostType;
-          filteredPosts = await _apiService.getPosts(type: type);
+          // String'e dönüştürüyoruz
+          final typeStr = type.toString().split('.').last;
+          filteredPosts = await _apiService.getPosts(type: typeStr);
           break;
         case 'city':
           final cityId = widget.filterData['cityId'] as int;
-          filteredPosts = await _apiService.getPosts(cityId: cityId);
+          // String'e dönüştürüyoruz
+          filteredPosts = await _apiService.getPosts(cityId: cityId.toString());
           break;
         case 'district':
           final districtId = widget.filterData['districtId'] as int;
-          filteredPosts = await _apiService.getPosts(districtId: districtId);
+          // String'e dönüştürüyoruz
+          filteredPosts = await _apiService.getPosts(districtId: districtId.toString());
           break;
         default:
           filteredPosts = await _apiService.getPosts();

@@ -143,7 +143,7 @@ class SikayetVarApp extends StatelessWidget {
           return MaterialPageRoute(
             builder: (context) => CityProfileScreen(
               cityId: cityId, 
-              cityName: "Şehir $cityId" // Ana ekranda değişecek
+              cityName: "Şehir ${cityId.toString()}" 
             ),
           );
         }

@@ -12,7 +12,7 @@ import 'package:sikayet_var/widgets/post_card.dart';
 import 'package:sikayet_var/widgets/survey_slider.dart';
 
 class CityProfileScreen extends ConsumerStatefulWidget {
-  final int cityId;
+  final int cityId; // Int olarak tutuyoruz ama API'ye String olarak göndereceğiz
   final String cityName;
   
   const CityProfileScreen({
