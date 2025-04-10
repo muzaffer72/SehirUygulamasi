@@ -12,6 +12,7 @@ import 'package:sikayet_var/widgets/post_card.dart';
 import 'package:sikayet_var/widgets/survey_slider.dart';
 import 'package:sikayet_var/widgets/city_priority_chart.dart';
 import 'package:sikayet_var/widgets/monthly_performance_card.dart';
+import 'package:sikayet_var/widgets/best_municipality_banner.dart';
 
 class CityProfileScreen extends ConsumerStatefulWidget {
   final int cityId; // Int olarak tutuyoruz ama API'ye String olarak göndereceğiz
@@ -1190,22 +1191,42 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                                 ),
                               ],
                               if (cityProfile.mayorSatisfactionRate != null) ...[
-                                const SizedBox(height: 8),
-                                Row(
+                                const SizedBox(height: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Memnuniyet Oranı: ',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                      ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Vatandaş Memnuniyet Oranı',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                        Text(
+                                          '%${cityProfile.mayorSatisfactionRate}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: _getSatisfactionColor(cityProfile.mayorSatisfactionRate!),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      '%${cityProfile.mayorSatisfactionRate}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: _getSatisfactionColor(cityProfile.mayorSatisfactionRate!),
+                                    const SizedBox(height: 8),
+                                    // İlerleme çubuğu
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(2),
+                                      child: LinearProgressIndicator(
+                                        value: cityProfile.mayorSatisfactionRate! / 100,
+                                        backgroundColor: Colors.grey[200],
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          _getSatisfactionColor(cityProfile.mayorSatisfactionRate!),
+                                        ),
+                                        minHeight: 6,
                                       ),
                                     ),
                                   ],
@@ -1367,6 +1388,7 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
 
 // Belediye öncelik durumu grafiği
 Widget _buildPriorityChart(BuildContext context, CityProfile cityProfile) {
+  // Dinamik widget'ımızı kullanarak belediye öncelik grafiğini oluşturuyoruz
   final priorityData = cityProfile.priorityData;
   if (priorityData == null || priorityData.isEmpty) {
     return const Center(
@@ -1374,89 +1396,16 @@ Widget _buildPriorityChart(BuildContext context, CityProfile cityProfile) {
     );
   }
   
-  // Toplam değeri hesapla (genellikle 100 olmalı)
-  final totalValue = priorityData.values.fold(0.0, (sum, value) => sum + value);
-  
-  return Card(
-    elevation: 2,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          for (final entry in priorityData.entries)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            _getPriorityIcon(entry.key),
-                            size: 16,
-                            color: _getPriorityColor(entry.key),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            entry.key,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        '%${entry.value.toStringAsFixed(1)}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: _getPriorityColor(entry.key),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  // İlerleme çubuğu
-                  Stack(
-                    children: [
-                      // Arka plan
-                      Container(
-                        height: 8,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      // Önplan (değerlendirme)
-                      Container(
-                        height: 8,
-                        width: (MediaQuery.of(context).size.width - 64) * (entry.value / totalValue),
-                        decoration: BoxDecoration(
-                          color: _getPriorityColor(entry.key),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    ),
+  return CityPriorityChart(
+    priorityData: priorityData,
+    height: 200,
+    showLabels: true,
   );
 }
 
 // Aylık performans grafiği
 Widget _buildMonthlyPerformanceChart(BuildContext context, CityProfile cityProfile) {
+  // Dinamik widget'ımızı kullanarak aylık performans kartını oluşturuyoruz
   final monthlyData = cityProfile.monthlyPerformance;
   if (monthlyData == null || monthlyData.isEmpty) {
     return const Center(
@@ -1464,125 +1413,8 @@ Widget _buildMonthlyPerformanceChart(BuildContext context, CityProfile cityProfi
     );
   }
   
-  // Verileri sırala (son aydan ilk aya doğru)
-  final sortedMonths = monthlyData.keys.toList()..sort();
-  
-  // Son ayın değeri ile önceki ayı karşılaştır
-  final lastMonth = sortedMonths.last;
-  final previousMonth = sortedMonths.length > 1 ? sortedMonths[sortedMonths.length - 2] : null;
-  
-  final lastMonthValue = monthlyData[lastMonth] ?? 0.0;
-  final previousMonthValue = previousMonth != null ? monthlyData[previousMonth] ?? 0.0 : 0.0;
-  
-  // Değişim oranını hesapla
-  double changeRate = 0;
-  if (previousMonthValue > 0) {
-    changeRate = ((lastMonthValue - previousMonthValue) / previousMonthValue) * 100;
-  }
-  
-  return Card(
-    elevation: 2,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Değişim bilgisi
-          if (previousMonth != null) 
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Row(
-                children: [
-                  Icon(
-                    changeRate >= 0 ? Icons.trending_up : Icons.trending_down,
-                    color: changeRate >= 0 ? Colors.green : Colors.red,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Geçen aya göre ${changeRate.abs().toStringAsFixed(1)}% ${changeRate >= 0 ? 'artış' : 'düşüş'}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: changeRate >= 0 ? Colors.green : Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          
-          // Aylık grafikler
-          for (int i = 0; i < sortedMonths.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        sortedMonths[i],
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        '%${monthlyData[sortedMonths[i]]?.toStringAsFixed(1)}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: _getPerformanceColor(monthlyData[sortedMonths[i]] ?? 0),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  // İlerleme çubuğu
-                  Stack(
-                    children: [
-                      // Arka plan
-                      Container(
-                        height: 8,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      // Önplan (değerlendirme)
-                      Container(
-                        height: 8,
-                        width: (MediaQuery.of(context).size.width - 64) * ((monthlyData[sortedMonths[i]] ?? 0) / 100),
-                        decoration: BoxDecoration(
-                          color: _getPerformanceColor(monthlyData[sortedMonths[i]] ?? 0),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          
-          // Çözüm oranı açıklaması
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Text(
-              '* Çözüm oranı, ay içerisinde belediyeye iletilen sorunların ne kadarının çözüldüğünü gösterir.',
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
+  return MonthlyPerformanceCard(
+    monthlyPerformance: monthlyData,
   );
 }
 
