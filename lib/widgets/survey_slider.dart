@@ -51,7 +51,7 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 220,
+      height: 180, // Daha küçük bir yükseklik
       child: FutureBuilder<List<Survey>>(
         future: widget.filterType == 'city' 
           ? _apiService.getActiveSurveysByType('city')
@@ -117,6 +117,7 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
   Widget _buildSurveyCard(Survey survey) {
     // Kalan süre bilgisini model üzerinden al
     String remainingTime = survey.getRemainingTimeText();
+    final bool isSurveyExpired = survey.endDate.isBefore(DateTime.now());
     
     // Katılım oranını modelden al
     final double participationRate = survey.getParticipationRate();
@@ -125,7 +126,11 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
     Color startColor;
     Color endColor;
     
-    if (participationRate < 0.3) {
+    if (isSurveyExpired) {
+      // Sona ermiş anket - gri tonlar
+      startColor = const Color(0xFF9E9E9E); 
+      endColor = const Color(0xFF616161);
+    } else if (participationRate < 0.3) {
       // Düşük katılım - kırmızı tonlar
       startColor = const Color(0xFFEF9A9A);
       endColor = const Color(0xFFC62828);
@@ -139,15 +144,11 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
       endColor = const Color(0xFF2E7D32);
     }
     
-    // Animasyon için metinler - yukarı doğru kayacak
+    // Animasyon için metinler - daha kısa ve özlü
     final List<String> animationTexts = [
-      survey.description,
-      "Ankete katılım: %${(participationRate * 100).toStringAsFixed(1)} | ${survey.totalVotes}/${survey.totalUsers} kişi",
-      "Son $remainingTime",
+      "%${(participationRate * 100).toStringAsFixed(1)} katılım oranı",
+      "${survey.totalVotes}/${survey.totalUsers} kişi katıldı",
     ];
-    
-    // Döngüsel olarak metin indeksi
-    final currentTextIndex = _textScrollIndex % animationTexts.length;
     
     return GestureDetector(
       onTap: () {
@@ -165,6 +166,7 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
           borderRadius: BorderRadius.circular(12),
         ),
         child: Container(
+          height: 120, // Sabit yükseklik - daha kompakt
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             gradient: LinearGradient(
@@ -177,7 +179,7 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12), // Daha az padding
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -197,7 +199,7 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Saat ikonu ve kalan süre
+                    // Saat ikonu veya sona erme ikonu
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
@@ -206,14 +208,14 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
                       ),
                       child: Row(
                         children: [
-                          const Icon(
-                            Icons.access_time_rounded,
+                          Icon(
+                            isSurveyExpired ? Icons.check_circle_outline : Icons.access_time_rounded,
                             color: Colors.white,
                             size: 14,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            remainingTime,
+                            isSurveyExpired ? "Tamamlandı" : remainingTime,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -228,37 +230,8 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
                 
                 const SizedBox(height: 12),
                 
-                // Yukarı doğru kayan metinler (AnimatedSwitcher)
-                SizedBox(
-                  height: 40,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 500),
-                    transitionBuilder: (Widget child, Animation<double> animation) {
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 1),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Text(
-                      animationTexts[currentTextIndex],
-                      key: ValueKey<int>(currentTextIndex),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 12),
+                // Açıklamayı kaldırıyoruz, sadece katılım grafiği gösteriyoruz
+                const SizedBox(height: 8),
                 
                 // Katılım oranı göstergesi
                 Column(
