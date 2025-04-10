@@ -19,6 +19,18 @@ export const categories = pgTable('categories', {
 export const cities = pgTable('cities', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
+  imageUrl: text('image_url'),
+  coverImageUrl: text('cover_image_url'),
+  mayorName: varchar('mayor_name', { length: 100 }),
+  mayorImageUrl: text('mayor_image_url'),
+  mayorParty: varchar('mayor_party', { length: 50 }),
+  mayorPartyLogo: text('mayor_party_logo'),
+  mayorSatisfactionRate: integer('mayor_satisfaction_rate'),
+  population: integer('population'),
+  contactEmail: varchar('contact_email', { length: 100 }),
+  contactPhone: varchar('contact_phone', { length: 50 }),
+  emergencyPhone: varchar('emergency_phone', { length: 50 }),
+  website: varchar('website', { length: 100 }),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -134,6 +146,65 @@ export const bannedWords = pgTable('banned_words', {
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
+// Şehir Hizmetleri tablosu
+export const cityServices = pgTable('city_services', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  iconUrl: text('icon_url'),
+  type: varchar('type', { length: 50 }).notNull(), // online, emergency, contact, etc.
+  url: text('url'),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Şehir-Hizmet İlişki Tablosu
+export const citiesServices = pgTable('cities_services', {
+  id: serial('id').primaryKey(),
+  cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
+  serviceId: integer('service_id').notNull().references(() => cityServices.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Şehir Proje tablosu
+export const cityProjects = pgTable('city_projects', {
+  id: serial('id').primaryKey(),
+  cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  imageUrl: text('image_url'),
+  startDate: timestamp('start_date'),
+  endDate: timestamp('end_date'),
+  status: varchar('status', { length: 30 }).notNull(), // planned, inProgress, completed
+  likes: integer('likes').default(0).notNull(),
+  dislikes: integer('dislikes').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Şehir Etkinlikleri tablosu
+export const cityEvents = pgTable('city_events', {
+  id: serial('id').primaryKey(),
+  cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  imageUrl: text('image_url'),
+  location: varchar('location', { length: 255 }),
+  eventDate: timestamp('event_date').notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Şehir İstatistikleri Tablosu
+export const cityStats = pgTable('city_stats', {
+  id: serial('id').primaryKey(),
+  cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 50 }).notNull(), // economy, tourism, education, environment
+  iconUrl: text('icon_url'),
+  title: varchar('title', { length: 100 }).notNull(),
+  description: text('description'),
+  value: varchar('value', { length: 50 }),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
 // İlişki tanımlamaları
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
@@ -232,6 +303,50 @@ export const surveyRegionalResultsRelations = relations(surveyRegionalResults, (
 export const districtsRelations = relations(districts, ({ one }) => ({
   city: one(cities, {
     fields: [districts.cityId],
+    references: [cities.id]
+  })
+}));
+
+export const citiesRelations = relations(cities, ({ many }) => ({
+  districts: many(districts),
+  services: many(citiesServices),
+  projects: many(cityProjects),
+  events: many(cityEvents),
+  stats: many(cityStats)
+}));
+
+export const cityServicesRelations = relations(cityServices, ({ many }) => ({
+  cities: many(citiesServices)
+}));
+
+export const citiesServicesRelations = relations(citiesServices, ({ one }) => ({
+  city: one(cities, {
+    fields: [citiesServices.cityId],
+    references: [cities.id]
+  }),
+  service: one(cityServices, {
+    fields: [citiesServices.serviceId],
+    references: [cityServices.id]
+  })
+}));
+
+export const cityProjectsRelations = relations(cityProjects, ({ one }) => ({
+  city: one(cities, {
+    fields: [cityProjects.cityId],
+    references: [cities.id]
+  })
+}));
+
+export const cityEventsRelations = relations(cityEvents, ({ one }) => ({
+  city: one(cities, {
+    fields: [cityEvents.cityId],
+    references: [cities.id]
+  })
+}));
+
+export const cityStatsRelations = relations(cityStats, ({ one }) => ({
+  city: one(cities, {
+    fields: [cityStats.cityId],
     references: [cities.id]
   })
 }));

@@ -1,12 +1,169 @@
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/models/survey.dart';
 
+class CityService {
+  final int id;
+  final String name;
+  final String? description;
+  final String? iconUrl;
+  final String type;
+  final String? url;
+  
+  CityService({
+    required this.id,
+    required this.name,
+    this.description,
+    this.iconUrl,
+    required this.type,
+    this.url,
+  });
+  
+  factory CityService.fromJson(Map<String, dynamic> json) {
+    return CityService(
+      id: json['id'],
+      name: json['name'],
+      description: json['description'],
+      iconUrl: json['iconUrl'],
+      type: json['type'],
+      url: json['url'],
+    );
+  }
+}
+
+class CityProject {
+  final int id;
+  final int cityId;
+  final String title;
+  final String? description;
+  final String? imageUrl;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final String status; // planned, inProgress, completed
+  final int likes;
+  final int dislikes;
+  
+  CityProject({
+    required this.id,
+    required this.cityId,
+    required this.title,
+    this.description,
+    this.imageUrl,
+    this.startDate,
+    this.endDate,
+    required this.status,
+    required this.likes,
+    required this.dislikes,
+  });
+  
+  factory CityProject.fromJson(Map<String, dynamic> json) {
+    return CityProject(
+      id: json['id'],
+      cityId: json['cityId'],
+      title: json['title'],
+      description: json['description'],
+      imageUrl: json['imageUrl'],
+      startDate: json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
+      endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
+      status: json['status'],
+      likes: json['likes'] ?? 0,
+      dislikes: json['dislikes'] ?? 0,
+    );
+  }
+  
+  // Projenin durumunu görsel olarak göstermek için
+  String get statusDisplay {
+    switch (status) {
+      case 'planned':
+        return 'Planlandı';
+      case 'inProgress':
+        return 'Devam Ediyor';
+      case 'completed':
+        return 'Tamamlandı';
+      default:
+        return 'Belirsiz';
+    }
+  }
+  
+  // Kalan gün hesaplama
+  int? get remainingDays {
+    if (status != 'inProgress' || endDate == null) return null;
+    return endDate!.difference(DateTime.now()).inDays;
+  }
+}
+
+class CityEvent {
+  final int id;
+  final int cityId;
+  final String title;
+  final String? description;
+  final String? imageUrl;
+  final String? location;
+  final DateTime eventDate;
+  final bool isActive;
+  
+  CityEvent({
+    required this.id,
+    required this.cityId,
+    required this.title,
+    this.description,
+    this.imageUrl,
+    this.location,
+    required this.eventDate,
+    required this.isActive,
+  });
+  
+  factory CityEvent.fromJson(Map<String, dynamic> json) {
+    return CityEvent(
+      id: json['id'],
+      cityId: json['cityId'],
+      title: json['title'],
+      description: json['description'],
+      imageUrl: json['imageUrl'],
+      location: json['location'],
+      eventDate: DateTime.parse(json['eventDate']),
+      isActive: json['isActive'],
+    );
+  }
+}
+
+class CityStat {
+  final int id;
+  final int cityId;
+  final String type; // economy, tourism, education, environment
+  final String? iconUrl;
+  final String title;
+  final String? description;
+  final String? value;
+  
+  CityStat({
+    required this.id,
+    required this.cityId,
+    required this.type,
+    this.iconUrl,
+    required this.title,
+    this.description,
+    this.value,
+  });
+  
+  factory CityStat.fromJson(Map<String, dynamic> json) {
+    return CityStat(
+      id: json['id'],
+      cityId: json['cityId'],
+      type: json['type'],
+      iconUrl: json['iconUrl'],
+      title: json['title'],
+      description: json['description'],
+      value: json['value'],
+    );
+  }
+}
+
 class CityProfile {
   final int id;
   final String name;
   final String? description;
   final String? imageUrl;
-  final String? headerImageUrl;
+  final String? coverImageUrl;
   final int population;
   final double latitude;
   final double longitude;
@@ -16,6 +173,25 @@ class CityProfile {
   final List<Post>? recentPosts;
   final List<Survey>? activeSurveyList;
   
+  // Belediye bilgileri
+  final String? mayorName;
+  final String? mayorImageUrl;
+  final String? mayorParty;
+  final String? mayorPartyLogo;
+  final int? mayorSatisfactionRate;
+  
+  // İletişim bilgileri
+  final String? contactEmail;
+  final String? contactPhone;
+  final String? emergencyPhone;
+  final String? website;
+  
+  // Şehir hizmetleri, projeler, etkinlikler ve istatistikler
+  final List<CityService>? services;
+  final List<CityProject>? projects;
+  final List<CityEvent>? events;
+  final List<CityStat>? stats;
+  
   // İstatistikler
   final Map<String, int>? statistics;
   
@@ -24,7 +200,7 @@ class CityProfile {
     required this.name,
     this.description,
     this.imageUrl,
-    this.headerImageUrl,
+    this.coverImageUrl,
     required this.population,
     required this.latitude,
     required this.longitude,
@@ -33,6 +209,19 @@ class CityProfile {
     required this.activeSurveys,
     this.recentPosts,
     this.activeSurveyList,
+    this.mayorName,
+    this.mayorImageUrl,
+    this.mayorParty,
+    this.mayorPartyLogo,
+    this.mayorSatisfactionRate,
+    this.contactEmail,
+    this.contactPhone,
+    this.emergencyPhone,
+    this.website,
+    this.services,
+    this.projects,
+    this.events,
+    this.stats,
     this.statistics,
   });
   
@@ -54,12 +243,36 @@ class CityProfile {
       statistics = Map<String, int>.from(json['statistics']);
     }
     
+    List<CityService>? services;
+    if (json['services'] != null) {
+      services = List<CityService>.from(
+        json['services'].map((x) => CityService.fromJson(x)));
+    }
+    
+    List<CityProject>? projects;
+    if (json['projects'] != null) {
+      projects = List<CityProject>.from(
+        json['projects'].map((x) => CityProject.fromJson(x)));
+    }
+    
+    List<CityEvent>? events;
+    if (json['events'] != null) {
+      events = List<CityEvent>.from(
+        json['events'].map((x) => CityEvent.fromJson(x)));
+    }
+    
+    List<CityStat>? stats;
+    if (json['stats'] != null) {
+      stats = List<CityStat>.from(
+        json['stats'].map((x) => CityStat.fromJson(x)));
+    }
+    
     return CityProfile(
       id: json['id'],
       name: json['name'],
       description: json['description'],
       imageUrl: json['imageUrl'],
-      headerImageUrl: json['headerImageUrl'],
+      coverImageUrl: json['coverImageUrl'] ?? json['headerImageUrl'],
       population: json['population'] ?? 0,
       latitude: json['latitude'] ?? 0.0,
       longitude: json['longitude'] ?? 0.0,
@@ -68,6 +281,19 @@ class CityProfile {
       activeSurveys: json['activeSurveysCount'] ?? 0,
       recentPosts: recentPosts,
       activeSurveyList: activeSurveyList,
+      mayorName: json['mayorName'],
+      mayorImageUrl: json['mayorImageUrl'],
+      mayorParty: json['mayorParty'],
+      mayorPartyLogo: json['mayorPartyLogo'],
+      mayorSatisfactionRate: json['mayorSatisfactionRate'],
+      contactEmail: json['contactEmail'],
+      contactPhone: json['contactPhone'],
+      emergencyPhone: json['emergencyPhone'],
+      website: json['website'],
+      services: services,
+      projects: projects,
+      events: events,
+      stats: stats,
       statistics: statistics,
     );
   }
