@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="250" viewBox="0 0 800 250">
+  <rect width="800" height="250" fill="#006400"/>
+  
+  <!-- Uludağ Silueti -->
+  <path d="M0 170 L 100 120 L 200 140 L 300 90 L 400 130 L 500 80 L 600 110 L 700 140 L 800 100 
+           L 800 250 L 0 250 Z" fill="#004D00"/>
+           
+  <!-- Kar -->
+  <path d="M300 90 L 315 95 L 330 88 L 350 92 L 370 85 L 390 90 L 400 130 
+           L 390 125 L 370 128 L 350 120 L 330 125 L 310 115 L 300 90 Z" fill="#FFFFFF"/>
+  <path d="M500 80 L 515 85 L 530 82 L 550 88 L 570 80 L 590 85 L 600 110 
+           L 580 105 L 560 110 L 540 100 L 520 108 L 505 100 L 500 80 Z" fill="#FFFFFF"/>
+           
+  <!-- Ulucami -->
+  <rect x="650" y="150" width="80" height="40" fill="#EEEEEE"/>
+  <path d="M650 150 A 40 40 0 0 1 730 150" fill="#EEEEEE"/>
+  <rect x="685" y="110" width="10" height="40" fill="#EEEEEE"/>
+  
+  <!-- Yeşil Türbe -->
+  <rect x="150" y="150" width="50" height="40" fill="#EEEEEE"/>
+  <path d="M150 150 A 25 25 0 0 1 200 150" fill="#EEEEEE"/>
+  
+  <text x="50" y="50" font-family="Arial" font-size="30" font-weight="bold" fill="#FFFFFF">BURSA</text>
+</svg>

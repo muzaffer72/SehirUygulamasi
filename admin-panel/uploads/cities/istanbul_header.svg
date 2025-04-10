@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="250" viewBox="0 0 800 250">
+  <rect width="800" height="250" fill="#0066CC"/>
+  
+  <!-- İstanbul Silueti -->
+  <path d="M0 180 Q 50 160, 100 170 Q 150 190, 200 170 Q 250 150, 300 160 
+           Q 320 120, 340 150 Q 360 100, 380 140 Q 400 80, 420 130 
+           Q 440 110, 460 140 Q 480 130, 500 150 Q 520 140, 540 160 
+           Q 560 170, 580 150 Q 600 130, 620 150 Q 640 160, 660 140 
+           Q 680 120, 700 140 Q 720 160, 740 150 Q 760 140, 800 170 
+           L 800 250 L 0 250 Z" fill="#00335E"/>
+           
+  <!-- Boğaz Köprüsü -->
+  <path d="M300 190 L 500 190" stroke="#FFCC00" stroke-width="5" />
+  <path d="M300 190 L 300 100" stroke="#FFCC00" stroke-width="5" />
+  <path d="M500 190 L 500 100" stroke="#FFCC00" stroke-width="5" />
+  <path d="M300 100 C 350 50, 450 50, 500 100" stroke="#FFCC00" stroke-width="5" fill="none" />
+  
+  <!-- Ay ve Yıldız -->
+  <circle cx="700" cy="50" r="30" fill="#E30A17"/>
+  <polygon points="740,50 755,65 745,45 760,40 740,35 750,20 730,30 720,15 715,35 700,25 715,45" fill="#FFFFFF"/>
+  
+  <text x="50" y="50" font-family="Arial" font-size="30" font-weight="bold" fill="#FFFFFF">İSTANBUL</text>
+</svg>
