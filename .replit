@@ -13,10 +13,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Flutter Main App"
+args = "Flutter Web App with Matrix Fix"
 
 [[workflows.workflow]]
-name = "Flutter Main App"
+name = "Flutter Web App with Matrix Fix"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -27,7 +27,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd . && DART_VM_OPTIONS=--disable-dart-dev flutter run -d web-server --web-port=5000 --web-hostname=0.0.0.0"
+args = "cd . && DART_VM_OPTIONS=\"--enable-experiment=native-assets\" flutter run -d web-server --web-port=5000 --web-hostname=0.0.0.0"
 waitForPort = 5000
 
 [deployment]
