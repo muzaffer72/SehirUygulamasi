@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 class BestMunicipalityBanner extends StatelessWidget {
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('cityName', cityName));
+    properties.add(StringProperty('awardMonth', awardMonth));
+    properties.add(IntProperty('awardScore', awardScore));
+    properties.add(StringProperty('awardText', awardText));
+  }
   final String cityName;
   final String awardMonth;
   final int? awardScore;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vector_math/vector_math_64.dart';
 import 'package:sikayet_var/models/city.dart';
 import 'package:sikayet_var/providers/city_provider.dart';
 import 'package:sikayet_var/providers/post_provider.dart';
@@ -7,6 +9,11 @@ import 'package:sikayet_var/widgets/post_card.dart';
 import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
 
 class CityProfileScreen extends ConsumerWidget {
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('cityId', cityId));
+  }
   final String cityId;
 
   const CityProfileScreen({
