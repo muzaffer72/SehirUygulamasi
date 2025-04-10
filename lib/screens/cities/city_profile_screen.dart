@@ -62,8 +62,9 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
       slivers: [
         // Üst kısım - Şehir Kapak Fotoğrafı ve Bilgileri
         SliverAppBar(
-          expandedHeight: 220,
+          expandedHeight: 250,
           pinned: true,
+          backgroundColor: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
           flexibleSpace: FlexibleSpaceBar(
             title: Text(
               cityProfile.name,
@@ -89,75 +90,130 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                         fit: BoxFit.cover,
                       )
                     : Container(
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                              Theme.of(context).colorScheme.primary,
+                              Color(0xFF6A3DE8), // Anket rengine benzer mor renk
+                              Color(0xFF5332B8), // Biraz daha koyu bir ton
                             ],
                           ),
                         ),
                       ),
                 ),
                 
-                // Sol üst - Parti Bilgisi
+                // Saydam overlay
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.2),
+                          Colors.black.withOpacity(0.4),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // Sol üst - Parti Bilgisi - Daha belirgin
                 if (cityProfile.mayorParty != null)
                 Positioned(
                   left: 16,
                   top: 80,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (cityProfile.mayorPartyLogo != null)
-                        Image.network(
-                          cityProfile.mayorPartyLogo!,
-                          width: 40,
-                          height: 40,
-                          errorBuilder: (context, error, stackTrace) => 
-                            Icon(Icons.account_balance, size: 40, color: Colors.white),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                      const SizedBox(height: 4),
-                      Text(
-                        cityProfile.mayorParty!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        if (cityProfile.mayorPartyLogo != null)
+                          Image.network(
+                            cityProfile.mayorPartyLogo!,
+                            width: 30,
+                            height: 30,
+                            errorBuilder: (context, error, stackTrace) => 
+                              Icon(Icons.account_balance, size: 30, color: Theme.of(context).colorScheme.primary),
+                          ),
+                        const SizedBox(width: 8),
+                        Text(
+                          cityProfile.mayorParty!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 
-                // Sağ üst - Belediye Başkanı
+                // Sağ üst - Belediye Başkanı - Daha belirgin
                 if (cityProfile.mayorName != null)
                 Positioned(
                   right: 16,
                   top: 80,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      if (cityProfile.mayorImageUrl != null)
-                        CircleAvatar(
-                          radius: 25,
-                          backgroundImage: NetworkImage(cityProfile.mayorImageUrl!),
-                          onBackgroundImageError: (exception, stackTrace) {},
-                          child: cityProfile.mayorImageUrl == null 
-                              ? Icon(Icons.person, size: 30, color: Colors.white)
-                              : null,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                      const SizedBox(height: 4),
-                      Text(
-                        cityProfile.mayorName!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              "Belediye Başkanı",
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              cityProfile.mayorName!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        if (cityProfile.mayorImageUrl != null)
+                          CircleAvatar(
+                            radius: 20,
+                            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                            backgroundImage: NetworkImage(cityProfile.mayorImageUrl!),
+                            onBackgroundImageError: (exception, stackTrace) {},
+                            child: cityProfile.mayorImageUrl == null 
+                                ? Icon(Icons.person, size: 20, color: Theme.of(context).colorScheme.primary)
+                                : null,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -165,39 +221,39 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
           ),
         ),
         
-        // Şehir Logosu
+        // Şehir Logosu - Üste taşındı
         SliverToBoxAdapter(
           child: Transform.translate(
-            offset: const Offset(0, -40),
+            offset: const Offset(0, -70), // Daha yukarıda gösteriliyor
             child: Center(
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.green,
+                  color: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 padding: const EdgeInsets.all(4),
                 child: CircleAvatar(
-                  radius: 40,
+                  radius: 45, // Biraz daha büyük
                   backgroundColor: Colors.white,
                   child: cityProfile.imageUrl != null
                       ? ClipOval(
                           child: Image.network(
                             cityProfile.imageUrl!,
-                            width: 70,
-                            height: 70,
+                            width: 80,
+                            height: 80,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) => 
-                              Icon(Icons.location_city, size: 40, color: Colors.green),
+                              Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
                           ),
                         )
-                      : Icon(Icons.location_city, size: 40, color: Colors.green),
+                      : Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
                 ),
               ),
             ),
@@ -397,28 +453,80 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
     );
   }
   
-  // Derecelendirme satırı oluşturan metot
+  // Derecelendirme satırı oluşturan metot - Daha görsel bir tasarım
   Widget _buildRatingRow(String label, double rating) {
+    // 10 üzerinden değerlendirmeyi 100'lük sisteme çevirelim
+    final percentRating = (rating / 10) * 100;
+    final displayRating = rating > 0 ? rating.toStringAsFixed(1) : "-.-";
+    final ratingColor = _getRatingColor(rating);
+    
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                displayRating,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: ratingColor,
+                ),
+              ),
+            ],
           ),
-          Text(
-            rating > 0 ? rating.toStringAsFixed(1) : "-.-",
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: rating > 8.0 ? Colors.green : Colors.grey[700],
-            ),
+          const SizedBox(height: 6),
+          // İlerleme çubuğu
+          Stack(
+            children: [
+              // Arka plan
+              Container(
+                height: 5,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(5),
+                ),
+              ),
+              // Önplan (değerlendirme)
+              Container(
+                height: 5,
+                width: percentRating > 0 ? (MediaQuery.of(context).size.width - 64) * (percentRating / 100) : 0,
+                decoration: BoxDecoration(
+                  color: ratingColor,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
+  }
+  
+  // Değerlendirme puanına göre renk döndürür
+  Color _getRatingColor(double rating) {
+    if (rating >= 8.0) {
+      return Colors.green;
+    } else if (rating >= 6.0) {
+      return Colors.lightGreen;
+    } else if (rating >= 4.0) {
+      return Colors.amber;
+    } else if (rating >= 2.0) {
+      return Colors.orange;
+    } else {
+      return Colors.red;
+    }
   }
   
   Widget _buildPostsTab(CityProfile cityProfile) {
