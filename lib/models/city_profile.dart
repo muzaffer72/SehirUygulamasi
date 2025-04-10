@@ -8,6 +8,9 @@ class CityService {
   final String? iconUrl;
   final String type;
   final String? url;
+  final String? category;
+  final String? contactInfo;
+  final String? workingHours;
   
   CityService({
     required this.id,
@@ -16,6 +19,9 @@ class CityService {
     this.iconUrl,
     required this.type,
     this.url,
+    this.category,
+    this.contactInfo,
+    this.workingHours,
   });
   
   factory CityService.fromJson(Map<String, dynamic> json) {
@@ -26,6 +32,9 @@ class CityService {
       iconUrl: json['iconUrl'],
       type: json['type'],
       url: json['url'],
+      category: json['category'],
+      contactInfo: json['contactInfo'],
+      workingHours: json['workingHours'],
     );
   }
 }
@@ -33,11 +42,13 @@ class CityService {
 class CityProject {
   final int id;
   final int cityId;
-  final String title;
+  final String name;
   final String? description;
   final String? imageUrl;
-  final DateTime? startDate;
-  final DateTime? endDate;
+  final DateTime? startDateDt;
+  final DateTime? endDateDt;
+  final String? startDate; // String formatında tarih
+  final String? endDate; // String formatında tarih
   final String status; // planned, inProgress, completed
   final int likes;
   final int dislikes;
@@ -45,9 +56,11 @@ class CityProject {
   CityProject({
     required this.id,
     required this.cityId,
-    required this.title,
+    required this.name,
     this.description,
     this.imageUrl,
+    this.startDateDt,
+    this.endDateDt,
     this.startDate,
     this.endDate,
     required this.status,
@@ -56,14 +69,38 @@ class CityProject {
   });
   
   factory CityProject.fromJson(Map<String, dynamic> json) {
+    DateTime? startDateDt, endDateDt;
+    String? startDateStr, endDateStr;
+    
+    // Tarih dönüşümleri
+    if (json['startDate'] != null) {
+      try {
+        startDateDt = DateTime.parse(json['startDate']);
+        startDateStr = '${startDateDt.day}/${startDateDt.month}/${startDateDt.year}';
+      } catch (e) {
+        startDateStr = json['startDate'];
+      }
+    }
+    
+    if (json['endDate'] != null) {
+      try {
+        endDateDt = DateTime.parse(json['endDate']);
+        endDateStr = '${endDateDt.day}/${endDateDt.month}/${endDateDt.year}';
+      } catch (e) {
+        endDateStr = json['endDate'];
+      }
+    }
+    
     return CityProject(
       id: json['id'],
       cityId: json['cityId'],
-      title: json['title'],
+      name: json['name'] ?? json['title'],
       description: json['description'],
       imageUrl: json['imageUrl'],
-      startDate: json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
-      endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
+      startDateDt: startDateDt,
+      endDateDt: endDateDt,
+      startDate: startDateStr,
+      endDate: endDateStr,
       status: json['status'],
       likes: json['likes'] ?? 0,
       dislikes: json['dislikes'] ?? 0,
@@ -86,42 +123,51 @@ class CityProject {
   
   // Kalan gün hesaplama
   int? get remainingDays {
-    if (status != 'inProgress' || endDate == null) return null;
-    return endDate!.difference(DateTime.now()).inDays;
+    if (status != 'inProgress' || endDateDt == null) return null;
+    return endDateDt!.difference(DateTime.now()).inDays;
   }
 }
 
 class CityEvent {
   final int id;
   final int cityId;
-  final String title;
+  final String name;
   final String? description;
   final String? imageUrl;
   final String? location;
   final DateTime eventDate;
   final bool isActive;
+  final String? date; // Formatlanmış tarih
   
   CityEvent({
     required this.id,
     required this.cityId,
-    required this.title,
+    required this.name,
     this.description,
     this.imageUrl,
     this.location,
     required this.eventDate,
     required this.isActive,
+    this.date,
   });
   
   factory CityEvent.fromJson(Map<String, dynamic> json) {
+    String? dateStr;
+    if (json['eventDate'] != null) {
+      final date = DateTime.parse(json['eventDate']);
+      dateStr = "${date.day} ${date.month} ${date.year}";
+    }
+    
     return CityEvent(
       id: json['id'],
       cityId: json['cityId'],
-      title: json['title'],
+      name: json['title'] ?? json['name'],
       description: json['description'],
       imageUrl: json['imageUrl'],
       location: json['location'],
-      eventDate: DateTime.parse(json['eventDate']),
-      isActive: json['isActive'],
+      eventDate: json['eventDate'] != null ? DateTime.parse(json['eventDate']) : DateTime.now(),
+      isActive: json['isActive'] ?? true,
+      date: dateStr,
     );
   }
 }
@@ -134,6 +180,7 @@ class CityStat {
   final String title;
   final String? description;
   final String? value;
+  final String name; // İstatistik adı (gösterim için)
   
   CityStat({
     required this.id,
@@ -143,7 +190,8 @@ class CityStat {
     required this.title,
     this.description,
     this.value,
-  });
+    String? name,
+  }) : name = name ?? title;
   
   factory CityStat.fromJson(Map<String, dynamic> json) {
     return CityStat(
@@ -153,7 +201,8 @@ class CityStat {
       iconUrl: json['iconUrl'],
       title: json['title'],
       description: json['description'],
-      value: json['value'],
+      value: json['value'] is int ? json['value'].toString() : json['value'],
+      name: json['name'] ?? json['title'],
     );
   }
 }
