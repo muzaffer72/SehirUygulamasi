@@ -5,6 +5,8 @@ session_start();
 
 // Database connection
 require_once 'db_config.php';
+require_once 'db_connection.php';
+$db = $conn; // MySQLiCompatWrapper'i $db değişkenine atayalım
 
 // Configuration
 $config = [

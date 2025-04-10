@@ -258,6 +258,7 @@ class CityProfile {
   final bool isBestOfMonth; // Ayın en iyi belediyesi
   final String? awardMonth; // Hangi ay için ödül aldı
   final double? awardScore;  // Ödül puanı
+  final String? awardText;  // Ödül açıklaması
   
   CityProfile({
     required this.id,
@@ -294,6 +295,7 @@ class CityProfile {
     this.isBestOfMonth = false,
     this.awardMonth,
     this.awardScore,
+    this.awardText,
   });
   
   factory CityProfile.fromJson(Map<String, dynamic> json) {
@@ -396,9 +398,11 @@ class CityProfile {
       complaintCount: json['complaintCount'] ?? json['totalPosts'] ?? 0,
       priorityData: priorityData,
       monthlyPerformance: monthlyPerformance,
-      isBestOfMonth: json['isBestOfMonth'] ?? false,
-      awardMonth: json['awardMonth'] ?? 'Nisan', // Varsayılan değer (mevcut ay)
-      awardScore: json['awardScore'] ?? 92.5, // Varsayılan değer
+      isBestOfMonth: json['is_best_of_month'] ?? json['isBestOfMonth'] ?? false,
+      awardMonth: json['award_month'] ?? json['awardMonth'],
+      awardScore: json['award_score'] != null ? json['award_score'].toDouble() : 
+                  json['awardScore'] != null ? json['awardScore'].toDouble() : null,
+      awardText: json['award_text'] ?? json['awardText']
     );
   }
   
