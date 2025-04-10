@@ -140,4 +140,29 @@ class AuthNotifier extends AsyncNotifier<User?> {
       throw e;
     }
   }
+  
+  // Kullanıcının konum bilgilerini güncelleme
+  Future<void> updateUserLocation(String userId, String? cityId, String? districtId) async {
+    state = const AsyncValue.loading();
+    
+    try {
+      // Mevcut kullanıcı verisini al
+      final currentUser = state.valueOrNull;
+      if (currentUser == null) {
+        throw Exception('Kullanıcı oturumu bulunamadı');
+      }
+      
+      // API servisi ile kullanıcıyı güncelle
+      final updatedUser = await _apiService.updateUser(userId, {
+        'city_id': cityId,
+        'district_id': districtId,
+      });
+      
+      // Durum güncellemesi yap
+      state = AsyncValue.data(updatedUser);
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+      throw e;
+    }
+  }
 }

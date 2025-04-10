@@ -253,6 +253,18 @@ class ApiService {
     }
   }
   
+  // Belirli bir türdeki anketleri getir (şehir/ilçe/genel)
+  Future<List<Survey>> getActiveSurveysByType(String type) async {
+    final response = await _client.get(Uri.parse('$baseUrl/surveys?active=true&type=$type'));
+    
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((item) => Survey.fromJson(item)).toList();
+    } else {
+      throw Exception('Failed to load active surveys by type: ${response.body}');
+    }
+  }
+  
   Future<Survey> getSurveyById(String id) async {
     final response = await _client.get(Uri.parse('$baseUrl/surveys/$id'));
     
