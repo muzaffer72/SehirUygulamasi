@@ -1,0 +1,10 @@
+id,name,icon_name,created_at
+1,Altyapı,construction,2025-04-09 18:59:03.290753+00
+2,Ulaşım,directions_bus,2025-04-09 18:59:03.290753+00
+3,Çevre,nature,2025-04-09 18:59:03.290753+00
+4,Güvenlik,security,2025-04-09 18:59:03.290753+00
+5,Sağlık,local_hospital,2025-04-09 18:59:03.290753+00
+6,Eğitim,school,2025-04-09 18:59:03.290753+00
+7,Kültür & Sanat,theater_comedy,2025-04-09 18:59:03.290753+00
+8,Sosyal Hizmetler,people,2025-04-09 18:59:03.290753+00
+9,Diğer,more_horiz,2025-04-09 18:59:03.290753+00

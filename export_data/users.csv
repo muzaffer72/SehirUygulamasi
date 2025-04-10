@@ -1,0 +1,2 @@
+id,name,email,password,profile_image_url,bio,city_id,district_id,is_verified,points,post_count,comment_count,level,created_at
+1,Admin,admin@example.com,$2b$10$k55g2qPRBM6SCcW8BM3l1OkTEQoiL.Vgab21jzv8x2ZHIV5uC1Pqe,,,,,t,0,0,0,master,2025-04-09 18:59:03.2124+00
