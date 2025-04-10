@@ -789,97 +789,144 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
       );
     }
     
-    return ListView.builder(
+    // Servisleri kategoriye göre grupla
+    final Map<String, List<CityService>> groupedServices = {};
+    for (var service in services) {
+      final category = service.category ?? 'Diğer';
+      if (!groupedServices.containsKey(category)) {
+        groupedServices[category] = [];
+      }
+      groupedServices[category]!.add(service);
+    }
+    
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      itemCount: services.length,
-      itemBuilder: (context, index) {
-        final service = services[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ...groupedServices.entries.map((entry) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  _getServiceIcon(service.category),
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 28,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        service.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      if (service.description != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            service.description!,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ),
-                      if (service.contactInfo != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.phone,
-                                size: 14,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                service.contactInfo!,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (service.workingHours != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.access_time,
-                                size: 14,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                service.workingHours!,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12, top: 8),
+                  child: Text(
+                    entry.key,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    childAspectRatio: 1,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: entry.value.length,
+                  itemBuilder: (context, index) {
+                    final service = entry.value[index];
+                    return _buildServiceIcon(context, service);
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+  
+  // Küçük servis ikonu
+  Widget _buildServiceIcon(BuildContext context, CityService service) {
+    return InkWell(
+      onTap: () {
+        _showServiceDetails(context, service);
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Icon(
+                _getServiceIcon(service.category),
+                color: Theme.of(context).colorScheme.primary,
+                size: 28,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // Servis detaylarını gösteren dialog
+  void _showServiceDetails(BuildContext context, CityService service) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(service.name),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (service.description != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      service.description!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                if (service.contactInfo != null)
+                  ListTile(
+                    leading: const Icon(Icons.phone),
+                    title: const Text('İletişim'),
+                    subtitle: Text(service.contactInfo!),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                if (service.workingHours != null)
+                  ListTile(
+                    leading: const Icon(Icons.access_time),
+                    title: const Text('Çalışma Saatleri'),
+                    subtitle: Text(service.workingHours!),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                if (service.url != null)
+                  ListTile(
+                    leading: const Icon(Icons.link),
+                    title: const Text('Web Sitesi'),
+                    subtitle: Text(service.url!),
+                    contentPadding: EdgeInsets.zero,
+                    onTap: () {
+                      // URL'yi aç
+                    },
+                  ),
               ],
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Kapat'),
+            ),
+          ],
         );
       },
     );
