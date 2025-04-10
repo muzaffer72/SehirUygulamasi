@@ -452,6 +452,9 @@ $page_file = "pages/{$page}.php";
                         <a href="?page=profanity_filter" class="<?= $page === 'profanity_filter' ? 'active' : '' ?>">
                             <i class="bi bi-shield-exclamation"></i> Küfür Filtresi
                         </a>
+                        <a href="?page=cities" class="<?= $page === 'cities' ? 'active' : '' ?>">
+                            <i class="bi bi-buildings"></i> Şehirler
+                        </a>
                         <a href="?logout=1" class="mt-5">
                             <i class="bi bi-box-arrow-right"></i> Çıkış Yap
                         </a>
