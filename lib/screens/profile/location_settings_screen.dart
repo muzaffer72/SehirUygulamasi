@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/city.dart';
 import 'package:sikayet_var/models/district.dart';
-import 'package:sikayet_var/models/user.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
 import 'package:sikayet_var/providers/user_provider.dart';
-import 'package:sikayet_var/screens/home/city_feed_screen.dart';
 import 'package:sikayet_var/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocationSettingsScreen extends ConsumerStatefulWidget {
   const LocationSettingsScreen({Key? key}) : super(key: key);
@@ -17,174 +16,182 @@ class LocationSettingsScreen extends ConsumerStatefulWidget {
 
 class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen> {
   final ApiService _apiService = ApiService();
+  
   String? _selectedCityId;
   String? _selectedDistrictId;
-  bool _isLoading = false;
-  bool _saveDefaultLocation = false;
+  
+  bool _isLoading = true;
   
   @override
   void initState() {
     super.initState();
-    
-    // Mevcut kullanıcı ayarlarını yükle
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final currentUser = ref.read(currentUserProvider).value;
-      if (currentUser != null) {
-        setState(() {
-          _selectedCityId = currentUser.cityId;
-          _selectedDistrictId = currentUser.districtId;
-          _saveDefaultLocation = currentUser.cityId != null || currentUser.districtId != null;
-        });
-      }
-      
-      // Ana ekran filtrelerini de önceden ayarlanmış değerlere göre ayarla
-      ref.read(cityFilterProvider.notifier).state = _selectedCityId;
-      ref.read(districtFilterProvider.notifier).state = _selectedDistrictId;
-    });
+    _loadUserLocation();
   }
   
-  Future<void> _saveLocationSettings() async {
-    final currentUser = ref.read(currentUserProvider).value;
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Konum ayarlarını kaydetmek için giriş yapın')),
-      );
-      return;
-    }
-    
+  Future<void> _loadUserLocation() async {
     setState(() {
       _isLoading = true;
     });
     
-    try {
-      // Ana ekran filtrelerini kullanıcı tercihlerine göre ayarla
-      ref.read(cityFilterProvider.notifier).state = _saveDefaultLocation ? _selectedCityId : null;
-      ref.read(districtFilterProvider.notifier).state = _saveDefaultLocation ? _selectedDistrictId : null;
-      
-      // Kullanıcı profilini güncelle (tercihleri kaydet)
-      if (_saveDefaultLocation) {
-        await ref.read(authNotifierProvider.notifier).updateUserLocation(
-          currentUser.id,
-          _selectedCityId,
-          _selectedDistrictId,
-        );
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Konum ayarları kaydedildi')),
-        );
-      } else {
-        // Varsayılan konum tercihlerini temizle
-        await ref.read(authNotifierProvider.notifier).updateUserLocation(
-          currentUser.id,
-          null,
-          null,
-        );
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Konum ayarları temizlendi')),
-        );
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Try to get location from user profile first
+    final userState = ref.read(authNotifierProvider);
+    
+    userState.whenData((user) {
+      if (user != null) {
+        _selectedCityId = user.cityId;
+        _selectedDistrictId = user.districtId;
       }
-      
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hata: $e')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    });
+    
+    // If not available in user profile, check saved preferences
+    if (_selectedCityId == null) {
+      _selectedCityId = prefs.getString('selectedCityId');
     }
+    
+    if (_selectedDistrictId == null) {
+      _selectedDistrictId = prefs.getString('selectedDistrictId');
+    }
+    
+    setState(() {
+      _isLoading = false;
+    });
+  }
+  
+  Future<void> _saveLocationPreferences() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Save to preferences
+    if (_selectedCityId != null) {
+      await prefs.setString('selectedCityId', _selectedCityId!);
+    } else {
+      await prefs.remove('selectedCityId');
+    }
+    
+    if (_selectedDistrictId != null) {
+      await prefs.setString('selectedDistrictId', _selectedDistrictId!);
+    } else {
+      await prefs.remove('selectedDistrictId');
+    }
+    
+    // Update user in database if logged in
+    final userState = ref.read(authNotifierProvider);
+    
+    userState.whenData((user) async {
+      if (user != null) {
+        try {
+          await ref.read(userProviderProvider.notifier).updateUserLocation(
+            _selectedCityId,
+            _selectedDistrictId,
+          );
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Konum tercihleri güncellendi'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Konum güncellenirken hata oluştu: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Konum tercihleri kaydedildi'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    });
+    
+    setState(() {
+      _isLoading = false;
+    });
   }
   
   @override
   Widget build(BuildContext context) {
-    final userState = ref.watch(currentUserProvider);
-    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Konum Ayarları'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _selectedCityId == null ? null : _saveLocationPreferences,
+            tooltip: 'Kaydet',
+          ),
+        ],
       ),
-      body: userState.when(
-        data: (User? user) {
-          if (user == null) {
-            return const Center(
-              child: Text('Konum ayarlarını kullanmak için giriş yapın'),
-            );
-          }
-          
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Bilgi kutusu
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Information card
+                  Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Theme.of(context).colorScheme.primary,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Konum Hakkında',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Konum Tercihleri',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Belirlediğiniz konum, size özel içerik gösterilmesinde ve anketlerde kullanılacaktır. '
+                            'İlçe seçimi isteğe bağlıdır. İlçe seçmezseniz, sadece şehir kapsamındaki içerikler gösterilir.',
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Ana sayfada gösterilecek varsayılan şehir ve ilçeyi burada belirleyebilirsiniz. Bu seçim, uygulamayı açtığınızda ilgili bölgeye ait gönderileri görmenizi sağlar.',
-                        style: TextStyle(
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Varsayılan konum kullanma seçeneği
-                SwitchListTile(
-                  title: const Text('Varsayılan Konum Kullan'),
-                  subtitle: const Text('Ana sayfada belirlediğiniz konumdaki içerikleri göster'),
-                  value: _saveDefaultLocation,
-                  activeColor: Theme.of(context).colorScheme.primary,
-                  onChanged: (value) {
-                    setState(() {
-                      _saveDefaultLocation = value;
-                    });
-                  },
-                ),
-                const Divider(),
-                const SizedBox(height: 16),
-                
-                if (_saveDefaultLocation) ...[
+                  
                   const Text(
-                    'Varsayılan Konumunuz',
+                    'Varsayılan Konum',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Uygulama içerisinde göreceğiniz içerikler ve anketler için varsayılan konumunuzu seçin.',
+                  ),
                   const SizedBox(height: 16),
                   
-                  // Şehir seçimi
+                  // City selection
                   FutureBuilder<List<City>>(
                     future: _apiService.getCities(),
                     builder: (context, snapshot) {
@@ -198,31 +205,51 @@ class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen>
                       
                       final cities = snapshot.data!;
                       
-                      return DropdownButtonFormField<String>(
-                        value: _selectedCityId,
-                        decoration: const InputDecoration(
-                          labelText: 'Şehir',
-                          prefixIcon: Icon(Icons.location_city),
-                          border: OutlineInputBorder(),
-                        ),
-                        items: cities.map((city) {
-                          return DropdownMenuItem<String>(
-                            value: city.id,
-                            child: Text(city.name),
-                          );
-                        }).toList(),
-                        onChanged: (newValue) {
-                          setState(() {
-                            _selectedCityId = newValue;
-                            _selectedDistrictId = null; // Reset district when city changes
-                          });
-                        },
+                      // Add "Tüm Türkiye" option at the top
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Şehir',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            value: _selectedCityId,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              hintText: 'Şehir seçin',
+                              prefixIcon: Icon(Icons.location_city),
+                              border: OutlineInputBorder(),
+                            ),
+                            items: [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text('Tüm Türkiye'),
+                              ),
+                              ...cities.map((city) {
+                                return DropdownMenuItem<String>(
+                                  value: city.id,
+                                  child: Text(city.name),
+                                );
+                              }).toList(),
+                            ],
+                            onChanged: (newValue) {
+                              setState(() {
+                                _selectedCityId = newValue;
+                                _selectedDistrictId = null; // Reset district when city changes
+                              });
+                            },
+                          ),
+                        ],
                       );
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   
-                  // İlçe seçimi (şehir seçiliyse)
+                  // District selection (only if city is selected)
                   if (_selectedCityId != null)
                     FutureBuilder<List<District>>(
                       future: _apiService.getDistrictsByCityId(_selectedCityId!),
@@ -237,56 +264,59 @@ class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen>
                         
                         final districts = snapshot.data!;
                         
-                        return DropdownButtonFormField<String>(
-                          value: _selectedDistrictId,
-                          decoration: const InputDecoration(
-                            labelText: 'İlçe',
-                            prefixIcon: Icon(Icons.location_on),
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<String>(
-                              value: null,
-                              child: Text('İlçe seçin (İsteğe bağlı)'),
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'İlçe (İsteğe bağlı)',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            ...districts.map((district) {
-                              return DropdownMenuItem<String>(
-                                value: district.id,
-                                child: Text(district.name),
-                              );
-                            }).toList(),
+                            const SizedBox(height: 8),
+                            DropdownButtonFormField<String>(
+                              value: _selectedDistrictId,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                hintText: 'İlçe seçin (İsteğe bağlı)',
+                                prefixIcon: Icon(Icons.location_on),
+                                border: OutlineInputBorder(),
+                              ),
+                              items: [
+                                const DropdownMenuItem<String>(
+                                  value: null,
+                                  child: Text('İlçe Seçmeyin - Tüm İl'),
+                                ),
+                                ...districts.map((district) {
+                                  return DropdownMenuItem<String>(
+                                    value: district.id,
+                                    child: Text(district.name),
+                                  );
+                                }).toList(),
+                              ],
+                              onChanged: (newValue) {
+                                setState(() {
+                                  _selectedDistrictId = newValue;
+                                });
+                              },
+                            ),
                           ],
-                          onChanged: (newValue) {
-                            setState(() {
-                              _selectedDistrictId = newValue;
-                            });
-                          },
                         );
                       },
                     ),
-                  const SizedBox(height: 24),
                 ],
-                
-                // Kaydetme butonu
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _saveLocationSettings,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('Ayarları Kaydet'),
-                  ),
-                ),
-              ],
+              ),
             ),
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        error: (error, stack) => Center(
-          child: Text('Hata: $error'),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SizedBox(
+          height: 50,
+          child: ElevatedButton(
+            onPressed: _selectedCityId == null ? null : _saveLocationPreferences,
+            child: _isLoading 
+                ? const CircularProgressIndicator() 
+                : const Text('Konum Ayarlarını Kaydet'),
+          ),
         ),
       ),
     );

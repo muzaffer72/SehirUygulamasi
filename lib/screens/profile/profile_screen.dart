@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/city.dart';
 import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
+import 'package:sikayet_var/screens/profile/location_settings_screen.dart';
 import 'package:sikayet_var/services/api_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -591,6 +592,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Ayarlar yakında eklenecek')),
+              );
+            },
+          ),
+          
+          // Konum Ayarları
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.location_on,
+                color: Colors.orange,
+              ),
+            ),
+            title: const Text('Konum Ayarları'),
+            subtitle: const Text('Varsayılan şehir ve ilçe tercihlerinizi belirleyin'),
+            onTap: () {
+              Navigator.push(
+                context, 
+                MaterialPageRoute(
+                  builder: (context) => const LocationSettingsScreen(),
+                ),
               );
             },
           ),

@@ -449,4 +449,84 @@ class ApiService {
       throw Exception('Failed to load category: ${response.body}');
     }
   }
+  
+  // User profile updates
+  Future<User> updateUserProfile(
+    String userId, 
+    {String? name, 
+    String? email, 
+    String? profileImageUrl}
+  ) async {
+    final token = await _getToken();
+    
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+    
+    // Create request body with only the fields that are provided
+    final Map<String, dynamic> requestBody = {};
+    if (name != null) requestBody['name'] = name;
+    if (email != null) requestBody['email'] = email;
+    if (profileImageUrl != null) requestBody['profile_image_url'] = profileImageUrl;
+    
+    final response = await _client.put(
+      Uri.parse('$baseUrl/users/$userId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(requestBody),
+    );
+    
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to update user profile: ${response.body}');
+    }
+  }
+  
+  // User location updates
+  Future<User> updateUserLocation(
+    String userId,
+    {String? cityId,
+    String? districtId}
+  ) async {
+    final token = await _getToken();
+    
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+    
+    // Create request body with only the fields that are provided
+    final Map<String, dynamic> requestBody = {};
+    if (cityId != null) requestBody['city_id'] = cityId;
+    if (districtId != null) requestBody['district_id'] = districtId;
+    
+    final response = await _client.put(
+      Uri.parse('$baseUrl/users/$userId/location'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(requestBody),
+    );
+    
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to update user location: ${response.body}');
+    }
+  }
+  
+  // Banned words management
+  Future<List<String>> getBannedWords() async {
+    final response = await _client.get(Uri.parse('$baseUrl/banned-words'));
+    
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map<String>((item) => item.toString()).toList();
+    } else {
+      throw Exception('Failed to load banned words: ${response.body}');
+    }
+  }
 }
