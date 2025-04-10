@@ -72,11 +72,14 @@ class _FilteredPostsScreenState extends ConsumerState<FilteredPostsScreen> {
       switch (filterType) {
         case 'status':
           final status = widget.filterData['statusValue'] as PostStatus;
-          filteredPosts = await _apiService.getPosts(status: status);
+          // String'e dönüştürüyoruz
+          final statusStr = status.toString().split('.').last;
+          filteredPosts = await _apiService.getPosts(status: statusStr);
           break;
         case 'category':
           final categoryId = widget.filterData['categoryId'] as int;
-          filteredPosts = await _apiService.getPosts(categoryId: categoryId);
+          // String'e dönüştürüyoruz
+          filteredPosts = await _apiService.getPosts(categoryId: categoryId.toString());
           break;
         case 'type':
           final type = widget.filterData['typeValue'] as PostType;
