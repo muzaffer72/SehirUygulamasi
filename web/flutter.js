@@ -1,101 +1,92 @@
-/**
- * Flutter'ın resmi web starter şablonundan uyarlanmıştır.
- * Daha basit ve daha güvenilir bir yapılandırma sağlar.
- */
-
+/* Flutter web yükleyici - 2.16.1 */
 'use strict';
 
 /**
- * Flutter uygulamasının yüklendiği global nesne
+ * This file is the entry point for the Flutter app when it's running in a web
+ * browser.
+ *
+ * This code handles loading the Flutter app's compiled JavaScript, and calling
+ * the app's main entrypoint function.
  */
-var _flutter = '_flutter';
 
 /**
- * Temel URL'yi belirle
+ * The element to display while the app is loading.
+ * @type {Element}
  */
-function getBaseUrl() {
-  // Get the URL from the script's location
-  const scripts = document.getElementsByTagName('script');
-  for (let i = 0; i < scripts.length; i++) {
-    if (scripts[i].src.indexOf('flutter.js') !== -1) {
-      const url = scripts[i].src;
-      return url.substring(0, url.lastIndexOf('/') + 1);
+const loader = document.querySelector('#loading');
+
+/**
+ * The main entrypoint for the Flutter app.
+ * @type {string}
+ */
+const entrypointUrl = 'main.dart.js';
+
+/**
+ * A global object to track initialization, and provide facilities to register
+ * Flutter web plugins.
+ * @type {Object}
+ */
+window._flutter = window._flutter || {};
+
+/**
+ * Set up the Flutter bootstrapping code.
+ */
+(function() {
+  // Set up the global _flutter object with required parts.
+  window._flutter.loader = window._flutter.loader || {};
+  
+  // Set build configuration as an early initialization step.
+  window._flutter.buildMode = 'debug';
+  window._flutter.buildConfig = window._flutter.buildConfig || {
+    canvasKitBaseUrl: '/canvaskit/',
+    canvasKitVariant: 'auto'
+  };
+  
+  // Define common functions and callbacks.
+  const appStarted = () => {
+    if (loader) {
+      loader.remove();
     }
-  }
-  return './';
-}
-
-/**
- * Güvenli şekilde global Flutter yapılandırmasını oluştur 
- */
-function initializeFlutterConfig() {
-  // Make sure _flutter object exists and has proper structures
-  if (typeof window[_flutter] === 'undefined') {
-    window[_flutter] = {};
-  }
+  };
   
-  // Loader function
-  if (typeof window[_flutter].loader === 'undefined') {
-    window[_flutter].loader = {};
-  }
+  const appFailed = (error) => {
+    console.error('Flutter app initialization failed:', error);
+    if (loader) {
+      loader.innerHTML = `
+        <div style="color: red; text-align: center; padding: 20px;">
+          <p>Uygulama yüklenemedi</p>
+          <p style="font-size: 12px;">Detaylar: ${error}</p>
+        </div>
+      `;
+    }
+  };
   
-  // Always set a buildConfig
-  if (typeof window[_flutter].buildConfig === 'undefined') {
-    window[_flutter].buildConfig = {
-      canvasKitBaseUrl: "/canvaskit/",
-      useColorEmoji: true
-    };
-  }
-}
-
-/**
- * Flutter'ı yüklemek için ana fonksiyon
- */
-function load(options) {
-  // Initialize Flutter configuration 
-  initializeFlutterConfig();
+  // Set up the loader to call the main entrypoint.
+  window._flutter.loader.loadEntrypoint = function(options) {
+    try {
+      // Create a script tag to load the main entrypoint.
+      const scriptTag = document.createElement('script');
+      scriptTag.src = entrypointUrl;
+      scriptTag.type = 'text/javascript';
+      scriptTag.addEventListener('load', function() {
+        // Script loaded, notify user app is ready.
+        if (window.console) {
+          console.log('Flutter app loaded successfully!');
+        }
+      });
+      scriptTag.addEventListener('error', function(e) {
+        appFailed(e);
+      });
+      
+      // Add the script tag to the body.
+      document.body.appendChild(scriptTag);
+    } catch (e) {
+      appFailed(e);
+    }
+  };
   
-  try {
-    // Default options
-    options = options || {};
-    const entrypoint = options.entrypoint || 'main.dart.js';
-    const serviceWorker = options.serviceWorker;
-    const onEntrypointLoaded = options.onEntrypointLoaded || function(){};
-    const baseUrl = options.baseUrl || getBaseUrl();
-    
-    // Update buildConfig with baseUrl
-    window[_flutter].buildConfig.baseUrl = baseUrl;
-    
-    // Create script element to load main.dart.js
-    const script = document.createElement('script');
-    script.src = baseUrl + entrypoint;
-    script.type = 'text/javascript';
-    
-    // When the script is loaded, it will automatically call
-    // the entrypoint loader function with engineInitializer
-    script.onload = function() {
-      console.log('Flutter script loaded successfully');
-    };
-    
-    // Append to document
-    document.body.appendChild(script);
-    
-  } catch (error) {
-    console.error('Error loading Flutter application:', error);
-    
-    // Try to show error on page
-    const errorDiv = document.createElement('div');
-    errorDiv.innerHTML = 'Failed to load Flutter application. Check console for details.';
-    errorDiv.style.color = 'red';
-    errorDiv.style.padding = '20px';
-    errorDiv.style.fontFamily = 'sans-serif';
-    document.body.appendChild(errorDiv);
-  }
-}
-
-// Make sure global _flutter object is initialized
-window[_flutter] = window[_flutter] || {};
-window[_flutter].loader = window[_flutter].loader || {};
-
-// Define the load function that will be called from index.html
-window[_flutter].loader.load = load;
+  // Simplified load method for direct bootstrap.
+  window._flutter.loader.load = function() {
+    window._flutter.loader.loadEntrypoint({});
+  };
+})();
