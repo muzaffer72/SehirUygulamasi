@@ -32,14 +32,15 @@ class _SwipeableFeedScreenState extends ConsumerState<SwipeableFeedScreen> with 
         title: const Text('ŞikayetVar'),
         bottom: TabBar(
           controller: _tabController,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          indicatorWeight: 2.0,
+          indicatorColor: Theme.of(context).colorScheme.primary,
           tabs: const [
             Tab(
-              icon: Icon(Icons.location_city),
-              text: 'Şehir',
+              text: 'Şehrindeki Gönderiler',
             ),
             Tab(
-              icon: Icon(Icons.location_on),
-              text: 'İlçe',
+              text: 'İlçendeki Gönderiler',
             ),
           ],
         ),
