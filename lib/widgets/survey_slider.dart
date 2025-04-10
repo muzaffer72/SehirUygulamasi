@@ -115,24 +115,35 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
   }
   
   Widget _buildSurveyCard(Survey survey) {
-    // Anket bitiş süresini hesapla
-    final now = DateTime.now();
-    final remainingDuration = survey.endDate.difference(now);
-    final days = remainingDuration.inDays;
-    final hours = remainingDuration.inHours % 24;
-    final minutes = remainingDuration.inMinutes % 60;
+    // Kalan süre bilgisini model üzerinden al
+    String remainingTime = survey.getRemainingTimeText();
     
-    // Katılım oranı (gerçek uygulamada bu değer API'den gelmelidir)
-    // Şu anda dummy veri olarak kullanıyoruz
-    final int totalUsers = 1000; // İl/ilçe veya genel kullanıcı sayısı
-    final double participationRate = survey.totalVotes / totalUsers;
+    // Katılım oranını modelden al
+    final double participationRate = survey.getParticipationRate();
     
-    // Animasyon için metinler
+    // Katılım oranına göre arka plan rengini belirle
+    Color startColor;
+    Color endColor;
+    
+    if (participationRate < 0.3) {
+      // Düşük katılım - kırmızı tonlar
+      startColor = const Color(0xFFEF9A9A);
+      endColor = const Color(0xFFC62828);
+    } else if (participationRate < 0.7) {
+      // Orta katılım - turuncu-sarı tonlar
+      startColor = const Color(0xFFFFD54F);
+      endColor = const Color(0xFFEF6C00);
+    } else {
+      // Yüksek katılım - yeşil tonlar
+      startColor = const Color(0xFFA5D6A7);
+      endColor = const Color(0xFF2E7D32);
+    }
+    
+    // Animasyon için metinler - yukarı doğru kayacak
     final List<String> animationTexts = [
       survey.description,
-      "Son ${days > 0 ? '$days gün ' : ''}${hours > 0 ? '$hours saat ' : ''}$minutes dakika içinde oy verin!",
-      "Katılım oranı: %${(participationRate * 100).toStringAsFixed(1)}",
-      "Toplam ${survey.totalVotes} kişi oy kullandı",
+      "Ankete katılım: %${(participationRate * 100).toStringAsFixed(1)} | ${survey.totalVotes}/${survey.totalUsers} kişi",
+      "Son $remainingTime",
     ];
     
     // Döngüsel olarak metin indeksi
@@ -160,8 +171,8 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                Theme.of(context).colorScheme.primary,
+                startColor, // Katılım oranına göre belirlenen renkler
+                endColor,
               ],
             ),
           ),
@@ -202,11 +213,7 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            days > 0 
-                              ? '$days gün'
-                              : hours > 0 
-                                ? '$hours sa $minutes dk' 
-                                : '$minutes dk',
+                            remainingTime,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -268,7 +275,7 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
                           ),
                         ),
                         Text(
-                          '${survey.totalVotes}/$totalUsers',
+                          '${survey.totalVotes}/${survey.totalUsers}',
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.9),
                             fontSize: 12,

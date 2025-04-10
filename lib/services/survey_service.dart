@@ -105,10 +105,12 @@ class SurveyService {
       Survey(
         id: 'survey_1',
         title: 'Ulusal bayramlar hakkında',
+        shortTitle: 'Bayram Etkinlikleri',
         description: 'Ulusal bayramlarımızla ilgili etkinliklere katılımınızı değerlendirin',
         question: 'Ulusal bayramlarda düzenlenen etkinliklere ne sıklıkla katılıyorsunuz?',
         imageUrl: 'https://example.com/images/bayram.jpg',
         scopeType: 'general', // Genel kapsam - tüm Türkiye çapında gösterilecek
+        totalUsers: 5000,
         options: [
           SurveyOption(
             id: 'option_1_1',
@@ -152,11 +154,13 @@ class SurveyService {
       Survey(
         id: 'survey_2',
         title: 'Toplu taşıma memnuniyeti',
+        shortTitle: 'Toplu Taşıma',
         description: 'Belediyelerin sunduğu toplu taşıma hizmetleri hakkında memnuniyetinizi değerlendirin',
         question: 'Yaşadığınız şehirdeki toplu taşıma hizmetlerinden ne kadar memnunsunuz?',
         imageUrl: 'https://example.com/images/toplu_tasima.jpg',
         scopeType: 'city', // İl bazlı anket
         cityId: 'all', // "Tüm Türkiye" seçeneği - her il için ayrı sonuçlar
+        totalUsers: 8500,
         options: [
           SurveyOption(
             id: 'option_2_1',
@@ -200,10 +204,12 @@ class SurveyService {
       Survey(
         id: 'survey_3',
         title: 'Park alanları hakkında',
+        shortTitle: 'Park Kullanımı',
         description: 'İstanbul\'daki park alanlarının kullanımı hakkında görüşlerinizi paylaşın',
         question: 'İstanbul\'daki park alanlarını ne sıklıkla kullanıyorsunuz?',
         scopeType: 'city', // İl bazlı anket
         cityId: 'city_1', // İstanbul
+        totalUsers: 3200,
         options: [
           SurveyOption(
             id: 'option_3_1',
@@ -241,11 +247,13 @@ class SurveyService {
       Survey(
         id: 'survey_4',
         title: 'Çöp toplama hizmetleri',
+        shortTitle: 'Çöp Toplama',
         description: 'Kadıköy ilçesindeki çöp toplama hizmetleri hakkında anket',
         question: 'Kadıköy ilçesinde çöp toplama hizmetleri hangi sıklıkta yapılmalı?',
         scopeType: 'district', // İlçe bazlı anket
         cityId: 'city_1', // İstanbul
         districtId: 'district_1', // Kadıköy
+        totalUsers: 1200,
         options: [
           SurveyOption(
             id: 'option_4_1',
