@@ -455,6 +455,9 @@ $page_file = "pages/{$page}.php";
                         <a href="?page=cities" class="<?= $page === 'cities' ? 'active' : '' ?>">
                             <i class="bi bi-buildings"></i> Şehirler
                         </a>
+                        <a href="?page=districts" class="<?= $page === 'districts' ? 'active' : '' ?>">
+                            <i class="bi bi-geo-alt"></i> İlçeler
+                        </a>
                         <a href="?logout=1" class="mt-5">
                             <i class="bi bi-box-arrow-right"></i> Çıkış Yap
                         </a>
