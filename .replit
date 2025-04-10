@@ -21,10 +21,6 @@ args = "Database Setup"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Flutter App Server"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "Flutter Test App"
 
 [[workflows.workflow.tasks]]
@@ -63,21 +59,6 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npx ts-node push-db.ts"
-
-[[workflows.workflow]]
-name = "Flutter App Server"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd . && flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0"
-waitForPort = 5001
 
 [[workflows.workflow]]
 name = "Flutter Test App"
@@ -121,8 +102,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd . && flutter run -d web-server --web-port=5002 --web-hostname=0.0.0.0 -t sikayetvar_location_test.dart"
-waitForPort = 5002
+args = "cd . && flutter run -d web-server --web-port=5003 --web-hostname=0.0.0.0 -t sikayetvar_location_test.dart"
 
 [deployment]
 run = ["sh", "-c", "cd . && flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0"]
@@ -144,5 +124,5 @@ localPort = 5002
 externalPort = 3002
 
 [[ports]]
-localPort = 39141
+localPort = 5003
 externalPort = 3000
