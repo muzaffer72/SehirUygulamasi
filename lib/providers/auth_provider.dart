@@ -74,7 +74,39 @@ class AuthNotifier extends AsyncNotifier<User?> {
     state = const AsyncValue.loading();
     
     try {
-      // Call the API service
+      // Test kullanıcısı için sabit bilgiler
+      if (email == 'test@example.com' && password == 'test123') {
+        print('TEST KULLANICISI GİRİŞİ BAŞARILI');
+        // Test kullanıcısını manuel olarak oluştur
+        final testUser = User(
+          id: '999',
+          name: 'Test Kullanıcı',
+          email: 'test@example.com',
+          isVerified: true,
+          createdAt: DateTime.now().subtract(const Duration(days: 30)),
+          cityId: '1', // Adana
+          districtId: '2', // Aladağ
+          bio: 'Bu bir test kullanıcısıdır',
+          profileImageUrl: 'https://i.pravatar.cc/150?img=3',
+          points: 100,
+          level: 'contributor',
+        );
+        
+        // Auth state'i güncelle
+        ref.read(authStateProvider.notifier).update((state) => 
+          state.copyWith(
+            isAuthenticated: true, 
+            token: 'test-token',
+            userId: testUser.id
+          )
+        );
+        
+        // Durum güncelle
+        state = AsyncValue.data(testUser);
+        return;
+      }
+      
+      // Normal API servisi çağrısı
       final user = await _apiService.login(email, password);
       
       // Update auth state

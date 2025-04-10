@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sikayet_var/models/survey.dart';
 import 'package:sikayet_var/screens/surveys/survey_detail_screen.dart';
 import 'package:sikayet_var/services/api_service.dart';
+import 'dart:async';
 
 class SurveySlider extends StatefulWidget {
   // Yeni özellik: Anket türü (şehir/ilçe filtrelemesi için)
