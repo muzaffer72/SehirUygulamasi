@@ -60,190 +60,102 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
   Widget _buildCityProfile(BuildContext context, CityProfile cityProfile) {
     return CustomScrollView(
       slivers: [
-        // Üst kısım - Şehir Kapak Fotoğrafı ve Bilgileri
+        // Üst kısım - Basitleştirilmiş App Bar (kapak fotoğrafı tamamen kaldırıldı)
         SliverAppBar(
-          expandedHeight: 250,
+          expandedHeight: 60,
           pinned: true,
           backgroundColor: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
-          flexibleSpace: FlexibleSpaceBar(
-            title: Text(
-              cityProfile.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                shadows: [
-                  Shadow(
-                    offset: Offset(1, 1),
-                    blurRadius: 3,
-                    color: Colors.black54,
-                  ),
-                ],
-              ),
-            ),
-            background: Stack(
-              children: [
-                // Kapak Resmi - Geçici olarak sadece gradient arka plan kullanılıyor
-                Positioned.fill(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFF6A3DE8), // Anket rengine benzer mor renk
-                          Color(0xFF5332B8), // Biraz daha koyu bir ton
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                
-                // Sol üst - Parti Bilgisi - Daha belirgin ve gölge artırıldı
-                if (cityProfile.mayorParty != null)
-                Positioned(
-                  left: 16,
-                  top: 80,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
-                          blurRadius: 12,
-                          offset: const Offset(0, 3),
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        if (cityProfile.mayorPartyLogo != null)
-                          Image.network(
-                            cityProfile.mayorPartyLogo!,
-                            width: 30,
-                            height: 30,
-                            errorBuilder: (context, error, stackTrace) => 
-                              Icon(Icons.account_balance, size: 30, color: Theme.of(context).colorScheme.primary),
-                          ),
-                        const SizedBox(width: 8),
-                        Text(
-                          cityProfile.mayorParty!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                // Sağ üst - Belediye Başkanı - Daha belirgin ve gölge artırıldı
-                if (cityProfile.mayorName != null)
-                Positioned(
-                  right: 16,
-                  top: 80,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
-                          blurRadius: 12,
-                          offset: const Offset(0, 3),
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Belediye Başkanı",
-                              style: TextStyle(
-                                color: Colors.grey[700],
-                                fontSize: 12,
-                              ),
-                            ),
-                            Text(
-                              cityProfile.mayorName!,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 8),
-                        if (cityProfile.mayorImageUrl != null)
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                            backgroundImage: NetworkImage(cityProfile.mayorImageUrl!),
-                            onBackgroundImageError: (exception, stackTrace) {},
-                            child: cityProfile.mayorImageUrl == null 
-                                ? Icon(Icons.person, size: 20, color: Theme.of(context).colorScheme.primary)
-                                : null,
-                          ),
-                      ],
-                    ),
-                  ),
+          title: Text(
+            cityProfile.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  offset: Offset(1, 1),
+                  blurRadius: 3,
+                  color: Colors.black54,
                 ),
               ],
             ),
           ),
+          actions: [
+            // Parti bilgisi için ikon
+            if (cityProfile.mayorParty != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Tooltip(
+                  message: "Parti: ${cityProfile.mayorParty}",
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Colors.white,
+                    child: cityProfile.mayorPartyLogo != null
+                      ? Image.network(
+                          cityProfile.mayorPartyLogo!,
+                          width: 25,
+                          height: 25,
+                          errorBuilder: (context, error, stackTrace) => 
+                            Icon(Icons.account_balance, size: 20, color: Theme.of(context).colorScheme.primary),
+                        )
+                      : Icon(Icons.account_balance, size: 20, color: Theme.of(context).colorScheme.primary),
+                  ),
+                ),
+              ),
+            
+            // Belediye başkanı için ikon
+            if (cityProfile.mayorName != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: Tooltip(
+                  message: "Belediye Başkanı: ${cityProfile.mayorName}",
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Colors.white,
+                    backgroundImage: cityProfile.mayorImageUrl != null ? NetworkImage(cityProfile.mayorImageUrl!) : null,
+                    child: cityProfile.mayorImageUrl == null 
+                      ? Icon(Icons.person, size: 20, color: Theme.of(context).colorScheme.primary)
+                      : null,
+                  ),
+                ),
+              ),
+          ],
         ),
         
-        // Şehir Logosu - Z-index artırıldı (kapak fotoğrafının üzerinde gösteriliyor)
+        // Şehir Logosu (kapak kaldırıldı)
         SliverToBoxAdapter(
-          child: Transform.translate(
-            offset: const Offset(0, -70), // Daha yukarıda gösteriliyor
+          child: Padding(
+            padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
             child: Center(
               child: Material(
-                elevation: 20, // Daha fazla yükseklik (z-index) sağlıyor - artırıldı
+                elevation: 8,
                 type: MaterialType.circle,
                 color: Colors.transparent,
-                shadowColor: Colors.black, // Gölge rengi
-                borderRadius: BorderRadius.circular(50),
-                child: PhysicalModel(
-                  color: Colors.transparent,
-                  elevation: 20, // Ek yükseklik (z-index) sağlama
-                  shadowColor: Colors.black54,
-                  shape: BoxShape.circle,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 4,
-                      ),
+                shadowColor: Colors.black,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 4,
                     ),
-                    padding: const EdgeInsets.all(4),
-                    child: CircleAvatar(
-                      radius: 45, // Biraz daha büyük
-                      backgroundColor: Colors.white,
-                      child: cityProfile.imageUrl != null
-                          ? ClipOval(
-                              child: Image.network(
-                                cityProfile.imageUrl!,
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => 
-                                  Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
-                              ),
-                            )
-                          : Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
-                    ),
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: CircleAvatar(
+                    radius: 45, // Biraz daha büyük
+                    backgroundColor: Colors.white,
+                    child: cityProfile.imageUrl != null
+                        ? ClipOval(
+                            child: Image.network(
+                              cityProfile.imageUrl!,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => 
+                                Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
+                            ),
+                          )
+                        : Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
                   ),
                 ),
               ),
@@ -253,10 +165,8 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
         
         // Şehir Bilgileri Özeti
         SliverToBoxAdapter(
-          child: Transform.translate(
-            offset: const Offset(0, -30),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
