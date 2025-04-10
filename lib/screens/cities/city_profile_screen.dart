@@ -120,58 +120,114 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
   }
 
   Widget _buildCityHeader(CityProfile cityProfile) {
-    return Container(
-      color: Theme.of(context).primaryColor.withOpacity(0.05),
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+    // Arka plan resmi (varsa)
+    final Widget background = cityProfile.coverImageUrl != null
+      ? Stack(
+          children: [
+            Image.network(
+              cityProfile.coverImageUrl!,
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => 
+                Container(
+                  height: 200,
+                  color: Theme.of(context).primaryColor.withOpacity(0.05),
+                ),
+            ),
+            // Yarı saydam overlay
+            Container(
+              width: double.infinity,
+              height: 200,
+              color: Colors.black.withOpacity(0.4),
+            ),
+          ],
+        )
+      : Container(
+          color: Theme.of(context).primaryColor.withOpacity(0.05),
+        );
+    
+    return Stack(
+      children: [
+        // Arka plan
+        background,
+        
+        // İçerik
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Sol kısım: Parti logosu
-              if (cityProfile.mayorPartyLogo != null)
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          cityProfile.mayorPartyLogo!,
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => 
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(Icons.image_not_supported, color: Colors.grey),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Sol kısım: Parti logosu
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (cityProfile.mayorPartyLogo != null)
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                              ],
                             ),
-                        ),
-                      ),
-                      if (cityProfile.mayorParty != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            cityProfile.mayorParty!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[700],
+                            child: Image.network(
+                              cityProfile.mayorPartyLogo!,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => 
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                                ),
                             ),
-                            textAlign: TextAlign.center,
                           ),
-                        ),
-                    ],
+                        if (cityProfile.mayorParty != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                cityProfile.mayorParty!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[800],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                )
-              else
-                const Expanded(flex: 1, child: SizedBox()),
               
               // Orta kısım: Şehir logosu (büyük)
               Expanded(
@@ -229,47 +285,94 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (cityProfile.mayorImageUrl != null)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(30),
-                        child: Image.network(
-                          cityProfile.mayorImageUrl!,
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => 
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                              child: Icon(
-                                Icons.person,
-                                size: 30,
-                                color: Theme.of(context).primaryColor,
-                              ),
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 3,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              spreadRadius: 2,
                             ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(35),
+                          child: Image.network(
+                            cityProfile.mayorImageUrl!,
+                            width: 70,
+                            height: 70,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => 
+                              CircleAvatar(
+                                radius: 35,
+                                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                                child: Icon(
+                                  Icons.person,
+                                  size: 35,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                          ),
                         ),
                       )
                     else
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                        child: Icon(
-                          Icons.person,
-                          size: 30,
-                          color: Theme.of(context).primaryColor,
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 3,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: CircleAvatar(
+                          radius: 35,
+                          backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                          child: Icon(
+                            Icons.person,
+                            size: 35,
+                            color: Theme.of(context).primaryColor,
+                          ),
                         ),
                       ),
                     if (cityProfile.mayorName != null)
                       Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          cityProfile.mayorName!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[700],
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                spreadRadius: 1,
+                              ),
+                            ],
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          child: Text(
+                            cityProfile.mayorName!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[800],
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
                   ],
@@ -1090,6 +1193,26 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Ayın Belediyesi Banner'ı (eğer bu belediye "Ayın Belediyesi" ise)
+              if (cityProfile.isBestOfMonth && cityProfile.awardMonth != null && cityProfile.awardScore != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 24.0),
+                  child: BestMunicipalityBanner(
+                    cityName: cityProfile.name,
+                    month: cityProfile.awardMonth!,
+                    score: cityProfile.awardScore!,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Bu belediye, performans değerlendirmesinde en yüksek puanı almıştır.'),
+                          duration: Duration(seconds: 3),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              
               // Belediye Öncelik Durumu Grafiği
               const Text(
                 'Belediye Öncelik Durumu',
