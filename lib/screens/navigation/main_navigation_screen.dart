@@ -5,7 +5,7 @@ import 'package:sikayet_var/providers/auth_provider.dart';
 import 'package:sikayet_var/providers/post_provider.dart';
 import 'package:sikayet_var/providers/user_provider.dart';
 import 'package:sikayet_var/screens/home/dashboard_screen.dart';
-import 'package:sikayet_var/screens/home/feed_screen.dart';
+import 'package:sikayet_var/screens/home/swipeable_feed_screen.dart'; // Değişiklik: FeedScreen yerine SwipeableFeedScreen kullanılıyor
 import 'package:sikayet_var/screens/profile/profile_screen.dart';
 import 'package:sikayet_var/screens/search/search_screen.dart';
 import 'package:sikayet_var/screens/surveys/surveys_screen.dart';
@@ -27,7 +27,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   void initState() {
     super.initState();
     _screens = [
-      const FeedScreen(),
+      const SwipeableFeedScreen(), // Değişiklik: FeedScreen yerine SwipeableFeedScreen kullanılıyor
       const SearchScreen(),
       const SurveysScreen(),
       const DashboardScreen(),

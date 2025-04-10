@@ -6,6 +6,37 @@ import 'package:sikayet_var/widgets/filter_bar.dart';
 import 'package:sikayet_var/widgets/post_card.dart';
 import 'package:sikayet_var/widgets/survey_slider.dart';
 
+// Post filtreleme state'leri için provider'lar
+final cityFilterProvider = StateProvider<String?>((ref) => null);
+final districtFilterProvider = StateProvider<String?>((ref) => null);
+final categoryFilterProvider = StateProvider<String?>((ref) => null);
+
+// Filtre değerlerini birleştiren provider
+final postFiltersProvider = Provider<PostFilter>((ref) {
+  final cityId = ref.watch(cityFilterProvider);
+  final districtId = ref.watch(districtFilterProvider);
+  final categoryId = ref.watch(categoryFilterProvider);
+  
+  return PostFilter(
+    cityId: cityId,
+    districtId: districtId,
+    categoryId: categoryId,
+  );
+});
+
+// Filtre değerlerini taşıyan model sınıfı
+class PostFilter {
+  final String? cityId;
+  final String? districtId;
+  final String? categoryId;
+  
+  PostFilter({
+    this.cityId,
+    this.districtId,
+    this.categoryId,
+  });
+}
+
 class CityFeedScreen extends ConsumerStatefulWidget {
   const CityFeedScreen({Key? key}) : super(key: key);
 
@@ -25,11 +56,14 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
     // İlk yüklemede şehir filtresiyle gönderileri getir
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final filters = ref.read(postFiltersProvider);
-      ref.read(postsProvider.notifier).filterPosts(
-        cityId: filters.cityId,
-        districtId: null, // İlçe filtresini null yap
-        categoryId: filters.categoryId,
-      );
+      // Şehir bazlı filtreleme yap - şehir belirtilmeli, ilçe boş olmalı
+      if (filters.cityId != null) {
+        ref.read(postsProvider.notifier).filterPosts(
+          cityId: filters.cityId,
+          districtId: null, // İlçe filtresini kullanma
+          categoryId: filters.categoryId,
+        );
+      }
     });
   }
   
@@ -63,10 +97,10 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
     // Get the filters
     final filters = ref.read(postFiltersProvider);
     
-    // Load more posts with city filter only
+    // Load more posts with city filter only (no district)
     await ref.read(postsProvider.notifier).filterPosts(
       cityId: filters.cityId,
-      districtId: null, // İlçe filtresini null yap
+      districtId: null, // No district filter for city view
       categoryId: filters.categoryId,
     );
     
@@ -80,7 +114,7 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
     
     await ref.read(postsProvider.notifier).filterPosts(
       cityId: filters.cityId,
-      districtId: null, // İlçe filtresini null yap
+      districtId: null, // No district filter for city view
       categoryId: filters.categoryId,
     );
   }
@@ -94,16 +128,16 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // Filter Bar (sadece şehir seçimi için)
+          // Filtre çubuğu (sadece şehir seçimi için)
           FilterBar(
             onFilterApplied: (cityId, districtId, categoryId) {
               ref.read(cityFilterProvider.notifier).state = cityId;
-              ref.read(districtFilterProvider.notifier).state = null; // İlçeyi sıfırla
+              ref.read(districtFilterProvider.notifier).state = null; // İlçeyi temizle
               ref.read(categoryFilterProvider.notifier).state = categoryId;
               
               ref.read(postsProvider.notifier).filterPosts(
                 cityId: cityId,
-                districtId: null, // İlçeyi null olarak gönder
+                districtId: null, // İlçe filtresini kullanma
                 categoryId: categoryId,
               );
             },
@@ -114,17 +148,17 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
               
               ref.read(postsProvider.notifier).loadPosts();
             },
-            cityOnly: true, // Sadece şehir filtresi göster
+            cityOnly: true, // Sadece şehir filtresine odaklan
           ),
           
-          // Feed Content
+          // Geri kalan içerik
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refreshData,
               child: CustomScrollView(
                 controller: _scrollController,
                 slivers: [
-                  // Şehir Başlığı (Seçili şehir varsa göster)
+                  // Şehir Başlığı (Eğer şehir seçiliyse)
                   if (cityId != null)
                     SliverToBoxAdapter(
                       child: Padding(
@@ -156,7 +190,7 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
                       ),
                     ),
                   
-                  // Survey Slider
+                  // Anket Slider
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -170,7 +204,7 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.secondary,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ),
@@ -180,7 +214,7 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
                     ),
                   ),
                   
-                  // Post List Header
+                  // Post Listesi Başlığı
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0, bottom: 8.0),
@@ -206,7 +240,7 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
                     ),
                   ),
                   
-                  // Posts List
+                  // Post Listesi
                   if (posts.isEmpty)
                     const SliverFillRemaining(
                       child: Center(
@@ -336,14 +370,14 @@ class _CityFeedScreenState extends ConsumerState<CityFeedScreen> {
   }
   
   void _sortPosts(String sortBy) {
-    // In a real app, this would call an API with sort parameters
+    // Gerçek uygulamada, bu fonksiyon sıralama parametreleriyle bir API çağrısı yapacak
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Şehir gönderileri "$sortBy" olarak sıralandı')),
     );
   }
   
   void _filterPostsByType(PostType type) {
-    // In a real app, this would call an API with filter parameters
+    // Gerçek uygulamada, bu fonksiyon filtre parametreleriyle bir API çağrısı yapacak
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(

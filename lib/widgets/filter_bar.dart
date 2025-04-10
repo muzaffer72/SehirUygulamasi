@@ -7,11 +7,16 @@ import 'package:sikayet_var/services/api_service.dart';
 class FilterBar extends StatefulWidget {
   final Function(String?, String?, String?) onFilterApplied;
   final VoidCallback onFilterCleared;
+  // Yeni özellikler: Sadece şehir veya ilçe görüntüleme
+  final bool cityOnly;
+  final bool districtOnly;
   
   const FilterBar({
     Key? key,
     required this.onFilterApplied,
     required this.onFilterCleared,
+    this.cityOnly = false,
+    this.districtOnly = false,
   }) : super(key: key);
 
   @override
@@ -103,7 +108,8 @@ class _FilterBarState extends State<FilterBar> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // City filter
+                // Şehir ekranında gösterilecek filtreler
+                if (!widget.districtOnly)
                 FutureBuilder(
                   future: _apiService.getCities(),
                   builder: (context, AsyncSnapshot<List<City>> snapshot) {
@@ -145,12 +151,12 @@ class _FilterBarState extends State<FilterBar> {
                     );
                   },
                 ),
-                const SizedBox(height: 16),
+                if (!widget.districtOnly) const SizedBox(height: 16),
                 
-                // District filter (only if city is selected)
-                if (_selectedCityId != null)
+                // İlçe filtresi (şehir ekranında bu gösterilmeyecek, ilçe ekranında gösterilecek)
+                if (!widget.cityOnly && (widget.districtOnly || _selectedCityId != null))
                   FutureBuilder(
-                    future: _apiService.getDistrictsByCityId(_selectedCityId!),
+                    future: _apiService.getDistrictsByCityId(_selectedCityId ?? ''),
                     builder: (context, AsyncSnapshot<List<District>> snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
@@ -189,9 +195,9 @@ class _FilterBarState extends State<FilterBar> {
                       );
                     },
                   ),
-                if (_selectedCityId != null) const SizedBox(height: 16),
+                if (!widget.cityOnly && (widget.districtOnly || _selectedCityId != null)) const SizedBox(height: 16),
                 
-                // Category filter
+                // Kategori filtresi (her iki ekranda da gösterilecek)
                 FutureBuilder(
                   future: _apiService.getCategories(),
                   builder: (context, AsyncSnapshot<List<Category>> snapshot) {

@@ -4,7 +4,10 @@ import 'package:sikayet_var/screens/surveys/survey_detail_screen.dart';
 import 'package:sikayet_var/services/api_service.dart';
 
 class SurveySlider extends StatefulWidget {
-  const SurveySlider({Key? key}) : super(key: key);
+  // Yeni özellik: Anket türü (şehir/ilçe filtrelemesi için)
+  final String? filterType;
+
+  const SurveySlider({Key? key, this.filterType}) : super(key: key);
 
   @override
   State<SurveySlider> createState() => _SurveySliderState();
@@ -26,7 +29,11 @@ class _SurveySliderState extends State<SurveySlider> {
     return SizedBox(
       height: 180,
       child: FutureBuilder<List<Survey>>(
-        future: _apiService.getActiveSurveys(),
+        future: widget.filterType == 'city' 
+          ? _apiService.getActiveSurveysByType('city')
+          : widget.filterType == 'district'
+            ? _apiService.getActiveSurveysByType('district')
+            : _apiService.getActiveSurveys(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
