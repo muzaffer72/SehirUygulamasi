@@ -1,5 +1,5 @@
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq } from 'drizzle-orm';
 import * as schema from './shared/schema';
 
@@ -8,32 +8,43 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
 }
 
-const sql = neon(process.env.DATABASE_URL);
-const db = drizzle(sql, { schema });
+// Replit'ten gelen PostgreSQL bağlantı URL'si kullanılıyor
+const pool = new Pool({
+  host: process.env.PGHOST,
+  port: parseInt(process.env.PGPORT || '5432'),
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  database: process.env.PGDATABASE,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+const db = drizzle(pool, { schema });
 
 async function main() {
   console.log('Veritabanı tabloları oluşturuluyor...');
 
   try {
     // Ardışık tablo oluşturmalar
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         icon_name VARCHAR(50),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
       );
-    `;
+    `);
 
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS cities (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
       );
-    `;
+    `);
 
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS districts (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
@@ -41,9 +52,9 @@ async function main() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
         FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
       );
-    `;
+    `);
 
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
@@ -62,9 +73,9 @@ async function main() {
         FOREIGN KEY (city_id) REFERENCES cities(id),
         FOREIGN KEY (district_id) REFERENCES districts(id)
       );
-    `;
+    `);
 
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS posts (
         id SERIAL PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
@@ -85,9 +96,9 @@ async function main() {
         FOREIGN KEY (city_id) REFERENCES cities(id),
         FOREIGN KEY (district_id) REFERENCES districts(id)
       );
-    `;
+    `);
 
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS media (
         id SERIAL PRIMARY KEY,
         post_id INTEGER NOT NULL,
@@ -96,9 +107,9 @@ async function main() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
       );
-    `;
+    `);
 
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS comments (
         id SERIAL PRIMARY KEY,
         post_id INTEGER NOT NULL,
@@ -113,9 +124,9 @@ async function main() {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
       );
-    `;
+    `);
 
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS surveys (
         id SERIAL PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
@@ -134,9 +145,9 @@ async function main() {
         FOREIGN KEY (district_id) REFERENCES districts(id),
         FOREIGN KEY (category_id) REFERENCES categories(id)
       );
-    `;
+    `);
 
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS survey_options (
         id SERIAL PRIMARY KEY,
         survey_id INTEGER NOT NULL,
@@ -145,9 +156,9 @@ async function main() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
         FOREIGN KEY (survey_id) REFERENCES surveys(id) ON DELETE CASCADE
       );
-    `;
+    `);
     
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS survey_regional_results (
         id SERIAL PRIMARY KEY,
         survey_id INTEGER NOT NULL,
@@ -161,15 +172,15 @@ async function main() {
         FOREIGN KEY (city_id) REFERENCES cities(id),
         FOREIGN KEY (district_id) REFERENCES districts(id)
       );
-    `;
+    `);
 
-    await sql`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS banned_words (
         id SERIAL PRIMARY KEY,
         word VARCHAR(100) NOT NULL UNIQUE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
       );
-    `;
+    `);
 
     console.log('Veritabanı tabloları başarıyla oluşturuldu!');
     
@@ -225,9 +236,9 @@ async function main() {
       
       // İlçeler için şehir ID'leri alalım
       const cities = await db.select().from(schema.cities);
-      const istanbulId = cities.find(c => c.name === 'İstanbul')?.id;
-      const ankaraId = cities.find(c => c.name === 'Ankara')?.id;
-      const izmirId = cities.find(c => c.name === 'İzmir')?.id;
+      const istanbulId = cities.find((c: any) => c.name === 'İstanbul')?.id;
+      const ankaraId = cities.find((c: any) => c.name === 'Ankara')?.id;
+      const izmirId = cities.find((c: any) => c.name === 'İzmir')?.id;
       
       if (istanbulId) {
         await db.insert(schema.districts).values([
