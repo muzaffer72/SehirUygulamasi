@@ -97,28 +97,7 @@ class _DistrictFeedScreenState extends ConsumerState<DistrictFeedScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // Filter Bar (ilçe seçimi için)
-          FilterBar(
-            onFilterApplied: (cityId, districtId, categoryId) {
-              ref.read(cityFilterProvider.notifier).state = cityId;
-              ref.read(districtFilterProvider.notifier).state = districtId;
-              ref.read(categoryFilterProvider.notifier).state = categoryId;
-              
-              ref.read(postsProvider.notifier).filterPosts(
-                cityId: cityId,
-                districtId: districtId, // İlçeyi kullan
-                categoryId: categoryId,
-              );
-            },
-            onFilterCleared: () {
-              ref.read(cityFilterProvider.notifier).state = null;
-              ref.read(districtFilterProvider.notifier).state = null;
-              ref.read(categoryFilterProvider.notifier).state = null;
-              
-              ref.read(postsProvider.notifier).loadPosts();
-            },
-            districtOnly: true, // İlçe filtresine odaklan
-          ),
+          // Filtrele kısmını gizledik
           
           // Feed Content
           Expanded(
