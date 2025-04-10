@@ -4,6 +4,7 @@ import 'package:sikayet_var/models/comment.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/models/user.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
+import 'package:sikayet_var/providers/current_user_provider.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:sikayet_var/providers/user_provider.dart';
