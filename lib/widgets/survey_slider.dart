@@ -166,7 +166,7 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
           borderRadius: BorderRadius.circular(12),
         ),
         child: Container(
-          height: 120, // Sabit yükseklik - daha kompakt
+          height: 100, // Daha da küçük yükseklik
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             gradient: LinearGradient(
@@ -213,15 +213,17 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
                             color: Colors.white,
                             size: 14,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isSurveyExpired ? "Tamamlandı" : remainingTime,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                          if (!isSurveyExpired) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              remainingTime,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
@@ -284,27 +286,7 @@ class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderSt
                   ],
                 ),
                 
-                const Spacer(),
-                
-                // Ankete Katıl butonu
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      'Ankete Katıl',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ),
+                // "Ankete Katıl" butonu kaldırıldı, tüm kart tıklanabilir
               ],
             ),
           ),
