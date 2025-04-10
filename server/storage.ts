@@ -54,32 +54,32 @@ export interface IStorage {
 // PostgreSQL veritabanı tabanlı depolama sınıfı
 export class DatabaseStorage implements IStorage {
   // Kullanıcı işlemleri
-  async getUsers(): Promise<any[]> {
+  async getUsers(): Promise<User[]> {
     return db.select().from(users).orderBy(desc(users.createdAt));
   }
   
-  async getUserById(id: number): Promise<any | undefined> {
+  async getUserById(id: number): Promise<User | undefined> {
     const results = await db.select().from(users).where(eq(users.id, id));
     return results.length > 0 ? results[0] : undefined;
   }
   
-  async getUserByUsername(email: string): Promise<any | undefined> {
-    const results = await db.select().from(users).where(eq(users.email, email));
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const results = await db.select().from(users).where(eq(users.email, username));
     return results.length > 0 ? results[0] : undefined;
   }
   
-  async createUser(user: any): Promise<any> {
+  async createUser(user: Partial<User>): Promise<User> {
     const result = await db.insert(users).values(user).returning();
     return result[0];
   }
   
-  async updateUser(id: number, data: any): Promise<any> {
+  async updateUser(id: number, data: Partial<User>): Promise<User> {
     const result = await db.update(users).set(data).where(eq(users.id, id)).returning();
     return result[0];
   }
   
   // Paylaşım işlemleri
-  async getPosts(filters?: any): Promise<any[]> {
+  async getPosts(filters?: Partial<Post>): Promise<Post[]> {
     let query = db.select().from(posts);
     
     if (filters) {
@@ -97,11 +97,13 @@ export class DatabaseStorage implements IStorage {
         conditions.push(eq(posts.status, filters.status));
       }
       
-      if (filters.search) {
+      // Handle custom search functionality
+      if ((filters as any).search) {
+        const searchTerm = (filters as any).search;
         conditions.push(
           or(
-            like(posts.title, `%${filters.search}%`),
-            like(posts.content, `%${filters.search}%`)
+            like(posts.title, `%${searchTerm}%`),
+            like(posts.content, `%${searchTerm}%`)
           )
         );
       }
@@ -114,32 +116,32 @@ export class DatabaseStorage implements IStorage {
     return query.orderBy(desc(posts.createdAt));
   }
   
-  async getPostById(id: number): Promise<any | undefined> {
+  async getPostById(id: number): Promise<Post | undefined> {
     const results = await db.select().from(posts).where(eq(posts.id, id));
     
     if (results.length > 0) {
       const post = results[0];
-      // Görselleri getir
+      // Get related media
       const mediaItems = await db.select().from(media).where(eq(media.postId, id));
       
       return {
         ...post,
         imageUrls: mediaItems.filter(m => m.type === 'image').map(m => m.url),
         videoUrl: mediaItems.find(m => m.type === 'video')?.url
-      };
+      } as Post;
     }
     
     return undefined;
   }
   
-  async createPost(postData: any): Promise<any> {
-    const { imageUrls, videoUrl, ...post } = postData;
+  async createPost(postData: Partial<Post>): Promise<Post> {
+    const { imageUrls, videoUrl, ...post } = postData as any;
     
-    // Önce paylaşımı oluştur
+    // Create post first
     const result = await db.insert(posts).values(post).returning();
     const newPost = result[0];
     
-    // Görselleri ekle
+    // Add images if present
     if (imageUrls && imageUrls.length > 0) {
       const mediaValues = imageUrls.map((url: string) => ({
         postId: newPost.id,
@@ -150,7 +152,7 @@ export class DatabaseStorage implements IStorage {
       await db.insert(media).values(mediaValues);
     }
     
-    // Video ekle
+    // Add video if present
     if (videoUrl) {
       await db.insert(media).values({
         postId: newPost.id,
@@ -159,7 +161,7 @@ export class DatabaseStorage implements IStorage {
       });
     }
     
-    // Kullanıcının paylaşım sayısını güncelle
+    // Increment user's post count
     await db
       .update(users)
       .set({ 
@@ -167,24 +169,24 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(users.id, post.userId));
     
-    return this.getPostById(newPost.id);
+    return this.getPostById(newPost.id) as Promise<Post>;
   }
   
-  async updatePost(id: number, data: any): Promise<any> {
-    const { imageUrls, videoUrl, ...updateData } = data;
+  async updatePost(id: number, data: Partial<Post>): Promise<Post> {
+    const { imageUrls, videoUrl, ...updateData } = data as any;
     
-    // Paylaşımı güncelle
+    // Update post
     await db
       .update(posts)
       .set(updateData)
       .where(eq(posts.id, id));
     
-    // Medya güncellemesi varsa
+    // If media is being updated
     if (imageUrls !== undefined || videoUrl !== undefined) {
-      // Mevcut medyayı sil
+      // Delete existing media
       await db.delete(media).where(eq(media.postId, id));
       
-      // Yeni görselleri ekle
+      // Add new images
       if (imageUrls && imageUrls.length > 0) {
         const mediaValues = imageUrls.map((url: string) => ({
           postId: id,
@@ -195,7 +197,7 @@ export class DatabaseStorage implements IStorage {
         await db.insert(media).values(mediaValues);
       }
       
-      // Yeni video ekle
+      // Add new video
       if (videoUrl) {
         await db.insert(media).values({
           postId: id,
@@ -205,7 +207,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    return this.getPostById(id);
+    return this.getPostById(id) as Promise<Post>;
   }
   
   async deletePost(id: number): Promise<void> {
@@ -227,7 +229,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Yorum işlemleri
-  async getCommentsByPostId(postId: number): Promise<any[]> {
+  async getCommentsByPostId(postId: number): Promise<Comment[]> {
     // First get the top-level comments (ones without parentId)
     const topLevelComments = await db
       .select()
@@ -251,47 +253,49 @@ export class DatabaseStorage implements IStorage {
     // Group replies by their parent comment
     const repliesByParentId = replies.reduce((acc, reply) => {
       const parentId = reply.parentId;
-      if (!acc[parentId]) {
-        acc[parentId] = [];
+      if (parentId !== null && parentId !== undefined) {
+        if (!acc[parentId]) {
+          acc[parentId] = [];
+        }
+        acc[parentId].push(reply);
       }
-      acc[parentId].push(reply);
       return acc;
-    }, {} as Record<number, any[]>);
+    }, {} as Record<number, Comment[]>);
     
     // Attach replies to their parent comments
     return topLevelComments.map(comment => ({
       ...comment,
       replies: repliesByParentId[comment.id] || []
-    }));
+    })) as Comment[];
   }
   
-  async addComment(comment: any): Promise<any> {
-    // Yorumu ekle
+  async addComment(comment: Partial<Comment>): Promise<Comment> {
+    // Add the comment
     const result = await db.insert(comments).values(comment).returning();
     const newComment = result[0];
     
-    // Kullanıcının yorum sayısını ve puanını artır
+    // Increment user's comment count and points
     await db
       .update(users)
       .set({ 
         commentCount: sql`${users.commentCount} + 1`,
-        points: sql`${users.points} + 5` // Her yorum 5 puan kazandırır
+        points: sql`${users.points} + 5` // Each comment gives 5 points
       })
-      .where(eq(users.id, comment.userId));
+      .where(eq(users.id, comment.userId!));
     
-    // Paylaşımın yorum sayısını artır
+    // Increment post's comment count
     await db
       .update(posts)
       .set({ 
         commentCount: sql`${posts.commentCount} + 1` 
       })
-      .where(eq(posts.id, comment.postId));
+      .where(eq(posts.id, comment.postId!));
     
     return newComment;
   }
   
   // Anket işlemleri
-  async getSurveys(filters?: any): Promise<any[]> {
+  async getSurveys(filters?: Partial<Survey>): Promise<Survey[]> {
     let query = db.select().from(surveys);
     
     if (filters) {
@@ -316,8 +320,8 @@ export class DatabaseStorage implements IStorage {
     
     const surveyResults = await query.orderBy(desc(surveys.createdAt));
     
-    // Her anket için seçenekleri ekle
-    const enrichedSurveys = [];
+    // Add options to each survey
+    const enrichedSurveys: Array<Survey & { options: SurveyOption[] }> = [];
     
     for (const survey of surveyResults) {
       const options = await db
@@ -331,10 +335,10 @@ export class DatabaseStorage implements IStorage {
       });
     }
     
-    return enrichedSurveys;
+    return enrichedSurveys as Survey[];
   }
   
-  async getSurveyById(id: number): Promise<any | undefined> {
+  async getSurveyById(id: number): Promise<Survey | undefined> {
     const results = await db.select().from(surveys).where(eq(surveys.id, id));
     
     if (results.length > 0) {
@@ -347,23 +351,23 @@ export class DatabaseStorage implements IStorage {
       return {
         ...survey,
         options
-      };
+      } as Survey;
     }
     
     return undefined;
   }
   
   // Kategori işlemleri
-  async getCategories(): Promise<any[]> {
+  async getCategories(): Promise<Category[]> {
     return db.select().from(categories).orderBy(asc(categories.name));
   }
   
   // Şehir ve ilçe işlemleri
-  async getCities(): Promise<any[]> {
+  async getCities(): Promise<City[]> {
     return db.select().from(cities).orderBy(asc(cities.name));
   }
   
-  async getDistrictsByCityId(cityId: number): Promise<any[]> {
+  async getDistrictsByCityId(cityId: number): Promise<District[]> {
     return db
       .select()
       .from(districts)
@@ -385,7 +389,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return result[0];
     } catch (error) {
-      // Muhtemelen kelime zaten var
+      // Probably word already exists
       return null;
     }
   }
