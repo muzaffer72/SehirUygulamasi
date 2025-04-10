@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base href="$FLUTTER_BASE_HREF">
+  <base href="/">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
@@ -21,7 +21,7 @@
 
   <script>
     // The value below is injected by flutter build, do not touch.
-    var serviceWorkerVersion = '{{flutter_service_worker_version}}';
+    var serviceWorkerVersion = null;
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
@@ -70,12 +70,18 @@
       // Download main.dart.js
       var loading = document.querySelector('#loading');
       
-      // Initialize Flutter
+      // Bu konfigürasyon Flutter'ın ana yapılandırması
       window._flutter = window._flutter || {};
       window._flutter.loader = window._flutter.loader || {};
       
-      // Load Flutter app
-      window._flutter.loader.load({
+      // Flutter yapılandırması için gerekli ayarlar
+      window._flutter.buildConfig = {
+        canvasKitBaseUrl: "/canvaskit/",
+        useColorEmoji: true
+      };
+      
+      // Flutter uygulamasını yükle
+      _flutter.loader.load({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
         },
