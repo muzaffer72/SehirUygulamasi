@@ -1,4 +1,4 @@
-import 'package:vector_math/vector_math_64.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 // Genel Flutter Matrix4 sorunlarını gidermek için oluşturulan yardımcı sınıf
 class Matrix4Fix {

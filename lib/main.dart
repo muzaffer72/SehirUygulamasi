@@ -9,7 +9,6 @@ import 'package:sikayet_var/screens/posts/filtered_posts_screen.dart';
 import 'package:sikayet_var/screens/cities/city_profile_screen.dart';
 import 'package:sikayet_var/screens/surveys/survey_detail_screen.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:vector_math/vector_math_64.dart';
 import 'package:sikayet_var/utils/matrix_fix.dart';
 import 'package:sikayet_var/utils/character_fix.dart';
 
