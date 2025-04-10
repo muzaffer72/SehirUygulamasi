@@ -14,13 +14,36 @@ class SurveySlider extends StatefulWidget {
   State<SurveySlider> createState() => _SurveySliderState();
 }
 
-class _SurveySliderState extends State<SurveySlider> {
+class _SurveySliderState extends State<SurveySlider> with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   final PageController _pageController = PageController();
+  late AnimationController _textAnimationController;
+  late Timer _timer;
   int _currentPage = 0;
+  int _textScrollIndex = 0;
+  
+  @override
+  void initState() {
+    super.initState();
+    
+    // Metin animasyonu için controller
+    _textAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat();
+    
+    // Her 4 saniyede bir metin değişimi için timer
+    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      setState(() {
+        _textScrollIndex++;
+      });
+    });
+  }
   
   @override
   void dispose() {
+    _timer.cancel();
+    _textAnimationController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -28,7 +51,7 @@ class _SurveySliderState extends State<SurveySlider> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 180,
+      height: 220,
       child: FutureBuilder<List<Survey>>(
         future: widget.filterType == 'city' 
           ? _apiService.getActiveSurveysByType('city')
@@ -92,6 +115,29 @@ class _SurveySliderState extends State<SurveySlider> {
   }
   
   Widget _buildSurveyCard(Survey survey) {
+    // Anket bitiş süresini hesapla
+    final now = DateTime.now();
+    final remainingDuration = survey.endDate.difference(now);
+    final days = remainingDuration.inDays;
+    final hours = remainingDuration.inHours % 24;
+    final minutes = remainingDuration.inMinutes % 60;
+    
+    // Katılım oranı (gerçek uygulamada bu değer API'den gelmelidir)
+    // Şu anda dummy veri olarak kullanıyoruz
+    final int totalUsers = 1000; // İl/ilçe veya genel kullanıcı sayısı
+    final double participationRate = survey.totalVotes / totalUsers;
+    
+    // Animasyon için metinler
+    final List<String> animationTexts = [
+      survey.description,
+      "Son ${days > 0 ? '$days gün ' : ''}${hours > 0 ? '$hours saat ' : ''}$minutes dakika içinde oy verin!",
+      "Katılım oranı: %${(participationRate * 100).toStringAsFixed(1)}",
+      "Toplam ${survey.totalVotes} kişi oy kullandı",
+    ];
+    
+    // Döngüsel olarak metin indeksi
+    final currentTextIndex = _textScrollIndex % animationTexts.length;
+    
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -124,69 +170,160 @@ class _SurveySliderState extends State<SurveySlider> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Survey title
-                Text(
-                  survey.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                // Survey title ve süre bilgisi
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        survey.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Saat ikonu ve kalan süre
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.access_time_rounded,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            days > 0 
+                              ? '$days gün'
+                              : hours > 0 
+                                ? '$hours sa $minutes dk' 
+                                : '$minutes dk',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
                 
-                // Survey description
-                Text(
-                  survey.description,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 14,
+                const SizedBox(height: 12),
+                
+                // Yukarı doğru kayan metinler (AnimatedSwitcher)
+                SizedBox(
+                  height: 40,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Text(
+                      animationTexts[currentTextIndex],
+                      key: ValueKey<int>(currentTextIndex),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Katılım oranı göstergesi
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Katılım: ${(participationRate * 100).toStringAsFixed(1)}%',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '${survey.totalVotes}/$totalUsers',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Stack(
+                      children: [
+                        // Zemin çubuk
+                        Container(
+                          height: 6,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        // Dolu kısım
+                        FractionallySizedBox(
+                          widthFactor: participationRate.clamp(0.0, 1.0), // 0-1 arasında olmasını sağla
+                          child: Container(
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 
                 const Spacer(),
                 
-                // Survey stats
-                Row(
-                  children: [
-                    // Total votes
-                    Icon(
-                      Icons.how_to_vote,
-                      color: Colors.white.withOpacity(0.8),
-                      size: 16,
+                // Ankete Katıl butonu
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${survey.totalVotes} oy',
+                    child: Text(
+                      'Ankete Katıl',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
                     ),
-                    
-                    const Spacer(),
-                    
-                    // Call to action
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        'Ankete Katıl',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
