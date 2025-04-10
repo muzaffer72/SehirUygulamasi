@@ -4,9 +4,24 @@ import psycopg2
 from psycopg2.extras import execute_values
 
 # Veritabanı bağlantısı
-database_url = os.environ.get('DATABASE_URL')
-if not database_url:
-    raise ValueError("DATABASE_URL environment variable is not set")
+host = os.environ.get('PGHOST')
+port = os.environ.get('PGPORT')
+user = os.environ.get('PGUSER')
+password = os.environ.get('PGPASSWORD')
+dbname = os.environ.get('PGDATABASE')
+
+if not all([host, port, user, password, dbname]):
+    raise ValueError("PostgreSQL connection environment variables are not set")
+
+# SSL ayarları ile bağlantı
+conn_params = {
+    'host': host,
+    'port': port,
+    'user': user,
+    'password': password,
+    'dbname': dbname,
+    'sslmode': 'require'
+}
 
 # İl ve ilçe verileri
 il_csv = 'il.csv'
@@ -16,9 +31,13 @@ ilce_csv = 'ilce.csv'
 def fix_turkish_chars(text):
     return text.replace('İ', 'İ').replace('Ş', 'Ş').replace('Ğ', 'Ğ').replace('Ü', 'Ü').replace('Ö', 'Ö').replace('Ç', 'Ç')
 
+# Bağlantı ve cursor değişkenlerinin tanımlaması
+conn = None
+cursor = None
+
 try:
     # Veritabanına bağlan
-    conn = psycopg2.connect(database_url)
+    conn = psycopg2.connect(**conn_params)
     cursor = conn.cursor()
     
     # Mevcut verileri temizle (isteğe bağlı)
