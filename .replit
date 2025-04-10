@@ -13,10 +13,14 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Flutter Web App with Matrix Fix"
+args = "Admin Panel"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Flutter Web"
 
 [[workflows.workflow]]
-name = "Flutter Web App with Matrix Fix"
+name = "Admin Panel"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -27,7 +31,22 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd . && DART_VM_OPTIONS=\"--enable-experiment=native-assets\" flutter run -d web-server --web-port=5000 --web-hostname=0.0.0.0"
+args = "cd admin-panel && php -S 0.0.0.0:3000"
+waitForPort = 3000
+
+[[workflows.workflow]]
+name = "Flutter Web"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "flutter run -d web-server --web-port=5000 --web-hostname=0.0.0.0"
 waitForPort = 5000
 
 [deployment]
@@ -56,6 +75,10 @@ externalPort = 3000
 [[ports]]
 localPort = 8000
 externalPort = 8000
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
 
 [[ports]]
 localPort = 39301

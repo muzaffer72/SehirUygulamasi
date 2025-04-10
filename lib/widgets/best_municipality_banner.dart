@@ -2,104 +2,99 @@ import 'package:flutter/material.dart';
 
 class BestMunicipalityBanner extends StatelessWidget {
   final String cityName;
-  final String month;
-  final double score;
-  final Function()? onTap;
+  final String awardMonth;
+  final int? awardScore;
+  final String? awardText;
   
   const BestMunicipalityBanner({
-    Key? key,
+    super.key,
     required this.cityName,
-    required this.month,
-    required this.score,
-    this.onTap,
-  }) : super(key: key);
+    required this.awardMonth,
+    this.awardScore,
+    this.awardText,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.amber.shade600,
-              Colors.amber.shade400,
-              Colors.amber.shade300,
-            ],
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.amber.shade300, width: 1),
+      ),
+      child: Row(
+        children: [
+          // Altın kupa ikonu
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade200,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.emoji_events,
+              color: Colors.amber,
+              size: 36,
+            ),
           ),
-          borderRadius: BorderRadius.circular(12.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.amber.withOpacity(0.3),
-              blurRadius: 8.0,
-              spreadRadius: 1.0,
-              offset: const Offset(0, 3),
+          const SizedBox(width: 16),
+          // Ödül açıklaması
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "$awardMonth Ayının Belediyesi",
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "$cityName Belediyesi",
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (awardText != null && awardText!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    awardText!,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Altın kupa ikonu
+          ),
+          if (awardScore != null) ...[
             Container(
-              width: 50,
-              height: 50,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amber.shade200),
               ),
-              child: const Icon(
-                Icons.emoji_events,
-                color: Colors.white,
-                size: 30,
-              ),
-            ),
-            const SizedBox(width: 16.0),
-            // Belediye bilgileri
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'AYIN BELEDİYESİ',
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4.0),
+                  const Icon(Icons.star, color: Colors.amber, size: 16),
+                  const SizedBox(width: 4),
                   Text(
-                    cityName,
-                    style: const TextStyle(
-                      fontSize: 18.0,
+                    "$awardScore/100",
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4.0),
-                  Text(
-                    '$month Ayı Performans Puanı: ${score.toStringAsFixed(1)}/100',
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.amber.shade800,
                     ),
                   ),
                 ],
               ),
             ),
-            // Ok ikonu
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.white,
-              size: 16.0,
-            ),
           ],
-        ),
+        ],
       ),
     );
   }

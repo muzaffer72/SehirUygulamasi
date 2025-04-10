@@ -34,6 +34,11 @@ export const cities = pgTable('cities', {
   contactPhone: varchar('contact_phone', { length: 50 }),
   emergencyPhone: varchar('emergency_phone', { length: 50 }),
   website: varchar('website', { length: 100 }),
+  // Ayın Belediyesi özellikleri
+  isBestOfMonth: boolean('is_best_of_month').default(false),
+  awardMonth: varchar('award_month', { length: 20 }),
+  awardScore: integer('award_score'),
+  awardText: text('award_text'),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
