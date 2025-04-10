@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vector_math/vector_math_64.dart';
 import 'package:sikayet_var/screens/home/city_feed_screen.dart';
 import 'package:sikayet_var/screens/home/district_feed_screen.dart';
 
@@ -11,6 +13,16 @@ class SwipeableFeedScreen extends ConsumerStatefulWidget {
 }
 
 class _SwipeableFeedScreenState extends ConsumerState<SwipeableFeedScreen> with SingleTickerProviderStateMixin {
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<TabController>('_tabController', _tabController));
+  }
+  
+  @override
+  void activate() {
+    super.activate();
+  }
   late TabController _tabController;
   
   @override

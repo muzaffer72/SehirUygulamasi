@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vector_math/vector_math_64.dart';
 import 'package:sikayet_var/models/city.dart';
 import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/models/post.dart';
@@ -18,6 +20,16 @@ class ExploreScreen extends ConsumerStatefulWidget {
 }
 
 class _ExploreScreenState extends ConsumerState<ExploreScreen> with SingleTickerProviderStateMixin {
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<TabController>('_tabController', _tabController));
+  }
+  
+  @override
+  void activate() {
+    super.activate();
+  }
   late TabController _tabController;
   String? _selectedCityId;
   String? _selectedDistrictId;
