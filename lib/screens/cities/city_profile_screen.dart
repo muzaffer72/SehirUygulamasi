@@ -58,25 +58,14 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
   }
   
   Widget _buildCityProfile(BuildContext context, CityProfile cityProfile) {
-    return CustomScrollView(
-      slivers: [
-        // Üst kısım - Basitleştirilmiş App Bar (kapak fotoğrafı tamamen kaldırıldı)
-        SliverAppBar(
-          expandedHeight: 60,
-          pinned: true,
-          backgroundColor: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
+    return DefaultTabController(
+      length: 5,
+      child: Scaffold(
+        appBar: AppBar(
           title: Text(
             cityProfile.name,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  offset: Offset(1, 1),
-                  blurRadius: 3,
-                  color: Colors.black54,
-                ),
-              ],
             ),
           ),
           actions: [
@@ -87,17 +76,17 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                 child: Tooltip(
                   message: "Parti: ${cityProfile.mayorParty}",
                   child: CircleAvatar(
-                    radius: 18,
+                    radius: 16,
                     backgroundColor: Colors.white,
                     child: cityProfile.mayorPartyLogo != null
                       ? Image.network(
                           cityProfile.mayorPartyLogo!,
-                          width: 25,
-                          height: 25,
+                          width: 20,
+                          height: 20,
                           errorBuilder: (context, error, stackTrace) => 
-                            Icon(Icons.account_balance, size: 20, color: Theme.of(context).colorScheme.primary),
+                            Icon(Icons.account_balance, size: 18, color: Theme.of(context).colorScheme.primary),
                         )
-                      : Icon(Icons.account_balance, size: 20, color: Theme.of(context).colorScheme.primary),
+                      : Icon(Icons.account_balance, size: 18, color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
               ),
@@ -109,77 +98,78 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                 child: Tooltip(
                   message: "Belediye Başkanı: ${cityProfile.mayorName}",
                   child: CircleAvatar(
-                    radius: 18,
+                    radius: 16,
                     backgroundColor: Colors.white,
                     backgroundImage: cityProfile.mayorImageUrl != null ? NetworkImage(cityProfile.mayorImageUrl!) : null,
                     child: cityProfile.mayorImageUrl == null 
-                      ? Icon(Icons.person, size: 20, color: Theme.of(context).colorScheme.primary)
+                      ? Icon(Icons.person, size: 18, color: Theme.of(context).colorScheme.primary)
                       : null,
                   ),
                 ),
               ),
           ],
+          bottom: TabBar(
+            controller: _tabController,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Colors.grey,
+            isScrollable: true,
+            tabs: const [
+              Tab(text: 'Şikayetler'),
+              Tab(text: 'Projeler'),
+              Tab(text: 'Etkinlikler'),
+              Tab(text: 'Hizmetler'),
+              Tab(text: 'Hakkında'),
+            ],
+          ),
         ),
-        
-        // Şehir Logosu (kapak kaldırıldı)
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-            child: Center(
-              child: Material(
-                elevation: 8,
-                type: MaterialType.circle,
-                color: Colors.transparent,
-                shadowColor: Colors.black,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 4,
+        body: Column(
+          children: [
+            // Şehir Logosu
+            Padding(
+              padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+              child: Center(
+                child: Material(
+                  elevation: 8,
+                  type: MaterialType.circle,
+                  color: Colors.transparent,
+                  shadowColor: Colors.black,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context).colorScheme.primary, // Temadan çekilen renk
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 4,
+                      ),
                     ),
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  child: CircleAvatar(
-                    radius: 45, // Biraz daha büyük
-                    backgroundColor: Colors.white,
-                    child: cityProfile.imageUrl != null
-                        ? ClipOval(
-                            child: Image.network(
-                              cityProfile.imageUrl!,
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => 
-                                Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
-                            ),
-                          )
-                        : Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
+                    padding: const EdgeInsets.all(4),
+                    child: CircleAvatar(
+                      radius: 45, // Biraz daha büyük
+                      backgroundColor: Colors.white,
+                      child: cityProfile.imageUrl != null
+                          ? ClipOval(
+                              child: Image.network(
+                                cityProfile.imageUrl!,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => 
+                                  Icon(Icons.location_city, size: 45, color: Theme.of(context).colorScheme.primary),
+                              ),
+                            )
+                          : Icon(Icons.location_city, size: 45, color: Theme.of(context).colorScheme.primary),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-        
-        // Şehir Bilgileri Özeti
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            
+            // Şehir Bilgileri Özeti
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Şehir adı
-                  Text(
-                    cityProfile.name,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  
                   // Özet açıklama
                   if (cityProfile.description != null)
                     Padding(
@@ -196,7 +186,7 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                   
                   // Derecelendirme Bilgiler - İkonlar ve yanyana dizilim
                   Card(
-                    margin: const EdgeInsets.only(top: 16.0),
+                    margin: const EdgeInsets.only(top: 8.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -285,51 +275,29 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                 ],
               ),
             ),
-          ),
-        ),
-        
-        // Tab Bar
-        SliverPersistentHeader(
-          delegate: _SliverAppBarDelegate(
-            TabBar(
-              controller: _tabController,
-              labelColor: Theme.of(context).colorScheme.primary,
-              unselectedLabelColor: Colors.grey,
-              isScrollable: true,
-              tabs: const [
-                Tab(text: 'Şikayetler'),
-                Tab(text: 'Projeler'),
-                Tab(text: 'Etkinlikler'),
-                Tab(text: 'Hizmetler'),
-                Tab(text: 'Hakkında'),
-              ],
+            
+            // Tab İçerikleri
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Şehirdeki Şikayetler (Gönderiler)
+                  _buildPostsTab(cityProfile),
+                  
+                  // Şehirdeki Projeler
+                  _buildProjectsTab(cityProfile),
+                  
+                  // Şehirdeki Etkinlikler
+                  _buildEventsTab(cityProfile),
+                  
+                  // Şehirdeki Hizmetler
+                  _buildServicesTab(cityProfile),
+                  
+                  // Şehir Hakkında Bilgiler
+                  _buildAboutTab(cityProfile),
+                ],
+              ),
             ),
-          ),
-          pinned: true,
-        ),
-        
-        // Tab İçerikleri
-        SliverFillRemaining(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              // Şehirdeki Şikayetler (Gönderiler)
-              _buildPostsTab(cityProfile),
-              
-              // Şehirdeki Projeler
-              _buildProjectsTab(cityProfile),
-              
-              // Şehirdeki Etkinlikler
-              _buildEventsTab(cityProfile),
-              
-              // Şehirdeki Hizmetler
-              _buildServicesTab(cityProfile),
-              
-              // Şehir Hakkında Bilgiler
-              _buildAboutTab(cityProfile),
-            ],
-          ),
-        ),
       ],
     );
   }
