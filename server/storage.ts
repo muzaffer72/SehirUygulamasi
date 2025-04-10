@@ -68,13 +68,18 @@ export class DatabaseStorage implements IStorage {
     return results.length > 0 ? results[0] : undefined;
   }
   
-  async createUser(user: Partial<User>): Promise<User> {
-    const result = await db.insert(users).values(user).returning();
+  async createUser(user: any): Promise<User> {
+    // TypeScript hatalarını önlemek için gerekli alanların varlığını doğrula
+    if (!user.name || !user.email || !user.password) {
+      throw new Error('Kullanıcı oluşturmak için ad, e-posta ve şifre gereklidir');
+    }
+    
+    const result = await db.insert(users).values(user as any).returning();
     return result[0];
   }
   
   async updateUser(id: number, data: Partial<User>): Promise<User> {
-    const result = await db.update(users).set(data).where(eq(users.id, id)).returning();
+    const result = await db.update(users).set(data as any).where(eq(users.id, id)).returning();
     return result[0];
   }
   
@@ -270,8 +275,13 @@ export class DatabaseStorage implements IStorage {
   }
   
   async addComment(comment: Partial<Comment>): Promise<Comment> {
+    // TypeScript hatalarını önlemek için gerekli alanların varlığını doğrula
+    if (!comment.content || !comment.userId || !comment.postId) {
+      throw new Error('Yorum eklemek için içerik, kullanıcı ve paylaşım ID gereklidir');
+    }
+    
     // Add the comment
-    const result = await db.insert(comments).values(comment).returning();
+    const result = await db.insert(comments).values(comment as any).returning();
     const newComment = result[0];
     
     // Increment user's comment count and points
@@ -281,7 +291,7 @@ export class DatabaseStorage implements IStorage {
         commentCount: sql`${users.commentCount} + 1`,
         points: sql`${users.points} + 5` // Each comment gives 5 points
       })
-      .where(eq(users.id, comment.userId!));
+      .where(eq(users.id, comment.userId));
     
     // Increment post's comment count
     await db
@@ -289,7 +299,7 @@ export class DatabaseStorage implements IStorage {
       .set({ 
         commentCount: sql`${posts.commentCount} + 1` 
       })
-      .where(eq(posts.id, comment.postId!));
+      .where(eq(posts.id, comment.postId));
     
     return newComment;
   }
