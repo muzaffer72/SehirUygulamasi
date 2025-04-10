@@ -20,6 +20,6 @@ final cityListProvider = FutureProvider<List<dynamic>>((ref) async {
 final districtsByCityProvider = FutureProvider.family<List<dynamic>, int>(
   (ref, cityId) async {
     final apiService = ref.watch(apiServiceProvider);
-    return apiService.getDistrictsByCityId(cityId);
+    return apiService.getDistrictsByCityId(cityId.toString());
   },
 );

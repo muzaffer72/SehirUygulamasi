@@ -103,6 +103,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
   }
   
+  // Sekme kontrolcüsü
+  int _selectedTabIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -140,71 +143,37 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
           
-          // Categories section
+          // Sekmeler (Kategoriler/Şehirler)
+          if (!_hasSearched)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildTabButton(
+                      title: 'Kategoriler',
+                      index: 0,
+                      icon: Icons.category,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildTabButton(
+                      title: 'Şehirler',
+                      index: 1,
+                      icon: Icons.location_city,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          
+          // İçerik alanı
           if (!_hasSearched)
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Kategoriler',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Categories grid
-                    _categories.isEmpty
-                        ? const Center(child: Text('Kategoriler yükleniyor...'))
-                        : GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 2,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                            ),
-                            itemCount: _categories.length,
-                            itemBuilder: (context, index) {
-                              final category = _categories[index];
-                              return _buildCategoryCard(category);
-                            },
-                          ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Popular searches
-                    const Text(
-                      'Popüler Aramalar',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _buildSearchChip('Sokak Lambaları'),
-                        _buildSearchChip('Çöp Toplama'),
-                        _buildSearchChip('Yol Çalışması'),
-                        _buildSearchChip('Park ve Bahçeler'),
-                        _buildSearchChip('Gürültü Kirliliği'),
-                        _buildSearchChip('Toplu Taşıma'),
-                        _buildSearchChip('Su Kesintisi'),
-                        _buildSearchChip('İnternet Altyapısı'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              child: _selectedTabIndex == 0 
+                  ? _buildCategoriesTab()
+                  : const CitiesListScreen(),
             ),
           
           // Search results
@@ -349,5 +318,109 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       default:
         return Icons.category;
     }
+  }
+  
+  // Tab butonları oluşturma
+  Widget _buildTabButton({
+    required String title,
+    required int index,
+    required IconData icon,
+  }) {
+    final isSelected = _selectedTabIndex == index;
+    
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          _selectedTabIndex = index;
+        });
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected 
+            ? Theme.of(context).colorScheme.primary 
+            : Colors.grey.shade200,
+        foregroundColor: isSelected 
+            ? Colors.white 
+            : Colors.grey.shade700,
+        elevation: isSelected ? 2 : 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 8),
+          Text(title),
+        ],
+      ),
+    );
+  }
+  
+  // Kategoriler sekmesi
+  Widget _buildCategoriesTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Kategoriler',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Categories grid
+          _categories.isEmpty
+              ? const Center(child: Text('Kategoriler yükleniyor...'))
+              : GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: _categories.length,
+                  itemBuilder: (context, index) {
+                    final category = _categories[index];
+                    return _buildCategoryCard(category);
+                  },
+                ),
+          
+          const SizedBox(height: 32),
+          
+          // Popular searches
+          const Text(
+            'Popüler Aramalar',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildSearchChip('Sokak Lambaları'),
+              _buildSearchChip('Çöp Toplama'),
+              _buildSearchChip('Yol Çalışması'),
+              _buildSearchChip('Park ve Bahçeler'),
+              _buildSearchChip('Gürültü Kirliliği'),
+              _buildSearchChip('Toplu Taşıma'),
+              _buildSearchChip('Su Kesintisi'),
+              _buildSearchChip('İnternet Altyapısı'),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
