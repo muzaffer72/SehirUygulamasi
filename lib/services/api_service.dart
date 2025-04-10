@@ -8,6 +8,7 @@ import 'package:sikayet_var/models/comment.dart';
 import 'package:sikayet_var/models/survey.dart';
 import 'package:sikayet_var/models/city.dart';
 import 'package:sikayet_var/models/district.dart';
+import 'package:sikayet_var/models/city_profile.dart';
 import 'package:sikayet_var/models/category.dart' as app_category;
 
 class ApiService {
@@ -392,6 +393,17 @@ class ApiService {
       return City.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to load city: ${response.body}');
+    }
+  }
+  
+  // Şehir profil bilgilerini getir
+  Future<CityProfile> getCityProfile(int cityId) async {
+    final response = await _client.get(Uri.parse('$baseUrl/cities/$cityId/profile'));
+    
+    if (response.statusCode == 200) {
+      return CityProfile.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load city profile: ${response.body}');
     }
   }
   
