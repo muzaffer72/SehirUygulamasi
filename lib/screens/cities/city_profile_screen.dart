@@ -298,7 +298,9 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                 ],
               ),
             ),
-      ],
+          ],
+        ),
+      ),
     );
   }
   
