@@ -61,10 +61,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_city'])) {
     $population = $_POST['population'];
     $latitude = $_POST['latitude'];
     $longitude = $_POST['longitude'];
+    $mayorName = $_POST['mayor_name'];
+    $mayorParty = $_POST['mayor_party'];
+    $mayorSatisfactionRate = $_POST['mayor_satisfaction_rate'];
     
     // Headerımage ve image dosyaları kontrol ediliyor
     $headerImageUrl = null;
     $imageUrl = null;
+    $mayorImageUrl = null;
+    $mayorPartyLogoUrl = null;
     
     if (!empty($_FILES['header_image']['name'])) {
         $target_dir = "../uploads/cities/";
@@ -82,6 +87,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_city'])) {
             $headerImageUrl = 'uploads/cities/' . $headerImageFileName;
         } else {
             $error = "Banner resmi yüklenirken bir hata oluştu.";
+        }
+    }
+    
+    // Belediye başkanı fotoğrafı
+    if (!empty($_FILES['mayor_image']['name'])) {
+        $target_dir = "../uploads/mayors/";
+        
+        // Klasör yoksa oluştur
+        if (!file_exists($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+        
+        $mayorImageFileName = time() . '_' . basename($_FILES['mayor_image']['name']);
+        $target_file = $target_dir . $mayorImageFileName;
+        
+        // Dosya yükleme işlemi
+        if (move_uploaded_file($_FILES['mayor_image']['tmp_name'], $target_file)) {
+            $mayorImageUrl = 'uploads/mayors/' . $mayorImageFileName;
+        } else {
+            $error = "Belediye başkanı fotoğrafı yüklenirken bir hata oluştu.";
+        }
+    }
+    
+    // Parti logosu
+    if (!empty($_FILES['mayor_party_logo']['name'])) {
+        $target_dir = "../uploads/parties/";
+        
+        // Klasör yoksa oluştur
+        if (!file_exists($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+        
+        $partyLogoFileName = time() . '_' . basename($_FILES['mayor_party_logo']['name']);
+        $target_file = $target_dir . $partyLogoFileName;
+        
+        // Dosya yükleme işlemi
+        if (move_uploaded_file($_FILES['mayor_party_logo']['tmp_name'], $target_file)) {
+            $mayorPartyLogoUrl = 'uploads/parties/' . $partyLogoFileName;
+        } else {
+            $error = "Parti logosu yüklenirken bir hata oluştu.";
         }
     }
     
@@ -106,9 +151,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_city'])) {
     
     if (empty($error)) {
         // Şehir ekle
-        $insertQuery = "INSERT INTO cities (name, description, population, latitude, longitude, image_url, header_image_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+        $insertQuery = "INSERT INTO cities (name, description, population, latitude, longitude, image_url, header_image_url, 
+                        mayor_name, mayor_party, mayor_satisfaction_rate, mayor_image_url, mayor_party_logo, created_at) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
         $stmt = $conn->prepare($insertQuery);
-        $stmt->bind_param("ssdddss", $name, $description, $population, $latitude, $longitude, $imageUrl, $headerImageUrl);
+        $stmt->bind_param("ssdddssssisss", $name, $description, $population, $latitude, $longitude, 
+                           $imageUrl, $headerImageUrl, $mayorName, $mayorParty, $mayorSatisfactionRate, 
+                           $mayorImageUrl, $mayorPartyLogoUrl);
         
         if ($stmt->execute()) {
             $message = "Şehir başarıyla eklendi.";
@@ -126,9 +175,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_city'])) {
     $population = $_POST['population'];
     $latitude = $_POST['latitude'];
     $longitude = $_POST['longitude'];
+    $mayorName = $_POST['mayor_name'] ?? null;
+    $mayorParty = $_POST['mayor_party'] ?? null;
+    $mayorSatisfactionRate = isset($_POST['mayor_satisfaction_rate']) ? $_POST['mayor_satisfaction_rate'] : null;
     
     // Mevcut resim URL'lerini al
-    $getImagesQuery = "SELECT image_url, header_image_url FROM cities WHERE id = ?";
+    $getImagesQuery = "SELECT image_url, header_image_url, mayor_image_url, mayor_party_logo FROM cities WHERE id = ?";
     $stmt = $conn->prepare($getImagesQuery);
     $stmt->bind_param("i", $cityId);
     $stmt->execute();
@@ -137,6 +189,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_city'])) {
     
     $headerImageUrl = $city['header_image_url'];
     $imageUrl = $city['image_url'];
+    $mayorImageUrl = $city['mayor_image_url'];
+    $mayorPartyLogoUrl = $city['mayor_party_logo'];
     
     // Header Image işlemi
     if (!empty($_FILES['header_image']['name'])) {
@@ -365,6 +419,48 @@ if (isset($_GET['op']) && $_GET['op'] === 'edit' && isset($_GET['id'])) {
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Belediye Başkanı Bilgileri -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-primary">Belediye Başkanı Bilgileri</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="mayor_name" class="form-label">Belediye Başkanı Adı</label>
+                                        <input type="text" class="form-control" id="mayor_name" name="mayor_name">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="mayor_party" class="form-label">Parti</label>
+                                        <input type="text" class="form-control" id="mayor_party" name="mayor_party">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="mayor_satisfaction_rate" class="form-label">Memnuniyet Oranı (%)</label>
+                                        <input type="number" min="0" max="100" class="form-control" id="mayor_satisfaction_rate" name="mayor_satisfaction_rate" value="70">
+                                        <small class="form-text text-muted">0-100 arası bir değer girin (Örneğin: 75)</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="mayor_image" class="form-label">Belediye Başkanı Fotoğrafı</label>
+                                        <input type="file" class="form-control" id="mayor_image" name="mayor_image">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="mayor_party_logo" class="form-label">Parti Logosu</label>
+                                <input type="file" class="form-control" id="mayor_party_logo" name="mayor_party_logo">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
@@ -436,6 +532,58 @@ if (isset($_GET['op']) && $_GET['op'] === 'edit' && isset($_GET['id'])) {
                         <?php endif; ?>
                         <input type="file" class="form-control" id="edit_header_image" name="header_image">
                         <small class="form-text text-muted">Yeni bir resim yüklerseniz, eski resim değiştirilecektir.</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Belediye Başkanı Bilgileri -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Belediye Başkanı Bilgileri</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_mayor_name" class="form-label">Belediye Başkanı Adı</label>
+                                <input type="text" class="form-control" id="edit_mayor_name" name="mayor_name" value="<?php echo isset($editCity['mayor_name']) ? $editCity['mayor_name'] : ''; ?>">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_mayor_party" class="form-label">Parti</label>
+                                <input type="text" class="form-control" id="edit_mayor_party" name="mayor_party" value="<?php echo isset($editCity['mayor_party']) ? $editCity['mayor_party'] : ''; ?>">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_mayor_satisfaction_rate" class="form-label">Memnuniyet Oranı (%)</label>
+                                <input type="number" min="0" max="100" class="form-control" id="edit_mayor_satisfaction_rate" name="mayor_satisfaction_rate" value="<?php echo isset($editCity['mayor_satisfaction_rate']) ? $editCity['mayor_satisfaction_rate'] : 70; ?>">
+                                <small class="form-text text-muted">0-100 arası bir değer girin (Örneğin: 75)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_mayor_image" class="form-label">Belediye Başkanı Fotoğrafı</label>
+                                <?php if (!empty($editCity['mayor_image_url'])): ?>
+                                    <div class="mb-2">
+                                        <img src="<?php echo $editCity['mayor_image_url']; ?>" alt="Mevcut Başkan Fotoğrafı" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                                    </div>
+                                <?php endif; ?>
+                                <input type="file" class="form-control" id="edit_mayor_image" name="mayor_image">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_mayor_party_logo" class="form-label">Parti Logosu</label>
+                        <?php if (!empty($editCity['mayor_party_logo'])): ?>
+                            <div class="mb-2">
+                                <img src="<?php echo $editCity['mayor_party_logo']; ?>" alt="Mevcut Parti Logosu" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                            </div>
+                        <?php endif; ?>
+                        <input type="file" class="form-control" id="edit_mayor_party_logo" name="mayor_party_logo">
                     </div>
                 </div>
             </div>
