@@ -62,7 +62,7 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
       slivers: [
         // Üst kısım - Şehir Kapak Fotoğrafı ve Bilgileri
         SliverAppBar(
-          expandedHeight: 200,
+          expandedHeight: 220,
           pinned: true,
           flexibleSpace: FlexibleSpaceBar(
             title: Text(
@@ -79,81 +79,241 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                 ],
               ),
             ),
-            background: cityProfile.coverImageUrl != null 
-              ? Image.network(
-                  cityProfile.coverImageUrl!,
-                  fit: BoxFit.cover,
-                )
-              : Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                        Theme.of(context).colorScheme.primary,
-                      ],
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      cityProfile.name,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white.withOpacity(0.7),
+            background: Stack(
+              children: [
+                // Kapak Resmi
+                Positioned.fill(
+                  child: cityProfile.coverImageUrl != null 
+                    ? Image.network(
+                        cityProfile.coverImageUrl!,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                              Theme.of(context).colorScheme.primary,
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                ),
+                
+                // Sol üst - Parti Bilgisi
+                if (cityProfile.mayorParty != null)
+                Positioned(
+                  left: 16,
+                  top: 80,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (cityProfile.mayorPartyLogo != null)
+                        Image.network(
+                          cityProfile.mayorPartyLogo!,
+                          width: 40,
+                          height: 40,
+                          errorBuilder: (context, error, stackTrace) => 
+                            Icon(Icons.account_balance, size: 40, color: Colors.white),
+                        ),
+                      const SizedBox(height: 4),
+                      Text(
+                        cityProfile.mayorParty!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                
+                // Sağ üst - Belediye Başkanı
+                if (cityProfile.mayorName != null)
+                Positioned(
+                  right: 16,
+                  top: 80,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (cityProfile.mayorImageUrl != null)
+                        CircleAvatar(
+                          radius: 25,
+                          backgroundImage: NetworkImage(cityProfile.mayorImageUrl!),
+                          onBackgroundImageError: (exception, stackTrace) {},
+                          child: cityProfile.mayorImageUrl == null 
+                              ? Icon(Icons.person, size: 30, color: Colors.white)
+                              : null,
+                        ),
+                      const SizedBox(height: 4),
+                      Text(
+                        cityProfile.mayorName!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        // Şehir Logosu
+        SliverToBoxAdapter(
+          child: Transform.translate(
+            offset: const Offset(0, -40),
+            child: Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.green,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(4),
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.white,
+                  child: cityProfile.imageUrl != null
+                      ? ClipOval(
+                          child: Image.network(
+                            cityProfile.imageUrl!,
+                            width: 70,
+                            height: 70,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => 
+                              Icon(Icons.location_city, size: 40, color: Colors.green),
+                          ),
+                        )
+                      : Icon(Icons.location_city, size: 40, color: Colors.green),
+                ),
+              ),
+            ),
           ),
         ),
         
         // Şehir Bilgileri Özeti
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Şehir açıklaması
-                if (cityProfile.description != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: Text(
-                      cityProfile.description!,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
+          child: Transform.translate(
+            offset: const Offset(0, -30),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Şehir adı
+                  Text(
+                    cityProfile.name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  
+                  // Özet açıklama
+                  if (cityProfile.description != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
+                      child: Text(
+                        cityProfile.description!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  
+                  // Derecelendirme Bilgiler
+                  Card(
+                    margin: const EdgeInsets.only(top: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.star, color: Colors.amber, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                "ŞEHİR DEĞERLENDİRMESİ",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                          
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  cityProfile.solutionRate.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 4.0, left: 4.0),
+                                  child: Text(
+                                    "/ 10",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  "Çok İyi",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green[700],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          _buildRatingRow("Konum", cityProfile.latitude != 0 || cityProfile.longitude != 0 ? 8.2 : 0.0),
+                          const Divider(height: 1),
+                          _buildRatingRow("İlçe Sayısı", cityProfile.districtCount > 0 ? 9.3 : 0.0),
+                          const Divider(height: 1),
+                          _buildRatingRow("Nüfus", cityProfile.population > 0 ? 9.3 : 0.0),
+                          const Divider(height: 1),
+                          _buildRatingRow("Çözüm Oranı", cityProfile.solutionRate > 0 ? 9.5 : 0.0),
+                          const Divider(height: 1),
+                          _buildRatingRow("Memnuniyet", cityProfile.mayorSatisfactionRate != null ? cityProfile.mayorSatisfactionRate! / 10.0 : 0.0),
+                        ],
                       ),
                     ),
                   ),
-                
-                // İstatistikler ve özet bilgiler
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStatCard(
-                      context, 
-                      'İlçe Sayısı', 
-                      '${cityProfile.districtCount}',
-                      Icons.location_city,
-                    ),
-                    _buildStatCard(
-                      context, 
-                      'Nüfus', 
-                      '${cityProfile.population}',
-                      Icons.people,
-                    ),
-                    _buildStatCard(
-                      context, 
-                      'Çözüm Oranı', 
-                      '%${cityProfile.solutionRate.toStringAsFixed(1)}',
-                      Icons.check_circle_outline,
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -233,6 +393,30 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
             ),
           ],
         ),
+      ),
+    );
+  }
+  
+  // Derecelendirme satırı oluşturan metot
+  Widget _buildRatingRow(String label, double rating) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 14),
+          ),
+          Text(
+            rating > 0 ? rating.toStringAsFixed(1) : "-.-",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: rating > 8.0 ? Colors.green : Colors.grey[700],
+            ),
+          ),
+        ],
       ),
     );
   }

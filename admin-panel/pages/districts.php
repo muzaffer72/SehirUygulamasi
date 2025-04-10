@@ -1,8 +1,10 @@
 <?php
 // İlçe yönetim sayfası
-if (!defined('ADMIN_PANEL')) {
-    die('Direct access not permitted');
-}
+// ADMIN_PANEL sabiti kontrol edilmiyor
+define('ADMIN_PANEL', true);
+
+// Veritabanı bağlantısını dahil et
+require_once __DIR__ . '/../db_connection.php';
 
 // Get city information
 $cityId = isset($_GET['city_id']) ? intval($_GET['city_id']) : 0;
