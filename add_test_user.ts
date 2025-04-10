@@ -43,6 +43,21 @@ async function addTestUser() {
       return;
     }
     
+    // İlk önce mevcut ilçeleri kontrol edelim
+    const allDistricts = await db.select().from(schema.districts).limit(10);
+    console.log("İlk 10 ilçe:");
+    console.table(allDistricts.map(d => ({ id: d.id, name: d.name, cityId: d.cityId })));
+    
+    // İlk geçerli ilçeyi kullanalım
+    const firstDistrict = allDistricts[0];
+    
+    if (!firstDistrict) {
+      throw new Error("Hiç ilçe bulunamadı, kullanıcı eklenemedi!");
+    }
+    
+    // İlçenin şehir ID'sini kullanalım
+    console.log(`Seçilen ilçe: ${firstDistrict.name} (ID: ${firstDistrict.id}, Şehir ID: ${firstDistrict.cityId})`);
+    
     // Kullanıcıyı ekle
     const newUser = {
       name: 'Test Kullanıcı',
@@ -55,9 +70,9 @@ async function addTestUser() {
       level: 'contributor' as schema.UserLevel, // başlangıç seviyesi
       postCount: 0,
       commentCount: 0,
-      // Varsayılan olarak İstanbul ve Kadıköy
-      cityId: 34, // İstanbul
-      districtId: 1519 // Kadıköy - İstanbul'a bağlı
+      // Veritabanından alınan gerçek değerleri kullan
+      cityId: firstDistrict.cityId,
+      districtId: firstDistrict.id
     };
     
     const result = await db.insert(users).values(newUser as any).returning();
