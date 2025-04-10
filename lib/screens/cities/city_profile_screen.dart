@@ -80,9 +80,10 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
             if (_hasAward)
               SliverToBoxAdapter(
                 child: BestMunicipalityBanner(
+                  cityName: widget.cityProfile.name,
                   awardText: widget.cityProfile.awardText!,
                   awardMonth: widget.cityProfile.awardMonth ?? '',
-                  awardScore: widget.cityProfile.awardScore ?? 0,
+                  awardScore: widget.cityProfile.awardScore != null ? widget.cityProfile.awardScore!.toInt() : null,
                 ),
               ),
             // Tab Bar
