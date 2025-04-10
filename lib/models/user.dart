@@ -8,14 +8,14 @@ enum UserLevel {
 
 // Kullanıcı rozetleri
 enum UserBadge {
-  mahalleBekçisi,    // Bir mahalledeki sorunları sürekli rapor edenler
-  sorunAvcısı,       // Birçok farklı sorunu bulan ve bildirenler
-  halkTemsilcisi,    // En çok oylanan ve desteklenen gönderilere sahip
-  çözümÜreticisi,    // Sorunlar çözüldüğünde belediye tarafından atanır
-  toplumdanBiri,     // Aktif yorum yapan ve topluluk etkileşimi yüksek
-  çevreDostu,        // Çevre sorunları hakkında paylaşım yapanlar
-  altyapıDenetçisi,  // Altyapı sorunları hakkında paylaşım yapanlar 
-  ulaşımŞampiyonu    // Ulaşım sorunları hakkında paylaşım yapanlar
+  mahalleBekci,    // Bir mahalledeki sorunları sürekli rapor edenler
+  sorunAvcisi,     // Birçok farklı sorunu bulan ve bildirenler
+  halkTemsilcisi,  // En çok oylanan ve desteklenen gönderilere sahip
+  cozumUreticisi,  // Sorunlar çözüldüğünde belediye tarafından atanır
+  toplumdanBiri,   // Aktif yorum yapan ve topluluk etkileşimi yüksek
+  cevreDostu,      // Çevre sorunları hakkında paylaşım yapanlar
+  altyapiDenetcisi,// Altyapı sorunları hakkında paylaşım yapanlar 
+  ulasimSampiyonu  // Ulaşım sorunları hakkında paylaşım yapanlar
 }
 
 class User {
@@ -60,29 +60,29 @@ class User {
         for (var badge in badgesList) {
           if (badge is String) {
             switch (badge) {
-              case 'mahalleBekçisi':
-                badges.add(UserBadge.mahalleBekçisi);
+              case 'mahalleBekci':
+                badges.add(UserBadge.mahalleBekci);
                 break;
-              case 'sorunAvcısı':
-                badges.add(UserBadge.sorunAvcısı);
+              case 'sorunAvcisi':
+                badges.add(UserBadge.sorunAvcisi);
                 break;
               case 'halkTemsilcisi':
                 badges.add(UserBadge.halkTemsilcisi);
                 break;
-              case 'çözümÜreticisi':
-                badges.add(UserBadge.çözümÜreticisi);
+              case 'cozumUreticisi':
+                badges.add(UserBadge.cozumUreticisi);
                 break;
               case 'toplumdanBiri':
                 badges.add(UserBadge.toplumdanBiri);
                 break;
-              case 'çevreDostu':
-                badges.add(UserBadge.çevreDostu);
+              case 'cevreDostu':
+                badges.add(UserBadge.cevreDostu);
                 break;
-              case 'altyapıDenetçisi':
-                badges.add(UserBadge.altyapıDenetçisi);
+              case 'altyapiDenetcisi':
+                badges.add(UserBadge.altyapiDenetcisi);
                 break;
-              case 'ulaşımŞampiyonu':
-                badges.add(UserBadge.ulaşımŞampiyonu);
+              case 'ulasimSampiyonu':
+                badges.add(UserBadge.ulasimSampiyonu);
                 break;
             }
           }
@@ -100,12 +100,12 @@ class User {
       
       // 1000+ puan ise sorun avcısı rozeti ver
       if (points >= 1000) {
-        badges.add(UserBadge.sorunAvcısı);
+        badges.add(UserBadge.sorunAvcisi);
       }
       
       // 1500+ puan ise mahalle bekçisi rozeti ver
       if (points >= 1500) {
-        badges.add(UserBadge.mahalleBekçisi);
+        badges.add(UserBadge.mahalleBekci);
       }
     }
     
@@ -210,14 +210,14 @@ class User {
   // Rozet bilgilerini döndürür
   Map<String, dynamic> getBadgeInfo(UserBadge badge) {
     switch (badge) {
-      case UserBadge.mahalleBekçisi:
+      case UserBadge.mahalleBekci:
         return {
           'name': 'Mahalle Bekçisi',
           'description': 'Mahallesindeki sorunları sürekli takip eden ve raporlayan kullanıcı',
           'icon': 'visibility', // Gözetleme
           'color': 0xFF4CAF50, // Yeşil
         };
-      case UserBadge.sorunAvcısı:
+      case UserBadge.sorunAvcisi:
         return {
           'name': 'Sorun Avcısı',
           'description': 'Birçok farklı sorunu keşfedip bildiren kullanıcı',
@@ -231,7 +231,7 @@ class User {
           'icon': 'people',  // İnsanlar
           'color': 0xFF2196F3, // Mavi
         };
-      case UserBadge.çözümÜreticisi:
+      case UserBadge.cozumUreticisi:
         return {
           'name': 'Çözüm Üreticisi',
           'description': 'Bildirdiği sorunların çözüme kavuşma oranı yüksek olan kullanıcı',
@@ -245,21 +245,21 @@ class User {
           'icon': 'forum', // Forum
           'color': 0xFF9C27B0, // Mor
         };
-      case UserBadge.çevreDostu:
+      case UserBadge.cevreDostu:
         return {
           'name': 'Çevre Dostu',
           'description': 'Çevre sorunları hakkında paylaşım yapan kullanıcı',
           'icon': 'eco', // Çevre
           'color': 0xFF8BC34A, // Açık yeşil
         };
-      case UserBadge.altyapıDenetçisi:
+      case UserBadge.altyapiDenetcisi:
         return {
           'name': 'Altyapı Denetçisi',
           'description': 'Altyapı sorunları hakkında paylaşım yapan kullanıcı',
           'icon': 'construction', // İnşaat
           'color': 0xFFFF9800, // Turuncu
         };
-      case UserBadge.ulaşımŞampiyonu:
+      case UserBadge.ulasimSampiyonu:
         return {
           'name': 'Ulaşım Şampiyonu',
           'description': 'Ulaşım sorunları hakkında paylaşım yapan kullanıcı',

@@ -27,7 +27,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd . && flutter run -d web-server --web-port=5000 --web-hostname=0.0.0.0 -t lib/main.dart"
+args = "cd . && DART_VM_OPTIONS=--disable-dart-dev flutter run -d web-server --web-port=5000 --web-hostname=0.0.0.0"
 waitForPort = 5000
 
 [deployment]
