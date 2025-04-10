@@ -311,11 +311,22 @@ class _PostCardState extends State<PostCard> {
                               ? '${district.name}, ${city.name}' 
                               : city.name;
                           
-                          return Text(
-                            locationText,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                          return GestureDetector(
+                            onTap: () {
+                              // Şehir profil sayfasına yönlendirme
+                              Navigator.pushNamed(
+                                context,
+                                '/city_profile',
+                                arguments: city.id,
+                              );
+                            },
+                            child: Text(
+                              locationText,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.primary,
+                                decoration: TextDecoration.underline,
+                              ),
                             ),
                           );
                         },
