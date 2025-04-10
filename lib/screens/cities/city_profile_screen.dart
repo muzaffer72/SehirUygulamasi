@@ -98,22 +98,6 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                   ),
                 ),
                 
-                // Saydam overlay
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withOpacity(0.2),
-                          Colors.black.withOpacity(0.4),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                
                 // Sol üst - Parti Bilgisi - Daha belirgin ve gölge artırıldı
                 if (cityProfile.mayorParty != null)
                 Positioned(
