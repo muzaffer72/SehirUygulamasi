@@ -460,7 +460,7 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
   }
   
   // Derecelendirme satırı oluşturan metot - Daha görsel bir tasarım
-  Widget _buildRatingRow(String label, double rating) {
+  Widget _buildRatingRow(BuildContext context, String label, double rating) {
     // 10 üzerinden değerlendirmeyi 100'lük sisteme çevirelim
     final percentRating = (rating / 10) * 100;
     final displayRating = rating > 0 ? rating.toStringAsFixed(1) : "-.-";
@@ -668,32 +668,36 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
       );
     }
     
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: recentPosts.length,
-      itemBuilder: (context, index) {
-        final post = recentPosts[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: PostCard(
-            post: post,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PostDetailScreen(post: post),
-                ),
-              );
-            },
-            onLike: () async {
-              // Beğeni fonksiyonu
-              await ref.read(apiServiceProvider).likePost(post.id);
-            },
-            onHighlight: () async {
-              // Öne çıkarma fonksiyonu
-              await ref.read(apiServiceProvider).highlightPost(post.id);
-            },
-          ),
+    return Consumer(
+      builder: (context, ref, child) {
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: recentPosts.length,
+          itemBuilder: (context, index) {
+            final post = recentPosts[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: PostCard(
+                post: post,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PostDetailScreen(post: post),
+                    ),
+                  );
+                },
+                onLike: () async {
+                  // Beğeni fonksiyonu
+                  await ref.read(apiServiceProvider).likePost(post.id);
+                },
+                onHighlight: () async {
+                  // Öne çıkarma fonksiyonu
+                  await ref.read(apiServiceProvider).highlightPost(post.id);
+                },
+              ),
+            );
+          },
         );
       },
     );
