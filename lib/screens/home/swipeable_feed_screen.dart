@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vector_math/vector_math_64.dart';
+import 'package:sikayet_var/utils/matrix_fix.dart';
 import 'package:sikayet_var/screens/home/city_feed_screen.dart';
 import 'package:sikayet_var/screens/home/district_feed_screen.dart';
 
