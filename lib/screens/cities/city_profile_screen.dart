@@ -5,6 +5,7 @@ import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/models/survey.dart';
 import 'package:sikayet_var/providers/city_profile_provider.dart';
 import 'package:sikayet_var/providers/current_user_provider.dart';
+import 'package:sikayet_var/providers/api_service_provider.dart';
 import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
 import 'package:sikayet_var/screens/surveys/survey_detail_screen.dart';
 import 'package:sikayet_var/widgets/post_card.dart';
@@ -249,9 +250,17 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PostDetailScreen(postId: post.id),
+                  builder: (context) => PostDetailScreen(post: post),
                 ),
               );
+            },
+            onLike: () async {
+              // Beğeni fonksiyonu
+              await ref.read(apiServiceProvider).likePost(post.id);
+            },
+            onHighlight: () async {
+              // Öne çıkarma fonksiyonu
+              await ref.read(apiServiceProvider).highlightPost(post.id);
             },
           ),
         );
