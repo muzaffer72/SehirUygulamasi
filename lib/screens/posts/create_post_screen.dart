@@ -9,6 +9,7 @@ import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
 import 'package:sikayet_var/providers/api_service_provider.dart';
+import 'package:sikayet_var/providers/current_user_provider.dart';
 import 'package:sikayet_var/providers/user_provider.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:sikayet_var/utils/constants.dart';

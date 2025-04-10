@@ -6,6 +6,7 @@ import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/models/survey.dart';
 import 'package:sikayet_var/providers/survey_provider.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
+import 'package:sikayet_var/providers/current_user_provider.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:sikayet_var/providers/user_provider.dart';
 
