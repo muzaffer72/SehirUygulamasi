@@ -11,7 +11,7 @@ import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/models/category.dart' as app_category;
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:5000/api.php';
+  static const String baseUrl = 'https://sehir.muzaffersanli.com/api.php';
   static const String apiToken = 'api_token';
   
   // HTTP client
