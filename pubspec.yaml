@@ -43,6 +43,9 @@ dependencies:
   collection: ^1.18.0
   meta: ^1.12.0
   
+  # Matrix4 desteği için
+  flutter_matrix_math: ^0.0.3
+  
   # Analytics and services (commented out for now)
   # firebase_core: ^2.7.0
   # firebase_auth: ^4.2.9
