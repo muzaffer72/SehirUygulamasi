@@ -82,25 +82,20 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
             ),
             background: Stack(
               children: [
-                // Kapak Resmi - En arka planda
+                // Kapak Resmi - Geçici olarak sadece gradient arka plan kullanılıyor
                 Positioned.fill(
-                  child: cityProfile.coverImageUrl != null 
-                    ? Image.network(
-                        cityProfile.coverImageUrl!,
-                        fit: BoxFit.cover,
-                      )
-                    : Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF6A3DE8), // Anket rengine benzer mor renk
-                              Color(0xFF5332B8), // Biraz daha koyu bir ton
-                            ],
-                          ),
-                        ),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF6A3DE8), // Anket rengine benzer mor renk
+                          Color(0xFF5332B8), // Biraz daha koyu bir ton
+                        ],
                       ),
+                    ),
+                  ),
                 ),
                 
                 // Saydam overlay
@@ -119,7 +114,7 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                   ),
                 ),
                 
-                // Sol üst - Parti Bilgisi - Daha belirgin
+                // Sol üst - Parti Bilgisi - Daha belirgin ve gölge artırıldı
                 if (cityProfile.mayorParty != null)
                 Positioned(
                   left: 16,
@@ -127,13 +122,14 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
+                          spreadRadius: 2,
                         ),
                       ],
                     ),
@@ -161,7 +157,7 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                   ),
                 ),
                 
-                // Sağ üst - Belediye Başkanı - Daha belirgin
+                // Sağ üst - Belediye Başkanı - Daha belirgin ve gölge artırıldı
                 if (cityProfile.mayorName != null)
                 Positioned(
                   right: 16,
@@ -169,13 +165,14 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
+                          spreadRadius: 2,
                         ),
                       ],
                     ),
@@ -221,36 +218,48 @@ class _CityProfileScreenState extends ConsumerState<CityProfileScreen> with Sing
           ),
         ),
         
-        // Şehir Logosu - En üste taşındı ve z-index için Material widget kullanıldı
+        // Şehir Logosu - Z-index artırıldı (kapak fotoğrafının üzerinde gösteriliyor)
         SliverToBoxAdapter(
           child: Transform.translate(
             offset: const Offset(0, -70), // Daha yukarıda gösteriliyor
             child: Center(
               child: Material(
-                elevation: 8, // Daha fazla yükseklik (z-index) sağlıyor
+                elevation: 20, // Daha fazla yükseklik (z-index) sağlıyor - artırıldı
                 type: MaterialType.circle,
                 color: Colors.transparent,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  child: CircleAvatar(
-                    radius: 45, // Biraz daha büyük
-                    backgroundColor: Colors.white,
-                    child: cityProfile.imageUrl != null
-                        ? ClipOval(
-                            child: Image.network(
-                              cityProfile.imageUrl!,
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => 
-                                Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
-                            ),
-                          )
-                        : Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
+                shadowColor: Colors.black, // Gölge rengi
+                borderRadius: BorderRadius.circular(50),
+                child: PhysicalModel(
+                  color: Colors.transparent,
+                  elevation: 20, // Ek yükseklik (z-index) sağlama
+                  shadowColor: Colors.black54,
+                  shape: BoxShape.circle,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF6A3DE8), // Anket rengine benzer mor renk
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 4,
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: CircleAvatar(
+                      radius: 45, // Biraz daha büyük
+                      backgroundColor: Colors.white,
+                      child: cityProfile.imageUrl != null
+                          ? ClipOval(
+                              child: Image.network(
+                                cityProfile.imageUrl!,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => 
+                                  Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
+                              ),
+                            )
+                          : Icon(Icons.location_city, size: 45, color: const Color(0xFF6A3DE8)),
+                    ),
                   ),
                 ),
               ),
