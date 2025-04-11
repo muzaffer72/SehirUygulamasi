@@ -346,6 +346,8 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
           if (widget.cityProfile.monthlyPerformance != null)
             MonthlyPerformanceCard(
               monthlyPerformance: widget.cityProfile.monthlyPerformance!,
+              performanceMonth: "Nisan",
+              performanceYear: "2025",
             ),
         ],
       ),
@@ -846,25 +848,68 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
 
   // İstatistik öğesi oluşturur
   Widget _buildStatItem(String label, String value, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Theme.of(context).primaryColor),
-        const SizedBox(width: 8),
-        Text(
-          '$label: ',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 3,
+            spreadRadius: 1,
+            offset: const Offset(0, 1),
           ),
+        ],
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 14),
-            textAlign: TextAlign.right,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon, 
+              size: 20, 
+              color: Theme.of(context).primaryColor
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios,
+            size: 14,
+            color: Colors.grey.shade400,
+          ),
+        ],
+      ),
     );
   }
 

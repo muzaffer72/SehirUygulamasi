@@ -42,6 +42,7 @@ dependencies:
   vector_math: ^2.1.4
   collection: ^1.18.0
   meta: ^1.12.0
+  fl_chart: ^0.65.0
   
   # Analytics and services (commented out for now)
   # firebase_core: ^2.7.0
