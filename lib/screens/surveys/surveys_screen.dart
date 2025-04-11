@@ -58,7 +58,7 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
                               },
                             ),
                             if (user.districtId != null) FutureBuilder<District>(
-                              future: _apiService.getDistrictById(user.districtId!),
+                              future: _apiService.getDistrictById(user.districtId!.toString()),
                               builder: (context, snapshot) {
                                 if (snapshot.hasData) {
                                   return Text('İlçe: ${snapshot.data!.name}');
@@ -323,7 +323,7 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
                       // Location (if available)
                       if (survey.cityId != null)
                         FutureBuilder<City>(
-                          future: _apiService.getCityById(survey.cityId!),
+                          future: _apiService.getCityById(survey.cityId!.toString()),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {
                               return const SizedBox.shrink();
@@ -356,7 +356,7 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
                       // Category (if available)
                       if (survey.categoryId != null)
                         FutureBuilder<Category>(
-                          future: _apiService.getCategoryById(survey.categoryId!),
+                          future: _apiService.getCategoryById(survey.categoryId!.toString()),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {
                               return const SizedBox.shrink();
