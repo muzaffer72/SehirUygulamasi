@@ -49,7 +49,7 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
                             const Text('Anketler konum bilginize göre filtreleniyor:'),
                             const SizedBox(height: 12),
                             if (user.cityId != null) FutureBuilder<City>(
-                              future: _apiService.getCityById(user.cityId!),
+                              future: _apiService.getCityById(user.cityId!.toString()),
                               builder: (context, snapshot) {
                                 if (snapshot.hasData) {
                                   return Text('Şehir: ${snapshot.data!.name}');
