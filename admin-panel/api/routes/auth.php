@@ -21,9 +21,9 @@ function handleLogin($db, $data) {
     }
     
     // Kullanıcıyı veritabanında ara
-    $query = "SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1";
+    $query = "SELECT * FROM users WHERE email = ? LIMIT 1";
     $stmt = $db->prepare($query);
-    $stmt->bind_param("ss", $username, $username);
+    $stmt->bind_param("s", $username);
     $result = $stmt->get_result();
     
     if ($result->num_rows === 0) {
@@ -73,18 +73,13 @@ function handleRegister($db, $data) {
     }
     
     // Kullanıcı adı ve e-posta adresi kontrolü
-    $query = "SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1";
+    $query = "SELECT * FROM users WHERE email = ? LIMIT 1";
     $stmt = $db->prepare($query);
-    $stmt->bind_param("ss", $username, $email);
+    $stmt->bind_param("s", $email);
     $result = $stmt->get_result();
     
     if ($result->num_rows > 0) {
-        $existing = $result->fetch_assoc();
-        if ($existing['username'] === $username) {
-            sendError("Username already exists", 400);
-        } else {
-            sendError("Email already exists", 400);
-        }
+        sendError("Email already exists", 400);
     }
     
     // Şifreyi hash'le

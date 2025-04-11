@@ -64,7 +64,13 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const results = await db.select().from(users).where(eq(users.email, username));
+    // İlk olarak username alanında ara, eğer bulamazsa email alanında ara
+    const results = await db.select().from(users).where(
+      or(
+        eq(users.username, username),
+        eq(users.email, username)
+      )
+    );
     return results.length > 0 ? results[0] : undefined;
   }
   
@@ -72,6 +78,11 @@ export class DatabaseStorage implements IStorage {
     // TypeScript hatalarını önlemek için gerekli alanların varlığını doğrula
     if (!user.name || !user.email || !user.password) {
       throw new Error('Kullanıcı oluşturmak için ad, e-posta ve şifre gereklidir');
+    }
+    
+    // Eğer username belirtilmemişse, email'i username olarak kullan
+    if (!user.username) {
+      user.username = user.email;
     }
     
     const result = await db.insert(users).values(user as any).returning();
