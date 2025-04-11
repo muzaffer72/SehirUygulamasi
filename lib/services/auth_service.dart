@@ -1,104 +1,188 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user.dart';
 import '../config/api_config.dart';
+import '../models/user.dart';
 
 class AuthService {
-  static const String _tokenKey = 'auth_token';
-  static const String _userKey = 'user_data';
-  
-  // Admin panel API URL
-  final String baseUrl = ApiConfig.baseUrl;
+  final String _tokenKey = 'auth_token';
+  final String _userKey = 'user_data';
 
-  // Login
+  // Giriş işlemi
   Future<User> login(String email, String password) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api.php/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.login}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': email,  // Laravel admin panel username olarak bekliyor
+          'password': password,
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      
-      if (data['error'] != null) {
-        throw Exception(data['error']);
+      if (response.statusCode == 200) {
+        final userData = jsonDecode(response.body);
+        final user = User.fromJson(userData);
+
+        // Save user data to local storage
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_userKey, jsonEncode(user.toJson()));
+        await prefs.setString(_tokenKey, response.headers['set-cookie'] ?? '');
+
+        return user;
+      } else {
+        throw Exception('Giriş başarısız: ${response.body}');
       }
-      
-      // Save token and user data
-      final token = data['token'];
-      final user = User.fromJson(data['user']);
-      
-      await _saveAuthData(token, user);
-      
-      return user;
-    } else {
-      throw Exception('Login failed: ${response.reasonPhrase}');
+    } catch (e) {
+      throw Exception('Giriş işlemi sırasında bir hata oluştu: $e');
     }
   }
 
-  // Register
-  Future<User> register(String name, String email, String password, int? cityId, int? districtId) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api.php/register'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'name': name,
-        'email': email,
-        'password': password,
-        'city_id': cityId,
-        'district_id': districtId,
-      }),
-    );
+  // Kayıt işlemi
+  Future<User> register(
+    String name,
+    String email,
+    String password,
+    int? cityId,
+    int? districtId,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.register}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': name,
+          'username': email,  // Laravel admin panelde username olarak bekliyor
+          'email': email,
+          'password': password,
+          'city_id': cityId,
+          'district_id': districtId,
+          'user_level': 'newUser',
+          'points': 0,
+          'total_posts': 0,
+          'total_comments': 0,
+          'solved_issues': 0,
+        }),
+      );
 
-    if (response.statusCode == 201) {
-      final user = User.fromJson(jsonDecode(response.body));
-      return user;
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Registration failed');
+      if (response.statusCode == 201) {
+        final userData = jsonDecode(response.body);
+        final user = User.fromJson(userData);
+
+        // Save user data to local storage
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_userKey, jsonEncode(user.toJson()));
+        await prefs.setString(_tokenKey, response.headers['set-cookie'] ?? '');
+
+        return user;
+      } else {
+        throw Exception('Kayıt başarısız: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Kayıt işlemi sırasında bir hata oluştu: $e');
     }
   }
 
-  // Logout
+  // Çıkış işlemi
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(_tokenKey);
+
+      await http.post(
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.logout}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': token ?? '',
+        },
+      );
+
+      // Yerel depolamadan kullanıcı verilerini temizleme
+      await prefs.remove(_userKey);
+      await prefs.remove(_tokenKey);
+    } catch (e) {
+      throw Exception('Çıkış işlemi sırasında bir hata oluştu: $e');
+    }
   }
 
-  // Check if user is logged in
+  // Kullanıcının giriş durumunu kontrol etme
   Future<bool> isLoggedIn() async {
-    final token = await getToken();
-    return token != null;
-  }
-
-  // Get current user
-  Future<User?> getCurrentUser() async {
     final prefs = await SharedPreferences.getInstance();
     final userData = prefs.getString(_userKey);
-    
-    if (userData != null) {
-      return User.fromJson(jsonDecode(userData));
+    final token = prefs.getString(_tokenKey);
+
+    return userData != null && token != null;
+  }
+
+  // Mevcut kullanıcıyı alma
+  Future<User> getCurrentUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userData = prefs.getString(_userKey);
+      final token = prefs.getString(_tokenKey);
+
+      if (userData == null || token == null) {
+        throw Exception('Kullanıcı oturumu bulunamadı');
+      }
+
+      // API'den güncel kullanıcı bilgilerini alalım
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.currentUser}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final updatedUserData = jsonDecode(response.body);
+        final user = User.fromJson(updatedUserData);
+
+        // Güncel kullanıcı bilgilerini kaydedelim
+        await prefs.setString(_userKey, jsonEncode(user.toJson()));
+        
+        return user;
+      } else {
+        // API'den kullanıcı bilgisi alamazsak, yerel depolamadaki bilgileri kullanalım
+        return User.fromJson(jsonDecode(userData));
+      }
+    } catch (e) {
+      throw Exception('Kullanıcı bilgilerini alırken bir hata oluştu: $e');
     }
-    
-    return null;
   }
 
-  // Get authentication token
-  Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
-  }
+  // Kullanıcı profil güncelleme
+  Future<User> updateProfile(int userId, Map<String, dynamic> userData) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(_tokenKey);
 
-  // Save authentication data (token and user)
-  Future<void> _saveAuthData(String token, User user) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-    await prefs.setString(_userKey, jsonEncode(user.toJson()));
+      if (token == null) {
+        throw Exception('Oturum bulunamadı');
+      }
+
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.users}/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': token,
+        },
+        body: jsonEncode(userData),
+      );
+
+      if (response.statusCode == 200) {
+        final updatedUserData = jsonDecode(response.body);
+        final user = User.fromJson(updatedUserData);
+
+        // Güncel kullanıcı bilgilerini kaydedelim
+        await prefs.setString(_userKey, jsonEncode(user.toJson()));
+        
+        return user;
+      } else {
+        throw Exception('Profil güncelleme başarısız: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Profil güncelleme işlemi sırasında bir hata oluştu: $e');
+    }
   }
 }

@@ -1,200 +1,173 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/user.dart';
-import 'package:sikayet_var/providers/api_service_provider.dart';
-import 'package:sikayet_var/services/api_service.dart';
+import '../services/auth_service.dart';
+import '../models/user.dart';
 
-// Auth state representation
+// Auth state
+enum AuthStatus {
+  initial,
+  unauthenticated,
+  authenticating,
+  authenticated,
+  error,
+}
+
+// Auth state class to hold auth data and status
 class AuthState {
-  final bool isAuthenticated;
-  final String? userId;
-  final String? token;
-  
-  const AuthState({
-    this.isAuthenticated = false,
-    this.userId,
-    this.token,
+  final AuthStatus status;
+  final User? user;
+  final String? errorMessage;
+
+  AuthState({
+    this.status = AuthStatus.initial,
+    this.user,
+    this.errorMessage,
   });
-  
+
   AuthState copyWith({
-    bool? isAuthenticated,
-    String? userId,
-    String? token,
+    AuthStatus? status,
+    User? user,
+    String? errorMessage,
   }) {
     return AuthState(
-      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      userId: userId ?? this.userId,
-      token: token ?? this.token,
+      status: status ?? this.status,
+      user: user ?? this.user,
+      errorMessage: errorMessage,
     );
   }
 }
 
-// Auth state provider
-final authStateProvider = StateProvider<AuthState>((ref) => const AuthState());
+// Auth notifier that manages the auth state
+class AuthNotifier extends StateNotifier<AuthState> {
+  final AuthService _authService;
 
-// Auth notifier provider
-final authNotifierProvider = AsyncNotifierProvider<AuthNotifier, User?>(
-  () => AuthNotifier(),
-);
-
-class AuthNotifier extends AsyncNotifier<User?> {
-  late final ApiService _apiService;
-  
-  @override
-  Future<User?> build() async {
-    _apiService = ref.read(apiServiceProvider);
-    
-    try {
-      final token = await _apiService.getToken();
-      
-      // If we have a token, try to get the current user
-      if (token != null) {
-        // Update auth state
-        ref.read(authStateProvider.notifier).update((state) => 
-          state.copyWith(isAuthenticated: true, token: token, userId: '1')
-        );
-        
-        // Mock implementation - in the real app this would validate the token
-        final demoUser = User(
-          id: '1',
-          name: 'Demo User',
-          email: 'demo@example.com',
-          isVerified: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        );
-        return demoUser;
-      }
-    } catch (e) {
-      print('Error loading auth state: $e');
-    }
-    
-    return null;
+  AuthNotifier(this._authService) : super(AuthState()) {
+    // Check if the user is already logged in when the provider is initialized
+    checkAuth();
   }
 
+  // Check if the user is already authenticated
+  Future<void> checkAuth() async {
+    try {
+      final isLoggedIn = await _authService.isLoggedIn();
+      
+      if (isLoggedIn) {
+        final user = await _authService.getCurrentUser();
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: user,
+        );
+      } else {
+        state = state.copyWith(status: AuthStatus.unauthenticated);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  // Login the user
   Future<void> login(String email, String password) async {
-    state = const AsyncValue.loading();
-    
     try {
-      // Test kullanıcısı için sabit bilgiler
-      if (email == 'test@example.com' && password == 'test123') {
-        print('TEST KULLANICISI GİRİŞİ BAŞARILI');
-        // Test kullanıcısını manuel olarak oluştur
-        final testUser = User(
-          id: '999',
-          name: 'Test Kullanıcı',
-          email: 'test@example.com',
-          isVerified: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 30)),
-          cityId: '1', // Adana
-          districtId: '2', // Aladağ
-          bio: 'Bu bir test kullanıcısıdır',
-          profileImageUrl: 'https://i.pravatar.cc/150?img=3',
-          points: 100,
-          level: UserLevel.contributor,
-        );
-        
-        // Auth state'i güncelle
-        ref.read(authStateProvider.notifier).update((state) => 
-          state.copyWith(
-            isAuthenticated: true, 
-            token: 'test-token',
-            userId: testUser.id
-          )
-        );
-        
-        // Durum güncelle
-        state = AsyncValue.data(testUser);
-        return;
-      }
+      state = state.copyWith(status: AuthStatus.authenticating);
       
-      // Normal API servisi çağrısı
-      final user = await _apiService.login(email, password);
+      final user = await _authService.login(email, password);
       
-      // Update auth state
-      if (user != null) {
-        ref.read(authStateProvider.notifier).update((state) => 
-          state.copyWith(
-            isAuthenticated: true, 
-            token: 'dummy-token', // Real token would come from API
-            userId: user.id
-          )
-        );
-      }
-      
-      // Update the state with the logged-in user
-      state = AsyncValue.data(user);
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+        errorMessage: null,
+      );
     } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-      throw e;
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
     }
   }
-  
+
+  // Register a new user
   Future<void> register(
     String name,
     String email,
-    String password, {
-    String? cityId,
-    String? districtId,
-  }) async {
-    state = const AsyncValue.loading();
-    
+    String password,
+    int? cityId,
+    int? districtId,
+  ) async {
     try {
-      // Call the API service
-      final user = await _apiService.register(
+      state = state.copyWith(status: AuthStatus.authenticating);
+      
+      final user = await _authService.register(
         name,
         email,
         password,
-        cityId: cityId,
-        districtId: districtId,
+        cityId,
+        districtId,
       );
       
-      // Update the state with the newly registered user
-      state = AsyncValue.data(user);
+      // After registration, login the user
+      await login(email, password);
     } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-      throw e;
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
     }
   }
-  
+
+  // Logout the user
   Future<void> logout() async {
-    state = const AsyncValue.loading();
-    
     try {
-      // Call the API service
-      await _apiService.logout();
+      await _authService.logout();
       
-      // Reset auth state
-      ref.read(authStateProvider.notifier).update((_) => const AuthState());
-      
-      // Clear the user
-      state = const AsyncValue.data(null);
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        user: null,
+        errorMessage: null,
+      );
     } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-      throw e;
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
     }
   }
-  
-  // Kullanıcının konum bilgilerini güncelleme
-  Future<void> updateUserLocation(String userId, String? cityId, String? districtId) async {
-    state = const AsyncValue.loading();
-    
+
+  // Update user profile (just the basic fields for now)
+  Future<void> updateProfile(String name, String email) async {
     try {
-      // Mevcut kullanıcı verisini al
-      final currentUser = state.valueOrNull;
-      if (currentUser == null) {
-        throw Exception('Kullanıcı oturumu bulunamadı');
+      if (state.user == null) {
+        throw Exception('User not authenticated');
       }
       
-      // API servisi ile kullanıcıyı güncelle
-      final updatedUser = await _apiService.updateUser(userId, {
-        'city_id': cityId,
-        'district_id': districtId,
-      });
+      // In a real app, this would call an API to update the user's profile
+      // For now, we'll just update the local state
+      final updatedUser = state.user!.copyWith(
+        name: name,
+        email: email,
+      );
       
-      // Durum güncellemesi yap
-      state = AsyncValue.data(updatedUser);
+      state = state.copyWith(
+        user: updatedUser,
+      );
     } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
-      throw e;
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
     }
   }
 }
+
+// Provider for the auth service
+final authServiceProvider = Provider<AuthService>((ref) {
+  return AuthService();
+});
+
+// Provider for the auth state
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final authService = ref.watch(authServiceProvider);
+  return AuthNotifier(authService);
+});

@@ -1,271 +1,108 @@
-enum UserLevel {
-  newUser,     // 0-100 puan - Yeni Kullanıcı
-  contributor, // 101-500 puan - Şehrini Seven
-  active,      // 501-1000 puan - Şehir Sevdalısı
-  expert,      // 1001-2000 puan - Şehir Aşığı
-  master       // 2000+ puan - Şehir Uzmanı
-}
-
-// Kullanıcı rozetleri
-enum UserBadge {
-  mahalleBekci,    // Bir mahalledeki sorunları sürekli rapor edenler
-  sorunAvcisi,     // Birçok farklı sorunu bulan ve bildirenler
-  halkTemsilcisi,  // En çok oylanan ve desteklenen gönderilere sahip
-  cozumUreticisi,  // Sorunlar çözüldüğünde belediye tarafından atanır
-  toplumdanBiri,   // Aktif yorum yapan ve topluluk etkileşimi yüksek
-  cevreDostu,      // Çevre sorunları hakkında paylaşım yapanlar
-  altyapiDenetcisi,// Altyapı sorunları hakkında paylaşım yapanlar 
-  ulasimSampiyonu  // Ulaşım sorunları hakkında paylaşım yapanlar
-}
-
 class User {
-  final String id;
+  final int id;
   final String name;
   final String email;
-  final String? profileImageUrl;
-  final String? bio;
-  final String? cityId;
-  final String? districtId;
   final bool isVerified;
+  final int? cityId;
+  final int? districtId;
+  final String? createdAt;
+  final String? userLevel;
   final int points;
-  final int postCount;
-  final int commentCount;
-  final UserLevel level;
-  final DateTime createdAt;
-  final List<UserBadge> badges; // Kullanıcının rozetleri
+  final int totalPosts;
+  final int totalComments;
+  final String? profilePhotoUrl;
+  final int solvedIssues;
+  final String? badge;
 
   User({
     required this.id,
     required this.name,
     required this.email,
-    this.profileImageUrl,
-    this.bio,
+    this.isVerified = false,
     this.cityId,
     this.districtId,
-    required this.isVerified,
+    this.createdAt,
+    this.userLevel = 'newUser',
     this.points = 0,
-    this.postCount = 0,
-    this.commentCount = 0,
-    this.level = UserLevel.newUser,
-    required this.createdAt,
-    this.badges = const [],
+    this.totalPosts = 0,
+    this.totalComments = 0,
+    this.profilePhotoUrl,
+    this.solvedIssues = 0,
+    this.badge,
   });
 
+  // Factory constructor to create a User from a JSON map
   factory User.fromJson(Map<String, dynamic> json) {
-    // Rozet verilerini işle
-    List<UserBadge> badges = [];
-    if (json['badges'] != null) {
-      try {
-        final badgesList = json['badges'] as List;
-        for (var badge in badgesList) {
-          if (badge is String) {
-            switch (badge) {
-              case 'mahalleBekci':
-                badges.add(UserBadge.mahalleBekci);
-                break;
-              case 'sorunAvcisi':
-                badges.add(UserBadge.sorunAvcisi);
-                break;
-              case 'halkTemsilcisi':
-                badges.add(UserBadge.halkTemsilcisi);
-                break;
-              case 'cozumUreticisi':
-                badges.add(UserBadge.cozumUreticisi);
-                break;
-              case 'toplumdanBiri':
-                badges.add(UserBadge.toplumdanBiri);
-                break;
-              case 'cevreDostu':
-                badges.add(UserBadge.cevreDostu);
-                break;
-              case 'altyapiDenetcisi':
-                badges.add(UserBadge.altyapiDenetcisi);
-                break;
-              case 'ulasimSampiyonu':
-                badges.add(UserBadge.ulasimSampiyonu);
-                break;
-            }
-          }
-        }
-      } catch (e) {
-        print('Rozetler çözümlenirken hata oluştu: $e');
-      }
-    }
-    
-    // Varsayılan rozet ekleme (örnek için)
-    final points = json['points'] ?? 0;
-    if (badges.isEmpty && points >= 500) {
-      // 500+ puan ise en az bir rozet ver
-      badges.add(UserBadge.toplumdanBiri);
-      
-      // 1000+ puan ise sorun avcısı rozeti ver
-      if (points >= 1000) {
-        badges.add(UserBadge.sorunAvcisi);
-      }
-      
-      // 1500+ puan ise mahalle bekçisi rozeti ver
-      if (points >= 1500) {
-        badges.add(UserBadge.mahalleBekci);
-      }
-    }
-    
     return User(
-      id: json['id'].toString(),
+      id: json['id'],
       name: json['name'],
       email: json['email'],
-      profileImageUrl: json['profile_image_url'],
-      bio: json['bio'],
-      cityId: json['city_id']?.toString(),
-      districtId: json['district_id']?.toString(),
       isVerified: json['is_verified'] ?? false,
-      points: points,
-      postCount: json['post_count'] ?? 0,
-      commentCount: json['comment_count'] ?? 0,
-      level: _getUserLevel(points),
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
-      badges: badges,
+      cityId: json['city_id'],
+      districtId: json['district_id'],
+      createdAt: json['created_at'],
+      userLevel: json['user_level'] ?? 'newUser',
+      points: json['points'] ?? 0,
+      totalPosts: json['total_posts'] ?? 0,
+      totalComments: json['total_comments'] ?? 0,
+      profilePhotoUrl: json['profile_photo_url'],
+      solvedIssues: json['solved_issues'] ?? 0,
+      badge: json['badge'],
     );
   }
 
-  static UserLevel _getUserLevel(int points) {
-    if (points >= 2000) return UserLevel.master;
-    if (points >= 1001) return UserLevel.expert;
-    if (points >= 501) return UserLevel.active;
-    if (points >= 101) return UserLevel.contributor;
-    return UserLevel.newUser;
-  }
-
+  // Method to convert a User instance to a JSON map
   Map<String, dynamic> toJson() {
-    // Rozet adlarını string listesine çevir
-    final badgeNames = badges.map((badge) => badge.toString().split('.').last).toList();
-    
     return {
       'id': id,
       'name': name,
       'email': email,
-      'profile_image_url': profileImageUrl,
-      'bio': bio,
+      'is_verified': isVerified,
       'city_id': cityId,
       'district_id': districtId,
-      'is_verified': isVerified,
+      'created_at': createdAt,
+      'user_level': userLevel,
       'points': points,
-      'post_count': postCount,
-      'comment_count': commentCount,
-      'created_at': createdAt.toIso8601String(),
-      'badges': badgeNames,
+      'total_posts': totalPosts,
+      'total_comments': totalComments,
+      'profile_photo_url': profilePhotoUrl,
+      'solved_issues': solvedIssues,
+      'badge': badge,
     };
   }
 
+  // Create a copy of this user with updated attributes
   User copyWith({
-    String? id,
+    int? id,
     String? name,
     String? email,
-    String? profileImageUrl,
-    String? bio,
-    String? cityId,
-    String? districtId,
     bool? isVerified,
+    int? cityId,
+    int? districtId,
+    String? createdAt,
+    String? userLevel,
     int? points,
-    int? postCount,
-    int? commentCount,
-    UserLevel? level,
-    DateTime? createdAt,
-    List<UserBadge>? badges,
+    int? totalPosts,
+    int? totalComments,
+    String? profilePhotoUrl,
+    int? solvedIssues,
+    String? badge,
   }) {
     return User(
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
-      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
-      bio: bio ?? this.bio,
+      isVerified: isVerified ?? this.isVerified,
       cityId: cityId ?? this.cityId,
       districtId: districtId ?? this.districtId,
-      isVerified: isVerified ?? this.isVerified,
-      points: points ?? this.points,
-      postCount: postCount ?? this.postCount,
-      commentCount: commentCount ?? this.commentCount,
-      level: level ?? this.level,
       createdAt: createdAt ?? this.createdAt,
-      badges: badges ?? this.badges,
+      userLevel: userLevel ?? this.userLevel,
+      points: points ?? this.points,
+      totalPosts: totalPosts ?? this.totalPosts,
+      totalComments: totalComments ?? this.totalComments,
+      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
+      solvedIssues: solvedIssues ?? this.solvedIssues,
+      badge: badge ?? this.badge,
     );
-  }
-
-  String getLevelName() {
-    switch (level) {
-      case UserLevel.newUser:
-        return "Yeni Kullanıcı";
-      case UserLevel.contributor:
-        return "Şehrini Seven";
-      case UserLevel.active:
-        return "Şehir Sevdalısı";
-      case UserLevel.expert:
-        return "Şehir Aşığı";
-      case UserLevel.master:
-        return "Şehir Uzmanı";
-    }
-  }
-  
-  // Rozet bilgilerini döndürür
-  Map<String, dynamic> getBadgeInfo(UserBadge badge) {
-    switch (badge) {
-      case UserBadge.mahalleBekci:
-        return {
-          'name': 'Mahalle Bekçisi',
-          'description': 'Mahallesindeki sorunları sürekli takip eden ve raporlayan kullanıcı',
-          'icon': 'visibility', // Gözetleme
-          'color': 0xFF4CAF50, // Yeşil
-        };
-      case UserBadge.sorunAvcisi:
-        return {
-          'name': 'Sorun Avcısı',
-          'description': 'Birçok farklı sorunu keşfedip bildiren kullanıcı',
-          'icon': 'bug_report',  // Hata raporu
-          'color': 0xFFF44336, // Kırmızı
-        };
-      case UserBadge.halkTemsilcisi:
-        return {
-          'name': 'Halk Temsilcisi',
-          'description': 'Gönderileri en çok desteklenen ve oylanan kullanıcı',
-          'icon': 'people',  // İnsanlar
-          'color': 0xFF2196F3, // Mavi
-        };
-      case UserBadge.cozumUreticisi:
-        return {
-          'name': 'Çözüm Üreticisi',
-          'description': 'Bildirdiği sorunların çözüme kavuşma oranı yüksek olan kullanıcı',
-          'icon': 'lightbulb', // Ampul
-          'color': 0xFFFFEB3B, // Sarı
-        };
-      case UserBadge.toplumdanBiri:
-        return {
-          'name': 'Toplumdan Biri',
-          'description': 'Aktif yorum yapan ve topluluk katılımı yüksek olan kullanıcı',
-          'icon': 'forum', // Forum
-          'color': 0xFF9C27B0, // Mor
-        };
-      case UserBadge.cevreDostu:
-        return {
-          'name': 'Çevre Dostu',
-          'description': 'Çevre sorunları hakkında paylaşım yapan kullanıcı',
-          'icon': 'eco', // Çevre
-          'color': 0xFF8BC34A, // Açık yeşil
-        };
-      case UserBadge.altyapiDenetcisi:
-        return {
-          'name': 'Altyapı Denetçisi',
-          'description': 'Altyapı sorunları hakkında paylaşım yapan kullanıcı',
-          'icon': 'construction', // İnşaat
-          'color': 0xFFFF9800, // Turuncu
-        };
-      case UserBadge.ulasimSampiyonu:
-        return {
-          'name': 'Ulaşım Şampiyonu',
-          'description': 'Ulaşım sorunları hakkında paylaşım yapan kullanıcı',
-          'icon': 'directions_bus', // Otobüs
-          'color': 0xFF3F51B5, // Lacivert
-        };
-    }
   }
 }
