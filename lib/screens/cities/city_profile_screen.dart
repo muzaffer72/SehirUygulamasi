@@ -122,39 +122,35 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
 
   // Header arkaplanını oluşturur
   Widget _buildHeaderBackground() {
-    final background = widget.cityProfile.coverImageUrl != null
-        ? Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.network(
-                widget.cityProfile.coverImageUrl!,
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => 
-                  Container(
-                    height: 200,
-                    color: Theme.of(context).primaryColor.withOpacity(0.05),
-                  ),
-              ),
-              // Gradiant overlay
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          )
-        : Container(
-            color: Theme.of(context).primaryColor.withOpacity(0.05),
-          );
+    final background = Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.network(
+          widget.cityProfile.demoCoverImageUrl,
+          width: double.infinity,
+          height: 200,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => 
+            Container(
+              height: 200,
+              color: Theme.of(context).primaryColor.withOpacity(0.05),
+            ),
+        ),
+        // Gradiant overlay
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.black.withOpacity(0.7),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
     
     return Stack(
       children: [
@@ -176,31 +172,30 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (widget.cityProfile.mayorPartyLogo != null)
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Image.network(
-                              widget.cityProfile.mayorPartyLogo!,
-                              width: 60,
-                              height: 60,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
-                                Icons.image_not_supported,
-                                size: 50,
-                                color: Colors.grey,
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
                               ),
+                            ],
+                          ),
+                          child: Image.network(
+                            widget.cityProfile.demoMayorPartyLogo,
+                            width: 60,
+                            height: 60,
+                            errorBuilder: (context, error, stackTrace) => const Icon(
+                              Icons.image_not_supported,
+                              size: 50,
+                              color: Colors.grey,
                             ),
                           ),
+                        ),
                         const SizedBox(height: 8),
                         if (widget.cityProfile.mayorParty != null)
                           Text(
@@ -221,26 +216,25 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (widget.cityProfile.imageUrl != null)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              widget.cityProfile.imageUrl!,
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            widget.cityProfile.demoImageUrl,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
                               width: 80,
                               height: 80,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Container(
-                                width: 80,
-                                height: 80,
-                                color: Colors.grey.withOpacity(0.3),
-                                child: const Icon(
-                                  Icons.location_city,
-                                  size: 50,
-                                  color: Colors.white70,
-                                ),
+                              color: Colors.grey.withOpacity(0.3),
+                              child: const Icon(
+                                Icons.location_city,
+                                size: 50,
+                                color: Colors.white70,
                               ),
                             ),
                           ),
+                        ),
                       ],
                     ),
                   ),
@@ -411,23 +405,22 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (project.imageUrl != null)
-                Image.network(
-                  project.imageUrl!,
+              Image.network(
+                widget.cityProfile.demoProjectImageUrl,
+                width: double.infinity,
+                height: 150,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
                   width: double.infinity,
                   height: 150,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: double.infinity,
-                    height: 150,
-                    color: Colors.grey.withOpacity(0.2),
-                    child: const Icon(
-                      Icons.image_not_supported,
-                      size: 50,
-                      color: Colors.grey,
-                    ),
+                  color: Colors.grey.withOpacity(0.2),
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    size: 50,
+                    color: Colors.grey,
                   ),
                 ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -545,23 +538,22 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (event.imageUrl != null)
-                Image.network(
-                  event.imageUrl!,
+              Image.network(
+                widget.cityProfile.demoEventImageUrl,
+                width: double.infinity,
+                height: 150,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
                   width: double.infinity,
                   height: 150,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: double.infinity,
-                    height: 150,
-                    color: Colors.grey.withOpacity(0.2),
-                    child: const Icon(
-                      Icons.image_not_supported,
-                      size: 50,
-                      color: Colors.grey,
-                    ),
+                  color: Colors.grey.withOpacity(0.2),
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    size: 50,
+                    color: Colors.grey,
                   ),
                 ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
