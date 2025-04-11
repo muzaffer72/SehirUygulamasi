@@ -47,6 +47,8 @@ class AuthService {
     int? districtId,
   ) async {
     try {
+      print('Registering with: $email, $password');
+      
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.register}'),
         headers: {'Content-Type': 'application/json'},
@@ -55,15 +57,12 @@ class AuthService {
           'username': email,  // Laravel admin panelde username olarak bekliyor
           'email': email,
           'password': password,
-          'city_id': cityId,
-          'district_id': districtId,
-          'user_level': 'newUser',
-          'points': 0,
-          'total_posts': 0,
-          'total_comments': 0,
-          'solved_issues': 0,
+          'city_id': cityId != null ? cityId.toString() : null, // String olarak gönder
+          'district_id': districtId != null ? districtId.toString() : null, // String olarak gönder
         }),
       );
+
+      print('Register response: ${response.statusCode}, ${response.body}');
 
       if (response.statusCode == 201) {
         final userData = jsonDecode(response.body);
@@ -79,6 +78,7 @@ class AuthService {
         throw Exception('Kayıt başarısız: ${response.body}');
       }
     } catch (e) {
+      print('Registration error: $e');
       throw Exception('Kayıt işlemi sırasında bir hata oluştu: $e');
     }
   }
@@ -152,7 +152,7 @@ class AuthService {
   }
 
   // Kullanıcı profil güncelleme
-  Future<User> updateProfile(int userId, Map<String, dynamic> userData) async {
+  Future<User> updateProfile(String userId, Map<String, dynamic> userData) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(_tokenKey);
@@ -161,6 +161,7 @@ class AuthService {
         throw Exception('Oturum bulunamadı');
       }
 
+      // String olarak aldığımız userId'yi burada string olarak kullanıyoruz
       final response = await http.put(
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.users}/$userId'),
         headers: {
@@ -169,6 +170,8 @@ class AuthService {
         },
         body: jsonEncode(userData),
       );
+
+      print('Update profile response: ${response.statusCode}, ${response.body}');
 
       if (response.statusCode == 200) {
         final updatedUserData = jsonDecode(response.body);
@@ -182,6 +185,7 @@ class AuthService {
         throw Exception('Profil güncelleme başarısız: ${response.body}');
       }
     } catch (e) {
+      print('Update profile error: $e');
       throw Exception('Profil güncelleme işlemi sırasında bir hata oluştu: $e');
     }
   }
