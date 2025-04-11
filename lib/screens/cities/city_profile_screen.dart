@@ -279,25 +279,24 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Belediye Başkanı Bilgisi
-          if (widget.cityProfile.mayorName != null)
-            Row(
-              children: [
-                const Icon(Icons.person, size: 20, color: Colors.grey),
-                const SizedBox(width: 8),
-                const Text(
-                  'Belediye Başkanı:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+          Row(
+            children: [
+              const Icon(Icons.person, size: 20, color: Colors.grey),
+              const SizedBox(width: 8),
+              const Text(
+                'Belediye Başkanı:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  widget.cityProfile.mayorName!,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                widget.cityProfile.demoMayorName,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
           
           const SizedBox(height: 8),
           
@@ -353,12 +352,73 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
   Widget _buildServicesTab() {
     final services = widget.cityProfile.services ?? [];
     
+    // Demo hizmetler oluştur (gerçek hizmetler yoksa)
     if (services.isEmpty) {
-      return const Center(
-        child: Text('Henüz hizmet bilgisi bulunmuyor.'),
+      // Demo hizmet listesi
+      final demoServices = [
+        CityService(
+          id: 1,
+          name: 'Su ve Kanalizasyon Hizmetleri',
+          description: 'Şehrin temiz su dağıtımı ve kanalizasyon sistemi bakım hizmetleri',
+          type: 'active',
+          category: 'altyapı',
+        ),
+        CityService(
+          id: 2,
+          name: 'Çöp Toplama ve Temizlik',
+          description: 'Düzenli çöp toplama ve cadde temizleme hizmetleri',
+          type: 'active',
+          category: 'temizlik',
+        ),
+        CityService(
+          id: 3,
+          name: 'Toplu Taşıma',
+          description: 'Şehir içi otobüs ve minibüs hatları',
+          type: 'active',
+          category: 'ulaşım',
+        ),
+        CityService(
+          id: 4,
+          name: 'Park ve Bahçe Bakımı',
+          description: 'Şehirdeki park, bahçe ve yeşil alanların bakımı',
+          type: 'active',
+          category: 'park ve bahçeler',
+        ),
+        CityService(
+          id: 5,
+          name: 'Sosyal Destek Hizmetleri',
+          description: 'İhtiyaç sahiplerine gıda, kıyafet ve eğitim yardımları',
+          type: 'active',
+          category: 'sosyal hizmetler',
+        ),
+      ];
+      
+      return ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: demoServices.length,
+        itemBuilder: (context, index) {
+          final service = demoServices[index];
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: ListTile(
+              leading: Icon(
+                _getCategoryIcon(service.category ?? ''),
+                color: Theme.of(context).primaryColor,
+                size: 30,
+              ),
+              title: Text(service.name),
+              subtitle: Text(service.description ?? ''),
+              trailing: service.type == 'active'
+                  ? const Icon(Icons.check_circle, color: Colors.green)
+                  : const Icon(Icons.cancel, color: Colors.red),
+            ),
+          );
+        },
       );
     }
     
+    // Gerçek hizmetleri kullan
     return ListView.builder(
       padding: const EdgeInsets.all(16.0),
       itemCount: services.length,
@@ -388,39 +448,75 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
   Widget _buildProjectsTab() {
     final projects = widget.cityProfile.projects ?? [];
     
+    // Demo projeler oluştur (gerçek projeler yoksa)
     if (projects.isEmpty) {
-      return const Center(
-        child: Text('Henüz proje bilgisi bulunmuyor.'),
-      );
-    }
-    
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: projects.length,
-      itemBuilder: (context, index) {
-        final project = projects[index];
-        return Card(
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.network(
-                widget.cityProfile.demoProjectImageUrl,
-                width: double.infinity,
-                height: 150,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+      // Demo proje listesi
+      final demoProjects = [
+        CityProject(
+          id: 1,
+          name: 'Şehir Merkezi Yenileme Projesi',
+          description: 'Şehir merkezindeki tarihi binaların restore edilmesi ve çevre düzenlemelerinin yapılması',
+          status: 'devam ediyor',
+          startDate: '15 Mart 2025',
+          endDate: '20 Aralık 2025',
+          budget: '32.500.000',
+        ),
+        CityProject(
+          id: 2,
+          name: 'Akıllı Sokak Aydınlatma Sistemi',
+          description: 'Enerji tasarruflu, hareket sensörlü sokak lambaları kurulumu',
+          status: 'tamamlandı',
+          startDate: '5 Ocak 2025',
+          endDate: '10 Mart 2025',
+          budget: '5.750.000',
+        ),
+        CityProject(
+          id: 3,
+          name: 'Yeni Kültür Merkezi İnşaatı',
+          description: 'Şehir kütüphanesi, sanat galerisi ve 500 kişilik konferans salonundan oluşan kültür merkezi',
+          status: 'planlama',
+          startDate: '10 Haziran 2025',
+          endDate: '15 Eylül 2026',
+          budget: '58.250.000',
+        ),
+        CityProject(
+          id: 4,
+          name: 'Şehir Parkı Genişletme Projesi',
+          description: 'Mevcut şehir parkına yeni spor alanları, çocuk oyun alanları ve piknik alanlarının eklenmesi',
+          status: 'devam ediyor',
+          startDate: '20 Şubat 2025',
+          endDate: '15 Haziran 2025',
+          budget: '12.800.000',
+        ),
+      ];
+      
+      return ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: demoProjects.length,
+        itemBuilder: (context, index) {
+          final project = demoProjects[index];
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.network(
+                  widget.cityProfile.demoProjectImageUrl,
                   width: double.infinity,
                   height: 150,
-                  color: Colors.grey.withOpacity(0.2),
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    size: 50,
-                    color: Colors.grey,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: double.infinity,
+                    height: 150,
+                    color: Colors.grey.withOpacity(0.2),
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
-              ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -521,39 +617,67 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
   Widget _buildEventsTab() {
     final events = widget.cityProfile.events ?? [];
     
+    // Demo etkinlikler oluştur (gerçek etkinlikler yoksa)
     if (events.isEmpty) {
-      return const Center(
-        child: Text('Henüz etkinlik bilgisi bulunmuyor.'),
-      );
-    }
-    
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: events.length,
-      itemBuilder: (context, index) {
-        final event = events[index];
-        return Card(
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.network(
-                widget.cityProfile.demoEventImageUrl,
-                width: double.infinity,
-                height: 150,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+      // Demo etkinlik listesi
+      final demoEvents = [
+        CityEvent(
+          id: 1,
+          name: 'Şehir Kültür Festivali',
+          description: 'Şehrimizin kültürel değerlerini tanıtan ve yerel sanatçıların performanslarını içeren festival',
+          date: '15-20 Haziran 2025',
+          location: 'Şehir Meydanı',
+        ),
+        CityEvent(
+          id: 2,
+          name: 'Engelsiz Yaşam Şenliği',
+          description: 'Engelli vatandaşlarımız için farkındalık oluşturmak amacıyla düzenlenen etkinlikler',
+          date: '3 Aralık 2025',
+          location: 'Kültür Merkezi',
+        ),
+        CityEvent(
+          id: 3,
+          name: 'Çocuk Bilim Şenliği',
+          description: 'Çocuklara bilimi sevdirmek amacıyla düzenlenen atölye ve deneyler',
+          date: '23 Nisan 2025',
+          location: 'Bilim Merkezi',
+        ),
+        CityEvent(
+          id: 4,
+          name: 'Şehir Kitap Günleri',
+          description: 'Yerel ve ulusal yazarların katılımıyla düzenlenen kitap fuarı ve imza günleri',
+          date: '8-15 Eylül 2025',
+          location: 'Kültür Parkı',
+        ),
+      ];
+      
+      return ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: demoEvents.length,
+        itemBuilder: (context, index) {
+          final event = demoEvents[index];
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.network(
+                  widget.cityProfile.demoEventImageUrl,
                   width: double.infinity,
                   height: 150,
-                  color: Colors.grey.withOpacity(0.2),
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    size: 50,
-                    color: Colors.grey,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: double.infinity,
+                    height: 150,
+                    color: Colors.grey.withOpacity(0.2),
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
-              ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -620,17 +744,120 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
   Widget _buildStatsTab() {
     final stats = widget.cityProfile.stats;
     
+    // Demo istatistikler oluştur
     if (stats == null || stats.isEmpty) {
-      return const Center(
-        child: Text('Henüz istatistik bilgisi bulunmuyor.'),
-      );
-    }
-    
-    // İstatistikleri kategorilere göre grupla
-    final demografiStats = stats.where((stat) => stat.type == 'demografi').toList();
-    final ekonomiStats = stats.where((stat) => stat.type == 'ekonomi').toList();
-    final egitimStats = stats.where((stat) => stat.type == 'egitim').toList();
-    final altyapiStats = stats.where((stat) => stat.type == 'altyapi').toList();
+      // Demo istatistik listesi
+      final demoStats = [
+        // Demografi istatistikleri
+        CityStat(
+          id: 1,
+          name: 'Kadın Nüfus Oranı',
+          value: '%51.2',
+          type: 'demografi',
+        ),
+        CityStat(
+          id: 2,
+          name: 'Erkek Nüfus Oranı',
+          value: '%48.8',
+          type: 'demografi',
+        ),
+        CityStat(
+          id: 3,
+          name: 'Yaş Ortalaması',
+          value: '32.4',
+          type: 'demografi',
+        ),
+        CityStat(
+          id: 4,
+          name: 'Nüfus Artış Hızı',
+          value: '%1.8',
+          type: 'demografi',
+        ),
+        
+        // Eğitim istatistikleri
+        CityStat(
+          id: 5,
+          name: 'Okur-Yazarlık',
+          value: '%98.5',
+          type: 'egitim',
+        ),
+        CityStat(
+          id: 6,
+          name: 'Yüksekokul Mezunu',
+          value: '%32.7',
+          type: 'egitim',
+        ),
+        CityStat(
+          id: 7,
+          name: 'Lise Mezunu',
+          value: '%45.3',
+          type: 'egitim',
+        ),
+        CityStat(
+          id: 8,
+          name: 'İlkokul Mezunu',
+          value: '%22.0',
+          type: 'egitim',
+        ),
+        
+        // Ekonomi istatistikleri
+        CityStat(
+          id: 9,
+          name: 'İşsizlik Oranı',
+          value: '%6.8',
+          type: 'ekonomi',
+        ),
+        CityStat(
+          id: 10,
+          name: 'Kişi Başı Milli Gelir',
+          value: '22345 TL',
+          type: 'ekonomi',
+        ),
+        CityStat(
+          id: 11,
+          name: 'Yıllık Ekonomik Büyüme',
+          value: '%4.2',
+          type: 'ekonomi',
+        ),
+        CityStat(
+          id: 12,
+          name: 'Turizm Geliri',
+          value: '18500000 TL',
+          type: 'ekonomi',
+        ),
+        
+        // Altyapı istatistikleri
+        CityStat(
+          id: 13,
+          name: 'Temiz Su Erişimi',
+          value: '%98.2',
+          type: 'altyapi',
+        ),
+        CityStat(
+          id: 14,
+          name: 'Kanalizasyon Altyapısı',
+          value: '%97.5',
+          type: 'altyapi',
+        ),
+        CityStat(
+          id: 15,
+          name: 'Yol Ağı',
+          value: '1250 km',
+          type: 'altyapi',
+        ),
+        CityStat(
+          id: 16,
+          name: 'İnternet Erişimi',
+          value: '%93.8',
+          type: 'altyapi',
+        ),
+      ];
+      
+      // İstatistikleri kategorilere göre grupla
+      final demografiStats = demoStats.where((stat) => stat.type == 'demografi').toList();
+      final ekonomiStats = demoStats.where((stat) => stat.type == 'ekonomi').toList();
+      final egitimStats = demoStats.where((stat) => stat.type == 'egitim').toList();
+      final altyapiStats = demoStats.where((stat) => stat.type == 'altyapi').toList();
     
     // Eğitim istatistiklerini grafik için hazırla
     final Map<String, double> egitimData = {};
@@ -879,9 +1106,37 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
   Widget _buildPrioritiesTab() {
     final priorityData = widget.cityProfile.priorityData;
     
+    // Demo öncelik verileri oluştur
     if (priorityData == null || priorityData.isEmpty) {
-      return const Center(
-        child: Text('Henüz öncelik bilgisi bulunmuyor.'),
+      // Demo öncelik verileri
+      final demoPriorityData = {
+        'Altyapı Yatırımları': 25.0,
+        'Ulaşım ve Trafik': 20.0,
+        'Sosyal Hizmetler': 18.0,
+        'Çevre ve Yeşil Alanlar': 15.0,
+        'Kültür ve Sanat': 12.0,
+        'Eğitim Destekleri': 10.0,
+      };
+      
+      return ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          const Text(
+            'Belediye Öncelikleri',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Aşağıdaki grafikte belediyenin öncelik verdiği alanlar ve bunlara ayrılan bütçe oranları gösterilmektedir.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          const SizedBox(height: 24),
+          
+          CityPriorityChart(priorityData: demoPriorityData),
+        ],
       );
     }
     

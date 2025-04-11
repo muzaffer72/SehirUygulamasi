@@ -245,8 +245,13 @@ class CityProfile {
   String get demoImageUrl => imageUrl ?? 'https://picsum.photos/id/1015/400/300';
   String get demoCoverImageUrl => coverImageUrl ?? 'https://picsum.photos/id/1019/800/400';
   String get demoMayorPartyLogo => mayorPartyLogo ?? 'https://picsum.photos/id/28/100/100';
+  String get demoMayorImageUrl => mayorImageUrl ?? 'https://picsum.photos/id/1012/400/400';
   String get demoProjectImageUrl => 'https://picsum.photos/id/1071/800/400';
   String get demoEventImageUrl => 'https://picsum.photos/id/1048/800/400';
+  
+  // Demo veri oluşturma (boş eksik veriler için)
+  String get demoMayorName => mayorName ?? 'Mehmet Yılmaz';
+  int get demoMayorSatisfactionRate => mayorSatisfactionRate ?? 75;
   
   // İletişim bilgileri
   final String? contactEmail;
