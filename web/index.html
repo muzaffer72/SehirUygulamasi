@@ -25,7 +25,7 @@ found in the LICENSE file. -->
     const serviceWorkerVersion = null;
   </script>
   <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js" defer></script>
+  <script type="application/javascript" src="flutter.js" defer></script>
 </head>
 <body>
   <style>
@@ -134,6 +134,7 @@ found in the LICENSE file. -->
       
       // Load Flutter engine
       let entrypointScript = document.createElement('script');
+      entrypointScript.type = "application/javascript";
       entrypointScript.src = "main.dart.js";
       document.body.append(entrypointScript);
     });
