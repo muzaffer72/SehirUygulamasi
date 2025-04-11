@@ -3,6 +3,7 @@ import '../../models/city_profile.dart';
 import '../../widgets/best_municipality_banner.dart';
 import '../../widgets/city_priority_chart.dart';
 import '../../widgets/monthly_performance_card.dart';
+import '../../widgets/city_stats_chart.dart';
 
 class CityProfileScreen extends StatefulWidget {
   final CityProfile cityProfile;
@@ -639,10 +640,78 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
     final egitimStats = stats.where((stat) => stat.type == 'egitim').toList();
     final altyapiStats = stats.where((stat) => stat.type == 'altyapi').toList();
     
+    // Eğitim istatistiklerini grafik için hazırla
+    final Map<String, double> egitimData = {};
+    for (var stat in egitimStats) {
+      if (stat.value != null) {
+        double? value = double.tryParse(stat.value!.replaceAll(',', '.').replaceAll('%', ''));
+        if (value != null) {
+          egitimData[stat.name] = value;
+        }
+      }
+    }
+    
+    // Altyapı istatistiklerini grafik için hazırla
+    final Map<String, double> altyapiData = {};
+    for (var stat in altyapiStats) {
+      if (stat.value != null) {
+        double? value = double.tryParse(stat.value!.replaceAll(',', '.').replaceAll('%', ''));
+        if (value != null) {
+          altyapiData[stat.name] = value;
+        }
+      }
+    }
+    
+    // Ekonomi istatistiklerini grafik için hazırla
+    final Map<String, double> ekonomiData = {};
+    for (var stat in ekonomiStats) {
+      if (stat.value != null) {
+        double? value = double.tryParse(stat.value!.replaceAll(',', '.').replaceAll('%', '').replaceAll('TL', '').trim());
+        if (value != null) {
+          ekonomiData[stat.name] = value;
+        }
+      }
+    }
+    
+    // Çözüm istatistikleri
+    final Map<String, double> cozumVerileri = {
+      'Çözülen': widget.cityProfile.totalSolvedIssues.toDouble(),
+      'Bekleyen': (widget.cityProfile.totalPosts - widget.cityProfile.totalSolvedIssues).toDouble(),
+    };
+    
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        // Genel İstatistikler
+        // Belediye Performans Göstergeleri
+        if (cozumVerileri.isNotEmpty)
+          CityStatsChart(
+            data: cozumVerileri,
+            title: 'Belediye Şikayet Çözüm Durumu',
+            description: 'Belediyeye iletilen şikayetlerin çözüm durumu',
+            gradientColors: [Colors.orange, Colors.deepOrange],
+          ),
+        const SizedBox(height: 24),
+        
+        // Eğitim İstatistik Grafiği
+        if (egitimData.isNotEmpty)
+          RadarCityStatsChart(
+            data: egitimData,
+            title: 'Eğitim Durumu',
+            description: 'Şehrin eğitim alanındaki göstergeleri',
+            fillColor: const Color(0x402196F3),
+            borderColor: Colors.blue,
+          ),
+        const SizedBox(height: 24),
+        
+        // Ekonomi İstatistik Grafiği
+        if (ekonomiData.isNotEmpty)
+          CityStatsChart(
+            data: ekonomiData,
+            title: 'Ekonomik Göstergeler',
+            description: 'Şehrin ekonomik performans göstergeleri',
+            gradientColors: [Colors.green.shade300, Colors.green.shade700],
+          ),
+        const SizedBox(height: 24),
         const Text(
           'Genel İstatistikler',
           style: TextStyle(
