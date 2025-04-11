@@ -61,7 +61,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with SingleTi
     try {
       // Get user's posts
       final posts = await _apiService.getPosts(
-        userId: currentUser.id,
+        userId: currentUser.id.toString(),
         type: PostType.problem,
       );
       

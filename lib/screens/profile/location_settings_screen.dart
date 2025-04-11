@@ -39,19 +39,22 @@ class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen>
     final authState = ref.read(authProvider);
     
     if (authState.status == AuthStatus.authenticated && authState.user != null) {
-      _selectedCityId = authState.user!.cityId != null ? authState.user!.cityId.toString() : null;
-      _selectedDistrictId = authState.user!.districtId != null ? authState.user!.districtId.toString() : null;
+      setState(() {
+        _selectedCityId = authState.user!.cityId != null ? authState.user!.cityId.toString() : null;
+        _selectedDistrictId = authState.user!.districtId != null ? authState.user!.districtId.toString() : null;
+      });
     }
-    });
     
     // If not available in user profile, check saved preferences
-    if (_selectedCityId == null) {
-      _selectedCityId = prefs.getString('selectedCityId');
-    }
-    
-    if (_selectedDistrictId == null) {
-      _selectedDistrictId = prefs.getString('selectedDistrictId');
-    }
+    setState(() {
+      if (_selectedCityId == null) {
+        _selectedCityId = prefs.getString('selectedCityId');
+      }
+      
+      if (_selectedDistrictId == null) {
+        _selectedDistrictId = prefs.getString('selectedDistrictId');
+      }
+    });
     
     setState(() {
       _isLoading = false;
