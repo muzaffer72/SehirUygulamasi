@@ -54,6 +54,7 @@ export const districts = pgTable('districts', {
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
+  username: varchar('username', { length: 100 }).unique(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
   profileImageUrl: text('profile_image_url'),
