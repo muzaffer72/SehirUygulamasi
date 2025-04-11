@@ -64,8 +64,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     
     if (user != null && user.cityId != null) {
       setState(() {
-        _selectedCityId = user.cityId;
-        _selectedDistrictId = user.districtId;
+        _selectedCityId = user.cityId?.toString();
+        _selectedDistrictId = user.districtId?.toString();
       });
     }
   }

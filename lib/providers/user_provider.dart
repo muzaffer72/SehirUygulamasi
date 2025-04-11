@@ -32,7 +32,7 @@ class UserNotifier extends StateNotifier<AsyncValue<User?>> {
         state = const AsyncValue.loading();
         
         final updatedUser = await _apiService.updateUserProfile(
-          user.id,
+          user.id.toString(),
           name: name,
           email: email,
           profileImageUrl: profileImageUrl,
@@ -56,7 +56,7 @@ class UserNotifier extends StateNotifier<AsyncValue<User?>> {
         state = const AsyncValue.loading();
         
         final updatedUser = await _apiService.updateUserLocation(
-          user.id,
+          user.id.toString(),
           cityId: cityId,
           districtId: districtId,
         );

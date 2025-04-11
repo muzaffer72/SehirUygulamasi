@@ -33,7 +33,7 @@ final filteredSurveysProvider = FutureProvider<List<Survey>>((ref) async {
   
   // Kullanıcının konumuna göre anketleri filtrele
   return surveys.where((survey) => 
-    survey.isVisibleToUser(user.cityId, user.districtId)
+    survey.isVisibleToUser(user.cityId?.toString(), user.districtId?.toString())
   ).toList();
 });
 
