@@ -37,6 +37,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
   String? _selectedCityId;
   String? _selectedDistrictId;
   
+  // Helper method to build body based on auth state
+  Widget _buildBody(AuthState authState) {
+    switch (authState.status) {
+      case AuthStatus.initial:
+      case AuthStatus.unauthenticated:
+        return _buildAuthForm();
+      case AuthStatus.authenticating:
+        return const Center(child: CircularProgressIndicator());
+      case AuthStatus.authenticated:
+        if (authState.user != null) {
+          return _buildProfileView(authState.user!);
+        } else {
+          return _buildAuthForm();
+        }
+      case AuthStatus.error:
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 40,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Bir hata oluştu: ${authState.errorMessage ?? "Bilinmeyen hata"}',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  ref.refresh(authProvider);
+                },
+                child: const Text('Tekrar Dene'),
+              ),
+            ],
+          ),
+        );
+    }
+  }
+  
   @override
   void dispose() {
     _emailController.dispose();
@@ -53,43 +96,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
       appBar: AppBar(
         title: const Text('Profil'),
       ),
-      body: authState.when(
-        data: (user) {
-          if (user == null) {
-            return _buildAuthForm();
-          } else {
-            return _buildProfileView(user);
-          }
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.red,
-                size: 40,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Bir hata oluştu: $error',
-                style: const TextStyle(color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  ref.refresh(authProvider);
-                },
-                child: const Text('Tekrar Dene'),
-              ),
-            ],
-          ),
-        ),
-      ),
+      body: _buildBody(authState),
     );
   }
   
@@ -653,7 +660,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                 icon: const Icon(Icons.exit_to_app),
                 label: const Text('Çıkış Yap'),
                 onPressed: () async {
-                  await ref.read(authNotifierProvider.notifier).logout();
+                  await ref.read(authProvider.notifier).logout();
                 },
               ),
             ),

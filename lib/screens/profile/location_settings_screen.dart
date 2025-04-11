@@ -36,13 +36,12 @@ class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen>
     final prefs = await SharedPreferences.getInstance();
     
     // Try to get location from user profile first
-    final userState = ref.read(authNotifierProvider);
+    final authState = ref.read(authProvider);
     
-    userState.whenData((user) {
-      if (user != null) {
-        _selectedCityId = user.cityId;
-        _selectedDistrictId = user.districtId;
-      }
+    if (authState.status == AuthStatus.authenticated && authState.user != null) {
+      _selectedCityId = authState.user!.cityId != null ? authState.user!.cityId.toString() : null;
+      _selectedDistrictId = authState.user!.districtId != null ? authState.user!.districtId.toString() : null;
+    }
     });
     
     // If not available in user profile, check saved preferences
@@ -80,15 +79,15 @@ class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen>
     }
     
     // Update user in database if logged in
-    final userState = ref.read(authNotifierProvider);
+    final authState = ref.read(authProvider);
     
-    userState.whenData((user) async {
-      if (user != null) {
-        try {
-          await ref.read(userProviderProvider.notifier).updateUserLocation(
-            _selectedCityId,
-            _selectedDistrictId,
-          );
+    if (authState.status == AuthStatus.authenticated && authState.user != null) {
+      try {
+        // Assuming there's a user provider for updating user info
+        await ref.read(userProviderProvider.notifier).updateUserLocation(
+          _selectedCityId != null ? int.parse(_selectedCityId!) : null,
+          _selectedDistrictId != null ? int.parse(_selectedDistrictId!) : null,
+        );
           
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -108,17 +107,16 @@ class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen>
             );
           }
         }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Konum tercihleri kaydedildi'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Konum tercihleri kaydedildi'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
-    });
+    }
     
     setState(() {
       _isLoading = false;
