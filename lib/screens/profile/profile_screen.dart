@@ -420,8 +420,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
           name,
           email,
           password,
-          _selectedCityId != null ? int.parse(_selectedCityId!) : null,
-          _selectedDistrictId != null ? int.parse(_selectedDistrictId!) : null,
+          _selectedCityId,
+          _selectedDistrictId,
         );
         
         if (mounted) {

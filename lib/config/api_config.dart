@@ -1,27 +1,27 @@
 class ApiConfig {
   // Base URL for API endpoints
-  static const String baseUrl = 'http://localhost:3000';
+  static const String baseUrl = 'http://localhost:3000/api';
 
   // Authentication endpoints
-  static const String login = '/api/login';
-  static const String register = '/api/register';
-  static const String logout = '/api/logout';
-  static const String currentUser = '/api/user';
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String logout = '/logout';
+  static const String currentUser = '/user';
 
   // City and district endpoints
-  static const String cities = '/api/cities';
-  static const String districts = '/api/districts';
+  static const String cities = '/cities';
+  static const String districts = '/districts';
 
   // Posts endpoints
-  static const String posts = '/api/posts';
-  static const String comments = '/api/comments';
+  static const String posts = '/posts';
+  static const String comments = '/comments';
 
   // Survey endpoints
-  static const String surveys = '/api/surveys';
+  static const String surveys = '/surveys';
 
   // User endpoints
-  static const String users = '/api/users';
+  static const String users = '/users';
 
   // Categories endpoints
-  static const String categories = '/api/categories';
+  static const String categories = '/categories';
 }

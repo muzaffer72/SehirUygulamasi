@@ -12,7 +12,7 @@ import 'package:sikayet_var/models/city_profile.dart';
 import 'package:sikayet_var/models/category.dart' as app_category;
 
 class ApiService {
-  static const String baseUrl = 'https://sehir.muzaffersanli.com/api.php';
+  final String baseUrl = '${ApiConfig.baseUrl}';
   static const String apiToken = 'api_token';
   
   // HTTP client
