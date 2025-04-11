@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/api_service.dart';
+import '../../models/city.dart';
+import '../../models/district.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -19,9 +22,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _isConfirmPasswordVisible = false;
   bool _acceptTerms = false;
 
-  int? _selectedCityId;
-  int? _selectedDistrictId;
+  String? _selectedCityId;
+  String? _selectedDistrictId;
+  List<City> _cities = [];
+  List<District> _districts = [];
+  bool _isLoadingCities = false;
+  bool _isLoadingDistricts = false;
+  
+  final ApiService _apiService = ApiService();
 
+  @override
+  void initState() {
+    super.initState();
+    _loadCities();
+  }
+  
   @override
   void dispose() {
     _nameController.dispose();
@@ -29,6 +44,60 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+  
+  Future<void> _loadCities() async {
+    setState(() {
+      _isLoadingCities = true;
+    });
+    
+    try {
+      final cities = await _apiService.getCities();
+      setState(() {
+        _cities = cities;
+        _isLoadingCities = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingCities = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Şehirler yüklenirken hata oluştu: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+  
+  Future<void> _loadDistricts(String cityId) async {
+    setState(() {
+      _isLoadingDistricts = true;
+      _districts = [];
+      _selectedDistrictId = null;
+    });
+    
+    try {
+      final districts = await _apiService.getDistrictsByCityId(cityId);
+      setState(() {
+        _districts = districts;
+        _isLoadingDistricts = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingDistricts = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('İlçeler yüklenirken hata oluştu: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   // Name validator
@@ -228,8 +297,108 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // City selection will be implemented here
-                    // For now, using placeholders
+                    // City selection dropdown
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          hint: const Text('Şehir seçiniz'),
+                          value: _selectedCityId,
+                          icon: const Icon(Icons.arrow_drop_down),
+                          iconSize: 24,
+                          elevation: 16,
+                          onChanged: isLoading || _isLoadingCities
+                              ? null
+                              : (String? newValue) {
+                                  setState(() {
+                                    _selectedCityId = newValue;
+                                  });
+                                  if (newValue != null) {
+                                    _loadDistricts(newValue);
+                                  }
+                                },
+                          items: _isLoadingCities
+                              ? [
+                                  const DropdownMenuItem<String>(
+                                    value: null,
+                                    child: Text('Yükleniyor...'),
+                                  )
+                                ]
+                              : _cities.map<DropdownMenuItem<String>>(
+                                  (City city) {
+                                    return DropdownMenuItem<String>(
+                                      value: city.id,
+                                      child: Text(city.name),
+                                    );
+                                  },
+                                ).toList(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // District selection dropdown
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          hint: const Text('İlçe seçiniz'),
+                          value: _selectedDistrictId,
+                          icon: const Icon(Icons.arrow_drop_down),
+                          iconSize: 24,
+                          elevation: 16,
+                          onChanged: isLoading || _isLoadingDistricts || _selectedCityId == null
+                              ? null
+                              : (String? newValue) {
+                                  setState(() {
+                                    _selectedDistrictId = newValue;
+                                  });
+                                },
+                          items: _selectedCityId == null
+                              ? [
+                                  const DropdownMenuItem<String>(
+                                    value: null,
+                                    child: Text('Önce şehir seçiniz'),
+                                  )
+                                ]
+                              : _isLoadingDistricts
+                                  ? [
+                                      const DropdownMenuItem<String>(
+                                        value: null,
+                                        child: Text('Yükleniyor...'),
+                                      )
+                                    ]
+                                  : _districts.isEmpty
+                                      ? [
+                                          const DropdownMenuItem<String>(
+                                            value: null,
+                                            child: Text('İlçe bulunamadı'),
+                                          )
+                                        ]
+                                      : _districts
+                                          .map<DropdownMenuItem<String>>(
+                                            (District district) {
+                                              return DropdownMenuItem<String>(
+                                                value: district.id,
+                                                child: Text(district.name),
+                                              );
+                                            },
+                                          )
+                                          .toList(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     
                     // Terms and conditions checkbox
                     Row(
