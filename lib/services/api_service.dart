@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io' if (dart.library.html) 'package:sikayet_var/utils/web_stub.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sikayet_var/config/api_config.dart';
 import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/models/user.dart';
 import 'package:sikayet_var/models/comment.dart';
@@ -12,7 +13,7 @@ import 'package:sikayet_var/models/city_profile.dart';
 import 'package:sikayet_var/models/category.dart' as app_category;
 
 class ApiService {
-  final String baseUrl = '${ApiConfig.baseUrl}';
+  final String baseUrl = ApiConfig.baseUrl;
   static const String apiToken = 'api_token';
   
   // HTTP client
