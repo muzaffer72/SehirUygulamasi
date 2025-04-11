@@ -88,8 +88,8 @@ class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen>
       try {
         // Assuming there's a user provider for updating user info
         await ref.read(userProviderProvider.notifier).updateUserLocation(
-          _selectedCityId != null ? int.parse(_selectedCityId!) : null,
-          _selectedDistrictId != null ? int.parse(_selectedDistrictId!) : null,
+          _selectedCityId,
+          _selectedDistrictId,
         );
           
           if (mounted) {

@@ -3,8 +3,8 @@ class User {
   final String name;
   final String email;
   final bool isVerified;
-  final int? cityId;
-  final int? districtId;
+  final String? cityId;
+  final String? districtId;
   final String? createdAt;
   final String? userLevel;
   final int points;
@@ -77,8 +77,8 @@ class User {
     String? name,
     String? email,
     bool? isVerified,
-    int? cityId,
-    int? districtId,
+    String? cityId,
+    String? districtId,
     String? createdAt,
     String? userLevel,
     int? points,
