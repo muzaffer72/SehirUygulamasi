@@ -43,8 +43,8 @@ class AuthService {
     String name,
     String email,
     String password,
-    int? cityId,
-    int? districtId,
+    String? cityId,
+    String? districtId,
   ) async {
     try {
       print('Registering with: $email, $password');
@@ -57,8 +57,8 @@ class AuthService {
           'username': email,  // Laravel admin panelde username olarak bekliyor
           'email': email,
           'password': password,
-          'city_id': cityId != null ? cityId.toString() : null, // String olarak gönder
-          'district_id': districtId != null ? districtId.toString() : null, // String olarak gönder
+          'city_id': cityId, // Zaten string
+          'district_id': districtId, // Zaten string
         }),
       );
 

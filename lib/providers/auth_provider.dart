@@ -93,8 +93,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String name,
     String email,
     String password,
-    int? cityId,
-    int? districtId,
+    String? cityId,
+    String? districtId,
   ) async {
     try {
       state = state.copyWith(status: AuthStatus.authenticating);
