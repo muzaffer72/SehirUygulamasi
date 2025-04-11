@@ -47,7 +47,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
   
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
+    final authState = ref.watch(authProvider);
     
     return Scaffold(
       appBar: AppBar(
@@ -82,7 +82,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  ref.refresh(authNotifierProvider);
+                  ref.refresh(authProvider);
                 },
                 child: const Text('Tekrar Dene'),
               ),
@@ -396,7 +396,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
     
     try {
       if (_isLoggingIn) {
-        await ref.read(authNotifierProvider.notifier).login(email, password);
+        await ref.read(authProvider.notifier).login(email, password);
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -409,12 +409,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
       } else {
         final name = _nameController.text.trim();
         
-        await ref.read(authNotifierProvider.notifier).register(
+        await ref.read(authProvider.notifier).register(
           name,
           email,
           password,
-          cityId: _selectedCityId,
-          districtId: _selectedDistrictId,
+          _selectedCityId != null ? int.parse(_selectedCityId!) : null,
+          _selectedDistrictId != null ? int.parse(_selectedDistrictId!) : null,
         );
         
         if (mounted) {
