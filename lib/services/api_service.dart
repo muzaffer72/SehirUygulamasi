@@ -194,7 +194,7 @@ class ApiService {
         userId: '2',
         content: 'Bu sorun bizim mahallemizde de var.',
         likeCount: 3,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)).toString(),
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
       ),
       Comment(
         id: '2',
@@ -336,7 +336,7 @@ class ApiService {
       name: 'Demo Kullanıcı',
       email: 'demo@example.com',
       isVerified: true,
-      createdAt: DateTime.now().subtract(const Duration(days: 30)).toString(),
+      createdAt: DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
     );
   }
   
