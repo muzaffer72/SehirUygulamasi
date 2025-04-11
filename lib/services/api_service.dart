@@ -194,7 +194,7 @@ class ApiService {
         userId: '2',
         content: 'Bu sorun bizim mahallemizde de var.',
         likeCount: 3,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+        createdAt: DateTime.now().subtract(const Duration(days: 2)).toString(),
       ),
       Comment(
         id: '2',
@@ -332,11 +332,11 @@ class ApiService {
     // In a real app, this would validate the token with the server
     // For now, we'll return a mock user
     return User(
-      id: '1',
+      id: 1,
       name: 'Demo Kullanıcı',
       email: 'demo@example.com',
       isVerified: true,
-      createdAt: DateTime.now().subtract(const Duration(days: 30)),
+      createdAt: DateTime.now().subtract(const Duration(days: 30)).toString(),
     );
   }
   
