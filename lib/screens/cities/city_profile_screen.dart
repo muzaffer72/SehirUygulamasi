@@ -347,8 +347,8 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SingleTicker
           if (widget.cityProfile.monthlyPerformance != null)
             MonthlyPerformanceCard(
               monthlyPerformance: widget.cityProfile.monthlyPerformance!,
-              performanceMonth: "Nisan",
-              performanceYear: "2025",
+              performanceMonth: widget.cityProfile.performanceMonth ?? "Nisan",
+              performanceYear: widget.cityProfile.performanceYear ?? "2025",
             ),
         ],
       ),

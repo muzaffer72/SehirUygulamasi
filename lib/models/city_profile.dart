@@ -240,6 +240,13 @@ class CityProfile {
   final String? mayorParty;
   final String? mayorPartyLogo;
   final int? mayorSatisfactionRate;
+
+  // Demo fotoğraf URL'leri
+  String get demoImageUrl => imageUrl ?? 'https://picsum.photos/id/1015/400/300';
+  String get demoCoverImageUrl => coverImageUrl ?? 'https://picsum.photos/id/1019/800/400';
+  String get demoMayorPartyLogo => mayorPartyLogo ?? 'https://picsum.photos/id/28/100/100';
+  String get demoProjectImageUrl => 'https://picsum.photos/id/1071/800/400';
+  String get demoEventImageUrl => 'https://picsum.photos/id/1048/800/400';
   
   // İletişim bilgileri
   final String? contactEmail;

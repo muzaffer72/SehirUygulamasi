@@ -142,22 +142,76 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
           
-          // Sekmeler (Kategoriler/Şehirler)
+          // Popüler Aramalar (Arama Kutusunun Altında)
           if (!_hasSearched)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildTabButton(
-                title: 'Kategoriler',
-                index: 0,
-                icon: Icons.category,
-                fullWidth: true,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Popüler Aramalar',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildSearchChip('Sokak Lambaları'),
+                      _buildSearchChip('Çöp Toplama'),
+                      _buildSearchChip('Yol Çalışması'),
+                      _buildSearchChip('Park ve Bahçeler'),
+                      _buildSearchChip('Gürültü Kirliliği'),
+                      _buildSearchChip('Toplu Taşıma'),
+                      _buildSearchChip('Su Kesintisi'),
+                      _buildSearchChip('İnternet Altyapısı'),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
           
-          // İçerik alanı
+          // İçerik alanı - artık mavi kategori bölümü yok
           if (!_hasSearched)
             Expanded(
-              child: _buildCategoriesTab(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Kategoriler',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: _categories.isEmpty
+                        ? const Center(child: Text('Kategoriler yükleniyor...'))
+                        : GridView.builder(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                            itemCount: _categories.length,
+                            itemBuilder: (context, index) {
+                              final category = _categories[index];
+                              return _buildCategoryCard(category);
+                            },
+                          ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           
           // Search results
@@ -168,7 +222,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   : _searchResults.isEmpty
                       ? _buildEmptyResults()
                       : ListView.builder(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(16),
                           itemCount: _searchResults.length,
                           itemBuilder: (context, index) {
                             final post = _searchResults[index];
