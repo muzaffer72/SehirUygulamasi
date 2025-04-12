@@ -61,34 +61,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $latitude = !empty($latitude) ? floatval($latitude) : null;
         $longitude = !empty($longitude) ? floatval($longitude) : null;
         
-        // Veritabanını güncelle
+        // Veritabanını güncelle - plate_number sütunu olmadığı için sorgudan çıkarıyoruz
         $query = "UPDATE cities SET 
-                    name = ?, 
-                    plate_number = ?, 
-                    region = ?, 
+                    name = ?,  
                     population = ?, 
                     mayor = ?, 
                     mayor_party = ?, 
                     governor_name = ?, 
                     area_code = ?, 
                     latitude = ?, 
-                    longitude = ? 
-                 WHERE id = ?";
+                    longitude = ?";
         
-        $stmt = $pdo->prepare($query);
-        $stmt->execute([
-            $name, 
-            $plateNumber,
-            $region,
+        // Region sütunu varsa sorguya ekle
+        if (isset($city['region'])) {
+            $query .= ", region = ?";
+        }
+        
+        $query .= " WHERE id = ?";
+        
+        $params = [
+            $name,
             $population,
             $mayor,
             $mayorParty,
             $governorName,
             $areaCode,
             $latitude,
-            $longitude,
-            $cityId
-        ]);
+            $longitude
+        ];
+        
+        // Region parametresini ekle
+        if (isset($city['region'])) {
+            $params[] = $region;
+        }
+        
+        // Id parametresini en sona ekle
+        $params[] = $cityId;
+        
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
         
         // Başarılı mesajı
         $success_message = "'{$name}' şehri başarıyla güncellendi";
