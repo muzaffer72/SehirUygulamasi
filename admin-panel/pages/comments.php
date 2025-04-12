@@ -61,13 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_reply'])) {
     $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
     $postId = isset($_POST['post_id']) ? (int)$_POST['post_id'] : 0;
     $content = isset($_POST['content']) ? $_POST['content'] : '';
-    $isAnonymous = isset($_POST['is_anonymous']) ? true : false;
+    $isAnonymous = isset($_POST['is_anonymous']) ? 'TRUE' : 'FALSE';
     
     if ($parentId > 0 && $userId > 0 && $postId > 0 && !empty($content)) {
         try {
-            $query = "INSERT INTO comments (post_id, user_id, content, parent_id, is_anonymous) VALUES (?, ?, ?, ?, ?)";
+            // PostgreSQL için boolean değerler sorguya direk yazılmalıdır
+            $query = "INSERT INTO comments (post_id, user_id, content, parent_id, is_anonymous) VALUES (?, ?, ?, ?, $isAnonymous)";
             $stmt = $pdo->prepare($query);
-            $result = $stmt->execute([$postId, $userId, $content, $parentId, $isAnonymous]);
+            $result = $stmt->execute([$postId, $userId, $content, $parentId]);
             
             if ($result) {
                 // Paylaşımın yorum sayısını güncelle
@@ -431,16 +432,10 @@ if ($operation === 'view' && isset($_GET['id'])) {
                             <input type="hidden" name="parent_id" value="<?php echo $comment['id']; ?>">
                             <input type="hidden" name="post_id" value="<?php echo $comment['post_id']; ?>">
                             
-                            <div class="mb-3">
-                                <label for="user_id" class="form-label">Yanıtlayan Kullanıcı <span class="text-danger">*</span></label>
-                                <select class="form-select" id="user_id" name="user_id" required>
-                                    <option value="">Kullanıcı Seçin</option>
-                                    <?php foreach ($users as $user): ?>
-                                        <option value="<?php echo $user['id']; ?>">
-                                            <?php echo htmlspecialchars($user['name'] . ' (' . $user['username'] . ')'); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                            <!-- Admin kullanıcı olduğu için direkt olarak sabit admin değerini kullanıyoruz -->
+                            <input type="hidden" name="user_id" value="1">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Admin kullanıcısı olarak yanıt veriyorsunuz.
                             </div>
                             
                             <div class="mb-3">
