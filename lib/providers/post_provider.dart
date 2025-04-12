@@ -193,5 +193,12 @@ final postsProvider = StateNotifierProvider<PostsNotifier, List<Post>>((ref) {
 // Post detail provider
 final postDetailProvider = FutureProvider.family<Post, String>((ref, postId) async {
   final apiService = ref.watch(apiServiceProvider);
-  return await apiService.getPostById(postId);
+  final post = await apiService.getPostById(postId);
+  
+  // null olma durumunda istisna fırlat - FutureProvider'ın post: null değil, error state olmasını sağlar
+  if (post == null) {
+    throw Exception('Post not found: $postId');
+  }
+  
+  return post;
 });

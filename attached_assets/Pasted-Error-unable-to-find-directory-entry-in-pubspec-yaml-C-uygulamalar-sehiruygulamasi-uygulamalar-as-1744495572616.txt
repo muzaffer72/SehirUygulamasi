@@ -1,0 +1,38 @@
+Error: unable to find directory entry in pubspec.yaml: C:\uygulamalar\sehiruygulamasi\uygulamalar\assets\images\
+Error: unable to find directory entry in pubspec.yaml: C:\uygulamalar\sehiruygulamasi\uygulamalar\assets\icons\
+Waiting for connection from debug service on Chrome...
+lib/providers/post_provider.dart:196:10: Error: A value of type 'Post?' can't be returned from an async function with return type 'Future<Post>' because 'Post?' is nullable and 'Future<Post>' isn't.
+ - 'Post' is from 'package:sikayet_var/models/post.dart' ('lib/models/post.dart').
+ - 'Future' is from 'dart:async'.
+  return await apiService.getPostById(postId);
+         ^
+lib/screens/surveys/surveys_screen.dart:52:51: Error: The argument type 'Future<City?>' can't be assigned to the parameter type 'Future<City>?' because 'City?' is nullable and 'City' isn't.
+ - 'Future' is from 'dart:async'.
+ - 'City' is from 'package:sikayet_var/models/city.dart' ('lib/models/city.dart').
+                              future: _apiService.getCityById(user.cityId!.toString()),
+                                                  ^
+lib/screens/surveys/surveys_screen.dart:61:51: Error: The argument type 'Future<District?>' can't be assigned to the parameter type 'Future<District>?' because 'District?' is nullable and 'District' isn't.
+ - 'Future' is from 'dart:async'.
+ - 'District' is from 'package:sikayet_var/models/district.dart' ('lib/models/district.dart').
+                              future: _apiService.getDistrictById(user.districtId!.toString()),
+                                                  ^
+lib/screens/surveys/surveys_screen.dart:326:47: Error: The argument type 'Future<City?>' can't be assigned to the parameter type 'Future<City>?' because 'City?' is nullable and 'City' isn't.
+ - 'Future' is from 'dart:async'.
+ - 'City' is from 'package:sikayet_var/models/city.dart' ('lib/models/city.dart').
+                          future: _apiService.getCityById(survey.cityId!.toString()),
+                                              ^
+lib/screens/surveys/surveys_screen.dart:359:47: Error: The argument type 'Future<Category?>' can't be assigned to the parameter type 'Future<Category>?' because 'Category?' is nullable and 'Category' isn't.
+ - 'Future' is from 'dart:async'.
+ - 'Category' is from 'package:sikayet_var/models/category.dart' ('lib/models/category.dart').
+                          future: _apiService.getCategoryById(survey.categoryId!.toString()),
+                                              ^
+lib/services/api_service.dart:745:17: Error: The argument type 'Object' can't be assigned to the parameter type 'String'.
+ - 'Object' is from 'dart:core'.
+        userId: userId,
+                ^
+lib/widgets/post_card.dart:382:35: Error: The argument type 'Future<Category?>' can't be assigned to the parameter type 'Future<Category>?' because 'Category?' is nullable and 'Category' isn't.
+ - 'Future' is from 'dart:async'.
+ - 'Category' is from 'package:sikayet_var/models/category.dart' ('lib/models/category.dart').
+              future: _apiService.getCategoryById(widget.post.categoryId!),
+                                  ^
+Failed to compile application.

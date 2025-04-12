@@ -48,7 +48,7 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
                           children: [
                             const Text('Anketler konum bilginize göre filtreleniyor:'),
                             const SizedBox(height: 12),
-                            if (user.cityId != null) FutureBuilder<City>(
+                            if (user.cityId != null) FutureBuilder<City?>(
                               future: _apiService.getCityById(user.cityId!.toString()),
                               builder: (context, snapshot) {
                                 if (snapshot.hasData) {
@@ -57,7 +57,7 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
                                 return const Text('Şehir: Yükleniyor...');
                               },
                             ),
-                            if (user.districtId != null) FutureBuilder<District>(
+                            if (user.districtId != null) FutureBuilder<District?>(
                               future: _apiService.getDistrictById(user.districtId!.toString()),
                               builder: (context, snapshot) {
                                 if (snapshot.hasData) {
@@ -322,7 +322,7 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
                       
                       // Location (if available)
                       if (survey.cityId != null)
-                        FutureBuilder<City>(
+                        FutureBuilder<City?>(
                           future: _apiService.getCityById(survey.cityId!.toString()),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {
