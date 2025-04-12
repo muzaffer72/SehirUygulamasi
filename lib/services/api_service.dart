@@ -80,7 +80,162 @@ class ApiService {
   }
   
   // Posts
-  Future<List<Post>> getPosts({String? categoryId, String? cityId, String? districtId, String? status, String? userId, PostType? type, int page = 1, int limit = 20}) async {
+  Future<List<Post>> getPosts({
+    String? categoryId, 
+    String? cityId, 
+    String? districtId, 
+    String? status, 
+    String? userId, 
+    PostType? type,
+    String? sortBy,
+    int page = 1, 
+    int limit = 20
+  }) async {
+    // Laravel admin paneli ile uyumlu endpoint kullan
+    String url = '$baseUrl/api/posts';
+    
+    // Admin panel API'sına sorgu parametreleri
+    final queryParams = <String, String>{};
+    if (categoryId != null) queryParams['category_id'] = categoryId;
+    if (cityId != null) queryParams['city_id'] = cityId;
+    if (districtId != null) queryParams['district_id'] = districtId;
+    if (status != null) queryParams['status'] = status;
+    if (userId != null) queryParams['user_id'] = userId;
+    if (type != null) queryParams['type'] = type.toString().split('.').last;
+    if (sortBy != null) queryParams['sort'] = sortBy;
+    queryParams['page'] = page.toString();
+    queryParams['per_page'] = limit.toString();
+    
+    // URL'yi oluştur
+    if (queryParams.isNotEmpty) {
+      url += '?' + Uri(queryParameters: queryParams).query;
+    }
+    
+    print('Calling API: $url');
+    
+    try {
+      // API isteği yap
+      final response = await _client.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('Posts response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final dynamic data = jsonDecode(response.body);
+        print('Posts data type: ${data.runtimeType}');
+        
+        List<Post> results = [];
+        
+        // Admin paneli formatında yanıt kontrol
+        if (data is Map<String, dynamic>) {
+          // Laravel API formatları
+          if (data.containsKey('data') && data['data'] is List) {
+            // Laravel resource collection formatı
+            final List<dynamic> postsData = data['data'];
+            results = postsData.map((item) => Post.fromJson(item)).toList();
+            print('Parsed ${results.length} posts from data field');
+          } 
+          else if (data.containsKey('posts') && data['posts'] is List) {
+            // Özel Laravel admin formatı 
+            final List<dynamic> postsData = data['posts'];
+            results = postsData.map((item) => Post.fromJson(item)).toList();
+            print('Parsed ${results.length} posts from posts field');
+          }
+          else if (data.containsKey('results') && data['results'] is List) {
+            // Alternatif format
+            final List<dynamic> postsData = data['results'];
+            results = postsData.map((item) => Post.fromJson(item)).toList();
+            print('Parsed ${results.length} posts from results field');
+          }
+          else {
+            print('Unexpected API response format: $data');
+            
+            // Alternatif endpoint dene
+            return await _getFallbackPosts(
+              categoryId: categoryId,
+              cityId: cityId,
+              districtId: districtId,
+              status: status,
+              userId: userId,
+              type: type,
+              sortBy: sortBy,
+              page: page,
+              limit: limit
+            );
+          }
+        } 
+        // Düz liste formatında yanıt (nadiren olur)
+        else if (data is List) {
+          results = data.map((item) => Post.fromJson(item)).toList();
+          print('Parsed ${results.length} posts from direct list');
+        }
+        // Fallback mekanizması
+        else {
+          print('Unexpected API response type. Trying fallback endpoint.');
+          return await _getFallbackPosts(
+            categoryId: categoryId,
+            cityId: cityId,
+            districtId: districtId,
+            status: status,
+            userId: userId,
+            type: type,
+            sortBy: sortBy,
+            page: page,
+            limit: limit
+          );
+        }
+        
+        return results;
+      } else {
+        print('Failed to load posts: ${response.body}');
+        // Hata durumunda alternatif endpoint dene
+        return await _getFallbackPosts(
+          categoryId: categoryId,
+          cityId: cityId,
+          districtId: districtId,
+          status: status,
+          userId: userId,
+          type: type,
+          sortBy: sortBy,
+          page: page,
+          limit: limit
+        );
+      }
+    } catch (e) {
+      print('Error fetching posts: $e');
+      // Hata durumunda alternatif endpoint dene
+      return await _getFallbackPosts(
+        categoryId: categoryId,
+        cityId: cityId,
+        districtId: districtId,
+        status: status,
+        userId: userId,
+        type: type,
+        sortBy: sortBy,
+        page: page,
+        limit: limit
+      );
+    }
+  }
+  
+  // Alternatif endpoint - eski API formatına uyumlu
+  Future<List<Post>> _getFallbackPosts({
+    String? categoryId, 
+    String? cityId, 
+    String? districtId, 
+    String? status, 
+    String? userId, 
+    PostType? type,
+    String? sortBy,
+    int page = 1, 
+    int limit = 20
+  }) async {
+    print('Trying fallback posts endpoint');
     String url = '$baseUrl/posts';
     
     // Add query parameters if available
@@ -91,6 +246,7 @@ class ApiService {
     if (status != null) queryParams['status'] = status;
     if (userId != null) queryParams['user_id'] = userId;
     if (type != null) queryParams['type'] = type.toString().split('.').last;
+    if (sortBy != null) queryParams['sort'] = sortBy;
     queryParams['page'] = page.toString();
     queryParams['limit'] = limit.toString();
     
@@ -104,57 +260,106 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         
-        // Admin paneli formatına uyumlu yanıt yapısı kontrol edilir
+        // Eski formatlara uyumlu kontroller
         if (data is Map<String, dynamic> && data.containsKey('posts')) {
           final List<dynamic> postsData = data['posts'];
           return postsData.map((item) => Post.fromJson(item)).toList();
         } 
-        // Düz liste formatında yanıt
         else if (data is List) {
           return data.map((item) => Post.fromJson(item)).toList();
         } 
-        // Boş ya da geçersiz veri
         else {
-          print('Unexpected data format: $data');
+          print('Unexpected data format in fallback: $data');
           return [];
         }
       } else {
-        print('Failed to load posts: ${response.body}');
+        print('Failed to load posts from fallback: ${response.body}');
         return [];
       }
     } catch (e) {
-      print('Error fetching posts: $e');
+      print('Error fetching posts from fallback: $e');
       return [];
     }
   }
   
   Future<Post?> getPostById(String id) async {
+    print('Getting post details for ID: $id');
+    try {
+      // Laravel admin paneli API entegrasyonu
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/posts/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('Get post by ID response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('Post data format: ${data.runtimeType}');
+        
+        // Admin paneli API'si yanıt yapısı kontrol
+        if (data is Map<String, dynamic>) {
+          // Laravel API yapıları
+          if (data.containsKey('post')) {
+            // {post: {...}} formatı
+            print('Post found in post field');
+            return Post.fromJson(data['post']);
+          } else if (data.containsKey('data')) {
+            // Laravel resource formatı: {data: {...}}
+            print('Post found in data field');
+            return Post.fromJson(data['data']);
+          } else {
+            // Doğrudan post objesi
+            print('Post found as direct object');
+            return Post.fromJson(data);
+          }
+        } else {
+          print('Invalid post response format, trying fallback');
+          return await _getFallbackPostById(id);
+        }
+      } else {
+        print('Failed to load post: ${response.body}');
+        // Ana endpoint çalışmadığında yedek endpoint dene
+        return await _getFallbackPostById(id);
+      }
+    } catch (e) {
+      print('Error fetching post: $e');
+      // Hata oluştuğunda yedek endpoint dene
+      return await _getFallbackPostById(id);
+    }
+  }
+  
+  // Yedek gönderi detay endpoint'i - eski API formatları için
+  Future<Post?> _getFallbackPostById(String id) async {
+    print('Trying fallback endpoint for post ID: $id');
     try {
       final response = await _client.get(Uri.parse('$baseUrl/posts/$id'));
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         
-        // Admin paneli API'si yanıt yapısı kontrol edilir
         if (data is Map<String, dynamic>) {
-          // Admin panelinde post veya data altında veri olabilir
+          // Olası formatlar
           if (data.containsKey('post')) {
             return Post.fromJson(data['post']);
           } else if (data.containsKey('data')) {
             return Post.fromJson(data['data']);
           } else {
-            // Doğrudan post objesi
             return Post.fromJson(data);
           }
         } else {
-          throw Exception('Invalid response format');
+          print('Invalid fallback post response format');
+          return null;
         }
       } else {
-        print('Failed to load post: ${response.body}');
+        print('Failed to load post from fallback: ${response.body}');
         return null;
       }
     } catch (e) {
-      print('Error fetching post: $e');
+      print('Error fetching post from fallback: $e');
       return null;
     }
   }
@@ -213,61 +418,157 @@ class ApiService {
   }
   
   Future<Post?> likePost(String id) async {
+    print('Liking post ID: $id');
+    final token = await _getToken();
+    final user = await getCurrentUser();
+    final userId = user?.id;
+    
     try {
+      // Önce mevcut gönderiyi kontrol et
       final post = await getPostById(id);
       if (post == null) {
         print('Cannot like post: Post not found');
         return null;
       }
       
-      // Admin panelde direk API endpointi var mı kontrol et
+      // Laravel admin paneli API entegrasyonu
       try {
+        print('Trying admin panel API for liking post');
         final response = await _client.post(
-          Uri.parse('$baseUrl/posts/$id/like'),
-          headers: {'Content-Type': 'application/json'},
+          Uri.parse('$baseUrl/api/posts/$id/like'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': token != null ? (token.startsWith('Bearer ') ? token : 'Bearer $token') : '',
+          },
+          body: jsonEncode({
+            'user_id': userId,
+          }),
         );
         
-        if (response.statusCode == 200) {
-          return getPostById(id);
+        print('Like response status: ${response.statusCode}');
+        
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          print('Successfully liked post via API');
+          // Beğeni işlemi başarılı, güncel gönderiyi getir
+          return await getPostById(id);
+        } else {
+          print('API like request failed, trying alternative');
         }
       } catch (e) {
-        // API endpointi yoksa manuel olarak beğeni sayısını artır
+        print('API like request error: $e');
       }
       
+      // API yöntemi başarısız olursa alternatif yöntem
+      try {
+        print('Trying fallback method for liking post');
+        final fallbackResponse = await _client.post(
+          Uri.parse('$baseUrl/posts/$id/like'),
+          headers: {'Content-Type': 'application/json'},
+          body: token != null ? jsonEncode({'token': token}) : null,
+        );
+        
+        if (fallbackResponse.statusCode == 200) {
+          print('Successfully liked post via fallback endpoint');
+          return await getPostById(id);
+        }
+      } catch (e) {
+        print('Fallback like request error: $e');
+      }
+      
+      // Son çare - istemci tarafında beğeni sayısını artır
+      print('Using client-side fallback for liking post');
       final likes = post.likes + 1;
-      return updatePost(id, {'likes': likes});
+      
+      // Önce dinamik state güncellemesi için güncellenmiş gönderi objesi
+      final updatedPost = post.copyWith(likes: likes);
+      
+      // Paralelinde async olarak sunucuya güncelleme isteği gönderme
+      updatePost(id, {'likes': likes})
+        .then((_) => print('Updated post likes on server'))
+        .catchError((e) => print('Failed to update post likes on server: $e'));
+      
+      return updatedPost;
     } catch (e) {
-      print('Error liking post: $e');
+      print('Error in likePost: $e');
       return null;
     }
   }
   
   Future<Post?> highlightPost(String id) async {
+    print('Highlighting post ID: $id');
+    final token = await _getToken();
+    final user = await getCurrentUser();
+    final userId = user?.id;
+    
     try {
+      // Önce mevcut gönderiyi kontrol et
       final post = await getPostById(id);
       if (post == null) {
         print('Cannot highlight post: Post not found');
         return null;
       }
       
-      // Admin panelde direk API endpointi var mı kontrol et
+      // Laravel admin paneli API entegrasyonu
       try {
+        print('Trying admin panel API for highlighting post');
         final response = await _client.post(
-          Uri.parse('$baseUrl/posts/$id/highlight'),
-          headers: {'Content-Type': 'application/json'},
+          Uri.parse('$baseUrl/api/posts/$id/highlight'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': token != null ? (token.startsWith('Bearer ') ? token : 'Bearer $token') : '',
+          },
+          body: jsonEncode({
+            'user_id': userId,
+          }),
         );
         
-        if (response.statusCode == 200) {
-          return getPostById(id);
+        print('Highlight response status: ${response.statusCode}');
+        
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          print('Successfully highlighted post via API');
+          // Öne çıkarma işlemi başarılı, güncel gönderiyi getir
+          return await getPostById(id);
+        } else {
+          print('API highlight request failed, trying alternative');
         }
       } catch (e) {
-        // API endpointi yoksa manuel olarak öne çıkarma sayısını artır  
+        print('API highlight request error: $e');
       }
       
+      // API yöntemi başarısız olursa alternatif yöntem
+      try {
+        print('Trying fallback method for highlighting post');
+        final fallbackResponse = await _client.post(
+          Uri.parse('$baseUrl/posts/$id/highlight'),
+          headers: {'Content-Type': 'application/json'},
+          body: token != null ? jsonEncode({'token': token}) : null,
+        );
+        
+        if (fallbackResponse.statusCode == 200) {
+          print('Successfully highlighted post via fallback endpoint');
+          return await getPostById(id);
+        }
+      } catch (e) {
+        print('Fallback highlight request error: $e');
+      }
+      
+      // Son çare - istemci tarafında öne çıkarma sayısını artır
+      print('Using client-side fallback for highlighting post');
       final highlights = post.highlights + 1;
-      return updatePost(id, {'highlights': highlights});
+      
+      // Önce dinamik state güncellemesi için güncellenmiş gönderi objesi
+      final updatedPost = post.copyWith(highlights: highlights);
+      
+      // Paralelinde async olarak sunucuya güncelleme isteği gönderme
+      updatePost(id, {'highlights': highlights})
+        .then((_) => print('Updated post highlights on server'))
+        .catchError((e) => print('Failed to update post highlights on server: $e'));
+      
+      return updatedPost;
     } catch (e) {
-      print('Error highlighting post: $e');
+      print('Error in highlightPost: $e');
       return null;
     }
   }
@@ -615,92 +916,609 @@ class ApiService {
     }
   }
   
-  // Cities
-  Future<List<City>> getCities() async {
-    final response = await _client.get(Uri.parse('$baseUrl/cities'));
-    
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => City.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load cities: ${response.body}');
+  // Categories
+  Future<List<app_category.Category>> getCategories() async {
+    print('Fetching categories from API');
+    try {
+      // Laravel admin paneli ile uyumlu endpoint kullan
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/categories'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('Categories response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final dynamic data = jsonDecode(response.body);
+        List<app_category.Category> results = [];
+        
+        // API yanıt formatını kontrol et
+        if (data is Map<String, dynamic>) {
+          List<dynamic> categoriesData;
+          
+          if (data.containsKey('data') && data['data'] is List) {
+            // Laravel resource collection formatı
+            categoriesData = data['data'];
+          } 
+          else if (data.containsKey('categories') && data['categories'] is List) {
+            // Özel format
+            categoriesData = data['categories'];
+          }
+          else if (data.containsKey('results') && data['results'] is List) {
+            // Alternatif format
+            categoriesData = data['results'];
+          }
+          else {
+            print('Unexpected API response format for categories');
+            return await _getFallbackCategories();
+          }
+          
+          results = categoriesData
+              .map((item) => app_category.Category.fromJson(item))
+              .toList();
+          print('Parsed ${results.length} categories');
+          return results;
+        } 
+        else if (data is List) {
+          // Düz liste formatı
+          results = data
+              .map((item) => app_category.Category.fromJson(item))
+              .toList();
+          print('Parsed ${results.length} categories from list');
+          return results;
+        }
+        else {
+          print('Unexpected categories data type');
+          return await _getFallbackCategories();
+        }
+      } else {
+        print('Failed to load categories: ${response.body}');
+        return await _getFallbackCategories();
+      }
+    } catch (e) {
+      print('Error fetching categories: $e');
+      return await _getFallbackCategories();
     }
   }
   
-  Future<City> getCityById(String id) async {
-    final response = await _client.get(Uri.parse('$baseUrl/cities/$id'));
-    
-    if (response.statusCode == 200) {
-      return City.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to load city: ${response.body}');
+  // Yedek kategori yükleme
+  Future<List<app_category.Category>> _getFallbackCategories() async {
+    print('Using fallback endpoint for categories');
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/categories'));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data is List) {
+          return data.map((item) => app_category.Category.fromJson(item)).toList();
+        } else if (data is Map<String, dynamic> && data.containsKey('categories')) {
+          final List<dynamic> categoriesData = data['categories'];
+          return categoriesData.map((item) => app_category.Category.fromJson(item)).toList();
+        } else {
+          print('Invalid fallback categories format');
+          return [];
+        }
+      } else {
+        print('Failed to load fallback categories: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching fallback categories: $e');
+      return [];
+    }
+  }
+  
+  Future<app_category.Category?> getCategoryById(String id) async {
+    print('Fetching category details for ID: $id');
+    try {
+      // Laravel admin paneli API entegrasyonu
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/categories/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('data')) {
+            return app_category.Category.fromJson(data['data']);
+          } else if (data.containsKey('category')) {
+            return app_category.Category.fromJson(data['category']);
+          } else {
+            return app_category.Category.fromJson(data);
+          }
+        } else {
+          print('Invalid category response format');
+          return null;
+        }
+      } else {
+        print('Failed to load category: ${response.body}');
+        // Alternatif endpoint dene
+        return await _getFallbackCategoryById(id);
+      }
+    } catch (e) {
+      print('Error fetching category: $e');
+      return await _getFallbackCategoryById(id);
+    }
+  }
+  
+  // Yedek kategori detay yükleme
+  Future<app_category.Category?> _getFallbackCategoryById(String id) async {
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/categories/$id'));
+      
+      if (response.statusCode == 200) {
+        return app_category.Category.fromJson(jsonDecode(response.body));
+      } else {
+        print('Failed to load fallback category: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching fallback category: $e');
+      return null;
+    }
+  }
+  
+  // Cities
+  Future<List<City>> getCities() async {
+    print('Fetching cities from API');
+    try {
+      // Laravel admin paneli ile uyumlu endpoint kullan
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/cities'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('Cities response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final dynamic data = jsonDecode(response.body);
+        List<City> results = [];
+        
+        // API yanıt formatını kontrol et
+        if (data is Map<String, dynamic>) {
+          List<dynamic> citiesData;
+          
+          if (data.containsKey('data') && data['data'] is List) {
+            // Laravel resource collection formatı
+            citiesData = data['data'];
+          } 
+          else if (data.containsKey('cities') && data['cities'] is List) {
+            // Özel format
+            citiesData = data['cities'];
+          }
+          else if (data.containsKey('results') && data['results'] is List) {
+            // Alternatif format
+            citiesData = data['results'];
+          }
+          else {
+            print('Unexpected API response format for cities');
+            return await _getFallbackCities();
+          }
+          
+          results = citiesData
+              .map((item) => City.fromJson(item))
+              .toList();
+          print('Parsed ${results.length} cities');
+          return results;
+        } 
+        else if (data is List) {
+          // Düz liste formatı
+          results = data
+              .map((item) => City.fromJson(item))
+              .toList();
+          print('Parsed ${results.length} cities from list');
+          return results;
+        }
+        else {
+          print('Unexpected cities data type');
+          return await _getFallbackCities();
+        }
+      } else {
+        print('Failed to load cities: ${response.body}');
+        return await _getFallbackCities();
+      }
+    } catch (e) {
+      print('Error fetching cities: $e');
+      return await _getFallbackCities();
+    }
+  }
+  
+  // Yedek şehir listesi yükleme
+  Future<List<City>> _getFallbackCities() async {
+    print('Using fallback endpoint for cities');
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/cities'));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data is List) {
+          return data.map((item) => City.fromJson(item)).toList();
+        } else if (data is Map<String, dynamic> && data.containsKey('cities')) {
+          final List<dynamic> citiesData = data['cities'];
+          return citiesData.map((item) => City.fromJson(item)).toList();
+        } else {
+          print('Invalid fallback cities format');
+          return [];
+        }
+      } else {
+        print('Failed to load fallback cities: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching fallback cities: $e');
+      return [];
+    }
+  }
+  
+  Future<City?> getCityById(String id) async {
+    print('Fetching city details for ID: $id');
+    try {
+      // Laravel admin paneli API entegrasyonu
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/cities/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('data')) {
+            return City.fromJson(data['data']);
+          } else if (data.containsKey('city')) {
+            return City.fromJson(data['city']);
+          } else {
+            return City.fromJson(data);
+          }
+        } else {
+          print('Invalid city response format');
+          return await _getFallbackCityById(id);
+        }
+      } else {
+        print('Failed to load city: ${response.body}');
+        // Alternatif endpoint dene
+        return await _getFallbackCityById(id);
+      }
+    } catch (e) {
+      print('Error fetching city: $e');
+      return await _getFallbackCityById(id);
+    }
+  }
+  
+  // Yedek şehir detay yükleme
+  Future<City?> _getFallbackCityById(String id) async {
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/cities/$id'));
+      
+      if (response.statusCode == 200) {
+        return City.fromJson(jsonDecode(response.body));
+      } else {
+        print('Failed to load fallback city: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching fallback city: $e');
+      return null;
     }
   }
   
   // Şehir profil bilgilerini getir
-  Future<CityProfile> getCityProfile(int cityId) async {
-    // cityId'yi string'e çeviriyoruz
-    final response = await _client.get(Uri.parse('$baseUrl/cities/${cityId.toString()}/profile'));
+  Future<CityProfile?> getCityProfile(int cityId) async {
+    print('Fetching city profile for ID: $cityId');
     
-    if (response.statusCode == 200) {
-      return CityProfile.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to load city profile: ${response.body}');
+    try {
+      // Laravel admin panel API entegrasyonu
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/cities/${cityId.toString()}/profile'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('City profile response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('data')) {
+            return CityProfile.fromJson(data['data']);
+          } else if (data.containsKey('profile')) {
+            return CityProfile.fromJson(data['profile']);
+          } else if (data.containsKey('city_profile')) {
+            return CityProfile.fromJson(data['city_profile']);
+          } else {
+            return CityProfile.fromJson(data);
+          }
+        } else {
+          print('Invalid city profile response format');
+          return await _getFallbackCityProfile(cityId);
+        }
+      } else {
+        print('Failed to load city profile: ${response.body}');
+        return await _getFallbackCityProfile(cityId);
+      }
+    } catch (e) {
+      print('Error fetching city profile: $e');
+      return await _getFallbackCityProfile(cityId);
+    }
+  }
+  
+  // Yedek şehir profil bilgilerini getir
+  Future<CityProfile?> _getFallbackCityProfile(int cityId) async {
+    print('Using fallback endpoint for city profile ID: $cityId');
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/cities/${cityId.toString()}/profile'));
+      
+      if (response.statusCode == 200) {
+        return CityProfile.fromJson(jsonDecode(response.body));
+      } else {
+        print('Failed to load fallback city profile: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching fallback city profile: $e');
+      return null;
     }
   }
   
   // Districts
   Future<List<District>> getDistricts() async {
-    final response = await _client.get(Uri.parse('$baseUrl/districts'));
-    
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => District.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load districts: ${response.body}');
+    print('Fetching districts from API');
+    try {
+      // Laravel admin panel ile uyumlu endpoint kullan
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/districts'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('Districts response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final dynamic data = jsonDecode(response.body);
+        List<District> results = [];
+        
+        // API yanıt formatını kontrol et
+        if (data is Map<String, dynamic>) {
+          List<dynamic> districtsData;
+          
+          if (data.containsKey('data') && data['data'] is List) {
+            // Laravel resource collection formatı
+            districtsData = data['data'];
+          } 
+          else if (data.containsKey('districts') && data['districts'] is List) {
+            // Özel format
+            districtsData = data['districts'];
+          }
+          else if (data.containsKey('results') && data['results'] is List) {
+            // Alternatif format
+            districtsData = data['results'];
+          }
+          else {
+            print('Unexpected API response format for districts');
+            return await _getFallbackDistricts();
+          }
+          
+          results = districtsData
+              .map((item) => District.fromJson(item))
+              .toList();
+          print('Parsed ${results.length} districts');
+          return results;
+        } 
+        else if (data is List) {
+          // Düz liste formatı
+          results = data
+              .map((item) => District.fromJson(item))
+              .toList();
+          print('Parsed ${results.length} districts from list');
+          return results;
+        }
+        else {
+          print('Unexpected districts data type');
+          return await _getFallbackDistricts();
+        }
+      } else {
+        print('Failed to load districts: ${response.body}');
+        return await _getFallbackDistricts();
+      }
+    } catch (e) {
+      print('Error fetching districts: $e');
+      return await _getFallbackDistricts();
+    }
+  }
+  
+  // Yedek ilçe listesi yükleme
+  Future<List<District>> _getFallbackDistricts() async {
+    print('Using fallback endpoint for districts');
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/districts'));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data is List) {
+          return data.map((item) => District.fromJson(item)).toList();
+        } else if (data is Map<String, dynamic> && data.containsKey('districts')) {
+          final List<dynamic> districtsData = data['districts'];
+          return districtsData.map((item) => District.fromJson(item)).toList();
+        } else {
+          print('Invalid fallback districts format');
+          return [];
+        }
+      } else {
+        print('Failed to load fallback districts: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching fallback districts: $e');
+      return [];
     }
   }
   
   Future<List<District>> getDistrictsByCityId(String cityId) async {
-    final response = await _client.get(Uri.parse('$baseUrl/districts?city_id=$cityId'));
-    
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => District.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load districts: ${response.body}');
+    print('Fetching districts for city ID: $cityId');
+    try {
+      // Laravel admin panel ile uyumlu endpoint kullan
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/districts?city_id=$cityId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('Districts by city response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final dynamic data = jsonDecode(response.body);
+        List<District> results = [];
+        
+        // API yanıt formatını kontrol et
+        if (data is Map<String, dynamic>) {
+          List<dynamic> districtsData;
+          
+          if (data.containsKey('data') && data['data'] is List) {
+            districtsData = data['data'];
+          } 
+          else if (data.containsKey('districts') && data['districts'] is List) {
+            districtsData = data['districts'];
+          }
+          else if (data.containsKey('results') && data['results'] is List) {
+            districtsData = data['results'];
+          }
+          else {
+            print('Unexpected API response format for districts by city');
+            return await _getFallbackDistrictsByCityId(cityId);
+          }
+          
+          results = districtsData
+              .map((item) => District.fromJson(item))
+              .toList();
+          print('Parsed ${results.length} districts for city ID: $cityId');
+          return results;
+        } 
+        else if (data is List) {
+          results = data
+              .map((item) => District.fromJson(item))
+              .toList();
+          print('Parsed ${results.length} districts for city ID from list: $cityId');
+          return results;
+        }
+        else {
+          print('Unexpected districts by city data type');
+          return await _getFallbackDistrictsByCityId(cityId);
+        }
+      } else {
+        print('Failed to load districts by city: ${response.body}');
+        return await _getFallbackDistrictsByCityId(cityId);
+      }
+    } catch (e) {
+      print('Error fetching districts by city: $e');
+      return await _getFallbackDistrictsByCityId(cityId);
     }
   }
   
-  Future<District> getDistrictById(String id) async {
-    final response = await _client.get(Uri.parse('$baseUrl/districts/$id'));
-    
-    if (response.statusCode == 200) {
-      return District.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to load district: ${response.body}');
+  // Yedek ilçe listesi yükleme (şehir ID'sine göre)
+  Future<List<District>> _getFallbackDistrictsByCityId(String cityId) async {
+    print('Using fallback endpoint for districts by city ID: $cityId');
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/districts?city_id=$cityId'));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data is List) {
+          return data.map((item) => District.fromJson(item)).toList();
+        } else if (data is Map<String, dynamic> && data.containsKey('districts')) {
+          final List<dynamic> districtsData = data['districts'];
+          return districtsData.map((item) => District.fromJson(item)).toList();
+        } else {
+          print('Invalid fallback districts by city format');
+          return [];
+        }
+      } else {
+        print('Failed to load fallback districts by city: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching fallback districts by city: $e');
+      return [];
     }
   }
   
-  // Categories
-  Future<List<app_category.Category>> getCategories() async {
-    final response = await _client.get(Uri.parse('$baseUrl/categories'));
-    
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => app_category.Category.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load categories: ${response.body}');
+  Future<District?> getDistrictById(String id) async {
+    print('Fetching district details for ID: $id');
+    try {
+      // Laravel admin panel API entegrasyonu
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/districts/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('District details response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('data')) {
+            return District.fromJson(data['data']);
+          } else if (data.containsKey('district')) {
+            return District.fromJson(data['district']);
+          } else {
+            return District.fromJson(data);
+          }
+        } else {
+          print('Invalid district response format');
+          return await _getFallbackDistrictById(id);
+        }
+      } else {
+        print('Failed to load district: ${response.body}');
+        return await _getFallbackDistrictById(id);
+      }
+    } catch (e) {
+      print('Error fetching district: $e');
+      return await _getFallbackDistrictById(id);
     }
   }
   
-  Future<app_category.Category> getCategoryById(String id) async {
-    final response = await _client.get(Uri.parse('$baseUrl/categories/$id'));
-    
-    if (response.statusCode == 200) {
-      return app_category.Category.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to load category: ${response.body}');
+  // Yedek ilçe detay yükleme
+  Future<District?> _getFallbackDistrictById(String id) async {
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/districts/$id'));
+      
+      if (response.statusCode == 200) {
+        return District.fromJson(jsonDecode(response.body));
+      } else {
+        print('Failed to load fallback district: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching fallback district: $e');
+      return null;
     }
   }
   
