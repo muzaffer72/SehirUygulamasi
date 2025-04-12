@@ -1,0 +1,47 @@
+[
+  {
+    "id": 11,
+    "name": "Bronz Belediye Ödülü",
+    "description": "Şikayet çözüm oranı %25 ile %50 arasında olan belediyeler",
+    "icon_url": null,
+    "badge_url": null,
+    "color": "#CD7F32",
+    "points": 100,
+    "created_at": "2025-04-11T20:30:18.184Z",
+    "is_system": false,
+    "icon": "bronze_medal.png",
+    "min_rate": "25.00",
+    "max_rate": "49.99",
+    "badge_color": "#CD7F32"
+  },
+  {
+    "id": 12,
+    "name": "Gümüş Belediye Ödülü",
+    "description": "Şikayet çözüm oranı %50 ile %75 arasında olan belediyeler",
+    "icon_url": null,
+    "badge_url": null,
+    "color": "#C0C0C0",
+    "points": 200,
+    "created_at": "2025-04-11T20:30:18.184Z",
+    "is_system": false,
+    "icon": "silver_medal.png",
+    "min_rate": "50.00",
+    "max_rate": "74.99",
+    "badge_color": "#C0C0C0"
+  },
+  {
+    "id": 13,
+    "name": "Altın Belediye Ödülü",
+    "description": "Şikayet çözüm oranı %75 ve üzerinde olan belediyeler",
+    "icon_url": null,
+    "badge_url": null,
+    "color": "#FFD700",
+    "points": 300,
+    "created_at": "2025-04-11T20:30:18.184Z",
+    "is_system": false,
+    "icon": "gold_medal.png",
+    "min_rate": "75.00",
+    "max_rate": "100.00",
+    "badge_color": "#FFD700"
+  }
+]

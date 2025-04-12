@@ -28,59 +28,164 @@ if (isset($_GET['view_survey'])) {
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <p><strong>Kapsam:</strong> 
-                            <?php
-                            switch ($survey['scope_type']) {
-                                case 'general':
-                                    echo 'Genel (Tüm Türkiye)';
-                                    break;
-                                case 'city':
-                                    echo 'İl Bazlı: ' . get_city_name($survey['city_id']);
-                                    break;
-                                case 'district':
-                                    echo 'İlçe Bazlı: ' . get_district_name($survey['district_id']) . ', ' . get_city_name($survey['city_id']);
-                                    break;
-                            }
-                            ?>
-                        </p>
-                        <p><strong>Kategori:</strong> <?= get_category_name($survey['category_id']) ?></p>
-                        <p><strong>Durum:</strong> 
-                            <?= $survey['is_active'] 
-                                ? '<span class="badge text-bg-success">Aktif</span>' 
-                                : '<span class="badge text-bg-danger">Pasif</span>' ?>
-                        </p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Başlangıç:</strong> <?= htmlspecialchars($survey['start_date']) ?></p>
-                        <p><strong>Bitiş:</strong> <?= htmlspecialchars($survey['end_date']) ?></p>
-                        <p><strong>Toplam Oy:</strong> <?= number_format($survey['total_votes']) ?> / <?= number_format($survey['total_users']) ?> (<?= round(($survey['total_votes'] / $survey['total_users']) * 100, 1) ?>%)</p>
-                    </div>
-                </div>
-                
-                <h5 class="mb-3">Anket Seçenekleri</h5>
-                
-                <?php if (empty($survey['options'])): ?>
-                    <p class="text-muted">Bu anket için hiç seçenek tanımlanmamış.</p>
-                <?php else: ?>
-                    <?php foreach ($survey['options'] as $option): ?>
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between">
-                                <span><?= htmlspecialchars($option['text']) ?></span>
-                                <span><?= $option['vote_count'] ?> oy (<?= $survey['total_votes'] > 0 ? round(($option['vote_count'] / $survey['total_votes']) * 100, 1) : 0 ?>%)</span>
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Genel Bilgiler</h5>
                             </div>
-                            <div class="progress" style="height: 10px;">
-                                <div 
-                                    class="progress-bar" 
-                                    role="progressbar" 
-                                    style="width: <?= $survey['total_votes'] > 0 ? round(($option['vote_count'] / $survey['total_votes']) * 100, 1) : 0 ?>%;" 
-                                    aria-valuenow="<?= $option['vote_count'] ?>" 
-                                    aria-valuemin="0" 
-                                    aria-valuemax="<?= $survey['total_votes'] ?>">
+                            <div class="card-body">
+                                <p><strong>Kapsam:</strong> 
+                                    <?php
+                                    switch ($survey['scope_type']) {
+                                        case 'general':
+                                            echo 'Genel (Tüm Türkiye)';
+                                            break;
+                                        case 'city':
+                                            echo 'İl Bazlı: ' . get_city_name($survey['city_id']);
+                                            break;
+                                        case 'district':
+                                            echo 'İlçe Bazlı: ' . get_district_name($survey['district_id']) . ', ' . get_city_name($survey['city_id']);
+                                            break;
+                                    }
+                                    ?>
+                                </p>
+                                <p><strong>Kategori:</strong> <?= get_category_name($survey['category_id']) ?></p>
+                                <p><strong>Durum:</strong> 
+                                    <?= $survey['is_active'] 
+                                        ? '<span class="badge text-bg-success">Aktif</span>' 
+                                        : '<span class="badge text-bg-danger">Pasif</span>' ?>
+                                </p>
+                                <p><strong>Başlangıç:</strong> <?= htmlspecialchars($survey['start_date']) ?></p>
+                                <p><strong>Bitiş:</strong> <?= htmlspecialchars($survey['end_date']) ?></p>
+                                <p><strong>Toplam Oy:</strong> <?= number_format($survey['total_votes']) ?> / <?= number_format($survey['total_users']) ?> (<?= round(($survey['total_votes'] / $survey['total_users']) * 100, 1) ?>%)</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <a href="?page=surveys&edit_survey=<?= $survey['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil me-1"></i> Düzenle
+                                    </a>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="toggle-active-status" <?= $survey['is_active'] ? 'checked' : '' ?>>
+                                        <label class="form-check-label" for="toggle-active-status">Aktif/Pasif</label>
+                                        <script>
+                                            // Anket ID'sini JS tarafına aktar
+                                            window.surveyId = <?= $survey_id ?>;
+                                        </script>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Katılım Özeti</h5>
+                            </div>
+                            <div class="card-body d-flex flex-column justify-content-center">
+                                <div class="text-center mb-3">
+                                    <div class="display-4 fw-bold text-primary"><?= round(($survey['total_votes'] / $survey['total_users']) * 100, 1) ?>%</div>
+                                    <div class="text-muted">Katılım Oranı</div>
+                                </div>
+                                
+                                <div class="progress mb-3" style="height: 20px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                        style="width: <?= round(($survey['total_votes'] / $survey['total_users']) * 100, 1) ?>%;" 
+                                        aria-valuenow="<?= $survey['total_votes'] ?>" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="<?= $survey['total_users'] ?>">
+                                        <?= number_format($survey['total_votes']) ?> / <?= number_format($survey['total_users']) ?>
+                                    </div>
+                                </div>
+                                
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="h3 mb-0"><?= number_format($survey['total_votes']) ?></div>
+                                        <div class="text-muted">Oy Sayısı</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h3 mb-0"><?= number_format($survey['total_users']) ?></div>
+                                        <div class="text-muted">Hedef Kitle</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3" id="survey-options-chart">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Anket Seçenekleri</h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if (empty($survey['options'])): ?>
+                                    <p class="text-muted">Bu anket için hiç seçenek tanımlanmamış.</p>
+                                <?php else: ?>
+                                    <!-- Chart.js kütüphanesini ekleyelim -->
+                                    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+                                    
+                                    <script>
+                                        // Anket seçeneklerini grafikler için global değişkene aktarıyoruz
+                                        window.surveyOptions = <?= json_encode($survey['options']) ?>;
+                                        
+                                        // Bölgesel dağılım verisi (eğer varsa)
+                                        window.surveyRegionalData = [
+                                            // Örnek veri, gerçek uygulamada veritabanından gelir
+                                            {"name": "İstanbul", "vote_count": 120},
+                                            {"name": "Ankara", "vote_count": 85},
+                                            {"name": "İzmir", "vote_count": 65},
+                                            {"name": "Bursa", "vote_count": 45},
+                                            {"name": "Antalya", "vote_count": 30}
+                                        ];
+                                    </script>
+                                    
+                                    <?php foreach ($survey['options'] as $option): ?>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span><?= htmlspecialchars($option['text']) ?></span>
+                                                <span><?= $option['vote_count'] ?> oy (<?= $survey['total_votes'] > 0 ? round(($option['vote_count'] / $survey['total_votes']) * 100, 1) : 0 ?>%)</span>
+                                            </div>
+                                            <div class="progress" style="height: 15px;">
+                                                <div 
+                                                    class="progress-bar" 
+                                                    role="progressbar" 
+                                                    style="width: <?= $survey['total_votes'] > 0 ? round(($option['vote_count'] / $survey['total_votes']) * 100, 1) : 0 ?>%;" 
+                                                    aria-valuenow="<?= $option['vote_count'] ?>" 
+                                                    aria-valuemin="0" 
+                                                    aria-valuemax="<?= $survey['total_votes'] ?>">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Grafik Gösterimi</h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if (!empty($survey['options'])): ?>
+                                    <canvas id="options-chart" width="100%" height="250"></canvas>
+                                <?php else: ?>
+                                    <p class="text-muted">Grafik için yeterli veri yok.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <?php if ($survey['scope_type'] === 'general'): ?>
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Bölgesel Dağılım</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="regional-chart" width="100%" height="250"></canvas>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
         <?php
@@ -232,94 +337,15 @@ if (isset($_GET['add_survey'])) {
         </div>
     </div>
     
-    <script>
-        // Anket kapsamına göre seçenekleri göster/gizle
-        function toggleScopeOptions() {
-            const scopeType = document.getElementById('scope_type').value;
-            const cityOptions = document.getElementById('city-options');
-            const districtOptions = document.getElementById('district-options');
-            
-            // Tüm seçenekleri sıfırla
-            cityOptions.style.display = 'none';
-            districtOptions.style.display = 'none';
-            
-            // Seçime göre göster
-            if (scopeType === 'city') {
-                cityOptions.style.display = 'flex';
-            } else if (scopeType === 'district') {
-                districtOptions.style.display = 'flex';
-            }
-        }
-        
-        // İle göre ilçeleri yükle
-        function loadDistricts() {
-            const cityId = document.getElementById('district_city_id').value;
-            const districtSelect = document.getElementById('district_id');
-            
-            // Seçim yapılmadıysa ilçe seçimini devre dışı bırak
-            if (!cityId) {
-                districtSelect.disabled = true;
-                districtSelect.innerHTML = '<option value="">Önce il seçiniz...</option>';
-                return;
-            }
-            
-            // İlçeleri filtrele
-            const districts = <?= json_encode($districts) ?>;
-            const cityDistricts = districts.filter(d => d.city_id == cityId);
-            
-            // İlçe seçeneği yoksa uyarı göster
-            if (cityDistricts.length === 0) {
-                districtSelect.disabled = true;
-                districtSelect.innerHTML = '<option value="">Bu il için ilçe tanımlanmamış</option>';
-                return;
-            }
-            
-            // İlçeleri yükle
-            districtSelect.disabled = false;
-            districtSelect.innerHTML = '<option value="">Seçiniz...</option>';
-            
-            cityDistricts.forEach(district => {
-                const option = document.createElement('option');
-                option.value = district.id;
-                option.textContent = district.name;
-                districtSelect.appendChild(option);
-            });
-        }
-        
-        // Yeni seçenek ekle
-        function addOption() {
-            const container = document.getElementById('options-container');
-            const optionCount = container.children.length + 1;
-            
-            const optionDiv = document.createElement('div');
-            optionDiv.className = 'input-group mb-2';
-            optionDiv.innerHTML = `
-                <input type="text" class="form-control" name="options[]" placeholder="Seçenek ${optionCount}" required>
-                <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">Sil</button>
-            `;
-            
-            container.appendChild(optionDiv);
-        }
-        
-        // Seçenek sil
-        function removeOption(button) {
-            const container = document.getElementById('options-container');
-            
-            // En az 2 seçenek olmalı
-            if (container.children.length <= 2) {
-                alert('En az 2 seçenek olmalıdır.');
-                return;
-            }
-            
-            button.parentElement.remove();
-            
-            // Kalan seçeneklerin placeholderlarını güncelle
-            Array.from(container.children).forEach((div, index) => {
-                const input = div.querySelector('input');
-                input.placeholder = `Seçenek ${index + 1}`;
-            });
-        }
-    </script>
+    <!-- Chart.js kütüphanesini dahil et - spesifik versiyon belirterek -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<!-- Anketler sayfası JS dosyasını yükle -->
+<script>
+    // İlçeleri global değişkene aktar (loadDistricts fonksiyonunda kullanılıyor)
+    window.allDistricts = <?= json_encode($districts) ?>;
+</script>
+<script src="js/surveys.js"></script>
     <?php
     return;
 }
@@ -328,11 +354,86 @@ if (isset($_GET['add_survey'])) {
 ?>
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span>Anketler</span>
+        <div class="d-flex align-items-center">
+            <span class="me-2">Anketler</span>
+            <button class="btn btn-sm btn-outline-secondary" id="toggle-filters">
+                <i class="bi bi-funnel me-1"></i> Filtrele
+                <i class="bi bi-chevron-down ms-1" id="filter-toggle-icon"></i>
+            </button>
+        </div>
         <a href="?page=surveys&add_survey=1" class="btn btn-sm btn-primary">
             <i class="bi bi-plus"></i> Yeni Anket Ekle
         </a>
     </div>
+    
+    <!-- Filtreleme seçenekleri -->
+    <div class="card-body border-bottom" id="filter-content">
+        <form id="survey-filter-form" method="get" action="">
+            <input type="hidden" name="page" value="surveys">
+            
+            <div class="row g-3">
+                <!-- Statü filtresi -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Durum</label>
+                        <select name="status" class="form-select">
+                            <option value="">Tümü</option>
+                            <option value="active" <?= isset($_GET['status']) && $_GET['status'] === 'active' ? 'selected' : '' ?>>Aktif</option>
+                            <option value="inactive" <?= isset($_GET['status']) && $_GET['status'] === 'inactive' ? 'selected' : '' ?>>Pasif</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Kapsam filtresi -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Kapsam</label>
+                        <select name="scope_type" class="form-select">
+                            <option value="">Tümü</option>
+                            <option value="general" <?= isset($_GET['scope_type']) && $_GET['scope_type'] === 'general' ? 'selected' : '' ?>>Genel</option>
+                            <option value="city" <?= isset($_GET['scope_type']) && $_GET['scope_type'] === 'city' ? 'selected' : '' ?>>İl Bazlı</option>
+                            <option value="district" <?= isset($_GET['scope_type']) && $_GET['scope_type'] === 'district' ? 'selected' : '' ?>>İlçe Bazlı</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Kategori filtresi -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Kategori</label>
+                        <select name="category_id" class="form-select">
+                            <option value="">Tümü</option>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?= $category['id'] ?>" <?= isset($_GET['category_id']) && $_GET['category_id'] == $category['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($category['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Tarih aralığı filtresi -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Tarih Aralığı</label>
+                        <div class="input-group input-group-sm">
+                            <input type="date" class="form-control" name="start_date" id="filter_start_date" 
+                                value="<?= isset($_GET['start_date']) ? $_GET['start_date'] : '' ?>">
+                            <span class="input-group-text">-</span>
+                            <input type="date" class="form-control" name="end_date" id="filter_end_date"
+                                value="<?= isset($_GET['end_date']) ? $_GET['end_date'] : '' ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3 text-end">
+                <a href="?page=surveys" class="btn btn-sm btn-outline-secondary me-2">Sıfırla</a>
+                <button type="submit" class="btn btn-sm btn-primary">Filtrele</button>
+            </div>
+        </form>
+    </div>
+    
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover">

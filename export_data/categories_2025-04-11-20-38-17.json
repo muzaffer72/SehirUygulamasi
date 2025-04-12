@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "name": "Altyapı",
+    "icon_name": "construction",
+    "created_at": "2025-04-09T18:59:03.290Z"
+  },
+  {
+    "id": 2,
+    "name": "Ulaşım",
+    "icon_name": "directions_bus",
+    "created_at": "2025-04-09T18:59:03.290Z"
+  },
+  {
+    "id": 3,
+    "name": "Çevre",
+    "icon_name": "nature",
+    "created_at": "2025-04-09T18:59:03.290Z"
+  },
+  {
+    "id": 4,
+    "name": "Güvenlik",
+    "icon_name": "security",
+    "created_at": "2025-04-09T18:59:03.290Z"
+  },
+  {
+    "id": 5,
+    "name": "Sağlık",
+    "icon_name": "local_hospital",
+    "created_at": "2025-04-09T18:59:03.290Z"
+  },
+  {
+    "id": 6,
+    "name": "Eğitim",
+    "icon_name": "school",
+    "created_at": "2025-04-09T18:59:03.290Z"
+  },
+  {
+    "id": 7,
+    "name": "Kültür & Sanat",
+    "icon_name": "theater_comedy",
+    "created_at": "2025-04-09T18:59:03.290Z"
+  },
+  {
+    "id": 8,
+    "name": "Sosyal Hizmetler",
+    "icon_name": "people",
+    "created_at": "2025-04-09T18:59:03.290Z"
+  },
+  {
+    "id": 9,
+    "name": "Diğer",
+    "icon_name": "more_horiz",
+    "created_at": "2025-04-09T18:59:03.290Z"
+  }
+]

@@ -20,7 +20,12 @@ const connectionConfig = {
 };
 
 // PostgreSQL bağlantı havuzu oluştur
-export const pool = new Pool(connectionConfig);
+export const pool = new Pool({
+  ...connectionConfig,
+  ssl: {
+    rejectUnauthorized: false // SSL sertifikası doğrulama gerektirmez
+  }
+});
 
 // Drizzle ORM ile bağlan
 export const db = drizzle(pool, { schema });

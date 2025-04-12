@@ -1,4 +1,4 @@
-import { pgTable, serial, text, varchar, boolean, integer, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, varchar, boolean, integer, timestamp, date } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enum değerlerini basit string olarak tanımlayalım
@@ -34,6 +34,8 @@ export const cities = pgTable('cities', {
   contactPhone: varchar('contact_phone', { length: 50 }),
   emergencyPhone: varchar('emergency_phone', { length: 50 }),
   website: varchar('website', { length: 100 }),
+  // Sorunların çözüm oranı (%)
+  problemSolvingRate: integer('problem_solving_rate').default(0),
   // Ayın Belediyesi özellikleri
   isBestOfMonth: boolean('is_best_of_month').default(false),
   awardMonth: varchar('award_month', { length: 20 }),
@@ -47,6 +49,8 @@ export const districts = pgTable('districts', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
   cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
+  // Sorunların çözüm oranı (%)
+  problemSolvingRate: integer('problem_solving_rate').default(0),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -189,6 +193,29 @@ export const cityProjects = pgTable('city_projects', {
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
+// Kullanıcı beğenileri tablosu
+export const userLikes = pgTable('user_likes', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  postId: integer('post_id').references(() => posts.id, { onDelete: 'cascade' }),
+  commentId: integer('comment_id').references(() => comments.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Kullanıcı bildirimleri tablosu
+export const notifications = pgTable('notifications', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  content: text('content').notNull(),
+  type: varchar('type', { length: 50 }).notNull(), // 'like', 'comment', 'reply', 'status_update', 'system'
+  isRead: boolean('is_read').default(false).notNull(),
+  sourceId: integer('source_id'), // İlgili kaynak ID (post, comment vb.)
+  sourceType: varchar('source_type', { length: 50 }), // 'post', 'comment', 'reply'
+  data: text('data'), // JSON olarak ek veriler
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
 // Şehir Etkinlikleri tablosu
 export const cityEvents = pgTable('city_events', {
   id: serial('id').primaryKey(),
@@ -214,10 +241,61 @@ export const cityStats = pgTable('city_stats', {
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
+// Ödül Türleri Tablosu
+export const awardTypes = pgTable('award_types', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  iconUrl: text('icon_url'),
+  badgeUrl: text('badge_url'),
+  color: varchar('color', { length: 20 }),
+  points: integer('points').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Belediye Ödülleri Tablosu
+export const cityAwards = pgTable('city_awards', {
+  id: serial('id').primaryKey(),
+  cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
+  awardTypeId: integer('award_type_id').notNull().references(() => awardTypes.id),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  awardDate: date('award_date').notNull(),
+  issuer: varchar('issuer', { length: 100 }), // kim tarafından verildiği
+  certificateUrl: text('certificate_url'), // sertifika görseli
+  featured: boolean('featured').default(false).notNull(), // öne çıkan ödül mü?
+  projectId: integer('project_id').references(() => cityProjects.id), // hangi projeyle ilgili (opsiyonel)
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
 // İlişki tanımlamaları
+export const userLikesRelations = relations(userLikes, ({ one }) => ({
+  user: one(users, {
+    fields: [userLikes.userId],
+    references: [users.id]
+  }),
+  post: one(posts, {
+    fields: [userLikes.postId],
+    references: [posts.id]
+  }),
+  comment: one(comments, {
+    fields: [userLikes.commentId],
+    references: [comments.id]
+  })
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id]
+  })
+}));
+
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
-  comments: many(comments)
+  comments: many(comments),
+  likes: many(userLikes),
+  notifications: many(notifications)
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -238,7 +316,8 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
     references: [districts.id]
   }),
   comments: many(comments),
-  media: many(media)
+  media: many(media),
+  likes: many(userLikes)
 }));
 
 export const commentsRelations = relations(comments, ({ one, many }) => ({
@@ -254,7 +333,8 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
     fields: [comments.parentId],
     references: [comments.id]
   }),
-  replies: many(comments)
+  replies: many(comments),
+  likes: many(userLikes)
 }));
 
 export const mediaRelations = relations(media, ({ one }) => ({
@@ -321,7 +401,8 @@ export const citiesRelations = relations(cities, ({ many }) => ({
   services: many(citiesServices),
   projects: many(cityProjects),
   events: many(cityEvents),
-  stats: many(cityStats)
+  stats: many(cityStats),
+  awards: many(cityAwards)
 }));
 
 export const cityServicesRelations = relations(cityServices, ({ many }) => ({
@@ -357,5 +438,24 @@ export const cityStatsRelations = relations(cityStats, ({ one }) => ({
   city: one(cities, {
     fields: [cityStats.cityId],
     references: [cities.id]
+  })
+}));
+
+export const awardTypesRelations = relations(awardTypes, ({ many }) => ({
+  awards: many(cityAwards)
+}));
+
+export const cityAwardsRelations = relations(cityAwards, ({ one }) => ({
+  city: one(cities, {
+    fields: [cityAwards.cityId],
+    references: [cities.id]
+  }),
+  awardType: one(awardTypes, {
+    fields: [cityAwards.awardTypeId],
+    references: [awardTypes.id]
+  }),
+  project: one(cityProjects, {
+    fields: [cityAwards.projectId],
+    references: [cityProjects.id]
   })
 }));

@@ -8,163 +8,198 @@ require_once 'db_config.php';
 require_once 'db_connection.php';
 $db = $conn; // MySQLiCompatWrapper'i $db değişkenine atayalım
 
+// Başarı mesajı varsa
+$success_message = isset($_GET['success']) ? urldecode($_GET['success']) : null;
+
+// Admin yetki kontrolü fonksiyonu
+function requireAdmin() {
+    if (!isset($_SESSION['user'])) {
+        header('Location: index.php');
+        exit;
+    }
+}
+
+// Helper functions for displaying posts
+function get_status_label($status) {
+    if (!$status) return '<span class="badge text-bg-secondary">Bilinmiyor</span>';
+    
+    switch($status) {
+        case 'awaitingSolution':
+            return '<span class="badge text-bg-warning">Çözüm Bekliyor</span>';
+        case 'inProgress':
+            return '<span class="badge text-bg-info">İşleme Alındı</span>';
+        case 'solved':
+            return '<span class="badge text-bg-success">Çözüldü</span>';
+        case 'rejected':
+            return '<span class="badge text-bg-danger">Reddedildi</span>';
+        default:
+            return '<span class="badge text-bg-secondary">Bilinmiyor</span>';
+    }
+}
+
 // Configuration
 $config = [
     'admin_user' => 'admin',
     'admin_pass' => 'admin123' // In a production environment, use hashed passwords
 ];
 
-// Mock data (would come from the database in a real application)
-$posts = [
-    [
-        'id' => 1,
-        'title' => 'Sokak lambası çalışmıyor',
-        'content' => 'Evimin önündeki sokak lambası 3 gündür çalışmıyor. Akşamları dışarı çıkmak tehlikeli oluyor.',
-        'user_id' => 2,
-        'city_id' => 34, // İstanbul
-        'district_id' => 4, // Beşiktaş
-        'category_id' => 1, // Altyapı
-        'status' => 'inProgress',
-        'likes' => 25,
-        'highlights' => 5,
-        'created_at' => '2024-01-15 14:30:00'
-    ],
-    [
-        'id' => 2,
-        'title' => 'Çöpler toplanmıyor',
-        'content' => 'Mahallemizde çöpler düzenli toplanmıyor. Kötü koku ve sağlık sorunlarına yol açıyor.',
-        'user_id' => 3,
-        'city_id' => 6, // Ankara
-        'district_id' => 12, // Çankaya
-        'category_id' => 2, // Temizlik
-        'status' => 'awaitingSolution',
-        'likes' => 42,
-        'highlights' => 12,
-        'created_at' => '2024-01-20 09:15:00'
-    ],
-    [
-        'id' => 3,
-        'title' => 'Otobüs durağı hasarlı',
-        'content' => 'Ana caddedeki otobüs durağının camları kırık ve oturacak yerler hasarlı. Yağmurlu havalarda beklemek imkansız oluyor.',
-        'user_id' => 1,
-        'city_id' => 35, // İzmir
-        'district_id' => 18, // Konak
-        'category_id' => 3, // Ulaşım
-        'status' => 'solved',
-        'likes' => 18,
-        'highlights' => 3,
-        'created_at' => '2024-01-25 16:45:00'
-    ],
-];
+// Veritabanından posts'ları al
+try {
+    $query = "
+        SELECT p.*, c.name as city_name, d.name as district_name, cat.name as category_name, 
+               u.email as user_email, u.name as user_name, u.username as user_username
+        FROM posts p
+        LEFT JOIN cities c ON p.city_id = c.id
+        LEFT JOIN districts d ON p.district_id = d.id
+        LEFT JOIN categories cat ON p.category_id = cat.id
+        LEFT JOIN users u ON p.user_id = u.id
+        WHERE 1=1
+     ORDER BY p.created_at DESC LIMIT ? OFFSET ?
+    ";
+    $stmt = $db->prepare($query);
+    // Sayfalama için parametreleri hazırla
+    $posts_per_page = 16; // Sayfa başına gösterilecek kayıt sayısı
+    $current_page = isset($_GET['paged']) && is_numeric($_GET['paged']) ? intval($_GET['paged']) : 1;
+    $offset = ($current_page - 1) * $posts_per_page;
+    $limit = $posts_per_page;
+    
+    $stmt->bind_param("ii", $limit, $offset);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $posts = [];
+    while ($row = $result->fetch_assoc()) {
+        $posts[] = $row;
+    }
+    
+    // Toplam kayıt sayısını al
+    $count_query = "
+        SELECT COUNT(*) as total 
+        FROM posts p
+        WHERE 1=1
+    ";
+    $count_stmt = $db->prepare($count_query);
+    $count_stmt->execute();
+    $count_result = $count_stmt->get_result();
+    $total_posts = $count_result->fetch_assoc()['total'];
+} catch (Exception $e) {
+    echo '<div class="alert alert-danger">Veritabanı hatası: ' . $e->getMessage() . '</div>';
+    $posts = [];
+    $total_posts = 0;
+}
 
-$users = [
-    [
-        'id' => 1,
-        'name' => 'Ahmet Yılmaz',
-        'email' => 'ahmet@example.com',
-        'is_verified' => true,
-        'city_id' => 35,
-        'district_id' => 18,
-        'created_at' => '2023-12-01 10:00:00'
-    ],
-    [
-        'id' => 2,
-        'name' => 'Ayşe Kaya',
-        'email' => 'ayse@example.com',
-        'is_verified' => true,
-        'city_id' => 34,
-        'district_id' => 4,
-        'created_at' => '2023-12-05 14:30:00'
-    ],
-    [
-        'id' => 3,
-        'name' => 'Mehmet Demir',
-        'email' => 'mehmet@example.com',
-        'is_verified' => false,
-        'city_id' => 6,
-        'district_id' => 12,
-        'created_at' => '2023-12-10 09:15:00'
-    ],
-];
+// Kullanıcıları veritabanından al
+try {
+    $query = "SELECT * FROM users ORDER BY id DESC LIMIT 50";
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $users = [];
+    while ($row = $result->fetch_assoc()) {
+        $users[] = $row;
+    }
+} catch (Exception $e) {
+    echo '<div class="alert alert-danger">Kullanıcı verilerini alma hatası: ' . $e->getMessage() . '</div>';
+    $users = [];
+}
 
-$surveys = [
-    [
-        'id' => 1,
-        'title' => 'Yeni park projesi',
-        'short_title' => 'Park Anketi',
-        'description' => 'Mahallemize yapılacak yeni park için hangisi daha uygun olur?',
-        'city_id' => 34,
-        'category_id' => 4,
-        'scope_type' => 'city',
-        'is_active' => true,
-        'start_date' => '2024-02-01',
-        'end_date' => '2024-05-01',
-        'total_votes' => 125,
-        'total_users' => 500, // Görüntülenen toplam kullanıcı sayısı
-        'options' => [
-            ['id' => 1, 'text' => 'Çocuk oyun alanları ağırlıklı park', 'vote_count' => 75],
-            ['id' => 2, 'text' => 'Spor alanları ağırlıklı park', 'vote_count' => 35],
-            ['id' => 3, 'text' => 'Piknik alanları ağırlıklı park', 'vote_count' => 15]
-        ]
-    ],
-    [
-        'id' => 2,
-        'title' => 'Toplu taşıma saatleri',
-        'short_title' => 'Otobüs Saatleri',
-        'description' => 'Otobüs seferlerinin hangi saatlerde artırılmasını istersiniz?',
-        'city_id' => 6,
-        'category_id' => 3,
-        'scope_type' => 'general',
-        'is_active' => true,
-        'start_date' => '2024-02-15',
-        'end_date' => '2024-06-15',
-        'total_votes' => 210,
-        'total_users' => 800, // Görüntülenen toplam kullanıcı sayısı
-        'options' => [
-            ['id' => 1, 'text' => 'Sabah (07:00-09:00)', 'vote_count' => 95],
-            ['id' => 2, 'text' => 'Öğle (12:00-14:00)', 'vote_count' => 25],
-            ['id' => 3, 'text' => 'Akşam (17:00-19:00)', 'vote_count' => 90]
-        ]
-    ],
-    [
-        'id' => 3,
-        'title' => 'Şehir içi bisiklet yolları talebi',
-        'short_title' => 'Bisiklet Yolları',
-        'description' => 'Şehir içinde yeni bisiklet yolları yapılmasını istiyor musunuz?',
-        'city_id' => 34,
-        'district_id' => 4,
-        'category_id' => 3,
-        'scope_type' => 'district',
-        'is_active' => true,
-        'start_date' => '2024-03-01',
-        'end_date' => '2024-05-30',
-        'total_votes' => 85,
-        'total_users' => 350, // Görüntülenen toplam kullanıcı sayısı
-        'options' => [
-            ['id' => 1, 'text' => 'Evet, daha fazla bisiklet yolu istiyorum', 'vote_count' => 65],
-            ['id' => 2, 'text' => 'Hayır, mevcut yollar yeterli', 'vote_count' => 20]
-        ]
-    ]
-];
+// Şehirleri veritabanından al
+try {
+    $query = "SELECT id, name FROM cities ORDER BY name ASC";
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $cities = [];
+    while ($row = $result->fetch_assoc()) {
+        $cities[] = $row;
+    }
+} catch (Exception $e) {
+    echo '<div class="alert alert-danger">Şehir verilerini alma hatası: ' . $e->getMessage() . '</div>';
+    $cities = [];
+}
 
-$cities = [
-    ['id' => 6, 'name' => 'Ankara'],
-    ['id' => 34, 'name' => 'İstanbul'],
-    ['id' => 35, 'name' => 'İzmir']
-];
+// İlçeleri veritabanından al
+try {
+    $query = "SELECT * FROM districts ORDER BY name ASC";
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $districts = [];
+    while ($row = $result->fetch_assoc()) {
+        $districts[] = $row;
+    }
+} catch (Exception $e) {
+    echo '<div class="alert alert-danger">İlçe verilerini alma hatası: ' . $e->getMessage() . '</div>';
+    $districts = [];
+}
 
-$districts = [
-    ['id' => 4, 'name' => 'Beşiktaş', 'city_id' => 34],
-    ['id' => 12, 'name' => 'Çankaya', 'city_id' => 6],
-    ['id' => 18, 'name' => 'Konak', 'city_id' => 35]
-];
+// Kategorileri veritabanından al
+try {
+    $query = "SELECT * FROM categories ORDER BY name ASC";
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $categories = [];
+    while ($row = $result->fetch_assoc()) {
+        $categories[] = $row;
+    }
+} catch (Exception $e) {
+    echo '<div class="alert alert-danger">Kategori verilerini alma hatası: ' . $e->getMessage() . '</div>';
+    $categories = [];
+}
 
-$categories = [
-    ['id' => 1, 'name' => 'Altyapı', 'icon_name' => 'build'],
-    ['id' => 2, 'name' => 'Temizlik', 'icon_name' => 'cleaning_services'],
-    ['id' => 3, 'name' => 'Ulaşım', 'icon_name' => 'directions_bus'],
-    ['id' => 4, 'name' => 'Park ve Bahçeler', 'icon_name' => 'nature']
-];
+// Anketleri veritabanından al
+$surveys = [];
+try {
+    $query = "
+        SELECT s.*, c.name as category_name, 
+               city.name as city_name, d.name as district_name
+        FROM surveys s
+        LEFT JOIN categories c ON s.category_id = c.id
+        LEFT JOIN cities city ON s.city_id = city.id
+        LEFT JOIN districts d ON s.district_id = d.id
+        ORDER BY s.created_at DESC
+        LIMIT 10
+    ";
+    
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $surveys = [];
+    while ($row = $result->fetch_assoc()) {
+        $surveys[] = $row;
+    }
+    
+    // Her anket için oy seçeneklerini ve toplam oyları getir
+    foreach ($surveys as &$survey) {
+        $options_query = "
+            SELECT id, text, vote_count
+            FROM survey_options
+            WHERE survey_id = ?
+            ORDER BY id ASC
+        ";
+        
+        $options_stmt = $db->prepare($options_query);
+        $survey_id = isset($survey['id']) ? $survey['id'] : 0;
+        $options_stmt->bind_param("i", $survey_id);
+        $options_stmt->execute();
+        $options_result = $options_stmt->get_result();
+        $options = [];
+        while ($row = $options_result->fetch_assoc()) {
+            $options[] = $row;
+        }
+        
+        // Toplam oy sayısını hesapla
+        $total_votes = 0;
+        foreach ($options as $option) {
+            $total_votes += intval($option['vote_count']);
+        }
+        
+        $survey['options'] = $options;
+        $survey['total_votes'] = $total_votes;
+    }
+} catch (Exception $e) {
+    echo '<div class="alert alert-danger">Anket verilerini alma hatası: ' . $e->getMessage() . '</div>';
+}
 
 // Authentication
 if (isset($_POST['login'])) {
@@ -221,56 +256,46 @@ if (isset($_POST['verify_user'])) {
 }
 
 // Helper functions
-function get_status_label($status) {
-    switch ($status) {
-        case 'awaitingSolution':
-            return '<span class="badge text-bg-warning">Çözüm Bekliyor</span>';
-        case 'inProgress':
-            return '<span class="badge text-bg-primary">İşleme Alındı</span>';
-        case 'solved':
-            return '<span class="badge text-bg-success">Çözüldü</span>';
-        case 'rejected':
-            return '<span class="badge text-bg-danger">Reddedildi</span>';
-        default:
-            return '<span class="badge text-bg-secondary">Bilinmiyor</span>';
-    }
-}
 
 function get_city_name($city_id) {
+    if (!$city_id) return 'Bilinmiyor';
     global $cities;
     foreach ($cities as $city) {
-        if ($city['id'] == $city_id) {
-            return $city['name'];
+        if (isset($city['id']) && $city['id'] == $city_id) {
+            return isset($city['name']) ? $city['name'] : 'Bilinmiyor';
         }
     }
     return 'Bilinmiyor';
 }
 
 function get_district_name($district_id) {
+    if (!$district_id) return 'Bilinmiyor';
     global $districts;
     foreach ($districts as $district) {
-        if ($district['id'] == $district_id) {
-            return $district['name'];
+        if (isset($district['id']) && $district['id'] == $district_id) {
+            return isset($district['name']) ? $district['name'] : 'Bilinmiyor';
         }
     }
     return 'Bilinmiyor';
 }
 
 function get_category_name($category_id) {
+    if (!$category_id) return 'Bilinmiyor';
     global $categories;
     foreach ($categories as $category) {
-        if ($category['id'] == $category_id) {
-            return $category['name'];
+        if (isset($category['id']) && $category['id'] == $category_id) {
+            return isset($category['name']) ? $category['name'] : 'Bilinmiyor';
         }
     }
     return 'Bilinmiyor';
 }
 
 function get_user_name($user_id) {
+    if (!$user_id) return 'Bilinmiyor';
     global $users;
     foreach ($users as $user) {
-        if ($user['id'] == $user_id) {
-            return $user['name'];
+        if (isset($user['id']) && $user['id'] == $user_id) {
+            return isset($user['name']) ? $user['name'] : 'Bilinmiyor';
         }
     }
     return 'Bilinmiyor';
@@ -283,19 +308,19 @@ $active_surveys = 0;
 $verified_users = 0;
 
 foreach ($posts as $post) {
-    if ($post['status'] === 'solved') {
+    if (isset($post['status']) && $post['status'] === 'solved') {
         $solved_posts++;
     }
 }
 
 foreach ($surveys as $survey) {
-    if ($survey['is_active']) {
+    if (isset($survey['is_active']) && $survey['is_active']) {
         $active_surveys++;
     }
 }
 
 foreach ($users as $user) {
-    if ($user['is_verified']) {
+    if (isset($user['is_verified']) && $user['is_verified']) {
         $verified_users++;
     }
 }
@@ -314,6 +339,7 @@ $page_file = "pages/{$page}.php";
     <title>ŞikayetVar - Admin Panel</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -344,6 +370,22 @@ $page_file = "pages/{$page}.php";
         }
         .sidebar i {
             margin-right: 10px;
+        }
+        /* Mobil navigasyon stilleri */
+        .navbar-dark .navbar-toggler {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .navbar-dark .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        .navbar-dark .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .navbar-dark .nav-link.active {
+            color: #fff;
+        }
+        .navbar-dark .nav-link:hover {
+            color: #fff;
         }
         .content {
             padding: 20px;
@@ -401,6 +443,45 @@ $page_file = "pages/{$page}.php";
         .post-card:hover {
             transform: translateY(-5px);
         }
+        /* 4'lü grid için özel styling */
+        .col-lg-25p {
+            width: 25%;
+            -ms-flex: 0 0 25%;
+            flex: 0 0 25%;
+            max-width: 25%;
+        }
+        @media (max-width: 1199.98px) {
+            .col-lg-25p {
+                width: 33.333333%;
+                -ms-flex: 0 0 33.333333%;
+                flex: 0 0 33.333333%;
+                max-width: 33.333333%;
+            }
+        }
+        @media (max-width: 991.98px) {
+            .col-lg-25p {
+                width: 50%;
+                -ms-flex: 0 0 50%;
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+        }
+        @media (max-width: 767.98px) {
+            .col-lg-25p {
+                width: 50%;
+                -ms-flex: 0 0 50%;
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+        }
+        @media (max-width: 575.98px) {
+            .col-lg-25p {
+                width: 100%;
+                -ms-flex: 0 0 100%;
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -432,8 +513,87 @@ $page_file = "pages/{$page}.php";
         <!-- Admin Dashboard -->
         <div class="container-fluid">
             <div class="row">
-                <!-- Sidebar -->
-                <div class="col-md-3 col-lg-2 p-0 sidebar">
+                <!-- Mobile Nav -->
+                <nav class="navbar navbar-expand-lg navbar-dark bg-dark d-lg-none mb-4">
+                    <div class="container-fluid">
+                        <a class="navbar-brand" href="#">ŞikayetVar</a>
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNavbar" aria-controls="mobileNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="mobileNavbar">
+                            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'dashboard' ? 'active' : '' ?>" href="?page=dashboard">
+                                        <i class="bi bi-speedometer2"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'posts' ? 'active' : '' ?>" href="?page=posts">
+                                        <i class="bi bi-file-earmark-text"></i> Şikayetler
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'surveys' ? 'active' : '' ?>" href="?page=surveys">
+                                        <i class="bi bi-bar-chart"></i> Anketler
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'users' ? 'active' : '' ?>" href="?page=users">
+                                        <i class="bi bi-people"></i> Kullanıcılar
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'settings' ? 'active' : '' ?>" href="?page=settings">
+                                        <i class="bi bi-gear"></i> Ayarlar
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'profanity_filter' ? 'active' : '' ?>" href="?page=profanity_filter">
+                                        <i class="bi bi-shield-exclamation"></i> Küfür Filtresi
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'cities' ? 'active' : '' ?>" href="?page=cities">
+                                        <i class="bi bi-buildings"></i> Şehirler
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'districts' ? 'active' : '' ?>" href="?page=districts">
+                                        <i class="bi bi-geo-alt"></i> İlçeler
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'award_system' ? 'active' : '' ?>" href="?page=award_system">
+                                        <i class="bi bi-trophy"></i> Ödül Sistemi
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'comments' ? 'active' : '' ?>" href="?page=comments">
+                                        <i class="bi bi-chat-dots"></i> Yorumlar
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'user_likes' ? 'active' : '' ?>" href="?page=user_likes">
+                                        <i class="bi bi-heart"></i> Beğeniler
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'notifications' ? 'active' : '' ?>" href="?page=notifications">
+                                        <i class="bi bi-bell"></i> Bildirimler
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="?logout=1">
+                                        <i class="bi bi-box-arrow-right"></i> Çıkış Yap
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+
+                <!-- Sidebar (desktop only) -->
+                <div class="col-md-3 col-lg-2 p-0 sidebar d-none d-lg-block">
                     <div class="app-title">ŞikayetVar</div>
                     <nav>
                         <a href="?page=dashboard" class="<?= $page === 'dashboard' ? 'active' : '' ?>">
@@ -451,14 +611,26 @@ $page_file = "pages/{$page}.php";
                         <a href="?page=settings" class="<?= $page === 'settings' ? 'active' : '' ?>">
                             <i class="bi bi-gear"></i> Ayarlar
                         </a>
-                        <a href="?page=profanity_filter" class="<?= $page === 'profanity_filter' ? 'active' : '' ?>">
-                            <i class="bi bi-shield-exclamation"></i> Küfür Filtresi
-                        </a>
                         <a href="?page=cities" class="<?= $page === 'cities' ? 'active' : '' ?>">
                             <i class="bi bi-buildings"></i> Şehirler
                         </a>
+                        <a href="?page=profanity_filter" class="<?= $page === 'profanity_filter' ? 'active' : '' ?>">
+                            <i class="bi bi-shield-exclamation"></i> Küfür Filtresi
+                        </a>
                         <a href="?page=districts" class="<?= $page === 'districts' ? 'active' : '' ?>">
                             <i class="bi bi-geo-alt"></i> İlçeler
+                        </a>
+                        <a href="?page=award_system" class="<?= $page === 'award_system' ? 'active' : '' ?>">
+                            <i class="bi bi-trophy"></i> Ödül Sistemi
+                        </a>
+                        <a href="?page=comments" class="<?= $page === 'comments' ? 'active' : '' ?>">
+                            <i class="bi bi-chat-dots"></i> Yorumlar
+                        </a>
+                        <a href="?page=user_likes" class="<?= $page === 'user_likes' ? 'active' : '' ?>">
+                            <i class="bi bi-heart"></i> Beğeniler
+                        </a>
+                        <a href="?page=notifications" class="<?= $page === 'notifications' ? 'active' : '' ?>">
+                            <i class="bi bi-bell"></i> Bildirimler
                         </a>
                         <a href="?logout=1" class="mt-5">
                             <i class="bi bi-box-arrow-right"></i> Çıkış Yap
@@ -467,7 +639,7 @@ $page_file = "pages/{$page}.php";
                 </div>
 
                 <!-- Main Content -->
-                <div class="col-md-9 col-lg-10 content">
+                <div class="col-md-12 col-lg-10 content">
                     <?php if (isset($success_message)): ?>
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <?= $success_message ?>
@@ -500,16 +672,48 @@ $page_file = "pages/{$page}.php";
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach (array_slice($posts, 0, 5) as $post): ?>
+                                            <?php 
+                                            // Şikayetleri dinamik olarak getir 
+                                            try {
+                                                $latest_query = "
+                                                    SELECT p.*, c.name as city_name, d.name as district_name, 
+                                                            u.name as user_name, u.username as user_username
+                                                    FROM posts p
+                                                    LEFT JOIN cities c ON p.city_id = c.id
+                                                    LEFT JOIN districts d ON p.district_id = d.id 
+                                                    LEFT JOIN users u ON p.user_id = u.id
+                                                    ORDER BY p.created_at DESC LIMIT 5
+                                                ";
+                                                $latest_stmt = $db->prepare($latest_query);
+                                                $latest_stmt->execute();
+                                                $latest_result = $latest_stmt->get_result();
+                                                $latest_posts = [];
+                                                while ($row = $latest_result->fetch_assoc()) {
+                                                    $latest_posts[] = $row;
+                                                }
+                                            } catch (Exception $e) {
+                                                $latest_posts = [];
+                                            }
+
+                                            if (count($latest_posts) > 0): 
+                                                foreach ($latest_posts as $post): 
+                                            ?>
                                             <tr>
-                                                <td><?= $post['id'] ?></td>
-                                                <td><?= $post['title'] ?></td>
-                                                <td><?= get_user_name($post['user_id']) ?></td>
-                                                <td><?= get_city_name($post['city_id']) ?>, <?= get_district_name($post['district_id']) ?></td>
-                                                <td><?= get_status_label($post['status']) ?></td>
-                                                <td><?= date('d.m.Y', strtotime($post['created_at'])) ?></td>
+                                                <td><?= $post['id'] ?? '?' ?></td>
+                                                <td><?= $post['title'] ?? 'Başlıksız' ?></td>
+                                                <td><?= $post['user_name'] ?? $post['user_username'] ?? 'Bilinmiyor' ?></td>
+                                                <td><?= $post['city_name'] ?? 'Bilinmiyor' ?>, <?= $post['district_name'] ?? 'Bilinmiyor' ?></td>
+                                                <td><?= get_status_label($post['status'] ?? '') ?></td>
+                                                <td><?= isset($post['created_at']) && $post['created_at'] ? date('d.m.Y', strtotime($post['created_at'])) : 'Tarih yok' ?></td>
                                             </tr>
-                                            <?php endforeach; ?>
+                                            <?php 
+                                                endforeach; 
+                                            else:
+                                            ?>
+                                            <tr>
+                                                <td colspan="6" class="text-center">Henüz şikayet bulunmuyor.</td>
+                                            </tr>
+                                            <?php endif; ?>
                                         </tbody>
                                     </table>
                                 </div>
@@ -543,226 +747,7 @@ $page_file = "pages/{$page}.php";
                         </div>
 
                     <?php elseif ($page === 'posts'): ?>
-                        <!-- Posts Page -->
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h2>Şikayetler</h2>
-                            <div>
-                                <button class="btn btn-primary" type="button">Rapor Oluştur</button>
-                            </div>
-                        </div>
-                        
-                        <!-- Geliştirilmiş Filtreleme Alanı -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">Filtrele</h5>
-                            </div>
-                            <div class="card-body">
-                                <form method="get" action="">
-                                    <input type="hidden" name="page" value="posts">
-                                    <div class="row g-3">
-                                        <div class="col-md-3">
-                                            <label for="filter_city" class="form-label">Şehir</label>
-                                            <select class="form-select" id="filter_city" name="city_id">
-                                                <option value="">Tümü</option>
-                                                <?php foreach ($cities as $city): ?>
-                                                <option value="<?= $city['id'] ?>"><?= $city['name'] ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="filter_district" class="form-label">İlçe</label>
-                                            <select class="form-select" id="filter_district" name="district_id">
-                                                <option value="">Tümü</option>
-                                                <?php foreach ($districts as $district): ?>
-                                                <option value="<?= $district['id'] ?>" data-city="<?= $district['city_id'] ?>"><?= $district['name'] ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="filter_category" class="form-label">Kategori</label>
-                                            <select class="form-select" id="filter_category" name="category_id">
-                                                <option value="">Tümü</option>
-                                                <?php foreach ($categories as $category): ?>
-                                                <option value="<?= $category['id'] ?>"><?= $category['name'] ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="filter_status" class="form-label">Durum</label>
-                                            <select class="form-select" id="filter_status" name="status">
-                                                <option value="">Tümü</option>
-                                                <option value="awaitingSolution">Çözüm Bekleyen</option>
-                                                <option value="inProgress">İşleme Alınan</option>
-                                                <option value="solved">Çözüldü</option>
-                                                <option value="rejected">Reddedildi</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row g-3 mt-2">
-                                        <div class="col-md-3">
-                                            <label for="filter_type" class="form-label">İçerik Tipi</label>
-                                            <select class="form-select" id="filter_type" name="post_type">
-                                                <option value="">Tümü</option>
-                                                <option value="problem">Şikayetler</option>
-                                                <option value="suggestion">Öneriler</option>
-                                                <option value="announcement">Duyurular</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="filter_media" class="form-label">Medya</label>
-                                            <select class="form-select" id="filter_media" name="media_type">
-                                                <option value="">Tümü</option>
-                                                <option value="image">Resimli Paylaşımlar</option>
-                                                <option value="video">Videolu Paylaşımlar</option>
-                                                <option value="none">Medyasız Paylaşımlar</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="filter_date" class="form-label">Tarih</label>
-                                            <select class="form-select" id="filter_date" name="date_filter">
-                                                <option value="">Tümü</option>
-                                                <option value="today">Bugün</option>
-                                                <option value="week">Bu Hafta</option>
-                                                <option value="month">Bu Ay</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3 d-flex align-items-end">
-                                            <button type="submit" class="btn btn-primary w-100">Filtrele</button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <?php 
-                            // Filtreleme işlemleri
-                            $filtered_posts = $posts;
-                            
-                            // Şehir filtreleme
-                            if (isset($_GET['city_id']) && $_GET['city_id'] !== '') {
-                                $city_id = intval($_GET['city_id']);
-                                $filtered_posts = array_filter($filtered_posts, function($post) use ($city_id) {
-                                    return $post['city_id'] == $city_id;
-                                });
-                            }
-                            
-                            // İlçe filtreleme
-                            if (isset($_GET['district_id']) && $_GET['district_id'] !== '') {
-                                $district_id = intval($_GET['district_id']);
-                                $filtered_posts = array_filter($filtered_posts, function($post) use ($district_id) {
-                                    return $post['district_id'] == $district_id;
-                                });
-                            }
-                            
-                            // Kategori filtreleme
-                            if (isset($_GET['category_id']) && $_GET['category_id'] !== '') {
-                                $category_id = intval($_GET['category_id']);
-                                $filtered_posts = array_filter($filtered_posts, function($post) use ($category_id) {
-                                    return $post['category_id'] == $category_id;
-                                });
-                            }
-                            
-                            // Durum filtreleme
-                            if (isset($_GET['status']) && $_GET['status'] !== '') {
-                                $status = $_GET['status'];
-                                $filtered_posts = array_filter($filtered_posts, function($post) use ($status) {
-                                    return $post['status'] == $status;
-                                });
-                            }
-                            
-                            // İçerik tipi filtreleme (Gerçek veri tabanında post_type alanı olmalı)
-                            if (isset($_GET['post_type']) && $_GET['post_type'] !== '') {
-                                $post_type = $_GET['post_type'];
-                                $filtered_posts = array_filter($filtered_posts, function($post) use ($post_type) {
-                                    return isset($post['post_type']) && $post['post_type'] == $post_type;
-                                });
-                            }
-                            
-                            // Medya filtreleme (Gerçek veri tabanında media_type alanı olmalı)
-                            if (isset($_GET['media_type']) && $_GET['media_type'] !== '') {
-                                $media_type = $_GET['media_type'];
-                                $filtered_posts = array_filter($filtered_posts, function($post) use ($media_type) {
-                                    // Bu kısım gerçek veritabanı yapısına göre değiştirilmeli
-                                    return isset($post['media_type']) && $post['media_type'] == $media_type;
-                                });
-                            }
-                            
-                            // Tarih filtreleme
-                            if (isset($_GET['date_filter']) && $_GET['date_filter'] !== '') {
-                                $today = date('Y-m-d');
-                                $date_filter = $_GET['date_filter'];
-                                
-                                if ($date_filter === 'today') {
-                                    $filtered_posts = array_filter($filtered_posts, function($post) use ($today) {
-                                        return date('Y-m-d', strtotime($post['created_at'])) == $today;
-                                    });
-                                } else if ($date_filter === 'week') {
-                                    $week_ago = date('Y-m-d', strtotime('-7 days'));
-                                    $filtered_posts = array_filter($filtered_posts, function($post) use ($week_ago) {
-                                        return date('Y-m-d', strtotime($post['created_at'])) >= $week_ago;
-                                    });
-                                } else if ($date_filter === 'month') {
-                                    $month_ago = date('Y-m-d', strtotime('-30 days'));
-                                    $filtered_posts = array_filter($filtered_posts, function($post) use ($month_ago) {
-                                        return date('Y-m-d', strtotime($post['created_at'])) >= $month_ago;
-                                    });
-                                }
-                            }
-                            
-                            // Sonuçları göster
-                            if (empty($filtered_posts)): 
-                            ?>
-                                <div class="col-12 text-center my-5">
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-info-circle me-2"></i> Seçilen kriterlere uygun içerik bulunamadı.
-                                    </div>
-                                </div>
-                            <?php else: ?>
-                                <?php foreach ($filtered_posts as $post): ?>
-                                <div class="col-md-4 col-sm-6 mb-3">
-                                    <div class="card post-card h-100 shadow-sm">
-                                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                                            <h6 class="card-title mb-0 text-truncate" title="<?= $post['title'] ?>">
-                                                <?= strlen($post['title']) > 25 ? substr($post['title'], 0, 22) . '...' : $post['title'] ?>
-                                            </h6>
-                                            <?= get_status_label($post['status']) ?>
-                                        </div>
-                                        <div class="card-body py-2">
-                                            <p class="card-subtitle mb-2 text-muted small">
-                                                <i class="bi bi-person"></i> <?= get_user_name($post['user_id']) ?><br>
-                                                <i class="bi bi-geo-alt"></i> <?= get_city_name($post['city_id']) ?>, <?= get_district_name($post['district_id']) ?><br>
-                                                <i class="bi bi-tag"></i> <?= get_category_name($post['category_id']) ?>
-                                            </p>
-                                            <p class="card-text small" style="max-height: 80px; overflow: hidden;">
-                                                <?= strlen($post['content']) > 100 ? substr($post['content'], 0, 97) . '...' : $post['content'] ?>
-                                            </p>
-                                            <div class="d-flex justify-content-between align-items-center small">
-                                                <span class="text-muted">
-                                                    <i class="bi bi-heart"></i> <?= $post['likes'] ?>
-                                                    <i class="bi bi-star ms-2"></i> <?= $post['highlights'] ?>
-                                                </span>
-                                                <span class="text-muted"><?= date('d.m.Y', strtotime($post['created_at'])) ?></span>
-                                            </div>
-                                        </div>
-                                        <div class="card-footer bg-white pt-2 pb-2">
-                                            <form method="post" class="d-flex">
-                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                                <select name="status" class="form-select form-select-sm me-1">
-                                                    <option value="awaitingSolution" <?= $post['status'] === 'awaitingSolution' ? 'selected' : '' ?>>Bekliyor</option>
-                                                    <option value="inProgress" <?= $post['status'] === 'inProgress' ? 'selected' : '' ?>>İşlemde</option>
-                                                    <option value="solved" <?= $post['status'] === 'solved' ? 'selected' : '' ?>>Çözüldü</option>
-                                                    <option value="rejected" <?= $post['status'] === 'rejected' ? 'selected' : '' ?>>Ret</option>
-                                                </select>
-                                                <button type="submit" name="update_post_status" class="btn btn-primary btn-sm">Güncelle</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
+                        <?php include 'pages/posts.php'; ?>
 
                     <?php elseif ($page === 'surveys'): ?>
                         <!-- Surveys Page -->
@@ -1446,5 +1431,11 @@ $page_file = "pages/{$page}.php";
         }
     });
     </script>
+    
+    <!-- Anket demo verilerini ekleyen script -->
+    <script src="js/survey-demo-data.js"></script>
+    
+    <!-- Anket sayfası için özel JavaScript -->
+    <script src="js/surveys.js"></script>
 </body>
 </html>

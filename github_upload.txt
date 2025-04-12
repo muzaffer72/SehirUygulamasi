@@ -1,0 +1,66 @@
+# GitHub'a Code Gönderme Kılavuzu (Manuel Yöntem)
+
+Replit'teki `git push` komutunda sorun yaşandığı durumlar için alternatif bir çözüm olarak zip dosyasını manuel olarak GitHub'a yükleyebilirsiniz. Bu yöntem, özellikle uzak repository yapılandırmasında sorunlar yaşıyorsanız veya yetkilendirme problemleri varsa kullanışlıdır.
+
+## Zip Dosyası ile Manuel Yükleme
+
+1. `sikayetvar_project_essential.zip` dosyasını bilgisayarınıza indirin (Replit'in dosya tarayıcısından indirebilirsiniz)
+
+2. GitHub hesabınızda oturum açın ve `https://github.com/muzaffer72/SehirUygulamasi` sayfasına gidin
+
+3. Ana repository sayfasında "Add file" düğmesine tıklayın ve "Upload files" seçeneğini seçin
+
+4. Zip dosyasını tarayıcı penceresine sürükleyip bırakın veya "choose your files" bağlantısına tıklayarak dosya gezgininden seçin
+
+5. Commit mesajı için şu metni kullanabilirsiniz:
+   ```
+   ŞikayetVar projesi dosyaları ve dokümantasyon eklendi
+   
+   - Detaylı kurulum talimatları
+   - Proje yapısı ve mimarisi
+   - GitHub entegrasyon kılavuzu
+   - Ödül sistemi ve şehir yönetimi dokümantasyonu
+   ```
+
+6. "Commit changes" düğmesine tıklayın
+
+## GitHub CLI Kullanımı (Alternatif)
+
+Eğer bilgisayarınızda GitHub CLI yüklüyse, dosyaları şu komutlarla yükleyebilirsiniz:
+
+```bash
+# İndirdiğiniz zip dosyasını çıkarın
+unzip sikayetvar_project_essential.zip -d sikayetvar_project
+
+# Dizine gidin
+cd sikayetvar_project
+
+# GitHub ile kimlik doğrulama yapın
+gh auth login
+
+# Repository'yi klonlayın
+gh repo clone muzaffer72/SehirUygulamasi
+
+# Dosyaları kopyalayın
+cp -r * SehirUygulamasi/
+
+# Repository dizinine gidin
+cd SehirUygulamasi
+
+# Değişiklikleri commit edin
+git add .
+git commit -m "ŞikayetVar projesi dosyaları ve dokümantasyon eklendi"
+
+# GitHub'a gönderin
+git push
+```
+
+## Sonraki Adımlar
+
+Proje dosyalarınız GitHub'a yüklendikten sonra:
+
+1. Repository'nin README.md dosyasının doğru görüntülendiğinden emin olun
+2. Issues ve Pull Requests bölümlerini açarak projeye katkı yapılmasına izin verebilirsiniz
+3. GitHub Pages özelliğini etkinleştirerek projenizin web sitesini oluşturabilirsiniz
+
+Bu rehber, GitHub'a kod gönderme sürecinde sorun yaşadığınızda kullanabileceğiniz alternatif yöntemleri içerir. İleride herhangi bir sorunla karşılaşırsanız, GitHub Destek sayfasına başvurabilir veya Git dokümantasyonunu inceleyebilirsiniz.

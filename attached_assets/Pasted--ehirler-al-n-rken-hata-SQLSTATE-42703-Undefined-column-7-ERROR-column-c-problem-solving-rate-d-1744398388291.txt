@@ -1,0 +1,57 @@
+Şehirler alınırken hata: SQLSTATE[42703]: Undefined column: 7 ERROR: column c.problem_solving_rate does not exist LINE 2: SELECT c.id, c.name, c.problem_solving_rate, ^
+Kurulum Sonuçları:
+SQL query executed:
+DO $$
+BEGIN
+IF NOT EXISTS (
+SELECT 1 FROM information_schema.columns
+WHERE table_name='award_types' AND column_name='is_system'
+) THEN
+ALTER TABLE award_types ADD COLUMN is_system BOOLEAN NOT NULL DEFAULT FALSE;
+END IF;
+END
+$$;
+
+Ödül türleri tablosuna is_system sütunu başarıyla eklendi.
+SQL query executed:
+DO $$
+BEGIN
+IF NOT EXISTS (
+SELECT 1 FROM information_schema.columns
+WHERE table_name='award_types' AND column_name='icon'
+) THEN
+ALTER TABLE award_types ADD COLUMN icon VARCHAR(100);
+END IF;
+END
+$$;
+
+Ödül türleri tablosuna icon sütunu başarıyla eklendi.
+SQL query executed:
+DO $$
+BEGIN
+IF NOT EXISTS (
+SELECT 1 FROM information_schema.columns
+WHERE table_name='city_awards' AND column_name='expiry_date'
+) THEN
+ALTER TABLE city_awards ADD COLUMN expiry_date DATE;
+-- Mevcut ödüllerin son geçerlilik tarihini award_date + 1 ay olarak ayarla
+UPDATE city_awards SET expiry_date = award_date + INTERVAL '1 month';
+END IF;
+END
+$$;
+
+Ödül tablosuna son geçerlilik tarihi (expiry_date) başarıyla eklendi.
+Tablo güncellemeleri tamamlandı. Ödül Sistemi Sayfasına Dön
+
+SQL query executed: SELECT id FROM award_types WHERE name = ?
+SQL query executed: UPDATE award_types SET description = ?, icon = ?, color = ?, points = ?, is_system = TRUE WHERE id = ?
+Bronz Kupa başarıyla güncellendi.
+SQL query executed: SELECT id FROM award_types WHERE name = ?
+SQL query executed: UPDATE award_types SET description = ?, icon = ?, color = ?, points = ?, is_system = TRUE WHERE id = ?
+Gümüş Kupa başarıyla güncellendi.
+SQL query executed: SELECT id FROM award_types WHERE name = ?
+SQL query executed: UPDATE award_types SET description = ?, icon = ?, color = ?, points = ?, is_system = TRUE WHERE id = ?
+Altın Kupa başarıyla güncellendi.
+Varsayılan ödüller başarıyla oluşturuldu/güncellendi.
+
+Ödül Sistemi Sayfasına Dön

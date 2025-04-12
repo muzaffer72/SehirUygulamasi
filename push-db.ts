@@ -42,8 +42,8 @@ async function main() {
         name VARCHAR(100) NOT NULL,
         description TEXT,
         population BIGINT,
-        latitude DOUBLE PRECISION,
-        longitude DOUBLE PRECISION,
+        latitude TEXT,
+        longitude TEXT,
         image_url TEXT,
         header_image_url TEXT,
         mayor_name VARCHAR(255),
@@ -51,6 +51,7 @@ async function main() {
         mayor_satisfaction_rate INTEGER,
         mayor_image_url TEXT,
         mayor_party_logo TEXT,
+        problem_solving_rate INTEGER DEFAULT 0,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
       );
     `);
@@ -60,6 +61,7 @@ async function main() {
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         city_id INTEGER NOT NULL,
+        problem_solving_rate INTEGER DEFAULT 0,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
         FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE CASCADE
       );
@@ -191,6 +193,47 @@ async function main() {
         word VARCHAR(100) NOT NULL UNIQUE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
       );
+    `);
+
+    // Sosyal özellikler için tablolar
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_likes (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        post_id INTEGER,
+        comment_id INTEGER,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE
+      );
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS user_likes_user_id_idx ON user_likes(user_id);
+      CREATE INDEX IF NOT EXISTS user_likes_post_id_idx ON user_likes(post_id);
+      CREATE INDEX IF NOT EXISTS user_likes_comment_id_idx ON user_likes(comment_id);
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        is_read BOOLEAN NOT NULL DEFAULT FALSE,
+        source_id INTEGER,
+        source_type VARCHAR(50),
+        data TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS notifications_user_id_idx ON notifications(user_id);
+      CREATE INDEX IF NOT EXISTS notifications_is_read_idx ON notifications(is_read);
     `);
 
     console.log('Veritabanı tabloları başarıyla oluşturuldu!');

@@ -1,0 +1,63 @@
+name: sikayet_var
+description: Belediye ve Valiliğe yönelik şikayet ve öneri paylaşım platformu
+
+# The following defines the version and build number for your application.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # State management
+  flutter_riverpod: ^2.4.0
+  
+  # UI components
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+  timeago: ^3.6.0
+  
+  # Forms and input
+  image_picker: ^1.0.7
+  
+  # Networking
+  http: ^1.1.0
+  dio: ^5.4.0
+  
+  # Storage
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.2
+  
+  # Maps and location - Android SDK 35 ile uyumlu
+  google_maps_flutter: ^2.5.0
+  geocoding: ^2.1.1  # adres ve koordinat dönüşümleri için
+  
+  # Math ve grafik
+  vector_math: ^2.1.4
+  collection: ^1.18.0
+  meta: ^1.12.0
+  fl_chart: ^0.65.0
+  
+  # Analytics and services (commented out for now)
+  # firebase_core: ^2.7.0
+  # firebase_auth: ^4.2.9
+  # firebase_storage: ^11.0.14
+  # firebase_messaging: ^14.2.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/

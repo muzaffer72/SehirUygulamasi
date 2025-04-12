@@ -1,0 +1,1561 @@
+import 'package:flutter/material.dart';
+import '../../models/city_profile.dart';
+import '../../widgets/best_municipality_banner.dart';
+import '../../widgets/city_priority_chart.dart';
+import '../../widgets/monthly_performance_card.dart';
+import '../../widgets/city_stats_chart.dart';
+
+class CityProfileScreen extends StatefulWidget {
+  final CityProfile cityProfile;
+
+  const CityProfileScreen({Key? key, required this.cityProfile}) : super(key: key);
+
+  @override
+  State<CityProfileScreen> createState() => _CityProfileScreenState();
+}
+
+class _CityProfileScreenState extends State<CityProfileScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final ScrollController _scrollController = ScrollController();
+  bool _hasAward = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 5, vsync: this);
+    _hasAward = widget.cityProfile.awardText != null && widget.cityProfile.awardText!.isNotEmpty;
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: NestedScrollView(
+        controller: _scrollController,
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return <Widget>[
+            // App Bar
+            SliverAppBar(
+              expandedHeight: 200.0,
+              floating: false,
+              pinned: true,
+              backgroundColor: Theme.of(context).primaryColor,
+              flexibleSpace: FlexibleSpaceBar(
+                centerTitle: true,
+                title: Text(
+                  widget.cityProfile.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                background: _buildHeaderBackground(),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.share),
+                  onPressed: () {
+                    // Paylaşım fonksiyonelliği
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.star),
+                  onPressed: () {
+                    // Favorilere ekleme fonksiyonelliği
+                  },
+                ),
+              ],
+            ),
+            // Bilgi Başlığı
+            SliverToBoxAdapter(
+              child: _buildInfoHeader(),
+            ),
+            // Ay'ın Belediyesi Banner'ı (varsa)
+            if (_hasAward)
+              SliverToBoxAdapter(
+                child: BestMunicipalityBanner(
+                  cityName: widget.cityProfile.name,
+                  awardText: widget.cityProfile.awardText!,
+                  awardMonth: widget.cityProfile.awardMonth ?? '',
+                  awardScore: widget.cityProfile.awardScore != null ? widget.cityProfile.awardScore!.toInt() : null,
+                ),
+              ),
+            // Tab Bar
+            SliverPersistentHeader(
+              delegate: _SliverAppBarDelegate(
+                TabBar(
+                  controller: _tabController,
+                  labelColor: Theme.of(context).primaryColor,
+                  unselectedLabelColor: Colors.grey,
+                  tabs: const [
+                    Tab(icon: Icon(Icons.build)),
+                    Tab(icon: Icon(Icons.trending_up)),
+                    Tab(icon: Icon(Icons.event)),
+                    Tab(icon: Icon(Icons.insert_chart)),
+                    Tab(icon: Icon(Icons.priority_high)),
+                  ],
+                ),
+              ),
+              pinned: true,
+            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildServicesTab(),
+            _buildProjectsTab(),
+            _buildEventsTab(),
+            _buildStatsTab(),
+            _buildPrioritiesTab(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Header arkaplanını oluşturur
+  Widget _buildHeaderBackground() {
+    final background = Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.network(
+          widget.cityProfile.demoCoverImageUrl,
+          width: double.infinity,
+          height: 200,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => 
+            Container(
+              height: 200,
+              color: Theme.of(context).primaryColor.withOpacity(0.05),
+            ),
+        ),
+        // Gradiant overlay
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.black.withOpacity(0.7),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+    
+    return Stack(
+      children: [
+        // Arka plan
+        background,
+        
+        // İçerik
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Sol kısım: Parti logosu
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Image.network(
+                            widget.cityProfile.demoMayorPartyLogo,
+                            width: 60,
+                            height: 60,
+                            errorBuilder: (context, error, stackTrace) => const Icon(
+                              Icons.image_not_supported,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (widget.cityProfile.mayorParty != null)
+                          Text(
+                            widget.cityProfile.mayorParty!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Orta kısım: Şehir logosu/arması
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            widget.cityProfile.demoImageUrl,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              width: 80,
+                              height: 80,
+                              color: Colors.grey.withOpacity(0.3),
+                              child: const Icon(
+                                Icons.location_city,
+                                size: 50,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Sağ kısım: Nüfus bilgisi
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.people,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${widget.cityProfile.population.toString()} kişi',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Bilgi başlığını oluşturur
+  Widget _buildInfoHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Belediye Başkanı Bilgisi
+          Row(
+            children: [
+              const Icon(Icons.person, size: 20, color: Colors.grey),
+              const SizedBox(width: 8),
+              const Text(
+                'Belediye Başkanı:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                widget.cityProfile.demoMayorName,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Bölge Bilgisi
+          Row(
+            children: [
+              const Icon(Icons.location_on, size: 20, color: Colors.grey),
+              const SizedBox(width: 8),
+              const Text(
+                'Bölge:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                widget.cityProfile.region ?? 'Belirtilmemiş',
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Açıklama
+          if (widget.cityProfile.description != null &&
+              widget.cityProfile.description!.isNotEmpty)
+            Text(
+              widget.cityProfile.description!,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.justify,
+            ),
+          
+          const SizedBox(height: 16),
+          
+          // Performans Kartı
+          if (widget.cityProfile.monthlyPerformance != null)
+            MonthlyPerformanceCard(
+              monthlyPerformance: widget.cityProfile.monthlyPerformance!,
+              performanceMonth: widget.cityProfile.performanceMonth ?? "Nisan",
+              performanceYear: widget.cityProfile.performanceYear ?? "2025",
+            ),
+        ],
+      ),
+    );
+  }
+
+  // Hizmetler sekmesi
+  Widget _buildServicesTab() {
+    final services = widget.cityProfile.services ?? [];
+    
+    // Demo hizmetler oluştur (gerçek hizmetler yoksa)
+    if (services.isEmpty) {
+      // Demo hizmet listesi
+      final demoServices = [
+        CityService(
+          id: 1,
+          name: 'Su ve Kanalizasyon Hizmetleri',
+          description: 'Şehrin temiz su dağıtımı ve kanalizasyon sistemi bakım hizmetleri',
+          type: 'active',
+          category: 'altyapı',
+        ),
+        CityService(
+          id: 2,
+          name: 'Çöp Toplama ve Temizlik',
+          description: 'Düzenli çöp toplama ve cadde temizleme hizmetleri',
+          type: 'active',
+          category: 'temizlik',
+        ),
+        CityService(
+          id: 3,
+          name: 'Toplu Taşıma',
+          description: 'Şehir içi otobüs ve minibüs hatları',
+          type: 'active',
+          category: 'ulaşım',
+        ),
+        CityService(
+          id: 4,
+          name: 'Park ve Bahçe Bakımı',
+          description: 'Şehirdeki park, bahçe ve yeşil alanların bakımı',
+          type: 'active',
+          category: 'park ve bahçeler',
+        ),
+        CityService(
+          id: 5,
+          name: 'Sosyal Destek Hizmetleri',
+          description: 'İhtiyaç sahiplerine gıda, kıyafet ve eğitim yardımları',
+          type: 'active',
+          category: 'sosyal hizmetler',
+        ),
+      ];
+      
+      return ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: demoServices.length,
+        itemBuilder: (context, index) {
+          final service = demoServices[index];
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: ListTile(
+              leading: Icon(
+                _getCategoryIcon(service.category ?? ''),
+                color: Theme.of(context).primaryColor,
+                size: 30,
+              ),
+              title: Text(service.name),
+              subtitle: Text(service.description ?? ''),
+              trailing: service.type == 'active'
+                  ? const Icon(Icons.check_circle, color: Colors.green)
+                  : const Icon(Icons.cancel, color: Colors.red),
+            ),
+          );
+        },
+      );
+    }
+    
+    // Gerçek hizmetleri kullan
+    return ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      itemCount: services.length,
+      itemBuilder: (context, index) {
+        final service = services[index];
+        return Card(
+          elevation: 2,
+          margin: const EdgeInsets.only(bottom: 16),
+          child: ListTile(
+            leading: Icon(
+              _getCategoryIcon(service.category ?? ''),
+              color: Theme.of(context).primaryColor,
+              size: 30,
+            ),
+            title: Text(service.name),
+            subtitle: Text(service.description ?? ''),
+            trailing: service.type == 'active'
+                ? const Icon(Icons.check_circle, color: Colors.green)
+                : const Icon(Icons.cancel, color: Colors.red),
+          ),
+        );
+      },
+    );
+  }
+
+  // Projeler sekmesi
+  Widget _buildProjectsTab() {
+    final projects = widget.cityProfile.projects ?? [];
+    
+    // Demo projeler oluştur (gerçek projeler yoksa)
+    if (projects.isEmpty) {
+      // Demo proje listesi
+      final demoProjects = [
+        CityProject(
+          id: 1,
+          name: 'Şehir Merkezi Yenileme Projesi',
+          description: 'Şehir merkezindeki tarihi binaların restore edilmesi ve çevre düzenlemelerinin yapılması',
+          status: 'devam ediyor',
+          startDate: '15 Mart 2025',
+          endDate: '20 Aralık 2025',
+          budget: '32.500.000',
+        ),
+        CityProject(
+          id: 2,
+          name: 'Akıllı Sokak Aydınlatma Sistemi',
+          description: 'Enerji tasarruflu, hareket sensörlü sokak lambaları kurulumu',
+          status: 'tamamlandı',
+          startDate: '5 Ocak 2025',
+          endDate: '10 Mart 2025',
+          budget: '5.750.000',
+        ),
+        CityProject(
+          id: 3,
+          name: 'Yeni Kültür Merkezi İnşaatı',
+          description: 'Şehir kütüphanesi, sanat galerisi ve 500 kişilik konferans salonundan oluşan kültür merkezi',
+          status: 'planlama',
+          startDate: '10 Haziran 2025',
+          endDate: '15 Eylül 2026',
+          budget: '58.250.000',
+        ),
+        CityProject(
+          id: 4,
+          name: 'Şehir Parkı Genişletme Projesi',
+          description: 'Mevcut şehir parkına yeni spor alanları, çocuk oyun alanları ve piknik alanlarının eklenmesi',
+          status: 'devam ediyor',
+          startDate: '20 Şubat 2025',
+          endDate: '15 Haziran 2025',
+          budget: '12.800.000',
+        ),
+      ];
+      
+      return ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: demoProjects.length,
+        itemBuilder: (context, index) {
+          final project = demoProjects[index];
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.network(
+                  widget.cityProfile.demoProjectImageUrl,
+                  width: double.infinity,
+                  height: 150,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: double.infinity,
+                    height: 150,
+                    color: Colors.grey.withOpacity(0.2),
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            project.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(project.status ?? 'planlama'),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _getStatusText(project.status ?? 'planlama'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    if (project.description != null)
+                      Text(
+                        project.description!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Başlangıç: ${project.startDate ?? 'Belirtilmemiş'}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Icon(Icons.flag, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Bitiş: ${project.endDate ?? 'Belirtilmemiş'}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (project.budget != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.attach_money, size: 16, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Bütçe: ${project.budget} TL',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Etkinlikler sekmesi
+  Widget _buildEventsTab() {
+    final events = widget.cityProfile.events ?? [];
+    
+    // Demo etkinlikler oluştur (gerçek etkinlikler yoksa)
+    if (events.isEmpty) {
+      // Demo etkinlik listesi
+      final demoEvents = [
+        CityEvent(
+          id: 1,
+          name: 'Şehir Kültür Festivali',
+          description: 'Şehrimizin kültürel değerlerini tanıtan ve yerel sanatçıların performanslarını içeren festival',
+          date: '15-20 Haziran 2025',
+          location: 'Şehir Meydanı',
+        ),
+        CityEvent(
+          id: 2,
+          name: 'Engelsiz Yaşam Şenliği',
+          description: 'Engelli vatandaşlarımız için farkındalık oluşturmak amacıyla düzenlenen etkinlikler',
+          date: '3 Aralık 2025',
+          location: 'Kültür Merkezi',
+        ),
+        CityEvent(
+          id: 3,
+          name: 'Çocuk Bilim Şenliği',
+          description: 'Çocuklara bilimi sevdirmek amacıyla düzenlenen atölye ve deneyler',
+          date: '23 Nisan 2025',
+          location: 'Bilim Merkezi',
+        ),
+        CityEvent(
+          id: 4,
+          name: 'Şehir Kitap Günleri',
+          description: 'Yerel ve ulusal yazarların katılımıyla düzenlenen kitap fuarı ve imza günleri',
+          date: '8-15 Eylül 2025',
+          location: 'Kültür Parkı',
+        ),
+      ];
+      
+      return ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: demoEvents.length,
+        itemBuilder: (context, index) {
+          final event = demoEvents[index];
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.network(
+                  widget.cityProfile.demoEventImageUrl,
+                  width: double.infinity,
+                  height: 150,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: double.infinity,
+                    height: 150,
+                    color: Colors.grey.withOpacity(0.2),
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (event.description != null)
+                      Text(
+                        event.description!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Tarih: ${event.date ?? 'Belirtilmemiş'}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (event.location != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Yer: ${event.location}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // İstatistikler sekmesi
+  Widget _buildStatsTab() {
+    final stats = widget.cityProfile.stats;
+    
+    // Demo istatistikler oluştur
+    if (stats == null || stats.isEmpty) {
+      // Demo istatistik listesi
+      final demoStats = [
+        // Demografi istatistikleri
+        CityStat(
+          id: 1,
+          name: 'Kadın Nüfus Oranı',
+          value: '%51.2',
+          type: 'demografi',
+        ),
+        CityStat(
+          id: 2,
+          name: 'Erkek Nüfus Oranı',
+          value: '%48.8',
+          type: 'demografi',
+        ),
+        CityStat(
+          id: 3,
+          name: 'Yaş Ortalaması',
+          value: '32.4',
+          type: 'demografi',
+        ),
+        CityStat(
+          id: 4,
+          name: 'Nüfus Artış Hızı',
+          value: '%1.8',
+          type: 'demografi',
+        ),
+        
+        // Eğitim istatistikleri
+        CityStat(
+          id: 5,
+          name: 'Okur-Yazarlık',
+          value: '%98.5',
+          type: 'egitim',
+        ),
+        CityStat(
+          id: 6,
+          name: 'Yüksekokul Mezunu',
+          value: '%32.7',
+          type: 'egitim',
+        ),
+        CityStat(
+          id: 7,
+          name: 'Lise Mezunu',
+          value: '%45.3',
+          type: 'egitim',
+        ),
+        CityStat(
+          id: 8,
+          name: 'İlkokul Mezunu',
+          value: '%22.0',
+          type: 'egitim',
+        ),
+        
+        // Ekonomi istatistikleri
+        CityStat(
+          id: 9,
+          name: 'İşsizlik Oranı',
+          value: '%6.8',
+          type: 'ekonomi',
+        ),
+        CityStat(
+          id: 10,
+          name: 'Kişi Başı Milli Gelir',
+          value: '22345 TL',
+          type: 'ekonomi',
+        ),
+        CityStat(
+          id: 11,
+          name: 'Yıllık Ekonomik Büyüme',
+          value: '%4.2',
+          type: 'ekonomi',
+        ),
+        CityStat(
+          id: 12,
+          name: 'Turizm Geliri',
+          value: '18500000 TL',
+          type: 'ekonomi',
+        ),
+        
+        // Altyapı istatistikleri
+        CityStat(
+          id: 13,
+          name: 'Temiz Su Erişimi',
+          value: '%98.2',
+          type: 'altyapi',
+        ),
+        CityStat(
+          id: 14,
+          name: 'Kanalizasyon Altyapısı',
+          value: '%97.5',
+          type: 'altyapi',
+        ),
+        CityStat(
+          id: 15,
+          name: 'Yol Ağı',
+          value: '1250 km',
+          type: 'altyapi',
+        ),
+        CityStat(
+          id: 16,
+          name: 'İnternet Erişimi',
+          value: '%93.8',
+          type: 'altyapi',
+        ),
+      ];
+      
+      // İstatistikleri kategorilere göre grupla
+      final demografiStats = demoStats.where((stat) => stat.type == 'demografi').toList();
+      final ekonomiStats = demoStats.where((stat) => stat.type == 'ekonomi').toList();
+      final egitimStats = demoStats.where((stat) => stat.type == 'egitim').toList();
+      final altyapiStats = demoStats.where((stat) => stat.type == 'altyapi').toList();
+      
+      // Eğitim istatistiklerini grafik için hazırla
+      final Map<String, double> egitimData = {};
+      for (var stat in egitimStats) {
+        if (stat.value != null) {
+          double? value = double.tryParse(stat.value!.replaceAll(',', '.').replaceAll('%', ''));
+          if (value != null) {
+            egitimData[stat.name] = value;
+          }
+        }
+      }
+      
+      // Altyapı istatistiklerini grafik için hazırla
+      final Map<String, double> altyapiData = {};
+      for (var stat in altyapiStats) {
+        if (stat.value != null) {
+          double? value = double.tryParse(stat.value!.replaceAll(',', '.').replaceAll('%', ''));
+          if (value != null) {
+            altyapiData[stat.name] = value;
+          }
+        }
+      }
+      
+      // Ekonomi istatistiklerini grafik için hazırla
+      final Map<String, double> ekonomiData = {};
+      for (var stat in ekonomiStats) {
+        if (stat.value != null) {
+          double? value = double.tryParse(stat.value!.replaceAll(',', '.').replaceAll('%', '').replaceAll('TL', '').trim());
+          if (value != null) {
+            ekonomiData[stat.name] = value;
+          }
+        }
+      }
+      
+      // Çözüm istatistikleri
+      final Map<String, double> cozumVerileri = {
+        'Çözülen': widget.cityProfile.totalSolvedIssues.toDouble(),
+        'Bekleyen': (widget.cityProfile.totalPosts - widget.cityProfile.totalSolvedIssues).toDouble(),
+      };
+      
+      return ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          // Belediye Performans Göstergeleri
+          if (cozumVerileri.isNotEmpty)
+            CityStatsChart(
+              data: cozumVerileri,
+              title: 'Belediye Şikayet Çözüm Durumu',
+              description: 'Belediyeye iletilen şikayetlerin çözüm durumu',
+              gradientColors: [Colors.orange, Colors.deepOrange],
+            ),
+          const SizedBox(height: 24),
+          
+          // Eğitim İstatistik Grafiği
+          if (egitimData.isNotEmpty)
+            RadarCityStatsChart(
+              data: egitimData,
+              title: 'Eğitim Durumu',
+              description: 'Şehrin eğitim alanındaki göstergeleri',
+              fillColor: const Color(0x402196F3),
+              borderColor: Colors.blue,
+            ),
+          const SizedBox(height: 24),
+          
+          // Ekonomi İstatistik Grafiği
+          if (ekonomiData.isNotEmpty)
+            CityStatsChart(
+              data: ekonomiData,
+              title: 'Ekonomik Göstergeler',
+              description: 'Şehrin ekonomik performans göstergeleri',
+              gradientColors: [Colors.green.shade300, Colors.green.shade700],
+            ),
+          const SizedBox(height: 24),
+          const Text(
+            'Genel İstatistikler',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Nüfus Bilgileri
+          Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Demografi',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildStatItem(
+                    'Toplam Nüfus',
+                    '${widget.cityProfile.population} kişi',
+                    Icons.people,
+                  ),
+                  ...demografiStats.map((stat) => 
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: _buildStatItem(
+                        stat.name,
+                        stat.value ?? 'Belirtilmemiş',
+                        _getIconForStatType(stat.type),
+                      ),
+                    )
+                  ).toList(),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Ekonomi Bilgileri
+          if (ekonomiStats.isNotEmpty)
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ekonomi',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...ekonomiStats.map((stat) => 
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: _buildStatItem(
+                          stat.name,
+                          stat.value ?? 'Belirtilmemiş',
+                          _getIconForStatType(stat.type),
+                        ),
+                      )
+                    ).toList(),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 16),
+          
+          // Eğitim Bilgileri
+          if (egitimStats.isNotEmpty)
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Eğitim',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...egitimStats.map((stat) => 
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: _buildStatItem(
+                          stat.name,
+                          stat.value ?? 'Belirtilmemiş',
+                          _getIconForStatType(stat.type),
+                        ),
+                      )
+                    ).toList(),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 16),
+          
+          // Altyapı Bilgileri
+          if (altyapiStats.isNotEmpty)
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Altyapı ve Ulaşım',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...altyapiStats.map((stat) => 
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: _buildStatItem(
+                          stat.name,
+                          stat.value ?? 'Belirtilmemiş',
+                          _getIconForStatType(stat.type),
+                        ),
+                      )
+                    ).toList(),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      );
+    }
+    
+    // Eğitim istatistiklerini grafik için hazırla
+    final Map<String, double> egitimData = {};
+    for (var stat in egitimStats) {
+      if (stat.value != null) {
+        double? value = double.tryParse(stat.value!.replaceAll(',', '.').replaceAll('%', ''));
+        if (value != null) {
+          egitimData[stat.name] = value;
+        }
+      }
+    }
+    
+    // Altyapı istatistiklerini grafik için hazırla
+    final Map<String, double> altyapiData = {};
+    for (var stat in altyapiStats) {
+      if (stat.value != null) {
+        double? value = double.tryParse(stat.value!.replaceAll(',', '.').replaceAll('%', ''));
+        if (value != null) {
+          altyapiData[stat.name] = value;
+        }
+      }
+    }
+    
+    // Ekonomi istatistiklerini grafik için hazırla
+    final Map<String, double> ekonomiData = {};
+    for (var stat in ekonomiStats) {
+      if (stat.value != null) {
+        double? value = double.tryParse(stat.value!.replaceAll(',', '.').replaceAll('%', '').replaceAll('TL', '').trim());
+        if (value != null) {
+          ekonomiData[stat.name] = value;
+        }
+      }
+    }
+    
+    // Çözüm istatistikleri
+    final Map<String, double> cozumVerileri = {
+      'Çözülen': widget.cityProfile.totalSolvedIssues.toDouble(),
+      'Bekleyen': (widget.cityProfile.totalPosts - widget.cityProfile.totalSolvedIssues).toDouble(),
+    };
+    
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      children: [
+        // Belediye Performans Göstergeleri
+        if (cozumVerileri.isNotEmpty)
+          CityStatsChart(
+            data: cozumVerileri,
+            title: 'Belediye Şikayet Çözüm Durumu',
+            description: 'Belediyeye iletilen şikayetlerin çözüm durumu',
+            gradientColors: [Colors.orange, Colors.deepOrange],
+          ),
+        const SizedBox(height: 24),
+        
+        // Eğitim İstatistik Grafiği
+        if (egitimData.isNotEmpty)
+          RadarCityStatsChart(
+            data: egitimData,
+            title: 'Eğitim Durumu',
+            description: 'Şehrin eğitim alanındaki göstergeleri',
+            fillColor: const Color(0x402196F3),
+            borderColor: Colors.blue,
+          ),
+        const SizedBox(height: 24),
+        
+        // Ekonomi İstatistik Grafiği
+        if (ekonomiData.isNotEmpty)
+          CityStatsChart(
+            data: ekonomiData,
+            title: 'Ekonomik Göstergeler',
+            description: 'Şehrin ekonomik performans göstergeleri',
+            gradientColors: [Colors.green.shade300, Colors.green.shade700],
+          ),
+        const SizedBox(height: 24),
+        const Text(
+          'Genel İstatistikler',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        // Nüfus Bilgileri
+        Card(
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Demografi',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildStatItem(
+                  'Toplam Nüfus',
+                  '${widget.cityProfile.population} kişi',
+                  Icons.people,
+                ),
+                ...demografiStats.map((stat) => 
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: _buildStatItem(
+                      stat.name,
+                      stat.value ?? 'Belirtilmemiş',
+                      _getIconForStatType(stat.type),
+                    ),
+                  )
+                ).toList(),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        // Ekonomi Bilgileri
+        if (ekonomiStats.isNotEmpty)
+          Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ekonomi',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...ekonomiStats.map((stat) => 
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: _buildStatItem(
+                        stat.name,
+                        stat.value ?? 'Belirtilmemiş',
+                        _getIconForStatType(stat.type),
+                      ),
+                    )
+                  ).toList(),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 16),
+        
+        // Eğitim Bilgileri
+        if (egitimStats.isNotEmpty)
+          Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Eğitim',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...egitimStats.map((stat) => 
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: _buildStatItem(
+                        stat.name,
+                        stat.value ?? 'Belirtilmemiş',
+                        _getIconForStatType(stat.type),
+                      ),
+                    )
+                  ).toList(),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 16),
+        
+        // Altyapı Bilgileri
+        if (altyapiStats.isNotEmpty)
+          Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Altyapı ve Ulaşım',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...altyapiStats.map((stat) => 
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: _buildStatItem(
+                        stat.name,
+                        stat.value ?? 'Belirtilmemiş',
+                        _getIconForStatType(stat.type),
+                      ),
+                    )
+                  ).toList(),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+  
+  // İstatistik tipi için ikon döndürür
+  IconData _getIconForStatType(String type) {
+    switch (type.toLowerCase()) {
+      case 'demografi':
+      case 'nufus':
+        return Icons.people;
+      case 'egitim':
+        return Icons.school;
+      case 'ekonomi':
+        return Icons.attach_money;
+      case 'altyapi':
+        return Icons.build;
+      case 'ulasim':
+        return Icons.directions_bus;
+      case 'yesilalan':
+      case 'cevre':
+        return Icons.park;
+      case 'su':
+        return Icons.water_drop;
+      default:
+        return Icons.info;
+    }
+  }
+
+  // Öncelikler sekmesi
+  Widget _buildPrioritiesTab() {
+    final priorityData = widget.cityProfile.priorityData;
+    
+    // Demo öncelik verileri oluştur
+    if (priorityData == null || priorityData.isEmpty) {
+      // Demo öncelik verileri
+      final demoPriorityData = {
+        'Altyapı Yatırımları': 25.0,
+        'Ulaşım ve Trafik': 20.0,
+        'Sosyal Hizmetler': 18.0,
+        'Çevre ve Yeşil Alanlar': 15.0,
+        'Kültür ve Sanat': 12.0,
+        'Eğitim Destekleri': 10.0,
+      };
+      
+      return ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          const Text(
+            'Belediye Öncelikleri',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Aşağıdaki grafikte belediyenin öncelik verdiği alanlar ve bunlara ayrılan bütçe oranları gösterilmektedir.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          const SizedBox(height: 24),
+          
+          CityPriorityChart(priorityData: demoPriorityData),
+        ],
+      );
+    }
+    
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      children: [
+        const Text(
+          'Belediye Öncelikleri',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Aşağıdaki grafikte belediyenin öncelik verdiği alanlar ve bunlara ayrılan bütçe oranları gösterilmektedir.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        const SizedBox(height: 24),
+        
+        CityPriorityChart(priorityData: priorityData),
+      ],
+    );
+  }
+
+  // İstatistik öğesi oluşturur
+  Widget _buildStatItem(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 3,
+            spreadRadius: 1,
+            offset: const Offset(0, 1),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon, 
+              size: 20, 
+              color: Theme.of(context).primaryColor
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios,
+            size: 14,
+            color: Colors.grey.shade400,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Proje durumuna göre renk döndürür
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'tamamlandı':
+        return Colors.green;
+      case 'devam ediyor':
+        return Colors.blue;
+      case 'planlama':
+        return Colors.orange;
+      case 'ertelendi':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Proje durumunu formatlar
+  String _getStatusText(String status) {
+    // Türkçe karakterler ve büyük/küçük harf düzeltmeleri
+    switch (status.toLowerCase()) {
+      case 'tamamlandi':
+      case 'tamamlandı':
+        return 'Tamamlandı';
+      case 'devam ediyor':
+      case 'devamediyor':
+      case 'devam':
+        return 'Devam Ediyor';
+      case 'planlama':
+      case 'plan':
+        return 'Planlama';
+      case 'ertelendi':
+      case 'iptal':
+        return 'Ertelendi';
+      default:
+        return status;
+    }
+  }
+
+  // Kategori için icon döndürür
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'altyapı':
+        return Icons.build;
+      case 'temizlik':
+        return Icons.cleaning_services;
+      case 'ulaşım':
+      case 'ulasim':
+        return Icons.directions_bus;
+      case 'park ve bahçeler':
+      case 'parklar':
+        return Icons.nature;
+      case 'sosyal hizmetler':
+        return Icons.people;
+      case 'kültür':
+      case 'kultur':
+        return Icons.theater_comedy;
+      case 'güvenlik':
+      case 'guvenlik':
+        return Icons.security;
+      case 'eğitim':
+      case 'egitim':
+        return Icons.school;
+      case 'sağlık':
+      case 'saglik':
+        return Icons.local_hospital;
+      default:
+        return Icons.category;
+    }
+  }
+
+  // Performans değerine göre renk döndürür
+  Color _getPerformanceColor(double performance) {
+    if (performance >= 80) {
+      return Colors.green;
+    } else if (performance >= 60) {
+      return Colors.lightGreen;
+    } else if (performance >= 40) {
+      return Colors.amber;
+    } else if (performance >= 20) {
+      return Colors.orange;
+    } else {
+      return Colors.red;
+    }
+  }
+}
+
+// TabBar için delegate
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar _tabBar;
+
+  _SliverAppBarDelegate(this._tabBar);
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+  
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Colors.white,
+      child: _tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
+  }
+}
