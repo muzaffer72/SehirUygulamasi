@@ -7,10 +7,12 @@ class ApiHelper {
   /// Web uygulaması için mevcut URL'den API adresini oluşturur
   static String getApiBaseUrl() {
     if (kIsWeb) {
-      // Web'de çalışırken window.location.origin değerini kullanıyoruz
-      final origin = html.window.location.origin;
-      // Admin panel adresi (/api endpointi) kullan
-      return '$origin:3000/api';
+      // Web'de çalışırken protokol ve host'u ayır, port değerini değiştir
+      final protocol = html.window.location.protocol; // "http:" veya "https:"
+      final hostname = html.window.location.hostname; // "domain.com" veya "localhost" 
+      
+      // Admin panel 3000 portundan yayınlanıyor
+      return '$protocol//$hostname:3000/api';
     } else {
       // Mobilde sabit URL kullanıyoruz
       return 'https://workspace.replit.app/api';
