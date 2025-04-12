@@ -11,6 +11,9 @@ class AuthService {
   // Giriş işlemi
   Future<User> login(String email, String password) async {
     try {
+      print('Logging in with: $email');
+      
+      // Admin panel ile uyumlu giriş isteği yapıyoruz
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.login}'),
         headers: {'Content-Type': 'application/json'},
@@ -20,20 +23,52 @@ class AuthService {
         }),
       );
 
+      print('Login response: ${response.statusCode}, ${response.body}');
+      
       if (response.statusCode == 200) {
-        final userData = jsonDecode(response.body);
-        final user = User.fromJson(userData);
-
-        // Save user data to local storage
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_userKey, jsonEncode(user.toJson()));
-        await prefs.setString(_tokenKey, response.headers['set-cookie'] ?? '');
-
-        return user;
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        
+        // Admin panel yanıt formatı kontrol
+        if (responseData.containsKey('success') && responseData['success'] == true) {
+          // Admin panel success: true formatı
+          final userData = responseData['user'] ?? responseData;
+          final user = User.fromJson(userData);
+          
+          // Save user data to local storage
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_userKey, jsonEncode(user.toJson()));
+          
+          // Set-Cookie header'ı kullanarak token'ı kaydedin
+          // Veya token doğrudan yanıtta geliyorsa onu kullanın
+          String token = '';
+          if (response.headers.containsKey('set-cookie')) {
+            token = response.headers['set-cookie'] ?? '';
+          } else if (responseData.containsKey('token')) {
+            token = responseData['token'];
+          }
+          
+          await prefs.setString(_tokenKey, token);
+          
+          return user;
+        } else {
+          // Doğrudan yanıtın kendisi kullanıcı verisi olabilir
+          final user = User.fromJson(responseData);
+          
+          // Save user data to local storage
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_userKey, jsonEncode(user.toJson()));
+          
+          // Set-Cookie header'ı kullanarak token'ı kaydedin
+          final token = response.headers['set-cookie'] ?? '';
+          await prefs.setString(_tokenKey, token);
+          
+          return user;
+        }
       } else {
         throw Exception('Giriş başarısız: ${response.body}');
       }
     } catch (e) {
+      print('Login error: $e');
       throw Exception('Giriş işlemi sırasında bir hata oluştu: $e');
     }
   }
@@ -49,6 +84,7 @@ class AuthService {
     try {
       print('Registering with: $email, $password');
       
+      // Admin panel ile uyumlu kayıt isteği yapıyoruz
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.register}'),
         headers: {'Content-Type': 'application/json'},
@@ -64,14 +100,34 @@ class AuthService {
 
       print('Register response: ${response.statusCode}, ${response.body}');
 
-      if (response.statusCode == 201) {
-        final userData = jsonDecode(response.body);
-        final user = User.fromJson(userData);
+      // Başarılı kayıt kodu 201 veya 200 olabilir
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        
+        // Admin panel yanıt formatı kontrol
+        User user;
+        if (responseData.containsKey('success') && responseData['success'] == true) {
+          // Admin panel success: true formatı
+          final userData = responseData['user'] ?? responseData;
+          user = User.fromJson(userData);
+        } else {
+          // Doğrudan yanıtın kendisi kullanıcı verisi olabilir
+          user = User.fromJson(responseData);
+        }
 
         // Save user data to local storage
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_userKey, jsonEncode(user.toJson()));
-        await prefs.setString(_tokenKey, response.headers['set-cookie'] ?? '');
+        
+        // Token'ı kaydediyoruz
+        String token = '';
+        if (response.headers.containsKey('set-cookie')) {
+          token = response.headers['set-cookie'] ?? '';
+        } else if (responseData.containsKey('token')) {
+          token = responseData['token'];
+        }
+        
+        await prefs.setString(_tokenKey, token);
 
         return user;
       } else {
@@ -124,6 +180,8 @@ class AuthService {
       if (userData == null || token == null) {
         throw Exception('Kullanıcı oturumu bulunamadı');
       }
+      
+      print('Getting current user with token: ${token.substring(0, Math.min(20, token.length))}...');
 
       // API'den güncel kullanıcı bilgilerini alalım
       final response = await http.get(
@@ -131,22 +189,45 @@ class AuthService {
         headers: {
           'Content-Type': 'application/json',
           'Cookie': token,
+          'Authorization': token.startsWith('Bearer ') ? token : 'Bearer $token',
         },
       );
+      
+      print('Current user response: ${response.statusCode}, ${response.body}');
 
       if (response.statusCode == 200) {
-        final updatedUserData = jsonDecode(response.body);
-        final user = User.fromJson(updatedUserData);
-
-        // Güncel kullanıcı bilgilerini kaydedelim
-        await prefs.setString(_userKey, jsonEncode(user.toJson()));
+        final responseData = jsonDecode(response.body);
         
-        return user;
+        // Admin panel yanıt formatı kontrol
+        User user;
+        if (responseData is Map<String, dynamic>) {
+          if (responseData.containsKey('success') && responseData['success'] == true) {
+            // Admin panel success: true formatı
+            final userData = responseData['user'] ?? responseData;
+            user = User.fromJson(userData);
+          } else {
+            // Doğrudan yanıtın kendisi kullanıcı verisi olabilir
+            user = User.fromJson(responseData);
+          }
+          
+          // Güncel kullanıcı bilgilerini kaydedelim
+          await prefs.setString(_userKey, jsonEncode(user.toJson()));
+          
+          return user;
+        } else {
+          throw Exception('Geçersiz API yanıt formatı');
+        }
+      } else if (response.statusCode == 401) {
+        // Oturum geçersiz, kullanıcıyı çıkış yapmış olarak işaretleyelim
+        await logout();
+        throw Exception('Oturum süresi dolmuş, lütfen tekrar giriş yapın');
       } else {
         // API'den kullanıcı bilgisi alamazsak, yerel depolamadaki bilgileri kullanalım
+        print('Fallback to local user data');
         return User.fromJson(jsonDecode(userData));
       }
     } catch (e) {
+      print('Error getting current user: $e');
       throw Exception('Kullanıcı bilgilerini alırken bir hata oluştu: $e');
     }
   }
