@@ -355,7 +355,7 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
                       
                       // Category (if available)
                       if (survey.categoryId != null)
-                        FutureBuilder<Category>(
+                        FutureBuilder<Category?>(
                           future: _apiService.getCategoryById(survey.categoryId!.toString()),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {

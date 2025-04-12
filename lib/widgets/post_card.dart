@@ -378,7 +378,7 @@ class _PostCardState extends State<PostCard> {
           
           // Category
           if (widget.post.categoryId != null)
-            FutureBuilder<Category>(
+            FutureBuilder<Category?>(
               future: _apiService.getCategoryById(widget.post.categoryId!),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {

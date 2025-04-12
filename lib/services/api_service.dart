@@ -742,7 +742,7 @@ class ApiService {
       return Comment(
         id: "temp_${DateTime.now().millisecondsSinceEpoch}",
         postId: postId,
-        userId: userId,
+        userId: userId.toString(),
         content: content,
         likeCount: 0,
         isAnonymous: isAnonymous,
