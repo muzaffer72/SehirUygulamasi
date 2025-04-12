@@ -9,7 +9,8 @@ class ApiHelper {
     if (kIsWeb) {
       // Web'de çalışırken window.location.origin değerini kullanıyoruz
       final origin = html.window.location.origin;
-      return '$origin/api';
+      // Admin panel adresi (/api endpointi) kullan
+      return '$origin:3000/api';
     } else {
       // Mobilde sabit URL kullanıyoruz
       return 'https://workspace.replit.app/api';
