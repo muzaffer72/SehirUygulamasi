@@ -80,7 +80,7 @@ class ApiService {
   }
   
   // Posts
-  Future<List<Post>> getPosts({String? categoryId, String? cityId, String? districtId, String? status, String? userId, PostType? type}) async {
+  Future<List<Post>> getPosts({String? categoryId, String? cityId, String? districtId, String? status, String? userId, PostType? type, int page = 1, int limit = 20}) async {
     String url = '$baseUrl/posts';
     
     // Add query parameters if available
@@ -91,28 +91,71 @@ class ApiService {
     if (status != null) queryParams['status'] = status;
     if (userId != null) queryParams['user_id'] = userId;
     if (type != null) queryParams['type'] = type.toString().split('.').last;
+    queryParams['page'] = page.toString();
+    queryParams['limit'] = limit.toString();
     
     if (queryParams.isNotEmpty) {
       url += '?' + Uri(queryParameters: queryParams).query;
     }
     
-    final response = await _client.get(Uri.parse(url));
-    
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => Post.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load posts: ${response.body}');
+    try {
+      final response = await _client.get(Uri.parse(url));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        // Admin paneli formatına uyumlu yanıt yapısı kontrol edilir
+        if (data is Map<String, dynamic> && data.containsKey('posts')) {
+          final List<dynamic> postsData = data['posts'];
+          return postsData.map((item) => Post.fromJson(item)).toList();
+        } 
+        // Düz liste formatında yanıt
+        else if (data is List) {
+          return data.map((item) => Post.fromJson(item)).toList();
+        } 
+        // Boş ya da geçersiz veri
+        else {
+          print('Unexpected data format: $data');
+          return [];
+        }
+      } else {
+        print('Failed to load posts: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching posts: $e');
+      return [];
     }
   }
   
-  Future<Post> getPostById(String id) async {
-    final response = await _client.get(Uri.parse('$baseUrl/posts/$id'));
-    
-    if (response.statusCode == 200) {
-      return Post.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to load post: ${response.body}');
+  Future<Post?> getPostById(String id) async {
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/posts/$id'));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        // Admin paneli API'si yanıt yapısı kontrol edilir
+        if (data is Map<String, dynamic>) {
+          // Admin panelinde post veya data altında veri olabilir
+          if (data.containsKey('post')) {
+            return Post.fromJson(data['post']);
+          } else if (data.containsKey('data')) {
+            return Post.fromJson(data['data']);
+          } else {
+            // Doğrudan post objesi
+            return Post.fromJson(data);
+          }
+        } else {
+          throw Exception('Invalid response format');
+        }
+      } else {
+        print('Failed to load post: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching post: $e');
+      return null;
     }
   }
   
@@ -169,18 +212,64 @@ class ApiService {
     }
   }
   
-  Future<Post> likePost(String id) async {
-    final post = await getPostById(id);
-    final likes = post.likes + 1;
-    
-    return updatePost(id, {'likes': likes});
+  Future<Post?> likePost(String id) async {
+    try {
+      final post = await getPostById(id);
+      if (post == null) {
+        print('Cannot like post: Post not found');
+        return null;
+      }
+      
+      // Admin panelde direk API endpointi var mı kontrol et
+      try {
+        final response = await _client.post(
+          Uri.parse('$baseUrl/posts/$id/like'),
+          headers: {'Content-Type': 'application/json'},
+        );
+        
+        if (response.statusCode == 200) {
+          return getPostById(id);
+        }
+      } catch (e) {
+        // API endpointi yoksa manuel olarak beğeni sayısını artır
+      }
+      
+      final likes = post.likes + 1;
+      return updatePost(id, {'likes': likes});
+    } catch (e) {
+      print('Error liking post: $e');
+      return null;
+    }
   }
   
-  Future<Post> highlightPost(String id) async {
-    final post = await getPostById(id);
-    final highlights = post.highlights + 1;
-    
-    return updatePost(id, {'highlights': highlights});
+  Future<Post?> highlightPost(String id) async {
+    try {
+      final post = await getPostById(id);
+      if (post == null) {
+        print('Cannot highlight post: Post not found');
+        return null;
+      }
+      
+      // Admin panelde direk API endpointi var mı kontrol et
+      try {
+        final response = await _client.post(
+          Uri.parse('$baseUrl/posts/$id/highlight'),
+          headers: {'Content-Type': 'application/json'},
+        );
+        
+        if (response.statusCode == 200) {
+          return getPostById(id);
+        }
+      } catch (e) {
+        // API endpointi yoksa manuel olarak öne çıkarma sayısını artır  
+      }
+      
+      final highlights = post.highlights + 1;
+      return updatePost(id, {'highlights': highlights});
+    } catch (e) {
+      print('Error highlighting post: $e');
+      return null;
+    }
   }
   
   // Comments
@@ -355,15 +444,34 @@ class ApiService {
       return null;
     }
     
-    // In a real app, this would validate the token with the server
-    // For now, we'll return a mock user
-    return User(
-      id: 1,
-      name: 'Demo Kullanıcı',
-      email: 'demo@example.com',
-      isVerified: true,
-      createdAt: DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
-    );
+    try {
+      // Token'ı kullanarak mevcut kullanıcıyı al
+      final response = await _client.get(
+        Uri.parse('$baseUrl/user'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data is Map<String, dynamic>) {
+          return User.fromJson(data);
+        } else {
+          throw Exception('Invalid user data format');
+        }
+      } else if (response.statusCode == 401) {
+        // Token geçersiz, null döndür ve uygulamada oturum açma sayfasına yönlendir
+        return null;
+      } else {
+        throw Exception('Failed to get current user: ${response.body}');
+      }
+    } catch (e) {
+      print('Error getting current user: $e');
+      // Hata durumunda yine null döndür
+      return null;
+    }
   }
   
   // Users

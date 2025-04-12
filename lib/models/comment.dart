@@ -80,6 +80,7 @@ class Comment {
     bool? isAnonymous,
     DateTime? createdAt,
     List<Comment>? replies,
+    String? parentId,
   }) {
     return Comment(
       id: id ?? this.id,
@@ -91,6 +92,7 @@ class Comment {
       isAnonymous: isAnonymous ?? this.isAnonymous,
       createdAt: createdAt ?? this.createdAt,
       replies: replies ?? this.replies,
+      parentId: parentId ?? this.parentId,
     );
   }
 }
