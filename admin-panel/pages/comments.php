@@ -83,20 +83,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_reply'])) {
                 // Bildirim oluştur
                 // Önce orijinal yorumun sahibini bul
                 $parentCommentQuery = "SELECT user_id FROM comments WHERE id = ?";
-                $parentCommentStmt = $db->prepare($parentCommentQuery);
-                $parentCommentStmt->bind_param("i", $parentId);
-                $parentCommentStmt->execute();
-                $parentCommentResult = $parentCommentStmt->get_result();
-                $parentComment = $parentCommentResult->fetch_assoc();
+                $parentCommentStmt = $pdo->prepare($parentCommentQuery);
+                $parentCommentStmt->execute([$parentId]);
+                $parentComment = $parentCommentStmt->fetch(PDO::FETCH_ASSOC);
                 
                 if ($parentComment && $parentComment['user_id'] !== $userId) {
                     // Yorumu yapan kullanıcının adını al
                     $usernameQuery = "SELECT username FROM users WHERE id = ?";
-                    $usernameStmt = $db->prepare($usernameQuery);
-                    $usernameStmt->bind_param("i", $userId);
-                    $usernameStmt->execute();
-                    $usernameResult = $usernameStmt->get_result();
-                    $usernameRow = $usernameResult->fetch_assoc();
+                    $usernameStmt = $pdo->prepare($usernameQuery);
+                    $usernameStmt->execute([$userId]);
+                    $usernameRow = $usernameStmt->fetch(PDO::FETCH_ASSOC);
                     $username = $usernameRow ? $usernameRow['username'] : 'Bir kullanıcı';
                     
                     // Paylaşım başlığını al
