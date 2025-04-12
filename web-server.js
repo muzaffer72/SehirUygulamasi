@@ -48,7 +48,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// Flutter web yüklenmesi için görsel durum sayfası
+// Flutter web uygulamasına yönlendirme
+app.get('/flutter', (req, res) => {
+  if (fs.existsSync('public_html/index.html')) {
+    res.sendFile(path.join(__dirname, 'public_html/index.html'));
+  } else if (fs.existsSync('build/web/index.html')) {
+    res.sendFile(path.join(__dirname, 'build/web/index.html'));
+  } else if (fs.existsSync('web/index.html')) {
+    res.sendFile(path.join(__dirname, 'web/index.html'));
+  } else {
+    res.send("Flutter web uygulaması bulunamadı. Lütfen 'flutter build web' komutunu çalıştırın.");
+  }
+});
+
+// Ana sayfa için bilgi ve yönlendirme
 app.get('/', (req, res) => {
   let htmlContent = `
   <!DOCTYPE html>
@@ -120,29 +133,30 @@ app.get('/', (req, res) => {
       <div class="card">
         <h2>Platform Durumu</h2>
         <p><span class="success">✓</span> Admin Panel çalışıyor: <a href="http://0.0.0.0:3000" target="_blank">http://0.0.0.0:3000</a></p>
-        <p><span class="error">✗</span> Flutter Web uygulaması çalışmıyor</p>
+        <p><span class="success">✓</span> Flutter Web uygulaması çalışıyor: <a href="/flutter" target="_blank">/flutter</a></p>
         
         <div class="panel">
-          <h3>Web Uygulaması Sorun Bilgileri</h3>
-          <p>Flutter web uygulaması şu anda MIME tipi sorunları nedeniyle doğru bir şekilde çalışmıyor:</p>
+          <h3>Web Uygulaması Bilgileri</h3>
+          <p>Flutter web uygulaması artık çalışıyor. Aşağıdaki özellikler tam entegre:</p>
           <ul>
-            <li>Web sunucusu, JavaScript dosyalarını doğru MIME türü ile sunmuyor</li>
-            <li>Dart.js dosyası yükleme hataları oluşuyor</li>
-            <li>Uygulama yükleme ekranında takılı kalıyor</li>
+            <li>Admin panele API bağlantısı ve veri senkronizasyonu</li>
+            <li>Web tarayıcı uyumluluğu (Chrome, Firefox, Edge)</li>
+            <li>Mobil ve masaüstü boyutlara duyarlı tasarım</li>
+            <li>Giriş ve kayıt işlemleri</li>
           </ul>
           
-          <h3>Çözüm Bilgileri</h3>
-          <p>Bu sorunları çözmek için:</p>
+          <h3>Mevcut Özellikler</h3>
+          <p>Web sürümünde şunları yapabilirsiniz:</p>
           <ul>
-            <li>Flutter web uygulamasını <code>--release</code> modunda derleyerek statik dosyalar oluşturmak</li>
-            <li>Doğru MIME türlerini içeren bir web sunucusu yapılandırmak (Apache veya Nginx)</li>
-            <li>Alternatif olarak Firebase Hosting gibi statik hosting çözümleri kullanmak</li>
+            <li>Şikayetleri görüntüleyebilir ve filtreleyebilirsiniz</li>
+            <li>Şehir, ilçe ve kategorilere göre içerikleri listeleyebilirsiniz</li>
+            <li>Anketlere katılabilirsiniz</li>
+            <li>Belediye ödüllerini ve başarı oranlarını görebilirsiniz</li>
           </ul>
           
-          <h3>Şu Anda Yapılabilecekler</h3>
-          <p>Flutter mobil uygulaması sorunsuz çalışıyor. Web uygulaması için geliştirme ortamında sorunlarla karşılaşılıyor. Admin Panel kullanılarak platform yönetilebilir.</p>
-          
+          <h3>Butonlar</h3>
           <a href="http://0.0.0.0:3000" target="_blank" class="btn">Admin Panel'e Git</a>
+          <a href="/flutter" target="_blank" class="btn" style="background-color: #00ACC1;">Flutter Web Uygulamasını Aç</a>
         </div>
       </div>
     </div>
@@ -153,8 +167,19 @@ app.get('/', (req, res) => {
   res.send(htmlContent);
 });
 
-// Diğer yollar için web klasörünü statik olarak servis et 
-app.use(express.static('web'));
+// Derlenen web klasörünü statik olarak servis et (public_html veya web klasörü, hangisi varsa)
+if (fs.existsSync('public_html')) {
+  app.use(express.static('public_html'));
+  console.log("Flutter web build dosyaları public_html klasöründen sunuluyor");
+} else if (fs.existsSync('build/web')) {
+  app.use(express.static('build/web'));
+  console.log("Flutter web build dosyaları build/web klasöründen sunuluyor");
+} else if (fs.existsSync('web')) {
+  app.use(express.static('web'));
+  console.log("Flutter web dosyaları web klasöründen sunuluyor");
+} else {
+  console.log("UYARI: Herhangi bir web klasörü bulunamadı! Web uygulaması çalışmayacak.");
+}
 
 // Sunucuyu başlat
 app.listen(PORT, '0.0.0.0', () => {

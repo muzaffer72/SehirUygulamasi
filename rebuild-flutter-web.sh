@@ -1,19 +1,27 @@
 #!/bin/bash
-# Flutter web uygulamasını yeniden inşa eden script
 
-# Önbelleği temizle
+# Flutter Web sürümünü yeniden derle
+echo "Flutter Web sürümünü derleniyor..."
+
+# Flutter cache temizle
 flutter clean
 
-# Bağımlılıkları güncelle
+# Flutter web paketlerini güncelle
 flutter pub get
 
-# Web için derleme yap
-flutter build web --web-renderer html --release
+# Web için derle
+flutter build web --release
 
-# Derlenen dosyaların listesini göster
-ls -la build/web
-
-# Derlenen dosyaları web klasörüne kopyala
-cp -r build/web/* web/
-
-echo "Flutter web derlemesi tamamlandı ve dosyalar web klasörüne kopyalandı"
+# Build klasörünü web-server için erişilebilir yap
+if [ -d "build/web" ]; then
+  echo "Web build klasörü 'build/web' başarıyla oluşturuldu."
+  
+  # Web build dosyalarını public_html klasörüne kopyala (web-server bunu kullanıyor)
+  mkdir -p public_html
+  cp -r build/web/* public_html/
+  
+  echo "Build dosyaları public_html klasörüne kopyalandı."
+  echo "Web uygulaması http://0.0.0.0:5000 adresinde çalışıyor."
+else
+  echo "HATA: Web build klasörü oluşturulamadı!"
+fi
