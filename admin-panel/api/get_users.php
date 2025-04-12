@@ -8,10 +8,12 @@ try {
     // Aktif kullanıcıları getir (yasaklanmamış)
     // PostgreSQL'de boolean değerler için 'FALSE' yerine 'false' kullanılıyor
     // ve IS NULL kontrolü ekliyoruz (is_banned sütunu yoksa hata vermemesi için)
+    // PostgreSQL için WHERE is_banned = FALSE koşulunu BOOLEAN olarak doğru kullanıyoruz
+    // Ayrıca is_banned sütunun hiç olmaması ihtimaline karşı IS NULL kontrolü de ekliyoruz
     $query = "
         SELECT id, username, name, email, profile_image_url 
         FROM users 
-        WHERE is_banned = false OR is_banned IS NULL
+        WHERE is_banned IS NULL OR is_banned = FALSE
         ORDER BY name ASC
     ";
     

@@ -868,23 +868,54 @@ function initializePostsPage() {
     
     // Yorum için kullanıcı seçim kutusunu doldur
     function populateCommentUserSelect() {
+        console.log("Kullanıcı seçim kutusunu doldurma fonksiyonu çağrıldı");
+        
         const userSelect = document.getElementById('comment-user');
-        if (!userSelect) return;
+        if (!userSelect) {
+            console.error("comment-user ID'li bir element bulunamadı!");
+            return;
+        }
         
         // Seçim kutusunu temizle
         userSelect.innerHTML = '<option value="">Kullanıcı Seçin</option>';
         
         // API'den kullanıcıları getir
+        console.log("API'den kullanıcılar getiriliyor...");
         fetch('/api/get_users.php')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log("API yanıtı alındı:", data);
                 if (data.success && data.users && data.users.length > 0) {
+                    console.log(`${data.users.length} kullanıcı bulundu`);
+                    // Admin kullanıcısını seçili yap
+                    let adminFound = false;
+                    
                     data.users.forEach(user => {
                         const option = document.createElement('option');
                         option.value = user.id;
                         option.textContent = `${user.name} (@${user.username})`;
+                        
+                        // Admin kullanıcısını seçili yap (id=1 varsayılan admin)
+                        if (user.id == 1) {
+                            option.selected = true;
+                            adminFound = true;
+                        }
+                        
                         userSelect.appendChild(option);
                     });
+                    
+                    // Admin bulunamadıysa en az bir kullanıcı seçili olsun
+                    if (!adminFound && data.users.length > 0) {
+                        userSelect.options[1].selected = true;
+                    }
+                }
+                else {
+                    console.warn("API başarılı yanıt döndürmedi veya kullanıcı bulunamadı:", data);
                 }
             })
             .catch(error => {
