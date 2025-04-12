@@ -42,9 +42,8 @@ if ($operation === 'toggle_visibility' && isset($_GET['id'])) {
         
         // Durumu güncelle
         $updateQuery = "UPDATE comments SET is_hidden = ? WHERE id = ?";
-        $updateStmt = $db->prepare($updateQuery);
-        $updateStmt->bind_param("ii", $isHidden, $commentId);
-        $result = $updateStmt->execute();
+        $updateStmt = $pdo->prepare($updateQuery);
+        $result = $updateStmt->execute([$isHidden, $commentId]);
         
         if ($result) {
             $message = "Yorum " . ($isHidden ? "gizlendi" : "görünür hale getirildi") . ".";
@@ -223,17 +222,10 @@ try {
     // Sorgu parametreleri
     $params[] = $limit;
     $params[] = $offset;
-    $types .= "ii";
     
-    $stmt = $db->prepare($query);
-    
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
-    
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $comments = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
+    $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Toplam sayıyı getir
     $countQuery = "
@@ -245,17 +237,10 @@ try {
     $countParams = $params;
     array_pop($countParams); // limit parametresini çıkar
     array_pop($countParams); // offset parametresini çıkar
-    $countTypes = substr($types, 0, -2); // son iki karakteri çıkar (ii)
     
-    $countStmt = $db->prepare($countQuery);
-    
-    if (!empty($countParams)) {
-        $countStmt->bind_param($countTypes, ...$countParams);
-    }
-    
-    $countStmt->execute();
-    $countResult = $countStmt->get_result();
-    $totalRows = $countResult->fetch_assoc()['total'];
+    $countStmt = $pdo->prepare($countQuery);
+    $countStmt->execute($countParams);
+    $totalRows = $countStmt->fetchColumn();
     
     $totalPages = ceil($totalRows / $limit);
 } catch (Exception $e) {
@@ -268,8 +253,9 @@ try {
 // Kullanıcıları al (filtre için)
 try {
     $usersQuery = "SELECT id, username, name FROM users ORDER BY name ASC LIMIT 200";
-    $usersResult = $db->query($usersQuery);
-    $users = $usersResult->fetch_all(MYSQLI_ASSOC);
+    $usersStmt = $pdo->prepare($usersQuery);
+    $usersStmt->execute();
+    $users = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     $error = "Kullanıcılar alınırken hata: " . $e->getMessage();
     $users = [];
@@ -278,8 +264,9 @@ try {
 // Paylaşımları al (filtre için)
 try {
     $postsQuery = "SELECT id, title FROM posts ORDER BY created_at DESC LIMIT 100";
-    $postsResult = $db->query($postsQuery);
-    $posts = $postsResult->fetch_all(MYSQLI_ASSOC);
+    $postsStmt = $pdo->prepare($postsQuery);
+    $postsStmt->execute();
+    $posts = $postsStmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     $error = "Paylaşımlar alınırken hata: " . $e->getMessage();
     $posts = [];
@@ -304,11 +291,9 @@ if ($operation === 'view' && isset($_GET['id'])) {
             WHERE c.id = ?
         ";
         
-        $stmt = $db->prepare($query);
-        $stmt->bind_param("i", $commentId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $comment = $result->fetch_assoc();
+        $stmt = $pdo->prepare($query);
+        $stmt->execute([$commentId]);
+        $comment = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$comment) {
             $error = "Yorum bulunamadı.";
@@ -322,11 +307,9 @@ if ($operation === 'view' && isset($_GET['id'])) {
                 ORDER BY r.created_at ASC
             ";
             
-            $repliesStmt = $db->prepare($repliesQuery);
-            $repliesStmt->bind_param("i", $commentId);
-            $repliesStmt->execute();
-            $repliesResult = $repliesStmt->get_result();
-            $replies = $repliesResult->fetch_all(MYSQLI_ASSOC);
+            $repliesStmt = $pdo->prepare($repliesQuery);
+            $repliesStmt->execute([$commentId]);
+            $replies = $repliesStmt->fetchAll(PDO::FETCH_ASSOC);
         }
     } catch (Exception $e) {
         $error = "Yorum detayları alınırken bir hata oluştu: " . $e->getMessage();
