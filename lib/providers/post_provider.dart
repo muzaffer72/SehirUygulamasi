@@ -54,22 +54,107 @@ class PostsNotifier extends StateNotifier<List<Post>> {
   
   PostsNotifier(this._apiService) : super([]);
   
-  Future<void> loadPosts() async {
-    final posts = await _apiService.getPosts();
-    state = posts;
+  int _currentPage = 1;
+  final int _postsPerPage = 10;
+  bool _isLastPage = false;
+  
+  Future<void> loadPosts({bool refresh = true}) async {
+    try {
+      if (refresh) {
+        _currentPage = 1;
+        _isLastPage = false;
+      }
+      
+      print('Loading posts page $_currentPage');
+      final posts = await _apiService.getPosts(
+        page: _currentPage,
+        limit: _postsPerPage
+      );
+      
+      print('Loaded ${posts.length} posts');
+      
+      if (posts.isEmpty) {
+        _isLastPage = true;
+      }
+      
+      if (refresh) {
+        state = posts;
+      } else {
+        // Sadece yeni gönderileri ekle, duplicate önle
+        final currentIds = state.map((post) => post.id).toSet();
+        final uniqueNewPosts = posts.where((post) => !currentIds.contains(post.id)).toList();
+        state = [...state, ...uniqueNewPosts];
+      }
+      
+      // Sonraki sayfa için hazırlık
+      if (posts.length < _postsPerPage) {
+        _isLastPage = true;
+      } else {
+        _currentPage++;
+      }
+    } catch (e) {
+      print('Error loading posts: $e');
+      // Hata durumunda boş liste kullanma
+      if (refresh) {
+        state = [];
+      }
+    }
   }
   
   Future<void> filterPosts({
     String? cityId,
     String? districtId,
     String? categoryId,
+    String? type,
+    String? sortBy,
+    bool refresh = true,
   }) async {
-    final posts = await _apiService.getPosts(
-      cityId: cityId,
-      districtId: districtId,
-      categoryId: categoryId,
-    );
-    state = posts;
+    try {
+      if (refresh) {
+        _currentPage = 1;
+        _isLastPage = false;
+      }
+      
+      print('Filtering posts page $_currentPage');
+      print('Filters: cityId=$cityId, districtId=$districtId, categoryId=$categoryId, type=$type, sortBy=$sortBy');
+      
+      final posts = await _apiService.getPosts(
+        cityId: cityId,
+        districtId: districtId, 
+        categoryId: categoryId,
+        type: type != null ? type == 'problem' ? PostType.problem : PostType.general : null,
+        page: _currentPage,
+        limit: _postsPerPage,
+      );
+      
+      print('Filtered posts count: ${posts.length}');
+      
+      if (posts.isEmpty) {
+        _isLastPage = true;
+      }
+      
+      if (refresh) {
+        state = posts;
+      } else {
+        // Sadece yeni gönderileri ekle, duplicate önle
+        final currentIds = state.map((post) => post.id).toSet();
+        final uniqueNewPosts = posts.where((post) => !currentIds.contains(post.id)).toList();
+        state = [...state, ...uniqueNewPosts];
+      }
+      
+      // Sonraki sayfa için hazırlık
+      if (posts.length < _postsPerPage) {
+        _isLastPage = true;
+      } else {
+        _currentPage++;
+      }
+    } catch (e) {
+      print('Error filtering posts: $e');
+      // Hata durumunda boş liste kullanma
+      if (refresh) {
+        state = [];
+      }
+    }
   }
   
   Future<void> likePost(String postId) async {

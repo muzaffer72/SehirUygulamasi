@@ -21,6 +21,49 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    
+    // Başlangıçta gönderi yükleme - admin panel entegrasyonu
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialPosts();
+    });
+  }
+  
+  Future<void> _loadInitialPosts() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    print('Loading initial posts');
+    
+    try {
+      // Filtreleri kontrol et (genellikle başlangıçta boş olur)
+      final filters = ref.read(postFiltersProvider);
+      
+      // Filtre varsa filtreli yükle, yoksa tümünü yükle
+      if (filters.hasFilters) {
+        await ref.read(postsProvider.notifier).filterPosts(
+          cityId: filters.cityId,
+          districtId: filters.districtId,
+          categoryId: filters.categoryId,
+          refresh: true,
+        );
+      } else {
+        await ref.read(postsProvider.notifier).loadPosts(refresh: true);
+      }
+    } catch (e) {
+      print('Error loading initial posts: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gönderiler yüklenirken bir hata oluştu')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
   
   @override
@@ -47,17 +90,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       _isLoading = true;
     });
     
-    // Simulate loading more data
-    await Future.delayed(const Duration(seconds: 1));
-    
     // Get the filters
     final filters = ref.read(postFiltersProvider);
     
-    // Load more posts
+    // Load more posts - refresh = false yaparak mevcut verilere ekle
     await ref.read(postsProvider.notifier).filterPosts(
       cityId: filters.cityId,
       districtId: filters.districtId,
       categoryId: filters.categoryId,
+      refresh: false, // Yani sayfa, mevcut verilere ekle
     );
     
     setState(() {
@@ -68,10 +109,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   Future<void> _refreshData() async {
     final filters = ref.read(postFiltersProvider);
     
+    // refresh = true yaparak yeniden yükle
     await ref.read(postsProvider.notifier).filterPosts(
       cityId: filters.cityId,
       districtId: filters.districtId,
       categoryId: filters.categoryId,
+      refresh: true, // Tam yenileme, verileri sıfırla
     );
   }
   
@@ -98,22 +141,29 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           // Filter Bar
           FilterBar(
             onFilterApplied: (cityId, districtId, categoryId) {
+              // State güncellemesi
               ref.read(cityFilterProvider.notifier).state = cityId;
               ref.read(districtFilterProvider.notifier).state = districtId;
               ref.read(categoryFilterProvider.notifier).state = categoryId;
               
+              // API ile filtreleme
+              print('Applying filters: cityId=$cityId, districtId=$districtId, categoryId=$categoryId');
               ref.read(postsProvider.notifier).filterPosts(
                 cityId: cityId,
                 districtId: districtId,
                 categoryId: categoryId,
+                refresh: true, // Filtreler değiştiğinde yeniden yükle
               );
             },
             onFilterCleared: () {
+              // State temizleme
               ref.read(cityFilterProvider.notifier).state = null;
               ref.read(districtFilterProvider.notifier).state = null;
               ref.read(categoryFilterProvider.notifier).state = null;
               
-              ref.read(postsProvider.notifier).loadPosts();
+              // Tüm gönderileri yeniden yükle
+              print('Clearing all filters, reloading posts');
+              ref.read(postsProvider.notifier).loadPosts(refresh: true);
             },
           ),
           
@@ -304,14 +354,41 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
   
   void _sortPosts(String sortBy) {
-    // In a real app, this would call an API with sort parameters
+    // Mevcut filtreleri al
+    final filters = ref.read(postFiltersProvider);
+    
+    // API ile gönderileri sırala
+    print('Sorting posts by: $sortBy');
+    ref.read(postsProvider.notifier).filterPosts(
+      cityId: filters.cityId,
+      districtId: filters.districtId,
+      categoryId: filters.categoryId,
+      sortBy: sortBy,
+      refresh: true,
+    );
+    
+    // Kullanıcıya bildirim göster
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Gönderiler "$sortBy" olarak sıralandı')),
     );
   }
   
   void _filterPostsByType(PostType type) {
-    // In a real app, this would call an API with filter parameters
+    // Mevcut filtreleri al
+    final filters = ref.read(postFiltersProvider);
+    final typeStr = type == PostType.problem ? 'problem' : 'general';
+    
+    // API ile gönderileri filtrele
+    print('Filtering posts by type: $typeStr');
+    ref.read(postsProvider.notifier).filterPosts(
+      cityId: filters.cityId,
+      districtId: filters.districtId,
+      categoryId: filters.categoryId,
+      type: typeStr,
+      refresh: true,
+    );
+    
+    // Kullanıcıya bildirim göster
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
