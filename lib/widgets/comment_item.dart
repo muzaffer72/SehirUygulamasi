@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/comment.dart';
+import 'package:sikayet_var/models/user.dart';
+import 'package:sikayet_var/services/api_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class CommentItem extends StatelessWidget {
+class CommentItem extends ConsumerWidget {
   final Comment comment;
   final VoidCallback onLike;
   final Function(String) onReply;
@@ -15,9 +18,9 @@ class CommentItem extends StatelessWidget {
     required this.onReply,
     this.isReply = false,
   }) : super(key: key);
-
+  
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: EdgeInsets.only(
         left: isReply ? 32.0 : 0.0,
@@ -37,9 +40,11 @@ class CommentItem extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 16,
+                backgroundColor: comment.isAnonymous ? Colors.grey[300] : Colors.blue[100],
                 child: Icon(
                   comment.isAnonymous ? Icons.face_retouching_off : Icons.person,
                   size: 16,
+                  color: comment.isAnonymous ? Colors.grey[700] : Colors.blue[800],
                 ),
               ),
               const SizedBox(width: 8),
@@ -47,13 +52,50 @@ class CommentItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      comment.isAnonymous ? 'Gizli Kullanıcı' : 'Kullanıcı Adı', // Would be replaced with actual username
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                    // Kullanıcı adı - API'den getirilir
+                    if (comment.isAnonymous)
+                      const Text(
+                        'Gizli Kullanıcı',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      )
+                    else
+                      FutureBuilder<User>(
+                        future: ApiService().getUserById(comment.userId),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Text(
+                              'Yükleniyor...',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            );
+                          } else if (snapshot.hasData) {
+                            return Text(
+                              snapshot.data!.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            );
+                          } else {
+                            return Text(
+                              'Kullanıcı ${comment.userId}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            );
+                          }
+                        },
                       ),
-                    ),
+                      
+                    // Yorum zamanı
                     Text(
                       timeago.format(comment.createdAt, locale: 'tr'),
                       style: TextStyle(

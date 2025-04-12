@@ -181,7 +181,7 @@ class AuthService {
         throw Exception('Kullanıcı oturumu bulunamadı');
       }
       
-      print('Getting current user with token: ${token.substring(0, Math.min(20, token.length))}...');
+      print('Getting current user with token: ${token.length > 20 ? token.substring(0, 20) : token}...');
 
       // API'den güncel kullanıcı bilgilerini alalım
       final response = await http.get(
