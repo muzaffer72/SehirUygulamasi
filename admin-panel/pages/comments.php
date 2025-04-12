@@ -61,27 +61,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_reply'])) {
     $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
     $postId = isset($_POST['post_id']) ? (int)$_POST['post_id'] : 0;
     $content = isset($_POST['content']) ? $_POST['content'] : '';
-    $isAnonymous = isset($_POST['is_anonymous']) ? 1 : 0;
+    $isAnonymous = isset($_POST['is_anonymous']) ? true : false;
     
     if ($parentId > 0 && $userId > 0 && $postId > 0 && !empty($content)) {
         try {
             $query = "INSERT INTO comments (post_id, user_id, content, parent_id, is_anonymous) VALUES (?, ?, ?, ?, ?)";
-            $stmt = $db->prepare($query);
-            $stmt->bind_param("iisii", $postId, $userId, $content, $parentId, $isAnonymous);
-            $result = $stmt->execute();
+            $stmt = $pdo->prepare($query);
+            $result = $stmt->execute([$postId, $userId, $content, $parentId, $isAnonymous]);
             
             if ($result) {
                 // Paylaşımın yorum sayısını güncelle
                 $updatePostQuery = "UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?";
-                $updatePostStmt = $db->prepare($updatePostQuery);
-                $updatePostStmt->bind_param("i", $postId);
-                $updatePostStmt->execute();
+                $updatePostStmt = $pdo->prepare($updatePostQuery);
+                $updatePostStmt->execute([$postId]);
                 
                 // Kullanıcının yorum sayısını güncelle
                 $updateUserQuery = "UPDATE users SET comment_count = comment_count + 1 WHERE id = ?";
-                $updateUserStmt = $db->prepare($updateUserQuery);
-                $updateUserStmt->bind_param("i", $userId);
-                $updateUserStmt->execute();
+                $updateUserStmt = $pdo->prepare($updateUserQuery);
+                $updateUserStmt->execute([$userId]);
                 
                 // Bildirim oluştur
                 // Önce orijinal yorumun sahibini bul
