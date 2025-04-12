@@ -97,11 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_reply'])) {
                     
                     // Paylaşım başlığını al
                     $postTitleQuery = "SELECT title FROM posts WHERE id = ?";
-                    $postTitleStmt = $db->prepare($postTitleQuery);
-                    $postTitleStmt->bind_param("i", $postId);
-                    $postTitleStmt->execute();
-                    $postTitleResult = $postTitleStmt->get_result();
-                    $postTitleRow = $postTitleResult->fetch_assoc();
+                    $postTitleStmt = $pdo->prepare($postTitleQuery);
+                    $postTitleStmt->execute([$postId]);
+                    $postTitleRow = $postTitleStmt->fetch(PDO::FETCH_ASSOC);
                     $postTitle = $postTitleRow ? $postTitleRow['title'] : 'bir paylaşım';
                     
                     // Bildirim ekle
@@ -113,9 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_reply'])) {
                     $recipientId = $parentComment['user_id'];
                     
                     $notificationQuery = "INSERT INTO notifications (user_id, title, content, type, source_id, source_type) VALUES (?, ?, ?, ?, ?, ?)";
-                    $notificationStmt = $db->prepare($notificationQuery);
-                    $notificationStmt->bind_param("isssss", $recipientId, $notificationTitle, $notificationContent, $notificationType, $notificationSourceId, $notificationSourceType);
-                    $notificationStmt->execute();
+                    $notificationStmt = $pdo->prepare($notificationQuery);
+                    $notificationStmt->execute([$recipientId, $notificationTitle, $notificationContent, $notificationType, $notificationSourceId, $notificationSourceType]);
                 }
                 
                 $message = "Yanıt başarıyla eklendi.";
@@ -138,9 +135,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_comment'])) {
     if ($commentId > 0 && !empty($content)) {
         try {
             $query = "UPDATE comments SET content = ? WHERE id = ?";
-            $stmt = $db->prepare($query);
-            $stmt->bind_param("si", $content, $commentId);
-            $result = $stmt->execute();
+            $stmt = $pdo->prepare($query);
+            $result = $stmt->execute([$content, $commentId]);
             
             if ($result) {
                 $message = "Yorum başarıyla güncellendi.";
