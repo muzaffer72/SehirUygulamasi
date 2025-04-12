@@ -13,9 +13,8 @@ if ($operation === 'delete' && isset($_GET['id'])) {
     
     try {
         $query = "DELETE FROM comments WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->bind_param("i", $commentId);
-        $result = $stmt->execute();
+        $stmt = $pdo->prepare($query);
+        $result = $stmt->execute([$commentId]);
         
         if ($result) {
             $message = "Yorum başarıyla silindi.";
@@ -34,11 +33,9 @@ if ($operation === 'toggle_visibility' && isset($_GET['id'])) {
     try {
         // Önce yorumun mevcut durumunu al
         $checkQuery = "SELECT is_hidden FROM comments WHERE id = ?";
-        $checkStmt = $db->prepare($checkQuery);
-        $checkStmt->bind_param("i", $commentId);
-        $checkStmt->execute();
-        $result = $checkStmt->get_result();
-        $comment = $result->fetch_assoc();
+        $checkStmt = $pdo->prepare($checkQuery);
+        $checkStmt->execute([$commentId]);
+        $comment = $checkStmt->fetch(PDO::FETCH_ASSOC);
         
         // Durumu tersine çevir
         $isHidden = !$comment['is_hidden'];
