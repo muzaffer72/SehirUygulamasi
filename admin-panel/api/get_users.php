@@ -6,10 +6,12 @@ header('Content-Type: application/json');
 try {
     global $pdo;
     // Aktif kullanıcıları getir (yasaklanmamış)
+    // PostgreSQL'de boolean değerler için 'FALSE' yerine 'false' kullanılıyor
+    // ve IS NULL kontrolü ekliyoruz (is_banned sütunu yoksa hata vermemesi için)
     $query = "
         SELECT id, username, name, email, profile_image_url 
         FROM users 
-        WHERE is_banned = FALSE OR is_banned IS NULL
+        WHERE is_banned = false OR is_banned IS NULL
         ORDER BY name ASC
     ";
     
