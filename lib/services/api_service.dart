@@ -185,33 +185,29 @@ class ApiService {
   
   // Comments
   Future<List<Comment>> getCommentsByPostId(String postId) async {
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    return [
-      Comment(
-        id: '1',
-        postId: postId,
-        userId: '2',
-        content: 'Bu sorun bizim mahallemizde de var.',
-        likeCount: 3,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      Comment(
-        id: '2',
-        postId: postId,
-        userId: '3',
-        content: 'Geçen hafta şikayet ettim ama hala düzeltilmedi.',
-        likeCount: 1,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-    ];
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/comments?post_id=$postId'));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data['success'] == true && data['comments'] != null) {
+          final List<dynamic> commentsData = data['comments'];
+          return commentsData.map((item) => Comment.fromJson(item)).toList();
+        } else {
+          return [];
+        }
+      } else {
+        throw Exception('Failed to load comments: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching comments: $e');
+      // Hata durumunda boş liste döndürüyoruz
+      return [];
+    }
   }
   
-  Future<Comment> addComment(String postId, String content, {bool isAnonymous = false}) async {
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
-    
+  Future<Comment> addComment(String postId, String content, {bool isAnonymous = false, String? parentId}) async {
     // Get user ID from token
     final token = await _getToken();
     if (token == null) {
@@ -221,15 +217,44 @@ class ApiService {
     // In a real app, this would be extracted from the token or provided by the API
     const userId = "1"; 
     
-    return Comment(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      postId: postId,
-      userId: userId,
-      content: content,
-      likeCount: 0,
-      isAnonymous: isAnonymous,
-      createdAt: DateTime.now(),
-    );
+    final Map<String, dynamic> requestBody = {
+      'post_id': postId,
+      'user_id': userId,
+      'content': content,
+      'is_anonymous': isAnonymous,
+    };
+    
+    // Eğer bir yoruma yanıt ise parent_id değerini ekle
+    if (parentId != null) {
+      requestBody['parent_id'] = parentId;
+    }
+    
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/comments'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+      
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Comment.fromJson(data);
+      } else {
+        throw Exception('Failed to add comment: ${response.body}');
+      }
+    } catch (e) {
+      print('Error adding comment: $e');
+      // Hata durumunda görsel amaçlı geçici bir yorum nesnesi döndürüyoruz
+      return Comment(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        postId: postId,
+        userId: userId,
+        content: content,
+        likeCount: 0,
+        isAnonymous: isAnonymous,
+        createdAt: DateTime.now(),
+      );
+    }
   }
   
   // Bu fonksiyon kaldırıldı çünkü aşağıda zaten bir getCityById (String) fonksiyonu var

@@ -8,6 +8,7 @@ class Comment {
   final DateTime createdAt;
   final List<Comment>? replies;
   final bool isAnonymous;
+  final String? parentId; // Yanıt olduğu yorumun ID'si
 
   Comment({
     required this.id,
@@ -19,6 +20,7 @@ class Comment {
     required this.createdAt,
     this.replies,
     this.isAnonymous = false,
+    this.parentId,
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class Comment {
       likeCount: json['like_count'] ?? 0,
       isHidden: json['is_hidden'] ?? false,
       isAnonymous: json['is_anonymous'] ?? false,
+      parentId: json['parent_id']?.toString(),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
@@ -55,6 +58,10 @@ class Comment {
       'is_anonymous': isAnonymous,
       'created_at': createdAt.toIso8601String(),
     };
+    
+    if (parentId != null) {
+      data['parent_id'] = parentId;
+    }
     
     if (replies != null) {
       data['replies'] = replies!.map((reply) => reply.toJson()).toList();
