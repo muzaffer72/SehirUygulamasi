@@ -19,6 +19,10 @@ args = "Admin Panel"
 task = "workflow.run"
 args = "Flutter Web"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "API Proxy"
+
 [[workflows.workflow]]
 name = "Admin Panel"
 author = "agent"
@@ -48,6 +52,21 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "node web-server.js"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "API Proxy"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node api-connect.js"
+waitForPort = 9000
 
 [deployment]
 run = ["sh", "-c", "cd . && flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0"]
@@ -79,6 +98,10 @@ externalPort = 8000
 [[ports]]
 localPort = 8080
 externalPort = 8080
+
+[[ports]]
+localPort = 9000
+externalPort = 9000
 
 [[ports]]
 localPort = 39301
