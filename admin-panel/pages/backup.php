@@ -8,6 +8,41 @@ if (!file_exists($backup_dir)) {
     mkdir($backup_dir, 0755, true);
 }
 
+// Projeyi yedekle (kodları)
+function backup_code() {
+    global $backup_dir;
+    $timestamp = date('Y-m-d_H-i-s');
+    $backup_file = "$backup_dir/code_backup_$timestamp.zip";
+    $project_root = realpath(__DIR__ . '/../../');
+    
+    // Hariç tutulacak klasörler ve dosyalar
+    $exclude_paths = [
+        '.git', 
+        'node_modules',
+        'vendor',
+        'export_data',
+        '.dart_tool',
+        '.pub-cache',
+        'build',
+        '.pub'
+    ];
+    
+    $exclude_args = '';
+    foreach ($exclude_paths as $path) {
+        $exclude_args .= " --exclude='$path'";
+    }
+    
+    // Zip komutunu çalıştır
+    $command = "cd $project_root && zip -r $backup_file ./ $exclude_args 2>&1";
+    exec($command, $output, $return_var);
+    
+    if ($return_var !== 0) {
+        return false;
+    }
+    
+    return $backup_file;
+}
+
 // PostgreSQL yedekleme için yardımcı fonksiyonlar
 function get_db_tables() {
     global $db;
@@ -66,7 +101,7 @@ function export_table_data($table_name, $format = 'sql') {
                 if ($val === null) {
                     return "NULL";
                 } else {
-                    return "'" . $db->real_escape_string($val) . "'";
+                    return "'" . addslashes($val) . "'";
                 }
             }, array_values($row));
             

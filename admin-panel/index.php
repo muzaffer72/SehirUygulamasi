@@ -657,7 +657,7 @@ $page_file = "pages/{$page}.php";
 
                     <?php if ($page === 'dashboard'): ?>
                         <?php include($page_file); ?>
-                    <?php elseif ($page === 'profanity_filter'): ?>
+                    <?php elseif (in_array($page, ['profanity_filter', 'backup', 'surveys'])): ?>
                         <?php include($page_file); ?>
                     <?php elseif (isset($_SESSION['user']) && file_exists($page_file)): ?>
                         <?php include($page_file); ?>
