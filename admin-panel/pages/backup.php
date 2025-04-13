@@ -562,7 +562,41 @@ function generate_json_export($table_name) {
 function generate_csv_export($table_name) {
     global $db, $backup_dir;
     $temp_file = tempnam(sys_get_temp_dir(), 'csv_');
+    $f = fopen($temp_file, 'w');
     
+    if (!$f) return false;
+    
+    // Sütun başlıklarını al
+    $query = "SELECT column_name FROM information_schema.columns 
+             WHERE table_name = ? 
+             ORDER BY ordinal_position";
+    $stmt = $db->prepare($query);
+    $stmt->bind_param("s", $table_name);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $headers = [];
+    while ($row = $result->fetch_assoc()) {
+        $headers[] = $row['column_name'];
+    }
+    
+    // CSV başlık satırını yaz
+    fputcsv($f, $headers);
+    
+    // Verileri al ve yaz
+    $data_query = "SELECT * FROM \"$table_name\"";
+    $data_stmt = $db->prepare($data_query);
+    $data_stmt->execute();
+    $data_result = $data_stmt->get_result();
+    
+    while ($row = $data_result->fetch_assoc()) {
+        fputcsv($f, $row);
+    }
+    
+    fclose($f);
+    return $temp_file;
+}
+
 // Yeni eklenen birleştirilmiş SQL yedekleme fonksiyonu
 function generate_unified_sql_export($with_drop = false) {
     global $db, $backup_dir;
@@ -1558,6 +1592,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = "Yedekleme oluşturulurken bir hata oluştu.";
                 $message_type = 'danger';
             }
+        } elseif ($format === 'unified_sql') {
+            // Birleştirilmiş SQL yedeği oluştur
+            $backup_file = generate_unified_sql_export($with_drop);
+            
+            // Sıkıştırma isteği varsa
+            if ($compress && $backup_file) {
+                $zip_path = $backup_file . ".zip";
+                $zip = new ZipArchive();
+                if ($zip->open($zip_path, ZipArchive::CREATE) === TRUE) {
+                    $zip->addFile($backup_file, basename($backup_file));
+                    $zip->close();
+                    // Orijinal dosyayı sil
+                    unlink($backup_file);
+                    $backup_file = $zip_path;
+                }
+            }
+            
+            if ($backup_file) {
+                $message = "Birleştirilmiş SQL yedekleme başarıyla tamamlandı: " . basename($backup_file);
+            } else {
+                $message = "Birleştirilmiş SQL yedekleme oluşturulurken bir hata oluştu.";
+                $message_type = 'danger';
+            }
         } else {
             $table = $_POST['table'] ?? '';
             
@@ -1674,6 +1731,7 @@ $backups = get_existing_backups();
                                 <option value="json">JSON</option>
                                 <option value="csv">CSV</option>
                                 <option value="full">Tam Yedekleme (SQL+JSON+CSV)</option>
+                                <option value="unified_sql">Birleştirilmiş SQL (Tek Dosya)</option>
                             </select>
                         </div>
                         
@@ -1890,7 +1948,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableSelect = document.getElementById('table');
     
     formatSelect.addEventListener('change', function() {
-        if (this.value === 'full') {
+        if (this.value === 'full' || this.value === 'unified_sql') {
             tableSelect.value = 'all';
             tableSelect.disabled = true;
         } else {
