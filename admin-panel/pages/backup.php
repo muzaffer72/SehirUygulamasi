@@ -1981,17 +1981,33 @@ $backups = get_existing_backups();
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Format seçimine göre tablo seçimini etkinleştir/devre dışı bırak
+    // Format seçimine göre tablo seçimini ve yedekleme içeriği seçimini etkinleştir/devre dışı bırak
     const formatSelect = document.getElementById('format');
     const tableSelect = document.getElementById('table');
+    const exportTypeOptions = document.querySelector('.export-type-options');
     
-    formatSelect.addEventListener('change', function() {
-        if (this.value === 'full' || this.value === 'unified_sql') {
+    // Sayfa yüklendiğinde format değerine göre görünürlüğü ayarla
+    function updateVisibility() {
+        if (formatSelect.value === 'full' || formatSelect.value === 'unified_sql') {
             tableSelect.value = 'all';
             tableSelect.disabled = true;
+            
+            // Eğer seçilen format unified_sql ise, yedekleme içeriği seçeneğini göster
+            if (formatSelect.value === 'unified_sql') {
+                exportTypeOptions.style.display = 'block';
+            } else {
+                exportTypeOptions.style.display = 'none';
+            }
         } else {
             tableSelect.disabled = false;
+            exportTypeOptions.style.display = 'none';
         }
-    });
+    }
+    
+    // Sayfa yüklendiğinde initial görünürlüğü ayarla
+    updateVisibility();
+    
+    // Format seçimi değiştiğinde görünürlüğü güncelle
+    formatSelect.addEventListener('change', updateVisibility);
 });
 </script>
