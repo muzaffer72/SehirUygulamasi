@@ -247,18 +247,266 @@ function export_table_data($table_name, $format = 'sql', $with_drop = false, $co
     return false;
 }
 
-function export_all_tables($format = 'sql', $with_drop = false, $compress = false) {
+function export_all_tables($format = 'sql', $with_drop = false, $as_zip = true) {
+    global $backup_dir;
     $tables = get_db_tables();
-    $exported_files = [];
+    $timestamp = date('Y-m-d_H-i-s');
     
-    foreach ($tables as $table) {
-        $file_path = export_table_data($table, $format, $with_drop, $compress);
-        if ($file_path) {
-            $exported_files[] = $file_path;
+    // Eğer tek ZIP olarak istendiyse
+    if ($as_zip) {
+        $zip_path = "$backup_dir/db_backup_{$format}_{$timestamp}.zip";
+        $zip = new ZipArchive();
+        
+        if ($zip->open($zip_path, ZipArchive::CREATE) !== TRUE) {
+            return [];
         }
+        
+        $temp_dir = sys_get_temp_dir() . "/sikayetvar_export_" . time();
+        if (!file_exists($temp_dir)) {
+            mkdir($temp_dir, 0755, true);
+        }
+        
+        // Her tablo için dosya oluştur (ancak yedekleme klasörüne değil, geçici klasöre)
+        $files_count = 0;
+        foreach ($tables as $table) {
+            $file_name = "{$table}.{$format}";
+            $file_path = "{$temp_dir}/{$file_name}";
+            
+            $content = '';
+            
+            if ($format === 'sql') {
+                $content = generate_sql_export($table, $with_drop);
+            } else if ($format === 'json') {
+                $content = generate_json_export($table);
+            } else if ($format === 'csv') {
+                $content = generate_csv_export($table);
+                // CSV için dosyaya yazma biraz farklı, doğrudan içerik dönmek yerine dosyaya yazıyor
+                if ($content) {
+                    $zip->addFile($content, $file_name);
+                    $files_count++;
+                    // CSV dosyasını sonradan silelim
+                    @unlink($content);
+                    continue;
+                }
+            }
+            
+            if ($content) {
+                file_put_contents($file_path, $content);
+                $zip->addFile($file_path, $file_name);
+                $files_count++;
+            }
+        }
+        
+        // İçerik bilgisi ekle
+        $readme = "# ŞikayetVar Veritabanı Yedeği ({$format} format)\n\n";
+        $readme .= "Tarih: " . date('Y-m-d H:i:s') . "\n\n";
+        $readme .= "Bu arşiv, veritabanının {$format} formatında yedeğini içerir.\n";
+        $readme .= "İçerik:\n";
+        $readme .= "- Tablo sayısı: " . count($tables) . "\n";
+        $readme .= "- Başarılı yedeklenen tablo sayısı: " . $files_count . "\n";
+        
+        $zip->addFromString("README.txt", $readme);
+        
+        $zip->close();
+        
+        // Geçici dosyaları temizle
+        if (file_exists($temp_dir)) {
+            $temp_files = scandir($temp_dir);
+            foreach ($temp_files as $file) {
+                if (in_array($file, ['.', '..'])) continue;
+                @unlink($temp_dir . '/' . $file);
+            }
+            @rmdir($temp_dir);
+        }
+        
+        return [$zip_path]; // Tek bir dosya döndür
+    } 
+    // Eski davranış - her tablo için ayrı dosya
+    else {
+        $exported_files = [];
+        foreach ($tables as $table) {
+            $file_path = export_table_data($table, $format, $with_drop, false); // compress=false çünkü her dosya ayrı
+            if ($file_path) {
+                $exported_files[] = $file_path;
+            }
+        }
+        return $exported_files;
+    }
+}
+
+// SQL içeriği oluştur
+function generate_sql_export($table_name, $with_drop = false) {
+    global $db;
+    
+    // Başlangıç yorumu ve transaction başlat
+    $output = "-- ŞikayetVar Veritabanı Yedeği\n";
+    $output .= "-- Tablo: $table_name\n";
+    $output .= "-- Tarih: " . date('Y-m-d H:i:s') . "\n\n";
+    $output .= "START TRANSACTION;\n\n";
+    
+    // DROP TABLE komutunu ekle (isteğe bağlı)
+    if ($with_drop) {
+        $output .= "DROP TABLE IF EXISTS \"$table_name\";\n\n";
     }
     
-    return $exported_files;
+    // Tablo yapısını çıkar
+    $query = "SELECT column_name, data_type, character_maximum_length, column_default, is_nullable 
+             FROM information_schema.columns 
+             WHERE table_name = ?
+             ORDER BY ordinal_position";
+    $stmt = $db->prepare($query);
+    $stmt->bind_param("s", $table_name);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    // Birincil anahtar bilgisini al
+    $pk_query = "SELECT a.attname as column_name
+                FROM pg_index i
+                JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+                WHERE i.indrelid = ?::regclass AND i.indisprimary";
+    $pk_stmt = $db->prepare($pk_query);
+    $pk_stmt->bind_param("s", $table_name);
+    $pk_stmt->execute();
+    $pk_result = $pk_stmt->get_result();
+    $primary_keys = [];
+    while ($pk_row = $pk_result->fetch_assoc()) {
+        $primary_keys[] = $pk_row['column_name'];
+    }
+    
+    // CREATE TABLE ifadesi oluştur
+    $create_table = "CREATE TABLE IF NOT EXISTS \"$table_name\" (\n";
+    $columns = [];
+    $column_defs = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $column_defs[$row['column_name']] = $row;
+        $col_def = "  \"" . $row['column_name'] . "\" " . $row['data_type'];
+        
+        if (!empty($row['character_maximum_length'])) {
+            $col_def .= "(" . $row['character_maximum_length'] . ")";
+        }
+        
+        // NULL/NOT NULL durumu
+        $col_def .= ($row['is_nullable'] === 'YES') ? ' NULL' : ' NOT NULL';
+        
+        // Varsayılan değer
+        if ($row['column_default'] !== null) {
+            $col_def .= " DEFAULT " . $row['column_default'];
+        }
+        
+        $columns[] = $col_def;
+    }
+    
+    $create_table .= implode(",\n", $columns);
+    
+    // Birincil anahtar kısıtlaması ekle
+    if (!empty($primary_keys)) {
+        $create_table .= ",\n  PRIMARY KEY (\"" . implode('", "', $primary_keys) . "\")";
+    }
+    
+    $create_table .= "\n);\n\n";
+    $output .= $create_table;
+    
+    // Veri çıkarma
+    $data_query = "SELECT * FROM \"$table_name\"";
+    $data_stmt = $db->prepare($data_query);
+    $data_stmt->execute();
+    $data_result = $data_stmt->get_result();
+    
+    // Her satır için INSERT komutunu oluştur
+    while ($row = $data_result->fetch_assoc()) {
+        $columns = array_keys($row);
+        $quoted_columns = array_map(function($col) {
+            return "\"" . $col . "\"";
+        }, $columns);
+        
+        $values = array_map(function($val) use ($db) {
+            if ($val === null) {
+                return "NULL";
+            } else {
+                return "'" . addslashes($val) . "'";
+            }
+        }, array_values($row));
+        
+        // IF NOT EXISTS mantığı ile INSERT oluştur - çakışma durumunda güncelleme yap
+        $insert = "INSERT INTO \"$table_name\" (" . implode(", ", $quoted_columns) . ") VALUES (" . implode(", ", $values) . ")";
+        
+        // ON CONFLICT kısmını ekle (PostgreSQL'in UPSERT özelliği)
+        if (!empty($primary_keys)) {
+            $insert .= " ON CONFLICT (\"" . implode('", "', $primary_keys) . "\") DO UPDATE SET ";
+            $updates = [];
+            foreach ($columns as $col) {
+                if (!in_array($col, $primary_keys)) {
+                    $updates[] = "\"$col\" = EXCLUDED.\"$col\"";
+                }
+            }
+            $insert .= implode(", ", $updates);
+        }
+        
+        $insert .= ";\n";
+        $output .= $insert;
+    }
+    
+    // Transaction'ı tamamla
+    $output .= "\nCOMMIT;\n";
+    
+    return $output;
+}
+
+// JSON içeriği oluştur
+function generate_json_export($table_name) {
+    global $db;
+    
+    $query = "SELECT * FROM \"$table_name\"";
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+    
+    return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+}
+
+// CSV içeriği oluştur (dosya döndürür)
+function generate_csv_export($table_name) {
+    global $db, $backup_dir;
+    $temp_file = tempnam(sys_get_temp_dir(), 'csv_');
+    $f = fopen($temp_file, 'w');
+    
+    if (!$f) return false;
+    
+    // Sütun başlıklarını al
+    $query = "SELECT column_name FROM information_schema.columns 
+             WHERE table_name = ? 
+             ORDER BY ordinal_position";
+    $stmt = $db->prepare($query);
+    $stmt->bind_param("s", $table_name);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $headers = [];
+    while ($row = $result->fetch_assoc()) {
+        $headers[] = $row['column_name'];
+    }
+    
+    // CSV başlık satırını yaz
+    fputcsv($f, $headers);
+    
+    // Verileri al ve yaz
+    $data_query = "SELECT * FROM \"$table_name\"";
+    $data_stmt = $db->prepare($data_query);
+    $data_stmt->execute();
+    $data_result = $data_stmt->get_result();
+    
+    while ($row = $data_result->fetch_assoc()) {
+        fputcsv($f, $row);
+    }
+    
+    fclose($f);
+    return $temp_file;
 }
 
 function create_full_backup($with_drop = false) {
@@ -266,54 +514,126 @@ function create_full_backup($with_drop = false) {
     $timestamp = date('Y-m-d_H-i-s');
     $backup_file = "$backup_dir/full_backup_$timestamp.zip";
     
-    // Tüm tabloları SQL, JSON ve CSV formatında dışa aktar
-    $sql_files = export_all_tables('sql', $with_drop, false); // Sıkıştırma yapma, tek tek sıkıştırmamalıyız
-    $json_files = export_all_tables('json', false, false);
-    $csv_files = export_all_tables('csv', false, false);
-    
     // Tüm dosyaları ZIP arşivine ekle
     $zip = new ZipArchive();
-    if ($zip->open($backup_file, ZipArchive::CREATE) === TRUE) {
-        // SQL dosyalarını ekle
-        foreach ($sql_files as $file) {
-            $zip->addFile($file, basename($file));
-        }
-        
-        // JSON dosyalarını ekle
-        foreach ($json_files as $file) {
-            $zip->addFile($file, basename($file));
-        }
-        
-        // CSV dosyalarını ekle
-        foreach ($csv_files as $file) {
-            $zip->addFile($file, basename($file));
-        }
-        
-        // İçerik bilgisi ekle
-        $readme = "# ŞikayetVar Veritabanı Tam Yedeği\n\n";
-        $readme .= "Tarih: " . date('Y-m-d H:i:s') . "\n\n";
-        $readme .= "Bu arşiv, veritabanının tam bir yedeğini içerir.\n";
-        $readme .= "İçerik:\n";
-        $readme .= "- SQL dosyaları: " . count($sql_files) . "\n";
-        $readme .= "- JSON dosyaları: " . count($json_files) . "\n";
-        $readme .= "- CSV dosyaları: " . count($csv_files) . "\n";
-        
-        $zip->addFromString("README.txt", $readme);
-        
-        // Yükleme ve çıkarma işlemi tamamlandıktan sonra ZIP'i kapat
-        $zip->close();
-        
-        // Geçici dosyaları temizle
-        foreach (array_merge($sql_files, $json_files, $csv_files) as $file) {
-            if (file_exists($file)) {
-                unlink($file);
-            }
-        }
-        
-        return $backup_file;
+    if ($zip->open($backup_file, ZipArchive::CREATE) !== TRUE) {
+        return false;
     }
     
-    return false;
+    // Tüm tabloları al
+    $tables = get_db_tables();
+    
+    // Geçici klasör oluştur
+    $temp_dir = sys_get_temp_dir() . "/sikayetvar_full_export_" . time();
+    if (!file_exists($temp_dir)) {
+        mkdir($temp_dir, 0755, true);
+    }
+    
+    // SQL, JSON ve CSV alt klasörleri oluştur
+    $sql_dir = $temp_dir . "/sql";
+    $json_dir = $temp_dir . "/json";
+    $csv_dir = $temp_dir . "/csv";
+    
+    mkdir($sql_dir, 0755, true);
+    mkdir($json_dir, 0755, true);
+    mkdir($csv_dir, 0755, true);
+    
+    $tables_processed = 0;
+    
+    // Her tablo için SQL, JSON ve CSV çıktısı al ve klasörlere kaydet
+    foreach ($tables as $table) {
+        // SQL formatında
+        $sql_content = generate_sql_export($table, $with_drop);
+        $sql_file = "{$sql_dir}/{$table}.sql";
+        file_put_contents($sql_file, $sql_content);
+        
+        // JSON formatında
+        $json_content = generate_json_export($table);
+        $json_file = "{$json_dir}/{$table}.json";
+        file_put_contents($json_file, $json_content);
+        
+        // CSV formatında
+        $csv_temp_file = generate_csv_export($table);
+        if ($csv_temp_file) {
+            $csv_file = "{$csv_dir}/{$table}.csv";
+            copy($csv_temp_file, $csv_file);
+            @unlink($csv_temp_file);
+        }
+        
+        $tables_processed++;
+    }
+    
+    // Tüm dosyaları ZIP'e ekle
+    $this_backup_dir = basename($temp_dir);
+    
+    // SQL klasörünü ekle
+    $zip->addEmptyDir("sql");
+    $sql_files = glob($sql_dir . "/*.sql");
+    foreach ($sql_files as $file) {
+        $zip->addFile($file, "sql/" . basename($file));
+    }
+    
+    // JSON klasörünü ekle
+    $zip->addEmptyDir("json");
+    $json_files = glob($json_dir . "/*.json");
+    foreach ($json_files as $file) {
+        $zip->addFile($file, "json/" . basename($file));
+    }
+    
+    // CSV klasörünü ekle
+    $zip->addEmptyDir("csv");
+    $csv_files = glob($csv_dir . "/*.csv");
+    foreach ($csv_files as $file) {
+        $zip->addFile($file, "csv/" . basename($file));
+    }
+    
+    // İçerik bilgisi ekle
+    $readme = "# ŞikayetVar Veritabanı Tam Yedeği\n\n";
+    $readme .= "Tarih: " . date('Y-m-d H:i:s') . "\n\n";
+    $readme .= "Bu arşiv, veritabanının tam bir yedeğini içerir.\n";
+    $readme .= "İçerik:\n";
+    $readme .= "- Toplam tablo sayısı: " . count($tables) . "\n";
+    $readme .= "- SQL dosyaları: " . count($sql_files) . "\n";
+    $readme .= "- JSON dosyaları: " . count($json_files) . "\n";
+    $readme .= "- CSV dosyaları: " . count($csv_files) . "\n\n";
+    $readme .= "Klasörler:\n";
+    $readme .= "- sql/: SQL formatında tablolar (DROP TABLE, CREATE TABLE ve INSERT komutları içerir)\n";
+    $readme .= "- json/: JSON formatında tablolar (tablo verilerini içerir)\n";
+    $readme .= "- csv/: CSV formatında tablolar (başlık satırı ve veri satırları içerir)\n";
+    
+    $zip->addFromString("README.txt", $readme);
+    
+    // Yükleme ve çıkarma işlemi tamamlandıktan sonra ZIP'i kapat
+    $zip->close();
+    
+    // Geçici klasörü temizle
+    if (file_exists($temp_dir)) {
+        // SQL dosyalarını temizle
+        $sql_files = glob($sql_dir . "/*.sql");
+        foreach ($sql_files as $file) {
+            @unlink($file);
+        }
+        @rmdir($sql_dir);
+        
+        // JSON dosyalarını temizle
+        $json_files = glob($json_dir . "/*.json");
+        foreach ($json_files as $file) {
+            @unlink($file);
+        }
+        @rmdir($json_dir);
+        
+        // CSV dosyalarını temizle
+        $csv_files = glob($csv_dir . "/*.csv");
+        foreach ($csv_files as $file) {
+            @unlink($file);
+        }
+        @rmdir($csv_dir);
+        
+        // Ana klasörü temizle
+        @rmdir($temp_dir);
+    }
+    
+    return $backup_file;
 }
 
 function get_existing_backups() {
@@ -341,6 +661,45 @@ function get_existing_backups() {
     });
     
     return $backups;
+}
+
+// Yedek dizinini temizle - belirli bir tarihten eski yedekleri sil
+function cleanup_backups($days = 7, $keep_min = 3) {
+    global $backup_dir;
+    
+    if (!file_exists($backup_dir)) {
+        return [0, 0]; // Silinen dosya sayısı, toplam boyut
+    }
+    
+    $backups = get_existing_backups();
+    
+    // En az keep_min sayıda yedek her zaman saklansın
+    if (count($backups) <= $keep_min) {
+        return [0, 0];
+    }
+    
+    $threshold_time = time() - ($days * 24 * 60 * 60);
+    $deleted_count = 0;
+    $freed_space = 0;
+    
+    // keep_min sayıda yedek tutacak şekilde, belirlenen tarihten eski yedekleri sil
+    $preserved_count = 0;
+    
+    foreach ($backups as $backup) {
+        $file_time = strtotime($backup['date']);
+        
+        // Eğer dosya belirtilen günden eskiyse ve minimum korunan sayısını aşmışsa sil
+        if ($file_time < $threshold_time && $preserved_count >= $keep_min) {
+            if (unlink($backup['path'])) {
+                $deleted_count++;
+                $freed_space += $backup['size'];
+            }
+        } else {
+            $preserved_count++;
+        }
+    }
+    
+    return [$deleted_count, $freed_space];
 }
 
 function format_file_size($size) {
@@ -371,41 +730,69 @@ function import_backup($file_path, $replace_data = false) {
             $zip->extractTo($extract_dir);
             $zip->close();
             
-            // Çıkarılan dosyaları işle
-            $extracted_files = scandir($extract_dir);
             $results = [];
             $processed = 0;
             
-            foreach ($extracted_files as $file) {
-                if (in_array($file, ['.', '..'])) continue;
+            // Eğer sql, json, csv klasörleri varsa, yapılandırılmış tam yedek kabul et
+            if (file_exists($extract_dir . '/sql') || 
+                file_exists($extract_dir . '/json') || 
+                file_exists($extract_dir . '/csv')) {
                 
-                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                if (in_array($ext, ['sql', 'json', 'csv'])) {
-                    $file_full_path = $extract_dir . '/' . $file;
-                    $result = import_single_file($file_full_path, $replace_data);
-                    $processed++;
-                    $results[$file] = $result;
+                // SQL klasörünü işle
+                if (file_exists($extract_dir . '/sql')) {
+                    $sql_files = glob($extract_dir . '/sql/*.sql');
+                    foreach ($sql_files as $file) {
+                        $result = import_single_file($file, $replace_data);
+                        $processed++;
+                        $results[basename($file)] = $result;
+                    }
+                }
+                
+                // JSON klasörünü işle
+                if (file_exists($extract_dir . '/json')) {
+                    $json_files = glob($extract_dir . '/json/*.json');
+                    foreach ($json_files as $file) {
+                        $result = import_single_file($file, $replace_data);
+                        $processed++;
+                        $results[basename($file)] = $result;
+                    }
+                }
+                
+                // CSV klasörünü işle
+                if (file_exists($extract_dir . '/csv')) {
+                    $csv_files = glob($extract_dir . '/csv/*.csv');
+                    foreach ($csv_files as $file) {
+                        $result = import_single_file($file, $replace_data);
+                        $processed++;
+                        $results[basename($file)] = $result;
+                    }
+                }
+            } 
+            // Aksi halde yedek klasörün içindeki tüm dosyaları doğrudan tara
+            else {
+                // Çıkarılan dosyaları işle
+                $extracted_files = scan_dir_recursive($extract_dir);
+                
+                foreach ($extracted_files as $file) {
+                    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                    if (in_array($ext, ['sql', 'json', 'csv'])) {
+                        $result = import_single_file($file, $replace_data);
+                        $processed++;
+                        $results[basename($file)] = $result;
+                    }
                 }
             }
             
             // Eğer hiç dosya işlenmediyse hata döndür
             if ($processed === 0) {
                 // Geçici klasörü temizle
-                foreach ($extracted_files as $file) {
-                    if (in_array($file, ['.', '..'])) continue;
-                    @unlink($extract_dir . '/' . $file);
-                }
-                @rmdir($extract_dir);
+                clean_dir_recursive($extract_dir);
                 
                 return [false, "ZIP içerisinde desteklenen format (SQL, JSON, CSV) bulunamadı."];
             }
             
             // Geçici klasörü temizle
-            foreach ($extracted_files as $file) {
-                if (in_array($file, ['.', '..'])) continue;
-                @unlink($extract_dir . '/' . $file);
-            }
-            @rmdir($extract_dir);
+            clean_dir_recursive($extract_dir);
             
             // Sonuçları döndür
             $success_count = 0;
@@ -426,6 +813,48 @@ function import_backup($file_path, $replace_data = false) {
         // Tek dosyayı işle
         return import_single_file($file_path, $replace_data);
     }
+}
+
+// Klasörü ve alt klasörleri recursive olarak tara
+function scan_dir_recursive($dir) {
+    $result = [];
+    $files = scandir($dir);
+    
+    foreach ($files as $file) {
+        if (in_array($file, ['.', '..'])) continue;
+        
+        $path = $dir . '/' . $file;
+        
+        if (is_dir($path)) {
+            $result = array_merge($result, scan_dir_recursive($path));
+        } else {
+            $result[] = $path;
+        }
+    }
+    
+    return $result;
+}
+
+// Klasörü ve içeriğini temizle
+function clean_dir_recursive($dir) {
+    if (!file_exists($dir)) return;
+    
+    $files = scandir($dir);
+    
+    foreach ($files as $file) {
+        if (in_array($file, ['.', '..'])) continue;
+        
+        $path = $dir . '/' . $file;
+        
+        if (is_dir($path)) {
+            clean_dir_recursive($path);
+            @rmdir($path);
+        } else {
+            @unlink($path);
+        }
+    }
+    
+    @rmdir($dir);
 }
 
 function import_single_file($file_path, $replace_data = false) {
@@ -692,7 +1121,19 @@ $message = '';
 $message_type = 'success';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['import_backup']) && isset($_FILES['import_file'])) {
+    if (isset($_POST['cleanup_backups'])) {
+        $days = isset($_POST['cleanup_days']) ? intval($_POST['cleanup_days']) : 7;
+        $keep_min = isset($_POST['cleanup_keep']) ? intval($_POST['cleanup_keep']) : 3;
+        
+        list($deleted_count, $freed_space) = cleanup_backups($days, $keep_min);
+        
+        if ($deleted_count > 0) {
+            $message = "{$deleted_count} adet yedek dosyası temizlendi. " . format_file_size($freed_space) . " alan boşaltıldı.";
+        } else {
+            $message = "Silinecek eski yedek bulunamadı.";
+        }
+    }
+    else if (isset($_POST['import_backup']) && isset($_FILES['import_file'])) {
         $file = $_FILES['import_file'];
         $replace_data = isset($_POST['replace_data']);
         
@@ -923,10 +1364,51 @@ $backups = get_existing_backups();
         
         <div class="col-md-6">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Mevcut Yedeklemeler</h5>
+                    <form method="post" class="d-inline">
+                        <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#cleanupModal">
+                            <i class="bi bi-trash"></i> Eski Yedekleri Temizle
+                        </button>
+                    </form>
                 </div>
                 <div class="card-body">
+                    <!-- Temizleme Modal -->
+                    <div class="modal fade" id="cleanupModal" tabindex="-1" aria-labelledby="cleanupModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="cleanupModalLabel">Eski Yedekleri Temizle</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form method="post">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="cleanup_days" class="form-label">Kaç günden eski yedekler silinsin?</label>
+                                            <input type="number" class="form-control" id="cleanup_days" name="cleanup_days" value="7" min="1" max="365">
+                                            <div class="form-text">Belirtilen günden daha eski yedekleri otomatik temizler.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="cleanup_keep" class="form-label">En az kaç yedek korunsun?</label>
+                                            <input type="number" class="form-control" id="cleanup_keep" name="cleanup_keep" value="3" min="1" max="20">
+                                            <div class="form-text">Belirtilen sayıda en yeni yedekler her zaman korunur.</div>
+                                        </div>
+                                        
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> Uyarı: Bu işlem, eski yedekleme dosyalarını kalıcı olarak silecektir.
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                                        <button type="submit" name="cleanup_backups" class="btn btn-warning">
+                                            <i class="bi bi-trash"></i> Eski Yedekleri Temizle
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <?php if (count($backups) > 0): ?>
                         <div class="table-responsive">
                             <table class="table table-hover">
