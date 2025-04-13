@@ -693,8 +693,29 @@ function generate_unified_sql_export($with_drop = false) {
         $create_table = "CREATE TABLE \"$table\" (\n";
         $columns = [];
         
+        // PostgreSQL sequence objeleri için ayrıca kontrol
+        $sequence_query = "SELECT column_name, column_default 
+                          FROM information_schema.columns 
+                          WHERE table_name = ? 
+                          AND column_default LIKE 'nextval%'";
+        $seq_stmt = $db->prepare($sequence_query);
+        $seq_stmt->bind_param("s", $table);
+        $seq_stmt->execute();
+        $seq_result = $seq_stmt->get_result();
+        
+        $sequences = [];
+        while ($seq_row = $seq_result->fetch_assoc()) {
+            // nextval('sequence_name'::regclass) içinden sequence adını çıkar
+            preg_match("/nextval\('([^']+)'::regclass\)/", $seq_row['column_default'], $matches);
+            if (!empty($matches[1])) {
+                $sequences[$seq_row['column_name']] = $matches[1];
+            }
+        }
+        
+        // Tablo kolonlarını oluştur
         while ($row = $result->fetch_assoc()) {
-            $col_def = "  \"" . $row['column_name'] . "\" " . $row['data_type'];
+            $col_name = $row['column_name'];
+            $col_def = "  \"" . $col_name . "\" " . $row['data_type'];
             
             if (!empty($row['character_maximum_length'])) {
                 $col_def .= "(" . $row['character_maximum_length'] . ")";
@@ -705,10 +726,29 @@ function generate_unified_sql_export($with_drop = false) {
             
             // Varsayılan değer
             if ($row['column_default'] !== null) {
-                $col_def .= " DEFAULT " . $row['column_default'];
+                // Sequence varsa, CREATE SEQUENCE komutunu ayrıca ekleyeceğiz
+                if (isset($sequences[$col_name])) {
+                    $col_def .= " DEFAULT nextval('" . $sequences[$col_name] . "'::regclass)";
+                } else {
+                    $col_def .= " DEFAULT " . $row['column_default'];
+                }
             }
             
             $columns[] = $col_def;
+        }
+        
+        // Her sequence için CREATE SEQUENCE komutunu ekle
+        if (!empty($sequences)) {
+            foreach ($sequences as $col_name => $sequence_name) {
+                // DROP SEQUENCE iste ve ekle
+                if ($with_drop) {
+                    fwrite($f, "DROP SEQUENCE IF EXISTS \"$sequence_name\" CASCADE;\n");
+                }
+                
+                // Sequence oluştur
+                fwrite($f, "CREATE SEQUENCE IF NOT EXISTS \"$sequence_name\";\n");
+            }
+            fwrite($f, "\n");
         }
         
         $create_table .= implode(",\n", $columns);
