@@ -610,7 +610,13 @@ function generate_csv_export($table_name) {
 }
 
 // Yeni eklenen birleştirilmiş SQL yedekleme fonksiyonu
-function generate_unified_sql_export($with_drop = false) {
+function generate_unified_sql_export($with_drop = false, $export_type = 'full') {
+    // $export_type seçenekleri:
+    // 'full' = Tam yedek (tablolar + veriler + bağımlılıklar)
+    // 'tables_only' = Sadece tablo yapısı
+    // 'data_only' = Sadece veriler 
+    // 'dependencies_only' = Sadece bağımlılıklar
+    // 'tables_dependencies' = Tablolar ve bağımlılıklar (veri olmadan)
     global $db, $backup_dir;
     $timestamp = date('Y-m-d_H-i-s');
     $file_path = "$backup_dir/unified_db_backup_$timestamp.sql";
@@ -774,46 +780,53 @@ function generate_unified_sql_export($with_drop = false) {
         fwrite($f, $create_table);
     }
     
-    // 2. Adım: Verileri tabloların içine aktar
-    fwrite($f, "\n-- 2. ADIM: VERİLERİ AKTAR\n");
-    fwrite($f, "-- -----------------------------\n\n");
-    
-    foreach ($tables as $table) {
-        fwrite($f, "-- Tablo: $table için veri\n");
+    // 2. Adım: Verileri tabloların içine aktar (sadece 'full' veya 'data_only' seçildiğinde)
+    if ($export_type == 'full' || $export_type == 'data_only') {
+        fwrite($f, "\n-- 2. ADIM: VERİLERİ AKTAR\n");
+        fwrite($f, "-- -----------------------------\n\n");
         
-        // Veri çıkarma
-        $data_query = "SELECT * FROM \"$table\"";
-        $data_stmt = $db->prepare($data_query);
-        $data_stmt->execute();
-        $data_result = $data_stmt->get_result();
-        
-        // Tablo boşsa not düş ve devam et
-        if ($data_result->num_rows == 0) {
-            fwrite($f, "-- Bu tablo boş, veri yok\n\n");
-            continue;
+        foreach ($tables as $table) {
+            fwrite($f, "-- Tablo: $table için veri\n");
+            
+            // Veri çıkarma
+            $data_query = "SELECT * FROM \"$table\"";
+            $data_stmt = $db->prepare($data_query);
+            $data_stmt->execute();
+            $data_result = $data_stmt->get_result();
+            
+            // Tablo boşsa not düş ve devam et
+            if ($data_result->num_rows == 0) {
+                fwrite($f, "-- Bu tablo boş, veri yok\n\n");
+                continue;
+            }
+            
+            // Her satır için INSERT komutunu oluştur
+            while ($row = $data_result->fetch_assoc()) {
+                $columns = array_keys($row);
+                $quoted_columns = array_map(function($col) {
+                    return "\"" . $col . "\"";
+                }, $columns);
+                
+                $values = array_map('fix_value_for_sql', array_values($row));
+                
+                $insert = "INSERT INTO \"$table\" (" . implode(", ", $quoted_columns) . ") VALUES (" . implode(", ", $values) . ")";
+                
+                // ON CONFLICT kısmı yerine SKIP yedeği tutmak için
+                $insert .= ";\n";
+                fwrite($f, $insert);
+            }
+            
+            fwrite($f, "\n");
         }
-        
-        // Her satır için INSERT komutunu oluştur
-        while ($row = $data_result->fetch_assoc()) {
-            $columns = array_keys($row);
-            $quoted_columns = array_map(function($col) {
-                return "\"" . $col . "\"";
-            }, $columns);
-            
-            $values = array_map('fix_value_for_sql', array_values($row));
-            
-            $insert = "INSERT INTO \"$table\" (" . implode(", ", $quoted_columns) . ") VALUES (" . implode(", ", $values) . ")";
-            
-            // ON CONFLICT kısmı yerine SKIP yedeği tutmak için
-            $insert .= ";\n";
-            fwrite($f, $insert);
-        }
-        
-        fwrite($f, "\n");
+    } else if ($export_type == 'tables_only' || $export_type == 'tables_dependencies' || $export_type == 'dependencies_only') {
+        fwrite($f, "\n-- VERİ AKTARMA DEVRE DIŞI: Bu yedekte yalnızca " . 
+               ($export_type == 'tables_only' ? 'tablo yapıları' : 
+               ($export_type == 'dependencies_only' ? 'ilişki tanımları' : 'tablo yapıları ve ilişkiler')) . 
+               " bulunmaktadır.\n\n");
     }
     
-    // 3. Adım: İlişkileri (foreign key kısıtlamaları) ekle
-    if (!empty($foreign_keys)) {
+    // 3. Adım: İlişkileri (foreign key kısıtlamaları) ekle (sadece 'dependencies_only' olmadığında)
+    if (!empty($foreign_keys) && ($export_type == 'full' || $export_type == 'tables_dependencies' || $export_type == 'dependencies_only')) {
         fwrite($f, "\n-- 3. ADIM: İLİŞKİLERİ (FOREIGN KEY KISITLAMALARI) EKLE\n");
         fwrite($f, "-- -----------------------------\n\n");
         
@@ -825,6 +838,8 @@ function generate_unified_sql_export($with_drop = false) {
             
             fwrite($f, $add_constraint);
         }
+    } else if (!empty($foreign_keys) && $export_type == 'tables_only') {
+        fwrite($f, "\n-- İLİŞKİ TANIMLARI DEVRE DIŞI: Bu yedekte yalnızca tablo yapıları bulunmaktadır.\n\n");
     }
     
     // Transaction'ı tamamla
@@ -1601,8 +1616,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message_type = 'danger';
             }
         } elseif ($format === 'unified_sql') {
+            // Yedekleme tipini belirle (tam, sadece tablolar, vs.)
+            $export_type = isset($_POST['export_type']) ? $_POST['export_type'] : 'full';
+            
             // Birleştirilmiş SQL yedeği oluştur
-            $backup_file = generate_unified_sql_export($with_drop);
+            $backup_file = generate_unified_sql_export($with_drop, $export_type);
             
             // Sıkıştırma isteği varsa
             if ($compress && $backup_file) {
@@ -1741,6 +1759,18 @@ $backups = get_existing_backups();
                                 <option value="full">Tam Yedekleme (SQL+JSON+CSV)</option>
                                 <option value="unified_sql">Birleştirilmiş SQL (Tek Dosya)</option>
                             </select>
+                        </div>
+                        
+                        <div class="mb-3 export-type-options" style="display:none;">
+                            <label for="export_type" class="form-label">Yedekleme İçeriği</label>
+                            <select class="form-select" id="export_type" name="export_type">
+                                <option value="full">Tam Yedek (Tablolar + Veriler + İlişkiler)</option>
+                                <option value="tables_only">Sadece Tablo Yapıları</option>
+                                <option value="data_only">Sadece Veriler</option>
+                                <option value="dependencies_only">Sadece İlişkiler</option>
+                                <option value="tables_dependencies">Tablolar ve İlişkiler (Veri Olmadan)</option>
+                            </select>
+                            <div class="form-text text-muted small">Yedekleme işleminin hangi öğeleri içereceğini belirler</div>
                         </div>
                         
                         <div class="mb-3 form-check">
