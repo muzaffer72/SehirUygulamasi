@@ -21,10 +21,25 @@ const makeRequest = (url, method, headers, body) => {
       });
       
       res.on('end', () => {
+        // HTML içeriği var mı kontrol et (HTML dönen yanıt genellikle '<!DOCTYPE' veya '<html' ile başlar)
+        if (data.trim().startsWith('<!') || data.trim().startsWith('<html')) {
+          // HTML yanıtı algılandı, API dönüşü değil
+          console.log('HTML yanıtı algılandı, API cevabı değil:', data.substring(0, 100) + '...');
+          resolve({ 
+            status: res.statusCode, 
+            data: { 
+              error: 'API formatı hatası',
+              message: 'API JSON yerine HTML içeriği döndürdü. Endpoint kontrolünüzü yapın.'
+            } 
+          });
+          return;
+        }
+        
         try {
           const jsonData = JSON.parse(data);
           resolve({ status: res.statusCode, data: jsonData });
         } catch (error) {
+          console.log('JSON ayrıştırma hatası, dönen içerik:', data.substring(0, 200) + '...');
           resolve({ status: res.statusCode, data: { error: 'JSON ayrıştırma hatası', details: error.message } });
         }
       });
@@ -177,7 +192,15 @@ app.use('/api', async (req, res) => {
   
   try {
     // Admin panel API'sine yönlendirme (parties hariç diğer endpointler için)
-    const targetUrl = `http://0.0.0.0:3001${req.url}`;
+    // API endpoint'in doğru olduğundan emin ol - eğer url /api ile başlıyorsa kaldır
+    // çünkü zaten route içindeyiz ve admin panel tarafında /api prefix'i var
+    let apiPath = req.url;
+    if (apiPath.startsWith('/api/')) {
+      apiPath = apiPath.substring(4); // '/api/' kısmını kaldır
+      console.log(`API yolu düzeltildi: ${apiPath}`);
+    }
+    
+    const targetUrl = `http://0.0.0.0:3001/api${apiPath}`;
     console.log(`İstek yönlendiriliyor: ${targetUrl}`);
     
     // İstek başlıklarını hazırla
