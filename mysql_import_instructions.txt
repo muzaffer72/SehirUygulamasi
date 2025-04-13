@@ -1,0 +1,54 @@
+ŞikayetVar Veritabanı - MySQL Import Talimatları
+===============================================
+
+Bu dosya, ŞikayetVar uygulamasının veritabanının MySQL'e nasıl import edileceğini açıklar.
+
+## DOSYALAR
+
+1. sikayetvar_mysql_import.sql - MySQL'e import edilecek tek SQL dosyası (103KB)
+
+## MYSQL IMPORT TALİMATLARI
+
+### 1. Komut Satırı ile Import (MySQL CLI)
+
+```bash
+# MySQL CLI ile import (terminal/komut satırı)
+mysql -u kullanici_adi -p < sikayetvar_mysql_import.sql
+```
+
+### 2. PhpMyAdmin ile Import
+
+1. PhpMyAdmin arayüzüne giriş yapın
+2. Sol menüden "Import" sekmesini seçin
+3. "Choose File" butonuna tıklayın ve sikayetvar_mysql_import.sql dosyasını seçin
+4. "Go" butonuna tıklayarak import işlemini başlatın
+
+### 3. MySQL Workbench ile Import
+
+1. MySQL Workbench'i açın ve sunucunuza bağlanın
+2. "Server" menüsünden "Data Import" seçeneğini tıklayın
+3. "Import from Self-Contained File" seçeneğini işaretleyin
+4. sikayetvar_mysql_import.sql dosyasını seçin
+5. "Start Import" butonuna tıklayın
+
+## ÖNEMLİ NOTLAR
+
+- Import dosyası otomatik olarak "sikayetvar" adında bir veritabanı oluşturacak ve bu veritabanına tabloları import edecektir.
+- Eğer aynı isimde bir veritabanı zaten varsa, import işlemi mevcut veritabanını kullanacaktır.
+- Tüm tablolar utf8mb4 karakter seti ve utf8mb4_unicode_ci kolasyonu ile oluşturulacaktır.
+- Dosya, PostgreSQL'den MySQL'e dönüştürülmüştür, bazı veri tipi dönüşümleri içerir:
+  - PostgreSQL boolean -> MySQL TINYINT(1) (1=true, 0=false)
+  - PostgreSQL timestamp with time zone -> MySQL DATETIME
+  - PostgreSQL text -> MySQL TEXT
+  - Sequence değerleri AUTO_INCREMENT olarak dönüştürülmüştür
+
+## SORUN GİDERME
+
+Eğer import sırasında sorunlarla karşılaşırsanız:
+
+1. MySQL sürümünüzün en az 5.7 veya üstü olduğundan emin olun
+2. Import için yeterli yetkilere sahip olduğunuzdan emin olun
+3. Dosyayı metin editörü ile açıp SQL söz dizimi hatalarını kontrol edin
+4. Çok büyük INSERT ifadeleri varsa, bunları daha küçük parçalara bölebilirsiniz
+
+Herhangi bir sorun durumunda, SQL dosyasını metin editörü ile açıp hatanın olduğu noktayı tespit edebilir ve düzeltebilirsiniz.
