@@ -271,11 +271,11 @@ export const cityAwards = pgTable('city_awards', {
 // Siyasi Partiler Tablosu
 export const politicalParties = pgTable('political_parties', {
   id: serial('id').primaryKey(),
-  name: varchar('name', { length: 100 }).notNull().unique(),
-  shortName: varchar('short_name', { length: 10 }).notNull().unique(), // Kısa isim, örn: AKP, CHP, MHP
+  name: varchar('name', { length: 255 }).notNull().unique(),
+  shortName: varchar('short_name', { length: 50 }).notNull().unique(), // Kısa isim, örn: AK Parti, CHP, MHP
   description: text('description'),
   logoUrl: text('logo_url').notNull(), // Parti logosu
-  color: varchar('color', { length: 7 }).notNull(), // Parti rengi (hex code)
+  color: varchar('color', { length: 20 }).notNull(), // Parti rengi (hex code)
   isActive: boolean('is_active').default(true).notNull(),
   foundedYear: integer('founded_year'), // Kuruluş yılı
   website: varchar('website', { length: 255 }),
@@ -284,20 +284,38 @@ export const politicalParties = pgTable('political_parties', {
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
-// Parti Performans İstatistikleri Tablosu 
-export const partyPerformanceStats = pgTable('party_performance_stats', {
+// Parti Performans Tablosu
+export const partyPerformance = pgTable('party_performance', {
   id: serial('id').primaryKey(),
-  partyId: integer('party_id').notNull().references(() => politicalParties.id, { onDelete: 'cascade' }),
-  totalMunicipalityCount: integer('total_municipality_count').default(0).notNull(), // Toplam belediye sayısı
+  partyId: integer('party_id').notNull().references(() => politicalParties.id, { onDelete: 'cascade' }).unique(),
+  cityCount: integer('city_count').default(0).notNull(), // Yönetilen şehir sayısı
+  districtCount: integer('district_count').default(0).notNull(), // Yönetilen ilçe sayısı
+  complaintCount: integer('complaint_count').default(0).notNull(), // Toplam şikayet sayısı
+  solvedCount: integer('solved_count').default(0).notNull(), // Çözülen şikayet sayısı
   problemSolvingRate: decimal('problem_solving_rate', { precision: 5, scale: 2 }).default('0').notNull(), // Çözüm oranı (%)
-  averageSatisfactionRate: decimal('average_satisfaction_rate', { precision: 5, scale: 2 }).default('0').notNull(), // Ortalama memnuniyet (%)
-  totalAwards: integer('total_awards').default(0).notNull(), // Toplam ödül sayısı
-  goldAwards: integer('gold_awards').default(0).notNull(), // Altın ödül sayısı
-  silverAwards: integer('silver_awards').default(0).notNull(), // Gümüş ödül sayısı
-  bronzeAwards: integer('bronze_awards').default(0).notNull(), // Bronz ödül sayısı
-  lastCalculatedAt: timestamp('last_calculated_at').defaultNow().notNull(), // En son hesaplama zamanı
+  lastUpdated: timestamp('last_updated').defaultNow().notNull(), // En son güncelleme zamanı
+});
+
+// Şehir-Parti İlişki Tablosu
+export const cityPartyRelations = pgTable('city_party_relations', {
+  id: serial('id').primaryKey(),
+  cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
+  partyId: integer('party_id').notNull().references(() => politicalParties.id, { onDelete: 'cascade' }),
+  startDate: date('start_date').notNull(), // Göreve başlama tarihi
+  endDate: date('end_date'), // Görev bitiş tarihi (null ise hala görevde)
+  isCurrent: boolean('is_current').default(true).notNull(), // Şu anda görevde mi?
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+// İlçe-Parti İlişki Tablosu
+export const districtPartyRelations = pgTable('district_party_relations', {
+  id: serial('id').primaryKey(),
+  districtId: integer('district_id').notNull().references(() => districts.id, { onDelete: 'cascade' }),
+  partyId: integer('party_id').notNull().references(() => politicalParties.id, { onDelete: 'cascade' }),
+  startDate: date('start_date').notNull(), // Göreve başlama tarihi
+  endDate: date('end_date'), // Görev bitiş tarihi (null ise hala görevde)
+  isCurrent: boolean('is_current').default(true).notNull(), // Şu anda görevde mi?
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 // İlişki tanımlamaları
@@ -421,11 +439,12 @@ export const surveyRegionalResultsRelations = relations(surveyRegionalResults, (
   })
 }));
 
-export const districtsRelations = relations(districts, ({ one }) => ({
+export const districtsRelations = relations(districts, ({ one, many }) => ({
   city: one(cities, {
     fields: [districts.cityId],
     references: [cities.id]
-  })
+  }),
+  partyRelations: many(districtPartyRelations)
 }));
 
 export const citiesRelations = relations(cities, ({ many }) => ({
@@ -434,7 +453,8 @@ export const citiesRelations = relations(cities, ({ many }) => ({
   projects: many(cityProjects),
   events: many(cityEvents),
   stats: many(cityStats),
-  awards: many(cityAwards)
+  awards: many(cityAwards),
+  partyRelations: many(cityPartyRelations)
 }));
 
 export const cityServicesRelations = relations(cityServices, ({ many }) => ({
@@ -493,14 +513,43 @@ export const cityAwardsRelations = relations(cityAwards, ({ one }) => ({
 }));
 
 // Siyasi Parti İlişkileri
-export const politicalPartiesRelations = relations(politicalParties, ({ many }) => ({
-  performanceStats: many(partyPerformanceStats)
+export const politicalPartiesRelations = relations(politicalParties, ({ one, many }) => ({
+  performance: one(partyPerformance, {
+    fields: [politicalParties.id],
+    references: [partyPerformance.partyId]
+  }),
+  cityRelations: many(cityPartyRelations),
+  districtRelations: many(districtPartyRelations)
 }));
 
-// Parti Performans İstatistikleri İlişkileri
-export const partyPerformanceStatsRelations = relations(partyPerformanceStats, ({ one }) => ({
+// Parti Performans İlişkileri
+export const partyPerformanceRelations = relations(partyPerformance, ({ one }) => ({
   party: one(politicalParties, {
-    fields: [partyPerformanceStats.partyId],
+    fields: [partyPerformance.partyId],
+    references: [politicalParties.id]
+  })
+}));
+
+// Şehir-Parti İlişkileri
+export const cityPartyRelationsRelations = relations(cityPartyRelations, ({ one }) => ({
+  city: one(cities, {
+    fields: [cityPartyRelations.cityId],
+    references: [cities.id]
+  }),
+  party: one(politicalParties, {
+    fields: [cityPartyRelations.partyId],
+    references: [politicalParties.id]
+  })
+}));
+
+// İlçe-Parti İlişkileri
+export const districtPartyRelationsRelations = relations(districtPartyRelations, ({ one }) => ({
+  district: one(districts, {
+    fields: [districtPartyRelations.districtId],
+    references: [districts.id]
+  }),
+  party: one(politicalParties, {
+    fields: [districtPartyRelations.partyId],
     references: [politicalParties.id]
   })
 }));

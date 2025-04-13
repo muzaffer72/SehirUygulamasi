@@ -90,7 +90,47 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
       body: surveysAsync.when(
         data: (surveys) {
           if (surveys.isEmpty) {
-            return _buildEmptyState();
+            return Column(
+              children: [
+                // Parti performans kaydırma alanını her zaman göster
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.insights, size: 18, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Belediyelerin Çözüm Oranları',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Spacer(),
+                          Tooltip(
+                            message: 'Çözüm oranları, belediyelerin şikayetleri çözme başarısına göre hesaplanır.',
+                            child: Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Parti performans göstergesini ekle
+                      const PartyPerformanceScroll(
+                        height: 100,
+                        autoScroll: true,
+                        scrollDuration: Duration(seconds: 30),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Boş durum mesajını göster
+                Expanded(child: _buildEmptyState()),
+              ],
+            );
           }
           
           return RefreshIndicator(
@@ -98,11 +138,55 @@ class _SurveysScreenState extends ConsumerState<SurveysScreen> {
               ref.refresh(filteredSurveysProvider);
             },
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: surveys.length,
+              padding: const EdgeInsets.only(bottom: 16),
+              itemCount: surveys.length + 1, // +1 for the performance scroll
               itemBuilder: (context, index) {
-                final survey = surveys[index];
-                return _buildSurveyCard(survey);
+                // İlk elemanı parti performans kaydırma alanı olarak göster
+                if (index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16, top: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.insights, size: 18, color: Colors.blue),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Belediyelerin Çözüm Oranları',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Spacer(),
+                              Tooltip(
+                                message: 'Çözüm oranları, belediyelerin şikayetleri çözme başarısına göre hesaplanır.',
+                                child: Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Parti performans göstergesini ekle
+                        const PartyPerformanceScroll(
+                          height: 100,
+                          autoScroll: true,
+                          scrollDuration: Duration(seconds: 30),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
+                // Anket kartlarını göster (index-1, kaydırma alanını hesaba katmak için)
+                final survey = surveys[index - 1];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildSurveyCard(survey),
+                );
               },
             ),
           );
