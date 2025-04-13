@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="90" fill="#E30A17" />
+  <circle cx="100" cy="100" r="75" fill="white" />
+  <path d="M80,60 L80,140 M120,60 L120,140" stroke="#E30A17" stroke-width="15" fill="none" stroke-linecap="round" />
+  <path d="M80,100 L120,100" stroke="#E30A17" stroke-width="15" fill="none" stroke-linecap="round" />
+  <text x="100" y="170" font-family="Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#E30A17">CHP</text>
+</svg>

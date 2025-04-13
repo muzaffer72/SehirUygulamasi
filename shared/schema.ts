@@ -1,4 +1,4 @@
-import { pgTable, serial, text, varchar, boolean, integer, timestamp, date } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, varchar, boolean, integer, timestamp, date, decimal } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enum değerlerini basit string olarak tanımlayalım
@@ -268,6 +268,38 @@ export const cityAwards = pgTable('city_awards', {
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
+// Siyasi Partiler Tablosu
+export const politicalParties = pgTable('political_parties', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  shortName: varchar('short_name', { length: 10 }).notNull().unique(), // Kısa isim, örn: AKP, CHP, MHP
+  description: text('description'),
+  logoUrl: text('logo_url').notNull(), // Parti logosu
+  color: varchar('color', { length: 7 }).notNull(), // Parti rengi (hex code)
+  isActive: boolean('is_active').default(true).notNull(),
+  foundedYear: integer('founded_year'), // Kuruluş yılı
+  website: varchar('website', { length: 255 }),
+  sortOrder: integer('sort_order').default(0).notNull(), // Sıralama için
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+// Parti Performans İstatistikleri Tablosu 
+export const partyPerformanceStats = pgTable('party_performance_stats', {
+  id: serial('id').primaryKey(),
+  partyId: integer('party_id').notNull().references(() => politicalParties.id, { onDelete: 'cascade' }),
+  totalMunicipalityCount: integer('total_municipality_count').default(0).notNull(), // Toplam belediye sayısı
+  problemSolvingRate: decimal('problem_solving_rate', { precision: 5, scale: 2 }).default('0').notNull(), // Çözüm oranı (%)
+  averageSatisfactionRate: decimal('average_satisfaction_rate', { precision: 5, scale: 2 }).default('0').notNull(), // Ortalama memnuniyet (%)
+  totalAwards: integer('total_awards').default(0).notNull(), // Toplam ödül sayısı
+  goldAwards: integer('gold_awards').default(0).notNull(), // Altın ödül sayısı
+  silverAwards: integer('silver_awards').default(0).notNull(), // Gümüş ödül sayısı
+  bronzeAwards: integer('bronze_awards').default(0).notNull(), // Bronz ödül sayısı
+  lastCalculatedAt: timestamp('last_calculated_at').defaultNow().notNull(), // En son hesaplama zamanı
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
 // İlişki tanımlamaları
 export const userLikesRelations = relations(userLikes, ({ one }) => ({
   user: one(users, {
@@ -457,5 +489,18 @@ export const cityAwardsRelations = relations(cityAwards, ({ one }) => ({
   project: one(cityProjects, {
     fields: [cityAwards.projectId],
     references: [cityProjects.id]
+  })
+}));
+
+// Siyasi Parti İlişkileri
+export const politicalPartiesRelations = relations(politicalParties, ({ many }) => ({
+  performanceStats: many(partyPerformanceStats)
+}));
+
+// Parti Performans İstatistikleri İlişkileri
+export const partyPerformanceStatsRelations = relations(partyPerformanceStats, ({ one }) => ({
+  party: one(politicalParties, {
+    fields: [partyPerformanceStats.partyId],
+    references: [politicalParties.id]
   })
 }));
