@@ -901,17 +901,44 @@ function import_single_file($file_path, $replace_data = false) {
             $db->begin_transaction();
             
             try {
-                // Tek seferde çalıştırmak yerine, SQL komutlarını ayrı ayrı çalıştır
-                $queries = parse_sql_file($sql_content);
+                // SQL içeriğini önişle - sondan boşlukları temizle
+                $sql_content = trim($sql_content);
+                                
+                // Yorum satırlarını temizle
+                $sql_content = preg_replace('/--.*$/m', '', $sql_content);
+                $sql_content = preg_replace('!/\*.*?\*/!s', '', $sql_content);
+                
+                error_log("SQL içeriği temizlendi, boyut: " . strlen($sql_content) . " bayt");
+                
+                // SQL dosyasını daha basit bir şekilde böl
+                $raw_queries = explode(';', $sql_content);
+                $queries = [];
+                
+                foreach ($raw_queries as $query) {
+                    $query = trim($query);
+                    if (!empty($query)) {
+                        $queries[] = $query;
+                    }
+                }
                 
                 error_log("SQL dosyasında " . count($queries) . " sorgu bulundu.");
                 
                 foreach ($queries as $i => $query) {
-                    if (trim($query)) {
+                    $query = trim($query);
+                    if (!empty($query)) {
                         try {
-                            error_log("SQL sorgusu çalıştırılıyor [" . ($i+1) . "/" . count($queries) . "]: " . substr(trim($query), 0, 50) . "...");
+                            $log_query = substr($query, 0, 100);
+                            error_log("SQL sorgusu çalıştırılıyor [" . ($i+1) . "/" . count($queries) . "]: " . $log_query . (strlen($query) > 100 ? "..." : ""));
+                            
+                            if (stripos($query, 'DROP TABLE') !== false) {
+                                error_log("DROP TABLE komutu tespit edildi");
+                            } else if (stripos($query, 'CREATE TABLE') !== false) {
+                                error_log("CREATE TABLE komutu tespit edildi");
+                            }
+                            
                             $result = $db->query($query);
-                            if (!$result) {
+                            
+                            if ($result === false) {
                                 error_log("SQL sorgu hatası [" . ($i+1) . "]: " . $db->error);
                                 throw new Exception($db->error);
                             }
