@@ -788,44 +788,6 @@ function generate_unified_sql_export($with_drop = false) {
     return $file_path;
 }
 
-function generate_csv_export($table_name) {
-    global $db, $backup_dir;
-    $temp_file = tempnam(sys_get_temp_dir(), 'csv_');
-    $f = fopen($temp_file, 'w');
-    
-    if (!$f) return false;
-    
-    // Sütun başlıklarını al
-    $query = "SELECT column_name FROM information_schema.columns 
-             WHERE table_name = ? 
-             ORDER BY ordinal_position";
-    $stmt = $db->prepare($query);
-    $stmt->bind_param("s", $table_name);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    $headers = [];
-    while ($row = $result->fetch_assoc()) {
-        $headers[] = $row['column_name'];
-    }
-    
-    // CSV başlık satırını yaz
-    fputcsv($f, $headers);
-    
-    // Verileri al ve yaz
-    $data_query = "SELECT * FROM \"$table_name\"";
-    $data_stmt = $db->prepare($data_query);
-    $data_stmt->execute();
-    $data_result = $data_stmt->get_result();
-    
-    while ($row = $data_result->fetch_assoc()) {
-        fputcsv($f, $row);
-    }
-    
-    fclose($f);
-    return $temp_file;
-}
-
 function create_full_backup($with_drop = false) {
     global $backup_dir;
     $timestamp = date('Y-m-d_H-i-s');
