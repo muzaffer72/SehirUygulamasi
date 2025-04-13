@@ -988,8 +988,19 @@ function import_single_file($file_path, $replace_data = false) {
                             $log_query = substr($query, 0, 100);
                             error_log("SQL sorgusu çalıştırılıyor [" . ($i+1) . "/" . count($queries) . "]: " . $log_query . (strlen($query) > 100 ? "..." : ""));
                             
+                            // DROP TABLE komutlarına CASCADE ekleyelim
                             if (stripos($query, 'DROP TABLE') !== false) {
                                 error_log("DROP TABLE komutu tespit edildi");
+                                // Eğer komutta CASCADE yoksa ekleyelim
+                                if (stripos($query, 'CASCADE') === false) {
+                                    // IF EXISTS varsa ondan sonra, yoksa DROP TABLE'dan sonra CASCADE ekle
+                                    if (stripos($query, 'IF EXISTS') !== false) {
+                                        $query = preg_replace('/IF EXISTS\s+([^\s;]+)/', 'IF EXISTS $1 CASCADE', $query);
+                                    } else {
+                                        $query = preg_replace('/DROP TABLE\s+([^\s;]+)/', 'DROP TABLE $1 CASCADE', $query);
+                                    }
+                                    error_log("DROP TABLE komutuna CASCADE eklendi: " . $query);
+                                }
                             } else if (stripos($query, 'CREATE TABLE') !== false) {
                                 error_log("CREATE TABLE komutu tespit edildi");
                             }
