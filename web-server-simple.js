@@ -1,27 +1,57 @@
+// Basitleştirilmiş web sunucusu - path-to-regexp hatasını önlemek için
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const app = express();
 const PORT = 5000;
 
-// Flutter web uygulaması hakkında durum mesajı
-console.log('\nŞikayetVar Flutter web uygulaması başlatılıyor...');
-console.log('=================================================\n');
+// Console logları için renkler
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  dim: '\x1b[2m',
+  underscore: '\x1b[4m',
+  blink: '\x1b[5m',
+  reverse: '\x1b[7m',
+  hidden: '\x1b[8m',
+  
+  fg: {
+    black: '\x1b[30m',
+    red: '\x1b[31m',
+    green: '\x1b[32m',
+    yellow: '\x1b[33m',
+    blue: '\x1b[34m',
+    magenta: '\x1b[35m',
+    cyan: '\x1b[36m',
+    white: '\x1b[37m',
+    crimson: '\x1b[38m'
+  },
+  
+  bg: {
+    black: '\x1b[40m',
+    red: '\x1b[41m',
+    green: '\x1b[42m',
+    yellow: '\x1b[43m',
+    blue: '\x1b[44m',
+    magenta: '\x1b[45m',
+    cyan: '\x1b[46m',
+    white: '\x1b[47m',
+    crimson: '\x1b[48m'
+  }
+};
 
-// MIME türleri için doğrudan Express ayarları
+console.log(colors.fg.cyan + '\nŞikayetVar Flutter web uygulaması başlatılıyor...' + colors.reset);
+console.log(colors.fg.cyan + '=================================================' + colors.reset);
+
+// Statik dosya sunumu için MIME türlerini ayarlama
 app.use((req, res, next) => {
-  // İstek yolunu ve uzantısını al
-  const url = req.path || req.url;
-  const ext = path.extname(url).toLowerCase();
+  const ext = path.extname(req.path).toLowerCase();
   
-  // İstek loglaması
-  console.log(`İstek: ${url}`);
+  // Log istekleri
+  console.log(`İstek: ${req.path}`);
   
-  // Tüm MIME türlerini manuel olarak ayarla
   if (ext === '.js') {
     res.set('Content-Type', 'application/javascript');
-  } else if (ext === '.dart') {
-    res.set('Content-Type', 'application/dart');
   } else if (ext === '.css') {
     res.set('Content-Type', 'text/css');
   } else if (ext === '.html') {
@@ -42,47 +72,10 @@ app.use((req, res, next) => {
     res.set('Content-Type', 'application/wasm');
   }
   
-  // CORS başlıkları
-  res.set('Access-Control-Allow-Origin', '*');
-  
   next();
 });
 
-// Flutter web uygulamasına yönlendirme
-app.get('/flutter', (req, res) => {
-  if (fs.existsSync('public_html/index.html')) {
-    res.sendFile(path.join(__dirname, 'public_html/index.html'));
-  } else if (fs.existsSync('build/web/index.html')) {
-    res.sendFile(path.join(__dirname, 'build/web/index.html'));
-  } else if (fs.existsSync('web/index.html')) {
-    res.sendFile(path.join(__dirname, 'web/index.html'));
-  } else {
-    res.send("Flutter web uygulaması bulunamadı. Lütfen 'flutter build web' komutunu çalıştırın.");
-  }
-});
-
-// Web klasöründeki static dosyalara erişim
-app.use(express.static('web'));
-
-// /flutter/ altındaki istekleri web klasörüne yönlendir - düzgün bir yol yerleştirme kullanarak
-app.get('/flutter/:file*?', (req, res, next) => {
-  let requestedPath = req.params.file || '';
-  // Varsa yol parametrelerinin geri kalanını ekle
-  if (req.params[0]) {
-    requestedPath += req.params[0];
-  }
-  
-  // Dosya yolunu oluştur ve dosyanın var olup olmadığını kontrol et
-  const filePath = path.join(__dirname, 'web', requestedPath);
-  
-  if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
-  } else {
-    next();
-  }
-});
-
-// Ana sayfa için bilgi ve yönlendirme
+// Tek ana sayfa route'u
 app.get('/', (req, res) => {
   let htmlContent = `
   <!DOCTYPE html>
@@ -118,9 +111,6 @@ app.get('/', (req, res) => {
         margin-top: 20px;
         background-color: #fff;
       }
-      .panel {
-        margin-top: 30px;
-      }
       .btn {
         display: inline-block;
         background-color: #1976d2;
@@ -139,14 +129,6 @@ app.get('/', (req, res) => {
       }
       .success {
         color: #2e7d32;
-        font-weight: bold;
-      }
-      .error {
-        color: #d32f2f;
-        font-weight: bold;
-      }
-      .warning {
-        color: #F57C00;
         font-weight: bold;
       }
       code {
@@ -180,17 +162,6 @@ app.get('/', (req, res) => {
         margin-top: 0;
         color: #1565C0;
       }
-      .update-note {
-        margin-top: 30px;
-        padding: 12px;
-        background-color: #FFEBEE;
-        border-radius: 6px;
-        border-left: 4px solid #EF5350;
-      }
-      .update-note h3 {
-        margin-top: 0;
-        color: #C62828;
-      }
     </style>
   </head>
   <body>
@@ -198,7 +169,7 @@ app.get('/', (req, res) => {
       <h1>ŞikayetVar Platformu</h1>
       
       <div class="status-message">
-        <p><span class="warning">⚠️</span> <strong>Flutter Web Durum Bildirisi:</strong> Flutter web uygulaması geliştirme aşamasındadır. Tam derleme tamamlanana kadar bazı sayfalar yüklenemeyebilir.</p>
+        <p><span class="success">✓</span> API ve Admin Paneli çalışır durumda</p>
       </div>
       
       <div class="card">
@@ -217,9 +188,9 @@ app.get('/', (req, res) => {
             <h4>Admin Panel</h4>
             <ul>
               <li>Şikayetler yönetimi</li>
-              <li>Kullanıcı hesapları kontrolü</li>
+              <li>Kullanıcı hesapları</li>
               <li>İçerik moderasyonu</li>
-              <li>İstatistikler ve raporlar</li>
+              <li>İstatistikler</li>
             </ul>
           </div>
           
@@ -227,43 +198,11 @@ app.get('/', (req, res) => {
             <h4>Flutter Mobil</h4>
             <ul>
               <li>Konum tabanlı şikayetler</li>
-              <li>Şikayet gönderme ve takibi</li>
+              <li>Şikayet takibi</li>
               <li>Belediye profilleri</li>
-              <li>Sosyal etkileşim özellikleri</li>
+              <li>Sosyal özellikler</li>
             </ul>
           </div>
-          
-          <div class="feature-card">
-            <h4>Veritabanı</h4>
-            <ul>
-              <li>PostgreSQL veritabanı</li>
-              <li>Şehir ve ilçe verileri</li>
-              <li>Ödül sistemi</li>
-              <li>Komple yedekleme mevcut</li>
-            </ul>
-          </div>
-          
-          <div class="feature-card">
-            <h4>API Sistemi</h4>
-            <ul>
-              <li>REST API endpoints</li>
-              <li>Mobil uygulama entegrasyonu</li>
-              <li>Veri senkronizasyonu</li>
-              <li>Güvenli kimlik doğrulama</li>
-            </ul>
-          </div>
-        </div>
-        
-        <div class="update-note">
-          <h3>Flutter Web Geliştirme Notu</h3>
-          <p>Flutter web uygulaması geliştirme aşamasındadır ve tam derleme henüz tamamlanmamıştır. Şu anda şunlar hazırlanıyor:</p>
-          <ul>
-            <li>Web derlemesi optimizasyonu</li>
-            <li>JavaScript interoperability</li>
-            <li>CanvasKit entegrasyonu</li>
-            <li>Görünüm iyileştirmeleri</li>
-          </ul>
-          <p>Web uygulaması için Flutter SDK'nın son versiyonuyla yapılan bir tam derleme bekleniyor.</p>
         </div>
         
         <div style="margin-top:25px">
@@ -280,22 +219,14 @@ app.get('/', (req, res) => {
   res.send(htmlContent);
 });
 
-// Derlenen web klasörünü statik olarak servis et (public_html veya web klasörü, hangisi varsa)
-if (fs.existsSync('public_html')) {
-  app.use(express.static('public_html'));
-  console.log("Flutter web build dosyaları public_html klasöründen sunuluyor");
-} else if (fs.existsSync('build/web')) {
-  app.use(express.static('build/web'));
-  console.log("Flutter web build dosyaları build/web klasöründen sunuluyor");
-} else if (fs.existsSync('web')) {
-  app.use(express.static('web'));
-  console.log("Flutter web dosyaları web klasöründen sunuluyor");
-} else {
-  console.log("UYARI: Herhangi bir web klasörü bulunamadı! Web uygulaması çalışmayacak.");
+// Web klasörünü statik olarak sun (varsa)
+if (fs.existsSync('web')) {
+  app.use('/web', express.static('web'));
+  console.log(colors.fg.green + "Flutter web dosyaları /web/ yolu altında sunuluyor" + colors.reset);
 }
 
 // Sunucuyu başlat
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`ŞikayetVar bilgi sayfası şu adreste çalışıyor: http://0.0.0.0:${PORT}`);
-  console.log(`Admin Panel şu adreste çalışıyor: http://0.0.0.0:3000`);
+  console.log(colors.fg.green + `ŞikayetVar bilgi sayfası şu adreste çalışıyor: http://0.0.0.0:${PORT}` + colors.reset);
+  console.log(colors.fg.green + `Admin Panel şu adreste çalışıyor: http://0.0.0.0:3000` + colors.reset);
 });

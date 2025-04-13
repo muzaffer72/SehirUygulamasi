@@ -50,7 +50,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node web-server.js"
+args = "node web-server-simple.js"
 waitForPort = 5000
 
 [[workflows.workflow]]
