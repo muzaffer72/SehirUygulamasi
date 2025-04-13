@@ -583,6 +583,11 @@ $page_file = "pages/{$page}.php";
                                     </a>
                                 </li>
                                 <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'backup' ? 'active' : '' ?>" href="?page=backup">
+                                        <i class="bi bi-database-fill-check"></i> Yedekleme
+                                    </a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link" href="?logout=1">
                                         <i class="bi bi-box-arrow-right"></i> Çıkış Yap
                                     </a>
@@ -631,6 +636,9 @@ $page_file = "pages/{$page}.php";
                         </a>
                         <a href="?page=notifications" class="<?= $page === 'notifications' ? 'active' : '' ?>">
                             <i class="bi bi-bell"></i> Bildirimler
+                        </a>
+                        <a href="?page=backup" class="<?= $page === 'backup' ? 'active' : '' ?>">
+                            <i class="bi bi-database-fill-check"></i> Yedekleme
                         </a>
                         <a href="?logout=1" class="mt-5">
                             <i class="bi bi-box-arrow-right"></i> Çıkış Yap
