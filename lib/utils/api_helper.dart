@@ -11,8 +11,8 @@ class ApiHelper {
       final protocol = html.window.location.protocol; // "http:" veya "https:"
       final hostname = html.window.location.hostname; // "domain.com" veya "localhost" 
       
-      // Admin panel 3000 portundan yayınlanıyor
-      return '$protocol//$hostname:3000/api';
+      // API proxy 9000 portundan yayınlanıyor 
+      return '$protocol//$hostname:9000/api';
     } else {
       // Mobilde sabit URL kullanıyoruz
       return 'https://workspace.replit.app/api';
