@@ -717,6 +717,8 @@ function import_backup($file_path, $replace_data = false) {
     global $db;
     $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
     
+    error_log("İçe aktarma başlatılıyor: $file_path ($file_ext)");
+    
     // ZIP dosyasını işle
     if ($file_ext === 'zip') {
         $extract_dir = sys_get_temp_dir() . '/sikayetvar_import_' . time();
@@ -724,61 +726,87 @@ function import_backup($file_path, $replace_data = false) {
             mkdir($extract_dir, 0755, true);
         }
         
+        error_log("Geçici dizin oluşturuldu: $extract_dir");
+        
         $zip = new ZipArchive();
-        if ($zip->open($file_path) === TRUE) {
+        $zip_result = $zip->open($file_path);
+        
+        if ($zip_result === TRUE) {
             // ZIP dosyasını açma ve içeriğini çıkarma başarılı
+            error_log("ZIP dosyası başarıyla açıldı, dosya sayısı: " . $zip->numFiles);
             $zip->extractTo($extract_dir);
             $zip->close();
             
+            error_log("ZIP içeriği $extract_dir klasörüne çıkarıldı");
+            
             $results = [];
             $processed = 0;
+            
+            // Klasör yapısını logla
+            $folder_content = scandir($extract_dir);
+            error_log("Çıkarılan içerik: " . implode(", ", $folder_content));
             
             // Eğer sql, json, csv klasörleri varsa, yapılandırılmış tam yedek kabul et
             if (file_exists($extract_dir . '/sql') || 
                 file_exists($extract_dir . '/json') || 
                 file_exists($extract_dir . '/csv')) {
                 
+                error_log("Yapılandırılmış yedek formatı tespit edildi");
+                
                 // SQL klasörünü işle
                 if (file_exists($extract_dir . '/sql')) {
                     $sql_files = glob($extract_dir . '/sql/*.sql');
+                    error_log("SQL klasöründe " . count($sql_files) . " dosya bulundu");
                     foreach ($sql_files as $file) {
+                        error_log("SQL dosyası işleniyor: " . basename($file));
                         $result = import_single_file($file, $replace_data);
                         $processed++;
                         $results[basename($file)] = $result;
+                        error_log("SQL dosyası işleme sonucu: " . ($result[0] ? "Başarılı" : "Başarısız - " . $result[1]));
                     }
                 }
                 
                 // JSON klasörünü işle
                 if (file_exists($extract_dir . '/json')) {
                     $json_files = glob($extract_dir . '/json/*.json');
+                    error_log("JSON klasöründe " . count($json_files) . " dosya bulundu");
                     foreach ($json_files as $file) {
+                        error_log("JSON dosyası işleniyor: " . basename($file));
                         $result = import_single_file($file, $replace_data);
                         $processed++;
                         $results[basename($file)] = $result;
+                        error_log("JSON dosyası işleme sonucu: " . ($result[0] ? "Başarılı" : "Başarısız - " . $result[1]));
                     }
                 }
                 
                 // CSV klasörünü işle
                 if (file_exists($extract_dir . '/csv')) {
                     $csv_files = glob($extract_dir . '/csv/*.csv');
+                    error_log("CSV klasöründe " . count($csv_files) . " dosya bulundu");
                     foreach ($csv_files as $file) {
+                        error_log("CSV dosyası işleniyor: " . basename($file));
                         $result = import_single_file($file, $replace_data);
                         $processed++;
                         $results[basename($file)] = $result;
+                        error_log("CSV dosyası işleme sonucu: " . ($result[0] ? "Başarılı" : "Başarısız - " . $result[1]));
                     }
                 }
             } 
             // Aksi halde yedek klasörün içindeki tüm dosyaları doğrudan tara
             else {
+                error_log("Standart yedek formatı tespit edildi, tüm dosyalar taranıyor...");
                 // Çıkarılan dosyaları işle
                 $extracted_files = scan_dir_recursive($extract_dir);
+                error_log("Toplam " . count($extracted_files) . " dosya bulundu");
                 
                 foreach ($extracted_files as $file) {
                     $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
                     if (in_array($ext, ['sql', 'json', 'csv'])) {
+                        error_log($ext . " dosyası işleniyor: " . basename($file));
                         $result = import_single_file($file, $replace_data);
                         $processed++;
                         $results[basename($file)] = $result;
+                        error_log("Dosya işleme sonucu: " . ($result[0] ? "Başarılı" : "Başarısız - " . $result[1]));
                     }
                 }
             }
@@ -811,6 +839,7 @@ function import_backup($file_path, $replace_data = false) {
         }
     } else {
         // Tek dosyayı işle
+        error_log("Tek dosya içe aktarılıyor: $file_path");
         return import_single_file($file_path, $replace_data);
     }
 }
@@ -860,6 +889,8 @@ function clean_dir_recursive($dir) {
 function import_single_file($file_path, $replace_data = false) {
     global $db;
     $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
+    
+    error_log("import_single_file: Dosya işleniyor: $file_path (format: $file_ext)");
     
     try {
         // SQL dosyası
