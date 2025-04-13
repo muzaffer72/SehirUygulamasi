@@ -4,7 +4,9 @@
 // Şehirleri getir
 function getCities($db) {
     $query = "SELECT * FROM cities ORDER BY name ASC";
-    $result = $db->query($query);
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
     
     $cities = [];
     while ($row = $result->fetch_assoc()) {

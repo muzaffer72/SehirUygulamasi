@@ -97,8 +97,14 @@ class MySQLiStmtCompatWrapper {
     }
 
     public function get_result() {
-        $this->stmt->execute();
-        return new MySQLiResultCompatWrapper($this->stmt);
+        try {
+            $this->stmt->execute();
+            return new MySQLiResultCompatWrapper($this->stmt);
+        } catch (PDOException $e) {
+            // Hata oluştuğunda uygun şekilde ele al
+            error_log("PDO execute exception: " . $e->getMessage());
+            throw $e; // Hata fırlatmaya devam et, böylece çağıran kod tarafında ele alınabilir
+        }
     }
 }
 

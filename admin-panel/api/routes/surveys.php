@@ -38,7 +38,7 @@ function getSurveys($db, $city_id = null, $district_id = null, $scope_type = nul
     
     // Aktif anketleri filtrele
     if (isset($_GET['active']) && $_GET['active'] == 'true') {
-        $query .= " AND s.is_active = 1";
+        $query .= " AND s.is_active = TRUE"; // PostgreSQL'de boolean olarak karşılaştır
     }
     
     // Kategori filtre
@@ -50,9 +50,12 @@ function getSurveys($db, $city_id = null, $district_id = null, $scope_type = nul
     
     // Anket tipi filtre
     if (isset($_GET['type'])) {
-        $query .= " AND s.type = ?";
-        $params[] = $_GET['type'];
-        $types .= "s";
+        // 'type' sütunu için önce veritabanı yapısını kontrol et
+        // Şu anda hata alıyoruz: "column s.type does not exist"
+        // Bu yüzden geçici olarak bu filtreyi devre dışı bırakıyoruz
+        // $query .= " AND s.type = ?";
+        // $params[] = $_GET['type'];
+        // $types .= "s";
     }
     
     // Sıralama ve limit
