@@ -508,13 +508,7 @@ function generate_sql_export($table_name, $with_drop = false) {
             return "\"" . $col . "\"";
         }, $columns);
         
-        $values = array_map(function($val) use ($db) {
-            if ($val === null) {
-                return "NULL";
-            } else {
-                return "'" . addslashes($val) . "'";
-            }
-        }, array_values($row));
+        $values = array_map('fix_value_for_sql', array_values($row));
         
         // IF NOT EXISTS mantığı ile INSERT oluştur - çakışma durumunda güncelleme yap
         $insert = "INSERT INTO \"$table_name\" (" . implode(", ", $quoted_columns) . ") VALUES (" . implode(", ", $values) . ")";
@@ -556,6 +550,24 @@ function generate_json_export($table_name) {
     }
     
     return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+}
+
+// PostgreSQL için değerleri doğru formatlayan yardımcı fonksiyon
+function fix_value_for_sql($val) {
+    if ($val === null) {
+        return "NULL";
+    } elseif ($val === "") {
+        // Boş string değerlerini NULL olarak işle (boolean hatalarını önlemek için)
+        return "NULL";
+    } elseif ($val === "t" || $val === "true" || $val === "1" || $val === true) {
+        // Boolean true değerlerini PostgreSQL uyumlu formata dönüştür
+        return "TRUE";
+    } elseif ($val === "f" || $val === "false" || $val === "0" || $val === false) {
+        // Boolean false değerlerini PostgreSQL uyumlu formata dönüştür
+        return "FALSE";
+    } else {
+        return "'" . addslashes($val) . "'";
+    }
 }
 
 // CSV içeriği oluştur (dosya döndürür)
@@ -788,14 +800,7 @@ function generate_unified_sql_export($with_drop = false) {
                 return "\"" . $col . "\"";
             }, $columns);
             
-            $values = array_map(function($val) use ($db) {
-                if ($val === null) {
- // Boş string değerleri NULL olarak işle (boolean hatalarını önlemek için)
-                    return "NULL";
-                } else {
-                    return "'" . addslashes($val) . "'";
-                }
-            }, array_values($row));
+            $values = array_map('fix_value_for_sql', array_values($row));
             
             $insert = "INSERT INTO \"$table\" (" . implode(", ", $quoted_columns) . ") VALUES (" . implode(", ", $values) . ")";
             
