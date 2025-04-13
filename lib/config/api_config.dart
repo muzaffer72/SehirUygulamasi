@@ -7,8 +7,8 @@ class ApiConfig {
     try {
       return ApiHelper.getApiBaseUrl();
     } catch (e) {
-      // ApiHelper çalışmazsa varsayılan olarak bu adresi kullan
-      return 'https://workspace.replit.app/api';
+      // ApiHelper çalışmazsa varsayılan olarak bu adresi kullan (api yolsuz)
+      return 'https://workspace.replit.app';
     }
   }
 

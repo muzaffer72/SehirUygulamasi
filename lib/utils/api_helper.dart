@@ -11,11 +11,11 @@ class ApiHelper {
       final protocol = html.window.location.protocol; // "http:" veya "https:"
       final hostname = html.window.location.hostname; // "domain.com" veya "localhost" 
       
-      // API proxy 9000 portundan yayınlanıyor 
-      return '$protocol//$hostname:9000/api';
+      // API proxy 9000 portundan yayınlanıyor (api yolsuz)
+      return '$protocol//$hostname:9000';
     } else {
-      // Mobilde sabit URL kullanıyoruz
-      return 'https://workspace.replit.app/api';
+      // Mobilde sabit URL kullanıyoruz (api yolsuz)
+      return 'https://workspace.replit.app';
     }
   }
 }
