@@ -324,6 +324,22 @@ $backups = get_existing_backups();
 ?>
 
 <div class="container-fluid">
+    <h2 class="mb-4">
+        <i class="bi bi-cloud-arrow-down"></i> Sistem Yedekleme
+    </h2>
+
+    <div class="alert alert-info mb-4">
+        <div class="d-flex">
+            <div class="me-3">
+                <i class="bi bi-info-circle-fill fs-3"></i>
+            </div>
+            <div>
+                <h5 class="alert-heading">Yedekleme Hakkında</h5>
+                <p class="mb-0">Bu sayfa, veritabanı ve kaynak kod yedeklemesi yapmanıza olanak tanır. Düzenli yedekleme yaparak veri kaybını önleyebilirsiniz. Yedekler <code>export_data</code> klasöründe saklanır.</p>
+            </div>
+        </div>
+    </div>
+    
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
             <a class="nav-link active" id="db-tab" data-bs-toggle="tab" href="#db-backup" role="tab">

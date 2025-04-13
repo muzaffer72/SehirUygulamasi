@@ -36,6 +36,7 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd admin-panel && php -S 0.0.0.0:3001"
+waitForPort = 3001
 
 [[workflows.workflow]]
 name = "Flutter Web"

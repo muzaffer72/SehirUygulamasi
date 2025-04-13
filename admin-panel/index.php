@@ -584,7 +584,7 @@ $page_file = "pages/{$page}.php";
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link <?= $page === 'backup' ? 'active' : '' ?>" href="?page=backup">
-                                        <i class="bi bi-database-fill-check"></i> Yedekleme
+                                        <i class="bi bi-cloud-arrow-down"></i> Yedekleme
                                     </a>
                                 </li>
                                 <li class="nav-item">
@@ -638,7 +638,7 @@ $page_file = "pages/{$page}.php";
                             <i class="bi bi-bell"></i> Bildirimler
                         </a>
                         <a href="?page=backup" class="<?= $page === 'backup' ? 'active' : '' ?>">
-                            <i class="bi bi-database-fill-check"></i> Yedekleme
+                            <i class="bi bi-cloud-arrow-down"></i> Yedekleme
                         </a>
                         <a href="?logout=1" class="mt-5">
                             <i class="bi bi-box-arrow-right"></i> Çıkış Yap
