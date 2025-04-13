@@ -29,7 +29,7 @@ try {
                city.name as city_name, d.name as district_name
         FROM surveys s
         LEFT JOIN categories c ON s.category_id = c.id
-        LEFT JOIN cities city ON s.city_id = city.id
+        LEFT JOIN cities city ON s.city_id = CAST(city.id AS INTEGER)
         LEFT JOIN districts d ON s.district_id = d.id
         WHERE s.id = ?
     ");
