@@ -15,30 +15,36 @@ if (file_exists($env_file)) {
     }
 }
 
-// Eğer PGHOST değişkeni tanımlıysa bunları kullan
-if (isset($_ENV['PGHOST'])) {
-    $db_host = $_ENV['PGHOST'];
-    $db_name = $_ENV['PGDATABASE'];
-    $db_user = $_ENV['PGUSER'];
-    $db_pass = $_ENV['PGPASSWORD'];
-    $db_port = $_ENV['PGPORT'];
-    $sslmode = 'prefer';
+// DATABASE_URL değerini alıp kullan (daha güvenilir yöntem)
+if (isset($_ENV['DATABASE_URL']) && !empty($_ENV['DATABASE_URL'])) {
+    $database_url = $_ENV['DATABASE_URL'];
 } else {
-    // Varsayılan bağlantı bilgileri
-    $db_host = getenv('PGHOST');
-    $db_name = getenv('PGDATABASE');
-    $db_user = getenv('PGUSER');
-    $db_pass = getenv('PGPASSWORD');
-    $db_port = getenv('PGPORT') ?: 5432;
-    $sslmode = 'prefer';
+    $database_url = getenv('DATABASE_URL');
 }
 
-// PDO veritabanı bağlantısı oluştur
+if (empty($database_url)) {
+    die("DATABASE_URL çevre değişkeni bulunamadı!");
+}
+
+// PostgreSQL sürücüsünün yüklenip yüklenmediğini kontrol et
+if (!extension_loaded('pdo_pgsql')) {
+    die("PostgreSQL PDO sürücüsü yüklü değil. PHP yapılandırmanızı kontrol edin.");
+}
+
+// URL'i parçalara ayır
+$dbparts = parse_url($database_url);
+$hostname = $dbparts['host'];
+$dbname = ltrim($dbparts['path'], '/');
+$username = $dbparts['user'];
+$password = $dbparts['pass'];
+$port = $dbparts['port'] ?? 5432;
+
+// Manuel bağlantı oluştur
 try {
     $pdo = new PDO(
-        "pgsql:host=$db_host;dbname=$db_name;port=$db_port;sslmode=$sslmode", 
-        $db_user, 
-        $db_pass, 
+        "pgsql:host=$hostname;port=$port;dbname=$dbname;sslmode=require", 
+        $username, 
+        $password, 
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
