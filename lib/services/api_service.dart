@@ -25,6 +25,82 @@ class ApiService {
     return prefs.getString(apiToken);
   }
   
+  // Genel HTTP GET isteği için yardımcı metot
+  Future<http.Response> get(String endpoint) async {
+    final token = await _getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    if (token != null) {
+      headers['Authorization'] = token.startsWith('Bearer ') ? token : 'Bearer $token';
+    }
+    
+    final url = Uri.parse('$baseUrl/$endpoint');
+    print('ApiService GET: $url');
+    return await _client.get(url, headers: headers);
+  }
+  
+  // Genel HTTP POST isteği için yardımcı metot
+  Future<http.Response> post(String endpoint, dynamic data) async {
+    final token = await _getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    if (token != null) {
+      headers['Authorization'] = token.startsWith('Bearer ') ? token : 'Bearer $token';
+    }
+    
+    final url = Uri.parse('$baseUrl/$endpoint');
+    print('ApiService POST: $url');
+    return await _client.post(
+      url, 
+      headers: headers,
+      body: data != null ? jsonEncode(data) : null,
+    );
+  }
+  
+  // Genel HTTP PUT isteği için yardımcı metot
+  Future<http.Response> put(String endpoint, dynamic data) async {
+    final token = await _getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    if (token != null) {
+      headers['Authorization'] = token.startsWith('Bearer ') ? token : 'Bearer $token';
+    }
+    
+    final url = Uri.parse('$baseUrl/$endpoint');
+    print('ApiService PUT: $url');
+    return await _client.put(
+      url, 
+      headers: headers,
+      body: data != null ? jsonEncode(data) : null,
+    );
+  }
+  
+  // Genel HTTP DELETE isteği için yardımcı metot
+  Future<http.Response> delete(String endpoint) async {
+    final token = await _getToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    if (token != null) {
+      headers['Authorization'] = token.startsWith('Bearer ') ? token : 'Bearer $token';
+    }
+    
+    final url = Uri.parse('$baseUrl/$endpoint');
+    print('ApiService DELETE: $url');
+    return await _client.delete(url, headers: headers);
+  }
+  
   // Authentication
   Future<User> login(String email, String password) async {
     final response = await _client.post(

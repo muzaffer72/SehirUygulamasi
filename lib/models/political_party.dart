@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class PoliticalParty {
   final int id;
   final String name;
@@ -10,7 +12,6 @@ class PoliticalParty {
   final int complaintCount;
   final int solvedCount;
   final DateTime lastUpdated;
-  final bool isActive;
 
   PoliticalParty({
     required this.id,
@@ -19,13 +20,12 @@ class PoliticalParty {
     required this.color,
     required this.logoUrl,
     required this.problemSolvingRate,
-    this.cityCount = 0,
-    this.districtCount = 0,
-    this.complaintCount = 0,
-    this.solvedCount = 0,
-    DateTime? lastUpdated,
-    this.isActive = true,
-  }) : this.lastUpdated = lastUpdated ?? DateTime.now();
+    required this.cityCount,
+    required this.districtCount,
+    required this.complaintCount,
+    required this.solvedCount,
+    required this.lastUpdated,
+  });
 
   factory PoliticalParty.fromJson(Map<String, dynamic> json) {
     return PoliticalParty(
@@ -34,15 +34,12 @@ class PoliticalParty {
       shortName: json['short_name'],
       color: json['color'],
       logoUrl: json['logo_url'],
-      problemSolvingRate: json['problem_solving_rate']?.toDouble() ?? 0.0,
-      cityCount: json['city_count'] ?? 0,
-      districtCount: json['district_count'] ?? 0,
-      complaintCount: json['complaint_count'] ?? 0,
-      solvedCount: json['solved_count'] ?? 0,
-      lastUpdated: json['last_updated'] != null
-          ? DateTime.parse(json['last_updated'])
-          : null,
-      isActive: json['is_active'] ?? true,
+      problemSolvingRate: json['problem_solving_rate'].toDouble(),
+      cityCount: json['city_count'],
+      districtCount: json['district_count'],
+      complaintCount: json['complaint_count'],
+      solvedCount: json['solved_count'],
+      lastUpdated: DateTime.parse(json['last_updated']),
     );
   }
 
@@ -59,85 +56,36 @@ class PoliticalParty {
       'complaint_count': complaintCount,
       'solved_count': solvedCount,
       'last_updated': lastUpdated.toIso8601String(),
-      'is_active': isActive,
     };
   }
 
-  // Demo veriler (API hazır olmadığında gösterim amaçlı)
-  static List<PoliticalParty> getDemoParties() {
-    return [
-      PoliticalParty(
-        id: 1,
-        name: 'Adalet ve Kalkınma Partisi',
-        shortName: 'AK Parti',
-        color: '#FFA500',
-        logoUrl: 'assets/images/parties/akp.png',
-        problemSolvingRate: 68.5,
-        cityCount: 45,
-        districtCount: 562,
-        complaintCount: 12750,
-        solvedCount: 8734,
-      ),
-      PoliticalParty(
-        id: 2,
-        name: 'Cumhuriyet Halk Partisi',
-        shortName: 'CHP',
-        color: '#FF0000',
-        logoUrl: 'assets/images/parties/chp.png',
-        problemSolvingRate: 71.2,
-        cityCount: 22,
-        districtCount: 234,
-        complaintCount: 8540,
-        solvedCount: 6080,
-      ),
-      PoliticalParty(
-        id: 3,
-        name: 'Milliyetçi Hareket Partisi',
-        shortName: 'MHP',
-        color: '#FF4500',
-        logoUrl: 'assets/images/parties/mhp.png',
-        problemSolvingRate: 57.8,
-        cityCount: 8,
-        districtCount: 102,
-        complaintCount: 3240,
-        solvedCount: 1872,
-      ),
-      PoliticalParty(
-        id: 4,
-        name: 'İyi Parti',
-        shortName: 'İYİ Parti',
-        color: '#1E90FF',
-        logoUrl: 'assets/images/parties/iyi.png',
-        problemSolvingRate: 63.4,
-        cityCount: 3,
-        districtCount: 25,
-        complaintCount: 980,
-        solvedCount: 621,
-      ),
-      PoliticalParty(
-        id: 5,
-        name: 'Demokratik Sol Parti',
-        shortName: 'DSP',
-        color: '#FF69B4',
-        logoUrl: 'assets/images/parties/dsp.png',
-        problemSolvingRate: 52.1,
-        cityCount: 1,
-        districtCount: 5,
-        complaintCount: 320,
-        solvedCount: 167,
-      ),
-      PoliticalParty(
-        id: 6,
-        name: 'Yeniden Refah Partisi',
-        shortName: 'YRP',
-        color: '#006400',
-        logoUrl: 'assets/images/parties/yrp.png',
-        problemSolvingRate: 44.3,
-        cityCount: 0,
-        districtCount: 3,
-        complaintCount: 85,
-        solvedCount: 38,
-      ),
-    ];
+  // İlgili parti rengini hex değerinden Flutter Color nesnesine dönüştüren metod
+  Color getPartyColor() {
+    // Hex renk kodunu (örn. #FF5733) ayrıştır
+    String hexColor = color.replaceAll("#", "");
+    
+    // Hex değerini int formatına çevir
+    int colorValue = int.parse(hexColor, radix: 16);
+    
+    // 0xFF değerini ekleyerek tam ARGB formatına getir
+    colorValue = colorValue + 0xFF000000;
+    
+    return Color(colorValue);
+  }
+
+  // Çözüm oranına göre renk döndüren yardımcı metod
+  Color getRateColor() {
+    if (problemSolvingRate >= 70) {
+      return Color(0xFF4CAF50); // Yeşil
+    } else if (problemSolvingRate >= 50) {
+      return Color(0xFFFFC107); // Sarı/Turuncu
+    } else {
+      return Color(0xFFF44336); // Kırmızı
+    }
+  }
+
+  // Başarı oranını formatlanmış bir string olarak döndürme
+  String getFormattedRate() {
+    return "%${problemSolvingRate.toStringAsFixed(1)}";
   }
 }
