@@ -1,4 +1,7 @@
 <?php
+// Hata raporlama ayarlarını yükle - bu API yanıtlarında hata mesajlarının görünmesini engeller
+require_once '../php_error_config.php';
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");

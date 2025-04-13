@@ -27,13 +27,9 @@ if (!extension_loaded('pdo_pgsql')) {
     die("PostgreSQL PDO sürücüsü yüklü değil. PHP yapılandırmanızı kontrol edin.");
 }
 
-// Bağlantı bilgilerini göster
-echo "<!-- Bağlantı bilgileri: 
-Host: $hostname
-DB: $dbname
-User: $username
-Port: $port
--->";
+// Bağlantı bilgilerini gösterme, API çağrılarında JSON yanıtı bozuyor
+// Hata ayıklama için gerekirse error_log() kullanın
+error_log("PostgreSQL bağlantısı: Host=$hostname DB=$dbname User=$username Port=$port");
 
 // Manuel bağlantı oluştur
 try {
