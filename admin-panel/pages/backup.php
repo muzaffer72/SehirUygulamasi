@@ -57,7 +57,7 @@ function get_db_tables() {
     return $tables;
 }
 
-function export_table_data($table_name, $format = 'sql') {
+function export_table_data($table_name, $format = 'sql', $with_drop = false, $compress = false) {
     global $db, $backup_dir;
     $timestamp = date('Y-m-d_H-i-s');
     
@@ -65,8 +65,21 @@ function export_table_data($table_name, $format = 'sql') {
         $file_path = "$backup_dir/{$table_name}_$timestamp.sql";
         $f = fopen($file_path, 'w');
         
+        // Başlangıç yorumu ve transaction başlat
+        $header = "-- ŞikayetVar Veritabanı Yedeği\n";
+        $header .= "-- Tablo: $table_name\n";
+        $header .= "-- Tarih: " . date('Y-m-d H:i:s') . "\n\n";
+        $header .= "START TRANSACTION;\n\n";
+        fwrite($f, $header);
+        
+        // DROP TABLE komutunu ekle (isteğe bağlı)
+        if ($with_drop) {
+            $drop_statement = "DROP TABLE IF EXISTS $table_name;\n\n";
+            fwrite($f, $drop_statement);
+        }
+        
         // Tablo yapısını çıkar
-        $query = "SELECT column_name, data_type, character_maximum_length 
+        $query = "SELECT column_name, data_type, character_maximum_length, column_default, is_nullable 
                  FROM information_schema.columns 
                  WHERE table_name = ?
                  ORDER BY ordinal_position";
@@ -75,17 +88,51 @@ function export_table_data($table_name, $format = 'sql') {
         $stmt->execute();
         $result = $stmt->get_result();
         
+        // Birincil anahtar bilgisini al
+        $pk_query = "SELECT a.attname as column_name
+                    FROM pg_index i
+                    JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+                    WHERE i.indrelid = ?::regclass AND i.indisprimary";
+        $pk_stmt = $db->prepare($pk_query);
+        $pk_stmt->bind_param("s", $table_name);
+        $pk_stmt->execute();
+        $pk_result = $pk_stmt->get_result();
+        $primary_keys = [];
+        while ($pk_row = $pk_result->fetch_assoc()) {
+            $primary_keys[] = $pk_row['column_name'];
+        }
+        
         // CREATE TABLE ifadesi oluştur
         $create_table = "CREATE TABLE IF NOT EXISTS $table_name (\n";
         $columns = [];
+        $column_defs = [];
+        
         while ($row = $result->fetch_assoc()) {
-            $col_def = "  " . $row['column_name'] . " " . $row['data_type'];
+            $column_defs[$row['column_name']] = $row;
+            $col_def = "  \"" . $row['column_name'] . "\" " . $row['data_type'];
+            
             if (!empty($row['character_maximum_length'])) {
                 $col_def .= "(" . $row['character_maximum_length'] . ")";
             }
+            
+            // NULL/NOT NULL durumu
+            $col_def .= ($row['is_nullable'] === 'YES') ? ' NULL' : ' NOT NULL';
+            
+            // Varsayılan değer
+            if ($row['column_default'] !== null) {
+                $col_def .= " DEFAULT " . $row['column_default'];
+            }
+            
             $columns[] = $col_def;
         }
+        
         $create_table .= implode(",\n", $columns);
+        
+        // Birincil anahtar kısıtlaması ekle
+        if (!empty($primary_keys)) {
+            $create_table .= ",\n  PRIMARY KEY (\"" . implode('", "', $primary_keys) . "\")";
+        }
+        
         $create_table .= "\n);\n\n";
         fwrite($f, $create_table);
         
@@ -95,8 +142,13 @@ function export_table_data($table_name, $format = 'sql') {
         $data_stmt->execute();
         $data_result = $data_stmt->get_result();
         
+        // Her satır için INSERT komutunu oluştur
         while ($row = $data_result->fetch_assoc()) {
             $columns = array_keys($row);
+            $quoted_columns = array_map(function($col) {
+                return "\"" . $col . "\"";
+            }, $columns);
+            
             $values = array_map(function($val) use ($db) {
                 if ($val === null) {
                     return "NULL";
@@ -105,11 +157,43 @@ function export_table_data($table_name, $format = 'sql') {
                 }
             }, array_values($row));
             
-            $insert = "INSERT INTO $table_name (" . implode(", ", $columns) . ") VALUES (" . implode(", ", $values) . ");\n";
+            // IF NOT EXISTS mantığı ile INSERT oluştur - çakışma durumunda güncelleme yap
+            $insert = "INSERT INTO $table_name (" . implode(", ", $quoted_columns) . ") VALUES (" . implode(", ", $values) . ")";
+            
+            // ON CONFLICT kısmını ekle (PostgreSQL'in UPSERT özelliği)
+            if (!empty($primary_keys)) {
+                $insert .= " ON CONFLICT (\"" . implode('", "', $primary_keys) . "\") DO UPDATE SET ";
+                $updates = [];
+                foreach ($columns as $col) {
+                    if (!in_array($col, $primary_keys)) {
+                        $updates[] = "\"$col\" = EXCLUDED.\"$col\"";
+                    }
+                }
+                $insert .= implode(", ", $updates);
+            }
+            
+            $insert .= ";\n";
             fwrite($f, $insert);
         }
         
+        // Transaction'ı tamamla
+        fwrite($f, "\nCOMMIT;\n");
+        
         fclose($f);
+        
+        // Sıkıştırma isteği varsa
+        if ($compress) {
+            $zip_path = "$backup_dir/{$table_name}_$timestamp.zip";
+            $zip = new ZipArchive();
+            if ($zip->open($zip_path, ZipArchive::CREATE) === TRUE) {
+                $zip->addFile($file_path, basename($file_path));
+                $zip->close();
+                // Orijinal dosyayı sil
+                unlink($file_path);
+                return $zip_path;
+            }
+        }
+        
         return $file_path;
     } elseif ($format === 'json') {
         $file_path = "$backup_dir/{$table_name}_$timestamp.json";
@@ -256,12 +340,343 @@ function format_file_size($size) {
     return round($size, 2) . ' ' . $units[$i];
 }
 
+// İçe aktarma (import) fonksiyonu
+function import_backup($file_path, $replace_data = false) {
+    global $db;
+    $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
+    
+    // ZIP dosyasını işle
+    if ($file_ext === 'zip') {
+        $extract_dir = sys_get_temp_dir() . '/sikayetvar_import_' . time();
+        if (!file_exists($extract_dir)) {
+            mkdir($extract_dir, 0755, true);
+        }
+        
+        $zip = new ZipArchive();
+        if ($zip->open($file_path) === TRUE) {
+            $zip->extractTo($extract_dir);
+            $zip->close();
+            
+            // Çıkarılan dosyaları işle
+            $extracted_files = scandir($extract_dir);
+            $results = [];
+            
+            foreach ($extracted_files as $file) {
+                if (in_array($file, ['.', '..'])) continue;
+                
+                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                if (in_array($ext, ['sql', 'json', 'csv'])) {
+                    $file_full_path = $extract_dir . '/' . $file;
+                    $result = import_single_file($file_full_path, $replace_data);
+                    $results[$file] = $result;
+                }
+            }
+            
+            // Geçici klasörü temizle
+            foreach ($extracted_files as $file) {
+                if (in_array($file, ['.', '..'])) continue;
+                @unlink($extract_dir . '/' . $file);
+            }
+            @rmdir($extract_dir);
+            
+            // Sonuçları döndür
+            $success_count = count(array_filter($results));
+            $total_count = count($results);
+            
+            if ($success_count === $total_count) {
+                return [true, "{$success_count} dosya başarıyla içe aktarıldı."];
+            } else {
+                return [false, "{$success_count}/{$total_count} dosya içe aktarıldı. Bazı dosyalar işlenemedi."];
+            }
+        } else {
+            return [false, "ZIP dosyası açılamadı."];
+        }
+    } else {
+        // Tek dosyayı işle
+        return import_single_file($file_path, $replace_data);
+    }
+}
+
+function import_single_file($file_path, $replace_data = false) {
+    global $db;
+    $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
+    
+    try {
+        // SQL dosyası
+        if ($file_ext === 'sql') {
+            $sql_content = file_get_contents($file_path);
+            
+            // SQL içeriğini çalıştır (transaction içinde)
+            $db->begin_transaction();
+            
+            try {
+                // Tek seferde çalıştırmak yerine, SQL komutlarını ayrı ayrı çalıştır
+                $queries = parse_sql_file($sql_content);
+                
+                foreach ($queries as $query) {
+                    if (trim($query)) {
+                        $db->query($query);
+                    }
+                }
+                
+                $db->commit();
+                return [true, "SQL dosyası başarıyla içe aktarıldı."];
+            } catch (Exception $e) {
+                $db->rollback();
+                return [false, "SQL hatası: " . $e->getMessage()];
+            }
+        } 
+        // JSON dosyası
+        else if ($file_ext === 'json') {
+            $json_content = file_get_contents($file_path);
+            $data = json_decode($json_content, true);
+            
+            if (is_null($data)) {
+                return [false, "Geçersiz JSON formatı."];
+            }
+            
+            // Tablonun adını dosya adından çıkar
+            $table_name = pathinfo($file_path, PATHINFO_FILENAME);
+            // Tarih bilgisini temizle
+            $table_name = preg_replace('/_\d{4}-\d{2}-\d{2}.*$/', '', $table_name);
+            
+            // Tablo zaten var mı kontrol et
+            $check_query = "SELECT 1 FROM information_schema.tables WHERE table_name = ?";
+            $check_stmt = $db->prepare($check_query);
+            $check_stmt->bind_param("s", $table_name);
+            $check_stmt->execute();
+            $table_exists = $check_stmt->get_result()->num_rows > 0;
+            
+            if (!$table_exists) {
+                // Tablo yoksa, tablo yapısını oluştur
+                $table_columns = [];
+                
+                if (!empty($data)) {
+                    $first_row = $data[0];
+                    foreach ($first_row as $column => $value) {
+                        $type = is_numeric($value) ? 
+                            (is_int($value) ? "INT" : "DECIMAL(10,2)") : 
+                            "VARCHAR(255)";
+                        $table_columns[] = "\"$column\" $type";
+                    }
+                    
+                    $create_table_sql = "CREATE TABLE \"$table_name\" (\n  " . 
+                                        implode(",\n  ", $table_columns) . "\n)";
+                    
+                    $db->query($create_table_sql);
+                }
+            } else if ($replace_data) {
+                // Tabloyu temizle
+                $db->query("DELETE FROM \"$table_name\"");
+            }
+            
+            // Veriyi ekle
+            if (!empty($data)) {
+                $db->begin_transaction();
+                
+                try {
+                    foreach ($data as $row) {
+                        $columns = array_keys($row);
+                        $quoted_columns = array_map(function($col) {
+                            return "\"$col\"";
+                        }, $columns);
+                        
+                        $placeholders = array_fill(0, count($columns), '?');
+                        $values = array_values($row);
+                        
+                        $insert_query = "INSERT INTO \"$table_name\" (" . 
+                                        implode(", ", $quoted_columns) . 
+                                        ") VALUES (" . implode(", ", $placeholders) . ")";
+                        
+                        $stmt = $db->prepare($insert_query);
+                        
+                        if ($stmt) {
+                            $types = '';
+                            foreach ($values as $val) {
+                                if (is_int($val)) $types .= 'i';
+                                else if (is_float($val)) $types .= 'd';
+                                else if (is_null($val)) $types .= 's';
+                                else $types .= 's';
+                            }
+                            
+                            $stmt->bind_param($types, ...$values);
+                            $stmt->execute();
+                        }
+                    }
+                    
+                    $db->commit();
+                    return [true, "JSON verisi başarıyla içe aktarıldı."];
+                } catch (Exception $e) {
+                    $db->rollback();
+                    return [false, "JSON içe aktarma hatası: " . $e->getMessage()];
+                }
+            }
+            
+            return [true, "JSON içe aktarma tamamlandı, ancak veri yok."];
+        } 
+        // CSV dosyası
+        else if ($file_ext === 'csv') {
+            $table_name = pathinfo($file_path, PATHINFO_FILENAME);
+            // Tarih bilgisini temizle
+            $table_name = preg_replace('/_\d{4}-\d{2}-\d{2}.*$/', '', $table_name);
+            
+            // CSV dosyasını aç
+            $f = fopen($file_path, 'r');
+            if (!$f) {
+                return [false, "CSV dosyası açılamadı."];
+            }
+            
+            // Başlık satırını oku
+            $headers = fgetcsv($f);
+            if (!$headers) {
+                fclose($f);
+                return [false, "CSV başlıkları okunamadı."];
+            }
+            
+            // Tablo zaten var mı kontrol et
+            $check_query = "SELECT 1 FROM information_schema.tables WHERE table_name = ?";
+            $check_stmt = $db->prepare($check_query);
+            $check_stmt->bind_param("s", $table_name);
+            $check_stmt->execute();
+            $table_exists = $check_stmt->get_result()->num_rows > 0;
+            
+            if (!$table_exists) {
+                // Tablo yoksa, tablo yapısını oluştur
+                $table_columns = array_map(function($col) {
+                    return "\"$col\" VARCHAR(255)";
+                }, $headers);
+                
+                $create_table_sql = "CREATE TABLE \"$table_name\" (\n  " . 
+                                    implode(",\n  ", $table_columns) . "\n)";
+                
+                $db->query($create_table_sql);
+            } else if ($replace_data) {
+                // Tabloyu temizle
+                $db->query("DELETE FROM \"$table_name\"");
+            }
+            
+            // Veriyi ekle
+            $db->begin_transaction();
+            
+            try {
+                $quoted_headers = array_map(function($col) {
+                    return "\"$col\"";
+                }, $headers);
+                
+                $placeholders = array_fill(0, count($headers), '?');
+                
+                $insert_query = "INSERT INTO \"$table_name\" (" . 
+                                implode(", ", $quoted_headers) . 
+                                ") VALUES (" . implode(", ", $placeholders) . ")";
+                
+                $stmt = $db->prepare($insert_query);
+                
+                // CSV'den satır satır oku ve ekle
+                while (($row = fgetcsv($f)) !== FALSE) {
+                    if (count($row) != count($headers)) {
+                        continue; // Sütun sayısı uyuşmuyorsa atla
+                    }
+                    
+                    if ($stmt) {
+                        $types = str_repeat('s', count($row));
+                        $stmt->bind_param($types, ...$row);
+                        $stmt->execute();
+                    }
+                }
+                
+                $db->commit();
+                fclose($f);
+                return [true, "CSV verisi başarıyla içe aktarıldı."];
+            } catch (Exception $e) {
+                $db->rollback();
+                fclose($f);
+                return [false, "CSV içe aktarma hatası: " . $e->getMessage()];
+            }
+        } else {
+            return [false, "Desteklenmeyen dosya formatı: " . $file_ext];
+        }
+    } catch (Exception $e) {
+        return [false, "İçe aktarma hatası: " . $e->getMessage()];
+    }
+}
+
+// SQL dosyasını ayrı komutlara ayır
+function parse_sql_file($content) {
+    $content = preg_replace("/--.*\n/", "", $content);
+    
+    $queries = [];
+    $current_query = '';
+    $in_string = false;
+    $string_char = '';
+    
+    for ($i = 0; $i < strlen($content); $i++) {
+        $char = $content[$i];
+        $next_char = ($i < strlen($content) - 1) ? $content[$i + 1] : '';
+        
+        // String içerisindeyiz
+        if ($in_string) {
+            $current_query .= $char;
+            
+            // String'in sonu
+            if ($char === $string_char && $next_char !== $string_char) {
+                $in_string = false;
+            }
+            // Kaçış karakteri
+            elseif ($char === '\\') {
+                $current_query .= $next_char;
+                $i++; // Kaçış karakterini ve bir sonraki karakteri atla
+            }
+        } 
+        // String içerisinde değiliz
+        else {
+            // String başlangıcı
+            if ($char === "'" || $char === '"') {
+                $in_string = true;
+                $string_char = $char;
+                $current_query .= $char;
+            }
+            // Sorgu sonu
+            elseif ($char === ';') {
+                $current_query .= $char;
+                $queries[] = $current_query;
+                $current_query = '';
+            }
+            // Normal karakter
+            else {
+                $current_query .= $char;
+            }
+        }
+    }
+    
+    // Son sorguyu da ekle (eğer ';' ile bitmiyorsa)
+    if (trim($current_query) !== '') {
+        $queries[] = $current_query;
+    }
+    
+    return $queries;
+}
+
 // İşlem yönetimi
 $message = '';
 $message_type = 'success';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['create_backup'])) {
+    if (isset($_POST['import_backup']) && isset($_FILES['import_file'])) {
+        $file = $_FILES['import_file'];
+        $replace_data = isset($_POST['replace_data']);
+        
+        if ($file['error'] === UPLOAD_ERR_OK) {
+            $temp_path = $file['tmp_name'];
+            list($success, $msg) = import_backup($temp_path, $replace_data);
+            
+            $message = $msg;
+            $message_type = $success ? 'success' : 'danger';
+        } else {
+            $message = "Dosya yükleme hatası: " . $file['error'];
+            $message_type = 'danger';
+        }
+    }
+    else if (isset($_POST['create_backup'])) {
         $format = $_POST['format'] ?? 'sql';
         
         if ($format === 'full') {
@@ -391,6 +806,18 @@ $backups = get_existing_backups();
                             </select>
                         </div>
                         
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="with_drop" name="with_drop">
+                            <label class="form-check-label" for="with_drop">DROP TABLE komutlarını dahil et</label>
+                            <div class="form-text text-muted small">Geri yükleme işleminde tablolar önce silinip sonra oluşturulur</div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="compress" name="compress" checked>
+                            <label class="form-check-label" for="compress">ZIP olarak sıkıştır</label>
+                            <div class="form-text text-muted small">Yedekleme dosyası ZIP formatında sıkıştırılarak kaydedilir</div>
+                        </div>
+                        
                         <button type="submit" name="create_backup" class="btn btn-primary">
                             <i class="bi bi-download"></i> Yedeklemeyi Başlat
                         </button>
@@ -399,6 +826,35 @@ $backups = get_existing_backups();
             </div>
             
             <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Yedekleme İçe Aktar</h5>
+                </div>
+                <div class="card-body mb-4">
+                    <form method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="import_file" class="form-label">Yedek Dosyası</label>
+                            <input type="file" class="form-control" id="import_file" name="import_file" accept=".sql,.json,.zip,.csv">
+                            <div class="form-text text-muted">
+                                SQL, JSON, CSV veya ZIP formatında bir yedek dosyası seçin
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="replace_data" name="replace_data">
+                            <label class="form-check-label" for="replace_data">Mevcut verileri tamamen değiştir</label>
+                            <div class="form-text text-muted small">Bu seçenek etkinleştirildiğinde, geri yükleme sırasında tablo içeriği silinir</div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill"></i> Uyarı: Bu işlem, veritabanınızı seçilen yedek dosyasından geri yükleyecektir.
+                        </div>
+                        
+                        <button type="submit" name="import_backup" class="btn btn-warning">
+                            <i class="bi bi-upload"></i> Yedeği İçe Aktar
+                        </button>
+                    </form>
+                </div>
+                
                 <div class="card-header">
                     <h5 class="card-title mb-0">Veritabanı İstatistikleri</h5>
                 </div>
