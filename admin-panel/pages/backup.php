@@ -57,6 +57,94 @@ function get_db_tables() {
     return $tables;
 }
 
+// Tabloların mantıksal sırasını belirle (önce ana tablolar, sonra bağımlı tablolar)
+function get_tables_in_order() {
+    global $db;
+    
+    // Tüm tabloları al
+    $tables = get_db_tables();
+    
+    // Foreign key bağımlılıklarını al
+    $query = "
+        SELECT
+            tc.table_name AS table_name,
+            ccu.table_name AS referenced_table
+        FROM information_schema.table_constraints AS tc
+        JOIN information_schema.constraint_column_usage AS ccu
+            ON ccu.constraint_name = tc.constraint_name
+        WHERE tc.constraint_type = 'FOREIGN KEY'
+    ";
+    
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    // Bağımlılık tablosunu oluştur
+    $dependencies = [];
+    while ($row = $result->fetch_assoc()) {
+        $table = $row['table_name'];
+        $referenced = $row['referenced_table'];
+        
+        if (!isset($dependencies[$table])) {
+            $dependencies[$table] = [];
+        }
+        
+        // Bu tablo hangi tabloya bağımlı?
+        $dependencies[$table][] = $referenced;
+    }
+    
+    // Ana tablolar (bağımlılığı olmayan) ve bağımlı tablolar
+    $independent_tables = [];
+    $dependent_tables = [];
+    
+    foreach ($tables as $table) {
+        if (isset($dependencies[$table])) {
+            $dependent_tables[] = $table;
+        } else {
+            $independent_tables[] = $table;
+        }
+    }
+    
+    // Bağımlılık düzeyine göre bağımlı tabloları sırala
+    $ordered_tables = $independent_tables;
+    
+    // Tüm bağımlı tablolar eklenene kadar devam et
+    while (count($dependent_tables) > 0) {
+        $tables_added_this_round = [];
+        
+        foreach ($dependent_tables as $index => $table) {
+            $can_add = true;
+            
+            // Bu tablonun bağımlı olduğu tüm tablolar eklenmiş mi?
+            foreach ($dependencies[$table] as $dep) {
+                if (!in_array($dep, $ordered_tables)) {
+                    $can_add = false;
+                    break;
+                }
+            }
+            
+            // Evet, eklenebilir
+            if ($can_add) {
+                $ordered_tables[] = $table;
+                $tables_added_this_round[] = $table;
+                unset($dependent_tables[$index]);
+            }
+        }
+        
+        // Eğer bu turda hiç tablo eklenemezse, döngüsel bağımlılık var demektir
+        // Bu durumda kalan tabloları mevcut sırayla ekle
+        if (empty($tables_added_this_round)) {
+            $ordered_tables = array_merge($ordered_tables, $dependent_tables);
+            break;
+        }
+        
+        // Dizindeksi resetle
+        $dependent_tables = array_values($dependent_tables);
+    }
+    
+    return $ordered_tables;
+}
+
 function export_table_data($table_name, $format = 'sql', $with_drop = false, $compress = false) {
     global $db, $backup_dir;
     $timestamp = date('Y-m-d_H-i-s');
@@ -471,6 +559,201 @@ function generate_json_export($table_name) {
 }
 
 // CSV içeriği oluştur (dosya döndürür)
+function generate_csv_export($table_name) {
+    global $db, $backup_dir;
+    $temp_file = tempnam(sys_get_temp_dir(), 'csv_');
+    
+// Yeni eklenen birleştirilmiş SQL yedekleme fonksiyonu
+function generate_unified_sql_export($with_drop = false) {
+    global $db, $backup_dir;
+    $timestamp = date('Y-m-d_H-i-s');
+    $file_path = "$backup_dir/unified_db_backup_$timestamp.sql";
+    $f = fopen($file_path, 'w');
+    
+    // Başlangıç yorumu
+    $header = "-- ŞikayetVar Veritabanı Birleştirilmiş Yedeği\n";
+    $header .= "-- Tarih: " . date('Y-m-d H:i:s') . "\n";
+    $header .= "-- Bu dosya, veritabanının doğru sırayla (önce tablolar, sonra veriler, son olarak ilişkiler) içe aktarılmasını sağlar\n\n";
+    $header .= "SET statement_timeout = 0;\n";
+    $header .= "SET lock_timeout = 0;\n";
+    $header .= "SET client_encoding = 'UTF8';\n";
+    $header .= "SET standard_conforming_strings = on;\n\n";
+    
+    // İşlem başlat
+    $header .= "START TRANSACTION;\n\n";
+    fwrite($f, $header);
+    
+    // Tabloları mantıksal sırayla al
+    $tables = get_tables_in_order();
+    
+    // 1. Adım: Tabloları oluştur (foreign key kısıtlamaları olmadan)
+    fwrite($f, "-- 1. ADIM: TABLO YAPILARINI OLUŞTUR\n");
+    fwrite($f, "-- -----------------------------\n\n");
+    
+    // Foreign key referanslarını daha sonra eklemek için sakla
+    $foreign_keys = [];
+    
+    foreach ($tables as $table) {
+        // DROP TABLE komutunu ekle (isteğe bağlı)
+        if ($with_drop) {
+            fwrite($f, "DROP TABLE IF EXISTS \"$table\" CASCADE;\n");
+        }
+        
+        // Tablo yapısını çıkar (foreign key kısıtlamaları olmadan)
+        $query = "SELECT column_name, data_type, character_maximum_length, column_default, is_nullable 
+                 FROM information_schema.columns 
+                 WHERE table_name = ?
+                 ORDER BY ordinal_position";
+        $stmt = $db->prepare($query);
+        $stmt->bind_param("s", $table);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        // Birincil anahtar bilgisini al
+        $pk_query = "SELECT a.attname as column_name
+                    FROM pg_index i
+                    JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+                    WHERE i.indrelid = ?::regclass AND i.indisprimary";
+        $pk_stmt = $db->prepare($pk_query);
+        $pk_stmt->bind_param("s", $table);
+        $pk_stmt->execute();
+        $pk_result = $pk_stmt->get_result();
+        $primary_keys = [];
+        while ($pk_row = $pk_result->fetch_assoc()) {
+            $primary_keys[] = $pk_row['column_name'];
+        }
+        
+        // Foreign key kısıtlamalarını al
+        $fk_query = "SELECT
+                    kcu.column_name, 
+                    ccu.table_name AS foreign_table_name,
+                    ccu.column_name AS foreign_column_name,
+                    tc.constraint_name
+                FROM 
+                    information_schema.table_constraints AS tc 
+                    JOIN information_schema.key_column_usage AS kcu
+                    ON tc.constraint_name = kcu.constraint_name
+                    AND tc.table_schema = kcu.table_schema
+                    JOIN information_schema.constraint_column_usage AS ccu 
+                    ON ccu.constraint_name = tc.constraint_name
+                    AND ccu.table_schema = tc.table_schema
+                WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_name=?";
+        
+        $fk_stmt = $db->prepare($fk_query);
+        $fk_stmt->bind_param("s", $table);
+        $fk_stmt->execute();
+        $fk_result = $fk_stmt->get_result();
+        
+        while ($fk_row = $fk_result->fetch_assoc()) {
+            // Foreign key'i daha sonra eklemek üzere sakla
+            $foreign_keys[] = [
+                'table' => $table,
+                'column' => $fk_row['column_name'],
+                'foreign_table' => $fk_row['foreign_table_name'],
+                'foreign_column' => $fk_row['foreign_column_name'],
+                'constraint_name' => $fk_row['constraint_name']
+            ];
+        }
+        
+        // CREATE TABLE ifadesi oluştur
+        $create_table = "CREATE TABLE \"$table\" (\n";
+        $columns = [];
+        
+        while ($row = $result->fetch_assoc()) {
+            $col_def = "  \"" . $row['column_name'] . "\" " . $row['data_type'];
+            
+            if (!empty($row['character_maximum_length'])) {
+                $col_def .= "(" . $row['character_maximum_length'] . ")";
+            }
+            
+            // NULL/NOT NULL durumu
+            $col_def .= ($row['is_nullable'] === 'YES') ? ' NULL' : ' NOT NULL';
+            
+            // Varsayılan değer
+            if ($row['column_default'] !== null) {
+                $col_def .= " DEFAULT " . $row['column_default'];
+            }
+            
+            $columns[] = $col_def;
+        }
+        
+        $create_table .= implode(",\n", $columns);
+        
+        // Birincil anahtar kısıtlaması ekle
+        if (!empty($primary_keys)) {
+            $create_table .= ",\n  PRIMARY KEY (\"" . implode('", "', $primary_keys) . "\")";
+        }
+        
+        $create_table .= "\n);\n\n";
+        fwrite($f, $create_table);
+    }
+    
+    // 2. Adım: Verileri tabloların içine aktar
+    fwrite($f, "\n-- 2. ADIM: VERİLERİ AKTAR\n");
+    fwrite($f, "-- -----------------------------\n\n");
+    
+    foreach ($tables as $table) {
+        fwrite($f, "-- Tablo: $table için veri\n");
+        
+        // Veri çıkarma
+        $data_query = "SELECT * FROM \"$table\"";
+        $data_stmt = $db->prepare($data_query);
+        $data_stmt->execute();
+        $data_result = $data_stmt->get_result();
+        
+        // Tablo boşsa not düş ve devam et
+        if ($data_result->num_rows == 0) {
+            fwrite($f, "-- Bu tablo boş, veri yok\n\n");
+            continue;
+        }
+        
+        // Her satır için INSERT komutunu oluştur
+        while ($row = $data_result->fetch_assoc()) {
+            $columns = array_keys($row);
+            $quoted_columns = array_map(function($col) {
+                return "\"" . $col . "\"";
+            }, $columns);
+            
+            $values = array_map(function($val) use ($db) {
+                if ($val === null) {
+                    return "NULL";
+                } else {
+                    return "'" . addslashes($val) . "'";
+                }
+            }, array_values($row));
+            
+            $insert = "INSERT INTO \"$table\" (" . implode(", ", $quoted_columns) . ") VALUES (" . implode(", ", $values) . ")";
+            
+            // ON CONFLICT kısmı yerine SKIP yedeği tutmak için
+            $insert .= ";\n";
+            fwrite($f, $insert);
+        }
+        
+        fwrite($f, "\n");
+    }
+    
+    // 3. Adım: İlişkileri (foreign key kısıtlamaları) ekle
+    if (!empty($foreign_keys)) {
+        fwrite($f, "\n-- 3. ADIM: İLİŞKİLERİ (FOREIGN KEY KISITLAMALARI) EKLE\n");
+        fwrite($f, "-- -----------------------------\n\n");
+        
+        foreach ($foreign_keys as $fk) {
+            $add_constraint = "ALTER TABLE \"" . $fk['table'] . "\" ADD CONSTRAINT \"" . $fk['constraint_name'] . "\" ";
+            $add_constraint .= "FOREIGN KEY (\"" . $fk['column'] . "\") REFERENCES \"" . $fk['foreign_table'] . "\" (\"" . $fk['foreign_column'] . "\")";
+            $add_constraint .= " ON UPDATE CASCADE ON DELETE CASCADE"; // Veya başka bir kural
+            $add_constraint .= ";\n";
+            
+            fwrite($f, $add_constraint);
+        }
+    }
+    
+    // Transaction'ı tamamla
+    fwrite($f, "\nCOMMIT;\n");
+    
+    fclose($f);
+    return $file_path;
+}
+
 function generate_csv_export($table_name) {
     global $db, $backup_dir;
     $temp_file = tempnam(sys_get_temp_dir(), 'csv_');
