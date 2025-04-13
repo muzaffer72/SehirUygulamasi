@@ -4,11 +4,14 @@ import 'package:sikayet_var/models/category.dart';
 import 'package:sikayet_var/models/city.dart';
 import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/models/survey.dart';
+import 'package:sikayet_var/models/political_party.dart';
 import 'package:sikayet_var/providers/survey_provider.dart';
 import 'package:sikayet_var/providers/auth_provider.dart';
 import 'package:sikayet_var/providers/current_user_provider.dart';
 import 'package:sikayet_var/services/api_service.dart';
+import 'package:sikayet_var/services/party_service.dart';
 import 'package:sikayet_var/providers/user_provider.dart';
+import 'package:sikayet_var/widgets/surveys/party_performance_scroll.dart';
 
 class SurveysScreen extends ConsumerStatefulWidget {
   const SurveysScreen({Key? key}) : super(key: key);
