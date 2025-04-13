@@ -3,7 +3,16 @@ import 'package:sikayet_var/models/political_party.dart';
 import 'package:sikayet_var/services/party_service.dart';
 
 class PartyPerformanceScroll extends StatefulWidget {
-  const PartyPerformanceScroll({Key? key}) : super(key: key);
+  final double height;
+  final bool autoScroll;
+  final Duration scrollDuration;
+  
+  const PartyPerformanceScroll({
+    Key? key, 
+    this.height = 120, 
+    this.autoScroll = false,
+    this.scrollDuration = const Duration(seconds: 20),
+  }) : super(key: key);
 
   @override
   State<PartyPerformanceScroll> createState() => _PartyPerformanceScrollState();
@@ -14,11 +23,61 @@ class _PartyPerformanceScrollState extends State<PartyPerformanceScroll> {
   bool _isLoading = true;
   String? _errorMessage;
   List<PoliticalParty> _parties = [];
-
+  final ScrollController _scrollController = ScrollController();
+  
   @override
   void initState() {
     super.initState();
     _loadParties();
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+  
+  // Otomatik kaydırma için Timer
+  void _setupAutoScroll() {
+    if (!widget.autoScroll) return;
+    
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      
+      // Düzenli aralıklarla otomatik kaydırma
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _startAutoScroll();
+      });
+    });
+  }
+  
+  void _startAutoScroll() {
+    if (!mounted || _scrollController.positions.isEmpty) return;
+    
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+    
+    // Önce sağa doğru kaydır
+    _scrollController.animateTo(
+      maxScrollExtent,
+      duration: widget.scrollDuration,
+      curve: Curves.linear,
+    ).then((_) {
+      if (!mounted) return;
+      
+      // Sonra başa dön
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOut,
+      ).then((_) {
+        if (!mounted) return;
+        
+        // Tekrar başlat
+        Future.delayed(const Duration(seconds: 1), () {
+          _startAutoScroll();
+        });
+      });
+    });
   }
 
   Future<void> _loadParties() async {
@@ -37,6 +96,11 @@ class _PartyPerformanceScrollState extends State<PartyPerformanceScroll> {
         _parties = parties;
         _isLoading = false;
       });
+      
+      // Verileri yükledikten sonra otomatik kaydırmayı başlat
+      if (widget.autoScroll && parties.isNotEmpty) {
+        _setupAutoScroll();
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Parti verileri yüklenemedi: $e';
@@ -84,19 +148,11 @@ class _PartyPerformanceScrollState extends State<PartyPerformanceScroll> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Text(
-            'Belediye Başarı Oranları',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-        ),
         const SizedBox(height: 8),
         SizedBox(
-          height: 120,
+          height: widget.height,
           child: ListView.separated(
+            controller: _scrollController,
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             scrollDirection: Axis.horizontal,
             itemCount: _parties.length,
