@@ -247,12 +247,12 @@ function export_table_data($table_name, $format = 'sql', $with_drop = false, $co
     return false;
 }
 
-function export_all_tables($format = 'sql') {
+function export_all_tables($format = 'sql', $with_drop = false, $compress = false) {
     $tables = get_db_tables();
     $exported_files = [];
     
     foreach ($tables as $table) {
-        $file_path = export_table_data($table, $format);
+        $file_path = export_table_data($table, $format, $with_drop, $compress);
         if ($file_path) {
             $exported_files[] = $file_path;
         }
@@ -261,15 +261,15 @@ function export_all_tables($format = 'sql') {
     return $exported_files;
 }
 
-function create_full_backup() {
+function create_full_backup($with_drop = false) {
     global $backup_dir;
     $timestamp = date('Y-m-d_H-i-s');
     $backup_file = "$backup_dir/full_backup_$timestamp.zip";
     
     // Tüm tabloları SQL, JSON ve CSV formatında dışa aktar
-    $sql_files = export_all_tables('sql');
-    $json_files = export_all_tables('json');
-    $csv_files = export_all_tables('csv');
+    $sql_files = export_all_tables('sql', $with_drop, false); // Sıkıştırma yapma, tek tek sıkıştırmamalıyız
+    $json_files = export_all_tables('json', false, false);
+    $csv_files = export_all_tables('csv', false, false);
     
     // Tüm dosyaları ZIP arşivine ekle
     $zip = new ZipArchive();
@@ -289,12 +289,25 @@ function create_full_backup() {
             $zip->addFile($file, basename($file));
         }
         
+        // İçerik bilgisi ekle
+        $readme = "# ŞikayetVar Veritabanı Tam Yedeği\n\n";
+        $readme .= "Tarih: " . date('Y-m-d H:i:s') . "\n\n";
+        $readme .= "Bu arşiv, veritabanının tam bir yedeğini içerir.\n";
+        $readme .= "İçerik:\n";
+        $readme .= "- SQL dosyaları: " . count($sql_files) . "\n";
+        $readme .= "- JSON dosyaları: " . count($json_files) . "\n";
+        $readme .= "- CSV dosyaları: " . count($csv_files) . "\n";
+        
+        $zip->addFromString("README.txt", $readme);
+        
         // Yükleme ve çıkarma işlemi tamamlandıktan sonra ZIP'i kapat
         $zip->close();
         
         // Geçici dosyaları temizle
         foreach (array_merge($sql_files, $json_files, $csv_files) as $file) {
-            unlink($file);
+            if (file_exists($file)) {
+                unlink($file);
+            }
         }
         
         return $backup_file;
@@ -354,12 +367,14 @@ function import_backup($file_path, $replace_data = false) {
         
         $zip = new ZipArchive();
         if ($zip->open($file_path) === TRUE) {
+            // ZIP dosyasını açma ve içeriğini çıkarma başarılı
             $zip->extractTo($extract_dir);
             $zip->close();
             
             // Çıkarılan dosyaları işle
             $extracted_files = scandir($extract_dir);
             $results = [];
+            $processed = 0;
             
             foreach ($extracted_files as $file) {
                 if (in_array($file, ['.', '..'])) continue;
@@ -368,8 +383,21 @@ function import_backup($file_path, $replace_data = false) {
                 if (in_array($ext, ['sql', 'json', 'csv'])) {
                     $file_full_path = $extract_dir . '/' . $file;
                     $result = import_single_file($file_full_path, $replace_data);
+                    $processed++;
                     $results[$file] = $result;
                 }
+            }
+            
+            // Eğer hiç dosya işlenmediyse hata döndür
+            if ($processed === 0) {
+                // Geçici klasörü temizle
+                foreach ($extracted_files as $file) {
+                    if (in_array($file, ['.', '..'])) continue;
+                    @unlink($extract_dir . '/' . $file);
+                }
+                @rmdir($extract_dir);
+                
+                return [false, "ZIP içerisinde desteklenen format (SQL, JSON, CSV) bulunamadı."];
             }
             
             // Geçici klasörü temizle
@@ -380,7 +408,10 @@ function import_backup($file_path, $replace_data = false) {
             @rmdir($extract_dir);
             
             // Sonuçları döndür
-            $success_count = count(array_filter($results));
+            $success_count = 0;
+            foreach ($results as $res) {
+                if ($res[0] === true) $success_count++;
+            }
             $total_count = count($results);
             
             if ($success_count === $total_count) {
@@ -678,9 +709,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     else if (isset($_POST['create_backup'])) {
         $format = $_POST['format'] ?? 'sql';
+        $with_drop = isset($_POST['with_drop']) ? true : false;
+        $compress = isset($_POST['compress']) ? true : false;
         
         if ($format === 'full') {
-            $backup_file = create_full_backup();
+            $backup_file = create_full_backup($with_drop);
             if ($backup_file) {
                 $message = "Tam yedekleme başarıyla tamamlandı: " . basename($backup_file);
             } else {
@@ -691,7 +724,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $table = $_POST['table'] ?? '';
             
             if ($table === 'all') {
-                $files = export_all_tables($format);
+                $files = export_all_tables($format, $with_drop, $compress);
                 if (count($files) > 0) {
                     $message = count($files) . " tablo başarıyla yedeklendi.";
                 } else {
@@ -699,7 +732,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $message_type = 'danger';
                 }
             } else {
-                $file = export_table_data($table, $format);
+                $file = export_table_data($table, $format, $with_drop, $compress);
                 if ($file) {
                     $message = "Tablo başarıyla yedeklendi: " . basename($file);
                 } else {
