@@ -46,11 +46,137 @@ const API_PORT = 9000;
 app.use(cors());
 app.use(express.json());
 
+// Demo parti verileri
+const demoParties = [
+  {
+    id: 1,
+    name: 'Adalet ve Kalkınma Partisi',
+    short_name: 'AK Parti',
+    color: '#FFA500',
+    logo_url: 'assets/images/parties/akp.png',
+    problem_solving_rate: 68.5,
+    city_count: 45,
+    district_count: 562,
+    complaint_count: 12750,
+    solved_count: 8734,
+    last_updated: new Date().toISOString()
+  },
+  {
+    id: 2,
+    name: 'Cumhuriyet Halk Partisi',
+    short_name: 'CHP',
+    color: '#FF0000',
+    logo_url: 'assets/images/parties/chp.png',
+    problem_solving_rate: 71.2,
+    city_count: 22,
+    district_count: 234,
+    complaint_count: 8540,
+    solved_count: 6080,
+    last_updated: new Date().toISOString()
+  },
+  {
+    id: 3,
+    name: 'Milliyetçi Hareket Partisi',
+    short_name: 'MHP',
+    color: '#FF4500',
+    logo_url: 'assets/images/parties/mhp.png',
+    problem_solving_rate: 57.8,
+    city_count: 8,
+    district_count: 102,
+    complaint_count: 3240,
+    solved_count: 1872,
+    last_updated: new Date().toISOString()
+  },
+  {
+    id: 4,
+    name: 'İyi Parti',
+    short_name: 'İYİ Parti',
+    color: '#1E90FF',
+    logo_url: 'assets/images/parties/iyi.png',
+    problem_solving_rate: 63.4,
+    city_count: 3,
+    district_count: 25,
+    complaint_count: 980,
+    solved_count: 621,
+    last_updated: new Date().toISOString()
+  },
+  {
+    id: 5,
+    name: 'Demokratik Sol Parti',
+    short_name: 'DSP',
+    color: '#FF69B4',
+    logo_url: 'assets/images/parties/dsp.png',
+    problem_solving_rate: 52.1,
+    city_count: 1,
+    district_count: 5,
+    complaint_count: 320,
+    solved_count: 167,
+    last_updated: new Date().toISOString()
+  },
+  {
+    id: 6,
+    name: 'Yeniden Refah Partisi',
+    short_name: 'YRP',
+    color: '#006400',
+    logo_url: 'assets/images/parties/yrp.png',
+    problem_solving_rate: 44.3,
+    city_count: 0,
+    district_count: 3,
+    complaint_count: 85,
+    solved_count: 38,
+    last_updated: new Date().toISOString()
+  }
+];
+
 // API proxy yönlendirmeleri
 app.use('/api', async (req, res) => {
   console.log(`API isteği alındı: ${req.method} ${req.url}`);
+  
+  // Özel parti API endpointleri
+  if (req.url.startsWith('/parties')) {
+    const partyId = req.url.split('/')[2];
+    
+    if (req.method === 'GET') {
+      // Specific party request
+      if (partyId && !isNaN(partyId)) {
+        const party = demoParties.find(p => p.id === parseInt(partyId));
+        if (party) {
+          return res.json(party);
+        } else {
+          return res.status(404).json({ error: 'Parti bulunamadı' });
+        }
+      }
+      
+      // All parties request
+      return res.json(demoParties);
+    } 
+    else if (req.method === 'POST' && req.url.includes('recalculate-stats')) {
+      // Simulate recalculation with a slight change in values
+      const updatedParties = demoParties.map(party => {
+        const change = (Math.random() * 6) - 3; // -3 to +3
+        let newRate = party.problem_solving_rate + change;
+        newRate = Math.max(0, Math.min(100, newRate)); // Keep between 0-100
+        return {
+          ...party,
+          problem_solving_rate: parseFloat(newRate.toFixed(1)),
+          last_updated: new Date().toISOString()
+        };
+      });
+      
+      // Update demo data
+      demoParties.splice(0, demoParties.length, ...updatedParties);
+      
+      return res.json({
+        success: true,
+        message: 'Parti performans istatistikleri yeniden hesaplandı',
+        updated_at: new Date().toISOString(),
+        parties: demoParties
+      });
+    }
+  }
+  
   try {
-    // Admin panel API'sine yönlendirme
+    // Admin panel API'sine yönlendirme (parties hariç diğer endpointler için)
     const targetUrl = `http://0.0.0.0:3000${req.url}`;
     console.log(`İstek yönlendiriliyor: ${targetUrl}`);
     

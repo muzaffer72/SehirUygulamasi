@@ -38,8 +38,14 @@ $partyId = $pathParts[1] ?? null;
 
 try {
     // Veritabanı bağlantısını kontrol et
-    if (!$pdo) {
-        throw new Exception("Veritabanı bağlantısı kurulamadı");
+    if (!isset($pdo) || !$pdo) {
+        // Admin panel içinden çağrılıyorsa $conn kullan
+        global $conn;
+        if (isset($conn)) {
+            $pdo = $conn;
+        } else {
+            throw new Exception("Veritabanı bağlantısı kurulamadı");
+        }
     }
 
     // Parti bilgilerini al

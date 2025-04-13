@@ -6,44 +6,31 @@
  * ve api/parties/* URL'leri için gerekli işlemleri yapar
  */
 
-// URL yolunu parçala
-$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$pathParts = explode('/', $path);
+// Admin panel için hazırlanmış fonksiyonları dahil et
+require_once __DIR__ . '/admin_parties.php';
 
-// İlgili parçayı bul (index duruma göre değişebilir)
-$routeIndex = array_search('parties', $pathParts);
-$subRoute = $pathParts[$routeIndex + 1] ?? null;
-$itemId = $pathParts[$routeIndex + 2] ?? null;
-
-// HTTP metodunu al
-$method = $_SERVER['REQUEST_METHOD'];
+// URL yolunu ve HTTP metodunu al
+$id = $segments[1] ?? null;
+$action = $segments[2] ?? null;
 
 // Rota işlemleri
 switch ($method) {
     case 'GET':
-        if ($subRoute === null) {
-            // GET /api/parties
-            // Tüm partileri listele
-            include_once __DIR__ . '/../get_parties.php';
-        } elseif (is_numeric($subRoute)) {
+        if ($id !== null && is_numeric($id)) {
             // GET /api/parties/1
-            // Belirli bir partinin detaylarını getir
-            $_SERVER['PATH_INFO'] = '/'. $subRoute;
-            include_once __DIR__ . '/../get_parties.php';
+            getPartyById($db, $id);
         } else {
-            http_response_code(404);
-            echo json_encode(['error' => 'Endpoint bulunamadı']);
+            // GET /api/parties
+            getParties($db);
         }
         break;
         
     case 'POST':
-        if ($subRoute === 'recalculate-stats') {
+        if ($id === 'recalculate-stats') {
             // POST /api/parties/recalculate-stats
-            // Parti performans istatistiklerini yeniden hesapla
-            include_once __DIR__ . '/../recalculate_party_performance.php';
+            recalculatePerformanceStats($db);
         } else {
-            http_response_code(404);
-            echo json_encode(['error' => 'Endpoint bulunamadı']);
+            sendError("Endpoint bulunamadı", 404);
         }
         break;
         
@@ -56,7 +43,5 @@ switch ($method) {
         break;
         
     default:
-        http_response_code(405); // Method Not Allowed
-        echo json_encode(['error' => 'Desteklenmeyen HTTP metodu: ' . $method]);
-        break;
+        sendError("Desteklenmeyen HTTP metodu: $method", 405);
 }

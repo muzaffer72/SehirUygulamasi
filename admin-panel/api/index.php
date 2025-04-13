@@ -217,6 +217,11 @@ switch ($endpoint) {
         }
         break;
         
+    case 'parties':
+        // Parti verilerini yönet
+        require_once 'routes/parties.php';
+        break;
+        
     default:
         sendError("Endpoint not found: $endpoint", 404);
 }
