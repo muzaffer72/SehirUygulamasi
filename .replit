@@ -35,8 +35,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd admin-panel && php -S 0.0.0.0:3000"
-waitForPort = 3000
+args = "cd admin-panel && php -S 0.0.0.0:3001"
 
 [[workflows.workflow]]
 name = "Flutter Web"
@@ -72,8 +71,16 @@ waitForPort = 9000
 run = ["sh", "-c", "cd . && flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0"]
 
 [[ports]]
+localPort = 80
+externalPort = 4200
+
+[[ports]]
 localPort = 3000
 externalPort = 3001
+
+[[ports]]
+localPort = 3001
+externalPort = 3003
 
 [[ports]]
 localPort = 5000

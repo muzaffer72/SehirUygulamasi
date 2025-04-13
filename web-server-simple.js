@@ -174,7 +174,7 @@ app.get('/', (req, res) => {
       
       <div class="card">
         <h2>Platform Bileşenleri</h2>
-        <p><span class="success">✓</span> <strong>Admin Panel:</strong> <a href="http://0.0.0.0:3000" target="_blank">http://0.0.0.0:3000</a> (PHP ile çalışıyor)</p>
+        <p><span class="success">✓</span> <strong>Admin Panel:</strong> <a href="http://0.0.0.0:3001" target="_blank">http://0.0.0.0:3001</a> (PHP ile çalışıyor)</p>
         <p><span class="success">✓</span> <strong>API Proxy:</strong> <code>http://0.0.0.0:9000</code> (Android için API yönlendirme)</p>
         
         <div class="status-card">
@@ -207,7 +207,7 @@ app.get('/', (req, res) => {
         
         <div style="margin-top:25px">
           <h3>Platform Erişimi</h3>
-          <a href="http://0.0.0.0:3000" target="_blank" class="btn">Admin Panel'e Git</a>
+          <a href="http://0.0.0.0:3001" target="_blank" class="btn">Admin Panel'e Git</a>
           <a href="https://workspace.guzelimbatmanli.repl.co/api" target="_blank" class="btn" style="background-color: #00897B;">API Endpointleri</a>
         </div>
       </div>
@@ -228,5 +228,5 @@ if (fs.existsSync('web')) {
 // Sunucuyu başlat
 app.listen(PORT, '0.0.0.0', () => {
   console.log(colors.fg.green + `ŞikayetVar bilgi sayfası şu adreste çalışıyor: http://0.0.0.0:${PORT}` + colors.reset);
-  console.log(colors.fg.green + `Admin Panel şu adreste çalışıyor: http://0.0.0.0:3000` + colors.reset);
+  console.log(colors.fg.green + `Admin Panel şu adreste çalışıyor: http://0.0.0.0:3001` + colors.reset);
 });
