@@ -969,13 +969,15 @@ function import_single_file($file_path, $replace_data = false) {
             $table_name = pathinfo($file_path, PATHINFO_FILENAME);
             // Tarih bilgisini temizle
             $table_name = preg_replace('/_\d{4}-\d{2}-\d{2}.*$/', '', $table_name);
+            error_log("JSON içe aktarma için tablo adı: $table_name");
             
             // Tablo zaten var mı kontrol et
-            $check_query = "SELECT 1 FROM information_schema.tables WHERE table_name = ?";
+            $check_query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?";
             $check_stmt = $db->prepare($check_query);
             $check_stmt->bind_param("s", $table_name);
             $check_stmt->execute();
             $table_exists = $check_stmt->get_result()->num_rows > 0;
+            error_log("JSON tablo kontrolü: " . ($table_exists ? "Tablo var" : "Tablo yok"));
             
             if (!$table_exists) {
                 // Tablo yoksa, tablo yapısını oluştur
@@ -1049,6 +1051,7 @@ function import_single_file($file_path, $replace_data = false) {
             $table_name = pathinfo($file_path, PATHINFO_FILENAME);
             // Tarih bilgisini temizle
             $table_name = preg_replace('/_\d{4}-\d{2}-\d{2}.*$/', '', $table_name);
+            error_log("CSV içe aktarma için tablo adı: $table_name");
             
             // CSV dosyasını aç
             $f = fopen($file_path, 'r');
@@ -1064,11 +1067,13 @@ function import_single_file($file_path, $replace_data = false) {
             }
             
             // Tablo zaten var mı kontrol et
-            $check_query = "SELECT 1 FROM information_schema.tables WHERE table_name = ?";
+            error_log("CSV için tablo varlığı kontrol ediliyor: $table_name");
+            $check_query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?";
             $check_stmt = $db->prepare($check_query);
             $check_stmt->bind_param("s", $table_name);
             $check_stmt->execute();
             $table_exists = $check_stmt->get_result()->num_rows > 0;
+            error_log("CSV tablo kontrolü: " . ($table_exists ? "Tablo var" : "Tablo yok"));
             
             if (!$table_exists) {
                 // Tablo yoksa, tablo yapısını oluştur
