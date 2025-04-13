@@ -904,9 +904,21 @@ function import_single_file($file_path, $replace_data = false) {
                 // Tek seferde çalıştırmak yerine, SQL komutlarını ayrı ayrı çalıştır
                 $queries = parse_sql_file($sql_content);
                 
-                foreach ($queries as $query) {
+                error_log("SQL dosyasında " . count($queries) . " sorgu bulundu.");
+                
+                foreach ($queries as $i => $query) {
                     if (trim($query)) {
-                        $db->query($query);
+                        try {
+                            error_log("SQL sorgusu çalıştırılıyor [" . ($i+1) . "/" . count($queries) . "]: " . substr(trim($query), 0, 50) . "...");
+                            $result = $db->query($query);
+                            if (!$result) {
+                                error_log("SQL sorgu hatası [" . ($i+1) . "]: " . $db->error);
+                                throw new Exception($db->error);
+                            }
+                        } catch (Exception $e) {
+                            error_log("SQL sorgu exception [" . ($i+1) . "]: " . $e->getMessage());
+                            throw $e;
+                        }
                     }
                 }
                 
@@ -1093,56 +1105,25 @@ function import_single_file($file_path, $replace_data = false) {
 
 // SQL dosyasını ayrı komutlara ayır
 function parse_sql_file($content) {
-    $content = preg_replace("/--.*\n/", "", $content);
+    // SQL yorum satırlarını temizle (-- ile başlayan)
+    $content = preg_replace("/--.*(\r\n|\n|\r)/", "\n", $content);
     
+    // Basit yaklaşım: SQL dosyasını noktalı virgül ile ayır
+    // Not: Karmaşık sorgular için yeterli olmayabilir
+    error_log("parse_sql_file: SQL içeriği ayrıştırılıyor, boyut: " . strlen($content) . " bayt");
+    
+    $raw_queries = explode(';', $content);
     $queries = [];
-    $current_query = '';
-    $in_string = false;
-    $string_char = '';
     
-    for ($i = 0; $i < strlen($content); $i++) {
-        $char = $content[$i];
-        $next_char = ($i < strlen($content) - 1) ? $content[$i + 1] : '';
-        
-        // String içerisindeyiz
-        if ($in_string) {
-            $current_query .= $char;
-            
-            // String'in sonu
-            if ($char === $string_char && $next_char !== $string_char) {
-                $in_string = false;
-            }
-            // Kaçış karakteri
-            elseif ($char === '\\') {
-                $current_query .= $next_char;
-                $i++; // Kaçış karakterini ve bir sonraki karakteri atla
-            }
-        } 
-        // String içerisinde değiliz
-        else {
-            // String başlangıcı
-            if ($char === "'" || $char === '"') {
-                $in_string = true;
-                $string_char = $char;
-                $current_query .= $char;
-            }
-            // Sorgu sonu
-            elseif ($char === ';') {
-                $current_query .= $char;
-                $queries[] = $current_query;
-                $current_query = '';
-            }
-            // Normal karakter
-            else {
-                $current_query .= $char;
-            }
+    foreach ($raw_queries as $raw_query) {
+        $query = trim($raw_query);
+        if (!empty($query)) {
+            // Sorgunun sonuna noktalı virgül ekle (son sorgu dışında)
+            $queries[] = $query . ';';
         }
     }
     
-    // Son sorguyu da ekle (eğer ';' ile bitmiyorsa)
-    if (trim($current_query) !== '') {
-        $queries[] = $current_query;
-    }
+    error_log("parse_sql_file: " . count($queries) . " sorgu ayrıştırıldı");
     
     return $queries;
 }
