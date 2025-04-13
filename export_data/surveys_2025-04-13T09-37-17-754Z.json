@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "title": "Şehir İçi Ulaşım Memnuniyeti",
+    "short_title": "Ulaşım Anketi",
+    "description": "Bu anket, şehirdeki toplu taşıma ve ulaşım hizmetleri hakkında vatandaş memnuniyetini ölçmek için hazırlanmıştır.",
+    "category_id": 3,
+    "scope_type": "general",
+    "city_id": null,
+    "district_id": null,
+    "start_date": "2025-04-11T00:00:00.000Z",
+    "end_date": "2025-05-11T00:00:00.000Z",
+    "total_users": 5000,
+    "is_active": true,
+    "created_at": "2025-04-11T16:50:41.992Z"
+  },
+  {
+    "id": 2,
+    "title": "Belediye Hizmetleri Değerlendirme",
+    "short_title": "Belediye Hizmetleri",
+    "description": "Belediyenin sunduğu hizmetlerden memnuniyet düzeyinizi belirtiniz.",
+    "category_id": 10,
+    "scope_type": "city",
+    "city_id": 34,
+    "district_id": null,
+    "start_date": "2025-04-11T00:00:00.000Z",
+    "end_date": "2025-05-11T00:00:00.000Z",
+    "total_users": 3000,
+    "is_active": true,
+    "created_at": "2025-04-11T16:50:42.212Z"
+  },
+  {
+    "id": 3,
+    "title": "Çevre Temizliği ve Atık Yönetimi",
+    "short_title": "Çevre Temizliği",
+    "description": "Yaşadığınız bölgede çevre temizliği ve atık yönetimi hakkındaki düşünceleriniz nelerdir?",
+    "category_id": 2,
+    "scope_type": "district",
+    "city_id": 34,
+    "district_id": 1,
+    "start_date": "2025-04-11T00:00:00.000Z",
+    "end_date": "2025-05-11T00:00:00.000Z",
+    "total_users": 2000,
+    "is_active": true,
+    "created_at": "2025-04-11T16:50:42.421Z"
+  }
+]

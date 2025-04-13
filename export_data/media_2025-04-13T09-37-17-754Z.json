@@ -1,0 +1,135 @@
+[
+  {
+    "id": 1,
+    "post_id": 22,
+    "url": "https://images.unsplash.com/photo-1605600659873-d808a13e4d2f?q=80&w=1000",
+    "type": "image",
+    "created_at": "2025-04-11T14:08:49.671Z"
+  },
+  {
+    "id": 2,
+    "post_id": 22,
+    "url": "https://images.unsplash.com/photo-1605600659873-d808a13e4d2f?q=80&w=1000",
+    "type": "image",
+    "created_at": "2025-04-11T14:08:49.701Z"
+  },
+  {
+    "id": 3,
+    "post_id": 24,
+    "url": "https://images.unsplash.com/photo-1528262502195-26dfb3c29f8f?q=80&w=1000",
+    "type": "image",
+    "created_at": "2025-04-11T14:08:50.132Z"
+  },
+  {
+    "id": 4,
+    "post_id": 24,
+    "url": "https://images.unsplash.com/photo-1528262502195-26dfb3c29f8f?q=80&w=1000",
+    "type": "image",
+    "created_at": "2025-04-11T14:08:50.152Z"
+  },
+  {
+    "id": 5,
+    "post_id": 26,
+    "url": "https://images.unsplash.com/photo-1628515334134-870832b6e76a?q=80&w=1000",
+    "type": "image",
+    "created_at": "2025-04-11T14:08:50.574Z"
+  },
+  {
+    "id": 6,
+    "post_id": 26,
+    "url": "https://images.unsplash.com/photo-1628515334134-870832b6e76a?q=80&w=1000",
+    "type": "image",
+    "created_at": "2025-04-11T14:08:50.595Z"
+  },
+  {
+    "id": 7,
+    "post_id": 30,
+    "url": "https://images.unsplash.com/photo-1549042261-24c2ddb5df68?q=80&w=1000",
+    "type": "image",
+    "created_at": "2025-04-11T14:08:51.388Z"
+  },
+  {
+    "id": 8,
+    "post_id": 30,
+    "url": "https://images.unsplash.com/photo-1549042261-24c2ddb5df68?q=80&w=1000",
+    "type": "image",
+    "created_at": "2025-04-11T14:08:51.410Z"
+  },
+  {
+    "id": 9,
+    "post_id": 32,
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "type": "video",
+    "created_at": "2025-04-11T14:08:51.823Z"
+  },
+  {
+    "id": 10,
+    "post_id": 32,
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "type": "video",
+    "created_at": "2025-04-11T14:08:51.844Z"
+  },
+  {
+    "id": 12,
+    "post_id": 36,
+    "url": "https://images.unsplash.com/photo-1526714719019-b3032b5b5aac?q=80&w=1000",
+    "type": "image",
+    "created_at": "2025-04-11T14:08:52.626Z"
+  },
+  {
+    "id": 13,
+    "post_id": 38,
+    "url": "https://www.youtube.com/watch?v=a3ICNMQW7Ok",
+    "type": "video",
+    "created_at": "2025-04-11T14:08:53.045Z"
+  },
+  {
+    "id": 14,
+    "post_id": 38,
+    "url": "https://www.youtube.com/watch?v=a3ICNMQW7Ok",
+    "type": "video",
+    "created_at": "2025-04-11T14:08:53.066Z"
+  },
+  {
+    "id": 15,
+    "post_id": 10,
+    "url": "https://picsum.photos/800/600",
+    "type": "image",
+    "created_at": "2025-04-11T14:44:48.276Z"
+  },
+  {
+    "id": 17,
+    "post_id": 7,
+    "url": "https://picsum.photos/800/500",
+    "type": "image",
+    "created_at": "2025-04-11T14:44:58.653Z"
+  },
+  {
+    "id": 18,
+    "post_id": 23,
+    "url": "https://www.youtube.com/embed/C0DPdy98e4c",
+    "type": "video",
+    "created_at": "2025-04-11T14:45:02.367Z"
+  },
+  {
+    "id": 19,
+    "post_id": 5,
+    "url": "https://picsum.photos/900/600",
+    "type": "image",
+    "created_at": "2025-04-11T14:45:06.675Z"
+  },
+  {
+    "id": 22,
+    "post_id": 11,
+    "url": "uploads/1744383142_technology-image-globe_114588-838.jpg",
+    "type": "image",
+    "created_at": "2025-04-11T14:52:22.893Z"
+  },
+  {
+    "id": 24,
+    "post_id": 12,
+    "url": "uploads/1744400518_1000146158.jpg",
+    "type": "image",
+    "created_at": "2025-04-11T19:41:58.189Z"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "id": 4,
+    "city_id": 57,
+    "award_type_id": 13,
+    "title": "Altın Belediye Ödülü Ödülü",
+    "description": "AFYONKARAHİSAR Şikayet çözüm oranı %75 ve üzerinde olan belediyeler",
+    "award_date": "2025-04-12T00:00:00.000Z",
+    "issuer": null,
+    "certificate_url": null,
+    "featured": false,
+    "project_id": null,
+    "created_at": "2025-04-12T08:11:33.770Z",
+    "expiry_date": "2025-05-12T00:00:00.000Z"
+  },
+  {
+    "id": 5,
+    "city_id": 57,
+    "award_type_id": 13,
+    "title": "Altın Belediye Ödülü Ödülü",
+    "description": "AFYONKARAHİSAR Şikayet çözüm oranı %75 ve üzerinde olan belediyeler",
+    "award_date": "2025-04-12T00:00:00.000Z",
+    "issuer": null,
+    "certificate_url": null,
+    "featured": false,
+    "project_id": null,
+    "created_at": "2025-04-12T08:12:02.786Z",
+    "expiry_date": "2025-05-12T00:00:00.000Z"
+  }
+]
