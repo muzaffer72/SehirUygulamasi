@@ -790,6 +790,7 @@ function generate_unified_sql_export($with_drop = false) {
             
             $values = array_map(function($val) use ($db) {
                 if ($val === null) {
+ // Boş string değerleri NULL olarak işle (boolean hatalarını önlemek için)
                     return "NULL";
                 } else {
                     return "'" . addslashes($val) . "'";
