@@ -717,6 +717,35 @@ function import_backup($file_path, $replace_data = false) {
     global $db;
     $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
     
+    // Uzantı boşsa ve dosya adında nokta yoksa, MIME tipi ile tespit etmeye çalış
+    if (empty($file_ext)) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $file_path);
+        finfo_close($finfo);
+        
+        error_log("Dosya uzantısı bulunamadı, MIME tipi ile tespit ediliyor: " . $mime_type);
+        
+        // MIME tipine göre uzantı belirle
+        if (strpos($mime_type, 'text/plain') !== false) {
+            // İçeriği kontrol ederek SQL, JSON veya CSV olduğunu belirle
+            $sample = file_get_contents($file_path, false, null, 0, 1000); // İlk 1000 byte
+            
+            if (preg_match('/(CREATE|INSERT|DROP)\s+TABLE/i', $sample)) {
+                $file_ext = 'sql';
+                error_log("İçerik analizi sonucu: SQL dosyası olarak belirlendi");
+            } elseif (preg_match('/^\s*[\{\[]/', $sample) && preg_match('/[\}\]]\s*$/', $sample)) {
+                $file_ext = 'json';
+                error_log("İçerik analizi sonucu: JSON dosyası olarak belirlendi");
+            } elseif (preg_match('/^[^,\n]*,[^,\n]*,[^,\n]*/', $sample)) {
+                $file_ext = 'csv';
+                error_log("İçerik analizi sonucu: CSV dosyası olarak belirlendi");
+            }
+        } elseif (strpos($mime_type, 'application/zip') !== false) {
+            $file_ext = 'zip';
+            error_log("MIME tipi analizi sonucu: ZIP dosyası olarak belirlendi");
+        }
+    }
+    
     error_log("İçe aktarma başlatılıyor: $file_path ($file_ext)");
     
     // ZIP dosyasını işle
@@ -889,6 +918,35 @@ function clean_dir_recursive($dir) {
 function import_single_file($file_path, $replace_data = false) {
     global $db;
     $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
+    
+    // Uzantı boşsa, MIME tipi ile tespit etmeye çalış
+    if (empty($file_ext)) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $file_path);
+        finfo_close($finfo);
+        
+        error_log("Dosya uzantısı bulunamadı, MIME tipi ile tespit ediliyor: " . $mime_type);
+        
+        // MIME tipine göre uzantı belirle
+        if (strpos($mime_type, 'text/plain') !== false) {
+            // İçeriği kontrol ederek SQL, JSON veya CSV olduğunu belirle
+            $sample = file_get_contents($file_path, false, null, 0, 1000); // İlk 1000 byte
+            
+            if (preg_match('/(CREATE|INSERT|DROP)\s+TABLE/i', $sample)) {
+                $file_ext = 'sql';
+                error_log("İçerik analizi sonucu: SQL dosyası olarak belirlendi");
+            } elseif (preg_match('/^\s*[\{\[]/', $sample) && preg_match('/[\}\]]\s*$/', $sample)) {
+                $file_ext = 'json';
+                error_log("İçerik analizi sonucu: JSON dosyası olarak belirlendi");
+            } elseif (preg_match('/^[^,\n]*,[^,\n]*,[^,\n]*/', $sample)) {
+                $file_ext = 'csv';
+                error_log("İçerik analizi sonucu: CSV dosyası olarak belirlendi");
+            }
+        } elseif (strpos($mime_type, 'application/zip') !== false) {
+            $file_ext = 'zip';
+            error_log("MIME tipi analizi sonucu: ZIP dosyası olarak belirlendi");
+        }
+    }
     
     error_log("import_single_file: Dosya işleniyor: $file_path (format: $file_ext)");
     
@@ -1128,7 +1186,8 @@ function import_single_file($file_path, $replace_data = false) {
                 return [false, "CSV içe aktarma hatası: " . $e->getMessage()];
             }
         } else {
-            return [false, "Desteklenmeyen dosya formatı: " . $file_ext];
+            error_log("Desteklenmeyen dosya formatı: " . $file_ext . " - dosya: " . basename($file_path));
+            return [false, "Desteklenmeyen dosya formatı: " . $file_ext . " (Kabul edilen formatlar: zip, sql, json, csv)"];
         }
     } catch (Exception $e) {
         return [false, "İçe aktarma hatası: " . $e->getMessage()];
