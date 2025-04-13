@@ -8,11 +8,11 @@ class PartyPerformanceScroll extends StatefulWidget {
   final Duration scrollDuration;
   
   const PartyPerformanceScroll({
-    Key? key, 
+    super.key, 
     this.height = 120, 
     this.autoScroll = false,
     this.scrollDuration = const Duration(seconds: 20),
-  }) : super(key: key);
+  });
 
   @override
   State<PartyPerformanceScroll> createState() => _PartyPerformanceScrollState();
