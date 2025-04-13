@@ -177,7 +177,7 @@ app.use('/api', async (req, res) => {
   
   try {
     // Admin panel API'sine yönlendirme (parties hariç diğer endpointler için)
-    const targetUrl = `http://0.0.0.0:3000${req.url}`;
+    const targetUrl = `http://0.0.0.0:3001${req.url}`;
     console.log(`İstek yönlendiriliyor: ${targetUrl}`);
     
     // İstek başlıklarını hazırla

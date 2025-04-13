@@ -15,29 +15,25 @@ if (file_exists($env_file)) {
     }
 }
 
-// DATABASE_URL değerini alıp kullan (daha güvenilir yöntem)
-if (isset($_ENV['DATABASE_URL']) && !empty($_ENV['DATABASE_URL'])) {
-    $database_url = $_ENV['DATABASE_URL'];
-} else {
-    $database_url = getenv('DATABASE_URL');
-}
-
-if (empty($database_url)) {
-    die("DATABASE_URL çevre değişkeni bulunamadı!");
-}
+// PGHOST ve diğer Postgres değişkenlerini kullan (Replit için daha güvenilir)
+$hostname = getenv('PGHOST') ?: 'ep-cold-voice-a42vfzgh.us-east-1.aws.neon.tech';
+$dbname = getenv('PGDATABASE') ?: 'neondb';
+$username = getenv('PGUSER') ?: 'neondb_owner';
+$password = getenv('PGPASSWORD') ?: '';
+$port = getenv('PGPORT') ?: 5432;
 
 // PostgreSQL sürücüsünün yüklenip yüklenmediğini kontrol et
 if (!extension_loaded('pdo_pgsql')) {
     die("PostgreSQL PDO sürücüsü yüklü değil. PHP yapılandırmanızı kontrol edin.");
 }
 
-// URL'i parçalara ayır
-$dbparts = parse_url($database_url);
-$hostname = $dbparts['host'];
-$dbname = ltrim($dbparts['path'], '/');
-$username = $dbparts['user'];
-$password = $dbparts['pass'];
-$port = $dbparts['port'] ?? 5432;
+// Bağlantı bilgilerini göster
+echo "<!-- Bağlantı bilgileri: 
+Host: $hostname
+DB: $dbname
+User: $username
+Port: $port
+-->";
 
 // Manuel bağlantı oluştur
 try {
