@@ -1,0 +1,65 @@
+ŞikayetVar Veritabanı - Güvenli PostgreSQL Import Talimatları
+===========================================================
+
+Bu yeni import dosyası, tablo ve sütun kontrolü yapan daha güvenli bir SQL formatı içerir.
+Bu sayede mevcut bir veritabanına güvenle import edebilirsiniz.
+
+## GÜVENLİ IMPORT ÖZELLİKLERİ
+
+✓ Tablo varlık kontrolü: Her tablo için "IF NOT EXISTS" kontrolü yapar
+✓ Sütun varlık kontrolü: Her sütun için kontrol yapar, yoksa ekler
+✓ UPSERT operasyonu: Aynı ID'li kayıt varsa günceller, yoksa ekler (ON CONFLICT)
+✓ Transaction güvenliği: Tüm işlem tek bir transaction içinde yapılır
+✓ Sequence düzeltmesi: Auto-increment değerlerini otomatik ayarlar
+
+## POSTGRESQL İMPORT TALİMATLARI
+
+### 1. Komut Satırı ile Import (psql)
+
+```bash
+# PostgreSQL komut satırı ile import
+psql -U kullanici_adi -d veritabani_adi -f sikayetvar_safe_import.sql
+```
+
+### 2. pgAdmin ile Import
+
+1. pgAdmin arayüzünü açın
+2. Sol menüden veritabanınızı seçin (veya yeni bir veritabanı oluşturun)
+3. Veritabanına sağ tıklayın ve "Query Tool" seçeneğini seçin
+4. "Open File" ikonuna tıklayın ve sikayetvar_safe_import.sql dosyasını seçin
+5. "Execute" (çalıştır) butonuna tıklayarak import işlemini başlatın
+
+## ÖNEMLİ NOTLAR
+
+1. Bu dosya, tablo kontrolleri yaparak ilerler:
+   - Tablo yoksa: Tabloyu oluşturur
+   - Tablo varsa: Sadece eksik sütunları ekler
+   
+2. Veri eklemesi için UPSERT yöntemi kullanılır:
+   - Aynı ID'ye sahip kayıt varsa: Güncellenir
+   - Aynı ID'ye sahip kayıt yoksa: Yeni kayıt eklenir
+   
+3. Hata mesajları ve bilgilendirmeler NOTICE formatında gösterilir:
+   - "Tablo oluşturuldu"
+   - "Sütun eklendi"
+   - "İmport tamamlandı"
+   
+4. İşlem tek bir transaction içinde gerçekleşir:
+   - Herhangi bir hata olursa tüm işlem geri alınır (rollback)
+   - Başarılı olursa tüm değişiklikler kaydedilir (commit)
+
+## SORUN GİDERME
+
+Eğer import sırasında sorunlarla karşılaşırsanız:
+
+1. PostgreSQL sürümünüzün en az 9.5 veya üstü olduğundan emin olun (UPSERT için)
+2. Import için veritabanında yeterli yetkilere sahip olduğunuzdan emin olun
+3. Hata mesajlarını inceleyerek sorunlu kısmı bulun ve düzeltin
+
+Bu import dosyası, farklı veritabanı durumlarında bile güvenle kullanılabilir:
+- Boş bir veritabanına ilk kez import
+- Tablolarınızın bir kısmı zaten varsa
+- Tüm tablolarınız zaten varsa (sadece güncelleme yapılır)
+
+Bu güvenli import yöntemi, veritabanınızın yapısını ve verilerinizi bozmadan
+güncellemeler yapmanızı sağlar.
