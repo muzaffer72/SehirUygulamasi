@@ -293,6 +293,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+    } elseif (isset($_POST['create_code_backup'])) {
+        $backup_file = backup_code();
+        if ($backup_file) {
+            $message = "Kod yedekleme başarıyla tamamlandı: " . basename($backup_file);
+        } else {
+            $message = "Kod yedekleme oluşturulurken bir hata oluştu.";
+            $message_type = 'danger';
+        }
     } elseif (isset($_POST['delete_backup'])) {
         $backup_file = $_POST['backup_file'] ?? '';
         
@@ -316,9 +324,21 @@ $backups = get_existing_backups();
 ?>
 
 <div class="container-fluid">
-    <h2 class="mb-4">
-        <i class="bi bi-database-fill-check"></i> Veritabanı Yedekleme
-    </h2>
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link active" id="db-tab" data-bs-toggle="tab" href="#db-backup" role="tab">
+                <i class="bi bi-database-fill-check"></i> Veritabanı Yedekleme
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="code-tab" data-bs-toggle="tab" href="#code-backup" role="tab">
+                <i class="bi bi-file-earmark-code"></i> Kaynak Kod Yedekleme
+            </a>
+        </li>
+    </ul>
+    
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="db-backup" role="tabpanel">
     
     <?php if (!empty($message)): ?>
         <div class="alert alert-<?= $message_type ?> alert-dismissible fade show" role="alert">
@@ -442,6 +462,37 @@ $backups = get_existing_backups();
                             Henüz yedekleme yapılmamış.
                         </div>
                     <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        </div>
+        
+        <div class="tab-pane fade" id="code-backup" role="tabpanel">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Kaynak Kod Yedekleme</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                <p class="mb-4">
+                                    Bu işlem tüm uygulama kaynak kodunu yedekleyerek bir ZIP dosyası olarak indirilmesini sağlar.
+                                    <br><br>
+                                    <strong>Not:</strong> 
+                                    <ul>
+                                        <li>Yedekleme işlemi, tüm projeyi ZIP dosyası olarak sıkıştırır</li>
+                                        <li>node_modules, vendor, .git gibi büyük klasörler hariç tutulur</li>
+                                        <li>Yedekleme işlemi büyüklüğüne bağlı olarak biraz zaman alabilir</li>
+                                    </ul>
+                                </p>
+                                
+                                <button type="submit" name="create_code_backup" class="btn btn-primary">
+                                    <i class="bi bi-file-earmark-zip"></i> Kaynak Kodu Yedekle
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
