@@ -225,6 +225,18 @@ switch ($endpoint) {
         require_once 'routes/parties.php';
         break;
         
+    case 'search':
+        // Doğrudan search.php dosyasını çağır
+        include 'search.php';
+        exit();
+        break;
+        
+    case 'search_suggestions':
+        // Doğrudan search_suggestions.php dosyasını çağır
+        include 'search_suggestions.php';
+        exit();
+        break;
+        
     default:
         sendError("Endpoint not found: $endpoint", 404);
 }

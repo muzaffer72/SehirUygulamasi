@@ -11,18 +11,30 @@ class SearchService {
   // Arama önerilerini getir
   Future<List<SearchSuggestion>> getSearchSuggestions() async {
     try {
+      print('Arama önerileri alınıyor: ${apiConfig.baseUrl}/api/search_suggestions');
+      
       final response = await http.get(
-        Uri.parse('${apiConfig.baseUrl}/search_suggestions'),
+        Uri.parse('${apiConfig.baseUrl}/api/search_suggestions'),
         headers: {'Content-Type': 'application/json'},
       );
 
+      print('Arama önerileri API yanıtı: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        final List<dynamic> suggestionsJson = data['suggestions'];
-
-        return suggestionsJson
-            .map((json) => SearchSuggestion.fromJson(json))
-            .toList();
+        print('API yanıt verisi: $data');
+        
+        if (data.containsKey('suggestions')) {
+          final List<dynamic> suggestionsJson = data['suggestions'];
+          print('${suggestionsJson.length} adet öneri bulundu');
+          
+          return suggestionsJson
+              .map((json) => SearchSuggestion.fromJson(json))
+              .toList();
+        } else {
+          print('API yanıtında "suggestions" anahtarı bulunamadı');
+          return [];
+        }
       } else {
         print('Arama önerileri alınamadı: ${response.statusCode}');
         print('Hata detay: ${response.body}');
@@ -37,15 +49,22 @@ class SearchService {
   // Arama yapma işlevi
   Future<Map<String, dynamic>> search(String query) async {
     try {
+      print('Arama yapılıyor: ${apiConfig.baseUrl}/api/search?q=${Uri.encodeComponent(query)}');
+      
       final response = await http.get(
-        Uri.parse('${apiConfig.baseUrl}/search?q=${Uri.encodeComponent(query)}'),
+        Uri.parse('${apiConfig.baseUrl}/api/search?q=${Uri.encodeComponent(query)}'),
         headers: {'Content-Type': 'application/json'},
       );
 
+      print('Arama API yanıtı: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final data = json.decode(response.body);
+        print('Arama sonuçları: $data');
+        return data;
       } else {
         print('Arama sonuçları alınamadı: ${response.statusCode}');
+        print('Hata detay: ${response.body}');
         return {
           'posts': [],
           'surveys': [],
