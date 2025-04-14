@@ -32,6 +32,7 @@ try {
     $end_date = trim($_POST['end_date'] ?? '');
     $total_users = intval($_POST['total_users'] ?? 1000);
     $is_active = isset($_POST['is_active']) ? true : false;
+    $is_pinned = isset($_POST['is_pinned']) ? true : false;
     $options = $_POST['options'] ?? [];
     
     // Veri doğrulama
@@ -104,9 +105,9 @@ try {
     $stmt = $pdo->prepare("
         INSERT INTO surveys (
             title, short_title, description, category_id, scope_type, 
-            city_id, district_id, start_date, end_date, total_users, is_active, created_at
+            city_id, district_id, start_date, end_date, total_users, is_active, is_pinned, created_at
         ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
         )
     ");
     
@@ -121,7 +122,8 @@ try {
         $start_date, 
         $end_date, 
         $total_users, 
-        ($is_active ? 'true' : 'false')
+        ($is_active ? 'true' : 'false'),
+        ($is_pinned ? 'true' : 'false')
     ]);
     
     if ($result) {
