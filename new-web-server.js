@@ -53,16 +53,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Flutter web dosyalarını sunmak için statik dizin
-if (fs.existsSync('./build/web')) {
-  app.use('/flutter', express.static('./build/web'));
-  console.log(colors.fg.green + 'Flutter web dosyaları /flutter/ yolu altında sunuluyor' + colors.reset);
-} else if (fs.existsSync('./web')) {
-  app.use('/flutter', express.static('./web'));
-  console.log(colors.fg.yellow + 'Flutter web klasörü bulundu, /flutter/ yolu altında sunuluyor (derlenmemiş)' + colors.reset);
-} else {
-  console.log(colors.fg.yellow + 'Flutter web klasörü bulunamadı. /flutter/ yolu kullanılamayacak' + colors.reset);
-}
+// Flutter web linki yerine doğrudan statik içerik sunalım
+console.log(colors.fg.green + 'Mobil görünüm için statik içerik hazırlandı' + colors.reset);
 
 // Ana sayfa
 app.get('/', (req, res) => {
@@ -340,7 +332,6 @@ app.get('/', (req, res) => {
       <div class="view-options">
         <a href="/" class="btn">Platform Bilgileri</a>
         <a href="/mobile" class="btn secondary">Mobil Görünüm</a>
-        <a href="/flutter" class="btn secondary">Flutter Web Uygulaması</a>
       </div>
       
       <div class="card">
@@ -725,7 +716,6 @@ app.get('/mobile', (req, res) => {
       <div class="view-options">
         <a href="/" class="btn secondary">Platform Bilgileri</a>
         <a href="/mobile" class="btn">Mobil Görünüm</a>
-        <a href="/flutter" class="btn secondary">Flutter Web Uygulaması</a>
       </div>
       
       <div class="screen-selector">
