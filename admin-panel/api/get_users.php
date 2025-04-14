@@ -4,22 +4,24 @@ require_once '../db_connection.php';
 header('Content-Type: application/json');
 
 try {
-    global $pdo;
     // Aktif kullanıcıları getir (yasaklanmamış)
-    // PostgreSQL'de boolean değerler için 'FALSE' yerine 'false' kullanılıyor
-    // ve IS NULL kontrolü ekliyoruz (is_banned sütunu yoksa hata vermemesi için)
-    // PostgreSQL için WHERE is_banned = FALSE koşulunu BOOLEAN olarak doğru kullanıyoruz
-    // Ayrıca is_banned sütunun hiç olmaması ihtimaline karşı IS NULL kontrolü de ekliyoruz
     $query = "
         SELECT id, username, name, email, profile_image_url 
         FROM users 
-        WHERE is_banned IS NULL OR is_banned = FALSE
+        WHERE is_banned IS NULL OR is_banned = false
         ORDER BY name ASC
     ";
     
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $pgresult = pg_query($conn, $query);
+    
+    if (!$pgresult) {
+        throw new Exception("Veritabanı sorgu hatası: " . pg_last_error($conn));
+    }
+    
+    $users = [];
+    while ($row = pg_fetch_assoc($pgresult)) {
+        $users[] = $row;
+    }
     
     // Verileri JSON olarak döndür
     echo json_encode([
