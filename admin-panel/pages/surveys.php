@@ -312,11 +312,18 @@ if (isset($_GET['add_survey'])) {
                 </div>
                 
                 <div class="mb-3">
-                    <div class="form-check">
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
                         <label class="form-check-label" for="is_active">
                             Anket Aktif
                         </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="is_pinned" name="is_pinned">
+                        <label class="form-check-label" for="is_pinned">
+                            Başa Tuttur <i class="bi bi-pin-angle-fill text-primary"></i>
+                        </label>
+                        <div class="form-text">Bu anket arama sonuçlarında üst sırada gösterilir.</div>
                     </div>
                 </div>
                 
@@ -454,7 +461,7 @@ if (isset($_GET['add_survey'])) {
                         <th>Başlangıç</th>
                         <th>Bitiş</th>
                         <th>Katılım</th>
-                        <th>Durum</th>
+                        <th>Durum <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Aktif/Pasif ve Başa Tutturulmuş (<i class='bi bi-pin-angle-fill'></i>) durumları"></i></th>
                         <th>İşlemler</th>
                     </tr>
                 </thead>
@@ -494,6 +501,9 @@ if (isset($_GET['add_survey'])) {
                                     <?= $survey['is_active'] 
                                         ? '<span class="badge text-bg-success">Aktif</span>' 
                                         : '<span class="badge text-bg-danger">Pasif</span>' ?>
+                                    <?php if (isset($survey['is_pinned']) && $survey['is_pinned']): ?>
+                                    <span class="badge text-bg-primary ms-1"><i class="bi bi-pin-angle-fill"></i></span>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
@@ -513,3 +523,15 @@ if (isset($_GET['add_survey'])) {
         </div>
     </div>
 </div>
+
+<script>
+// Tooltip'leri aktifleştir
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+            html: true
+        });
+    });
+});
+</script>
