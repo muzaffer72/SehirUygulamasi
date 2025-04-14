@@ -141,12 +141,14 @@ try {
               FROM categories c
               ORDER BY c.display_order ASC, c.name ASC";
     
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $pgresult = pg_query($conn, $query);
+    
+    if (!$pgresult) {
+        throw new Exception("Veritabanı sorgu hatası: " . pg_last_error($conn));
+    }
     
     $categories = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = pg_fetch_assoc($pgresult)) {
         $categories[] = $row;
     }
 } catch (Exception $e) {
