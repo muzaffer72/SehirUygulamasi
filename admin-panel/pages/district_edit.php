@@ -114,6 +114,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_district'])) {
                 $stmt->execute();
                 $result = $stmt->get_result();
                 $district = $result->fetch_assoc();
+                
+                // city_id değerinin doğru tipte olduğundan emin olalım
+                if (isset($district['city_id'])) {
+                    $district['city_id'] = intval($district['city_id']);
+                }
             } else {
                 $error_message = "Değişiklik yapılmadı veya bir hata oluştu.";
             }
