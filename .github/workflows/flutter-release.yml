@@ -33,8 +33,13 @@ jobs:
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
       
       - name: Upload Artifacts to Release
-        uses: softprops/action-gh-release@v1
+        uses: actions/upload-artifact@v2
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+          
+      - name: Upload to Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/flutter-apk/app-release.apk"
+          token: ${{ secrets.GITHUB_TOKEN }}
