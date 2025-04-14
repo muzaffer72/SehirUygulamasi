@@ -61,5 +61,6 @@ flutter:
   
   assets:
     - assets/images/
-    - assets/images/parties/
     - assets/icons/
+    - assets/fonts/
+    - assets/party_logos/
