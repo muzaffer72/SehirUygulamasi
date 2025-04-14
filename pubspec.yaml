@@ -44,11 +44,11 @@ dependencies:
   meta: ^1.12.0
   fl_chart: ^0.65.0
   
-  # Analytics and services (commented out for now)
-  # firebase_core: ^2.7.0
-  # firebase_auth: ^4.2.9
-  # firebase_storage: ^11.0.14
-  # firebase_messaging: ^14.2.5
+  # Analytics and services
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.16.0
+  firebase_storage: ^11.6.0
+  firebase_messaging: ^14.7.10
 
 dev_dependencies:
   flutter_test:
