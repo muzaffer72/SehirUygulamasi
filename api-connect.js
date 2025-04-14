@@ -245,7 +245,8 @@ app.get('/', (req, res) => {
       '/api/categories',
       '/api/posts',
       '/api/users',
-      '/api/parties'
+      '/api/parties',
+      '/api/search_suggestions'
     ],
     database: {
       type: 'PostgreSQL',
