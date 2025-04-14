@@ -2,6 +2,13 @@
 // Yetki kontrolü
 requireAdmin();
 
+// Veritabanı bağlantısını al
+$conn = pg_connect("host={$db_host} port={$db_port} dbname={$db_name} user={$db_user} password={$db_password}");
+if (!$conn) {
+    echo '<div class="alert alert-danger">Veritabanı bağlantı hatası: ' . pg_last_error() . '</div>';
+    exit;
+}
+
 // Filtreleme - region sütunu olmadığı için koddan çıkarıldı
 $regionFilter = isset($_GET['region']) ? $_GET['region'] : '';
 $query = "SELECT c.*, 
@@ -9,21 +16,19 @@ $query = "SELECT c.*,
             COUNT(DISTINCT p.id) as total_posts,
             SUM(CASE WHEN p.status = 'solved' THEN 1 ELSE 0 END) as solved_posts
           FROM cities c
-          LEFT JOIN posts p ON c.id = p.city_id";
+          LEFT JOIN posts p ON c.id = p.city_id
+          GROUP BY c.id ORDER BY c.name ASC";
 
-$params = [];
+$pgresult = pg_query($conn, $query);
+if (!$pgresult) {
+    echo '<div class="alert alert-danger">Sorgu hatası: ' . pg_last_error($conn) . '</div>';
+    exit;
+}
 
-// Region filtresi geçici olarak devre dışı bırakıldı
-// if (!empty($regionFilter)) {
-//     $query .= " WHERE c.region = ?";
-//     $params[] = $regionFilter;
-// }
-
-$query .= " GROUP BY c.id ORDER BY c.name ASC";
-
-$stmt = $pdo->prepare($query);
-$stmt->execute($params);
-$cities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$cities = [];
+while ($row = pg_fetch_assoc($pgresult)) {
+    $cities[] = $row;
+}
 
 // Bölgeleri çek - Bu kısmı geçici olarak devre dışı bıraktık, çünkü veritabanında 'region' sütunu yok
 // $regionsQuery = "SELECT DISTINCT region FROM cities WHERE region IS NOT NULL ORDER BY region";
@@ -33,8 +38,13 @@ $regions = [];
 
 // Ödül türlerini getir
 $awardQuery = "SELECT * FROM award_types ORDER BY min_rate ASC";
-$awardStmt = $pdo->query($awardQuery);
-$awardTypes = $awardStmt->fetchAll(PDO::FETCH_ASSOC);
+$pgresult = pg_query($conn, $awardQuery);
+$awardTypes = [];
+if ($pgresult) {
+    while ($row = pg_fetch_assoc($pgresult)) {
+        $awardTypes[] = $row;
+    }
+}
 
 // Ödül durumlarına göre şehir sayıları
 // PostgreSQL için bunu geçici olarak atlayacağız, çünkü integer/float dönüşümü sorun çıkarıyor.
@@ -48,18 +58,21 @@ foreach ($awardTypes as $award) {
     $awardStats[$award['id']] = 0;
 }
 
-// Aktif ödül sahibi şehirler - geçici olarak devre dışı
+// Aktif ödül sahibi şehirler
 $activeAwards = [];
-// PostgreSQL ile uyumluluk sorunları olduğu için bu sorguyu geçici olarak kaldırdık
-// $activeAwardsQuery = "SELECT c.name as city_name, at.name as award_name, at.badge_color, ca.award_date, ca.expiry_date
-//                       FROM city_awards ca
-//                       JOIN cities c ON ca.city_id = c.id
-//                       JOIN award_types at ON ca.award_type_id = at.id
-//                       WHERE ca.is_active = true
-//                       ORDER BY ca.award_date DESC
-//                       LIMIT 10";
-// $activeAwardsStmt = $pdo->query($activeAwardsQuery);
-// $activeAwards = $activeAwardsStmt->fetchAll(PDO::FETCH_ASSOC);
+$activeAwardsQuery = "SELECT c.name as city_name, at.name as award_name, at.badge_color, ca.award_date, ca.expiry_date
+                      FROM city_awards ca
+                      JOIN cities c ON ca.city_id = c.id
+                      JOIN award_types at ON ca.award_type_id = at.id
+                      WHERE ca.is_active = true
+                      ORDER BY ca.award_date DESC
+                      LIMIT 10";
+$pgresult = pg_query($conn, $activeAwardsQuery);
+if ($pgresult) {
+    while ($row = pg_fetch_assoc($pgresult)) {
+        $activeAwards[] = $row;
+    }
+}
 ?>
 
 <div class="container-fluid px-4">

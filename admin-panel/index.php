@@ -644,6 +644,9 @@ $page_file = "pages/{$page}.php";
                         <a href="?page=notifications" class="<?= $page === 'notifications' ? 'active' : '' ?>">
                             <i class="bi bi-bell"></i> Bildirimler
                         </a>
+                        <a href="?page=search_suggestions" class="<?= $page === 'search_suggestions' ? 'active' : '' ?>">
+                            <i class="bi bi-search"></i> Arama Önerileri
+                        </a>
                         <a href="?page=backup" class="<?= $page === 'backup' ? 'active' : '' ?>">
                             <i class="bi bi-cloud-arrow-down"></i> Yedekleme
                         </a>
