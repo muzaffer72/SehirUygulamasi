@@ -1,83 +1,94 @@
+/// Uygulama içinde kullanılacak bildirim modeli.
+/// 
+/// Firebase'den gelen bildirim verisini uygulamada kullanılacak forma dönüştürür.
 class NotificationModel {
-  final int id;
-  final int userId;
+  /// Bildirim ID'si
+  final String id;
+  
+  /// Bildirim başlığı
   final String title;
-  final String content;
-  final String type;
-  final String notificationType;
-  final String scopeType;
-  final int? scopeId;
-  final int? relatedId;
-  final String? imageUrl;
-  final String? actionUrl;
-  final DateTime createdAt;
+  
+  /// Bildirim mesajı
+  final String message;
+  
+  /// Bildirim verileri (JSON olarak)
+  final Map<String, dynamic>? data;
+  
+  /// Bildirim tarihi
+  final DateTime timestamp;
+  
+  /// Bildirim okundu mu?
   bool isRead;
-  final int? createdBy;
-  final String? senderName;
-  final String? senderUsername;
-  final String? senderAvatar;
-
+  
+  /// Bildirim tipi (örn. "complaint", "announcement", "message", vb.)
+  final String type;
+  
+  /// Bildirimle ilgili hedef sayfa
+  final String? targetRoute;
+  
+  /// Bildirimle ilgili hedef ID (ör. şikayet ID'si)
+  final String? targetId;
+  
+  /// Bildirim oluşturucu
   NotificationModel({
     required this.id,
-    required this.userId,
     required this.title,
-    required this.content,
+    required this.message,
+    this.data,
+    required this.timestamp,
+    this.isRead = false,
     required this.type,
-    required this.notificationType,
-    required this.scopeType,
-    this.scopeId,
-    this.relatedId,
-    this.imageUrl,
-    this.actionUrl,
-    required this.createdAt,
-    required this.isRead,
-    this.createdBy,
-    this.senderName,
-    this.senderUsername,
-    this.senderAvatar,
+    this.targetRoute,
+    this.targetId,
   });
-
-  factory NotificationModel.fromJson(Map<String, dynamic> json) {
+  
+  /// Firebase bildirim verisinden NotificationModel oluşturur.
+  factory NotificationModel.fromFirebaseMessage(Map<String, dynamic> message) {
+    final data = message['data'] as Map<String, dynamic>? ?? {};
+    
     return NotificationModel(
-      id: json['id'],
-      userId: json['user_id'],
-      title: json['title'],
-      content: json['content'],
-      type: json['type'],
-      notificationType: json['notification_type'] ?? 'interaction',
-      scopeType: json['scope_type'] ?? 'user',
-      scopeId: json['scope_id'],
-      relatedId: json['related_id'],
-      imageUrl: json['image_url'],
-      actionUrl: json['action_url'],
-      createdAt: DateTime.parse(json['created_at']),
-      isRead: json['is_read'] == 1 || json['is_read'] == true,
-      createdBy: json['created_by'],
-      senderName: json['sender_name'],
-      senderUsername: json['sender_username'],
-      senderAvatar: json['sender_avatar'],
+      id: data['notification_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      title: message['notification']?['title'] ?? data['title'] ?? 'Bildirim',
+      message: message['notification']?['body'] ?? data['message'] ?? '',
+      data: data,
+      timestamp: DateTime.fromMillisecondsSinceEpoch(
+        int.tryParse(data['timestamp'] ?? '') ?? DateTime.now().millisecondsSinceEpoch
+      ),
+      type: data['type'] ?? 'general',
+      targetRoute: data['target_route'],
+      targetId: data['target_id'],
     );
   }
-
-  Map<String, dynamic> toJson() {
+  
+  /// Map formatından NotificationModel oluşturur.
+  factory NotificationModel.fromMap(Map<String, dynamic> map) {
+    return NotificationModel(
+      id: map['id'] ?? '',
+      title: map['title'] ?? '',
+      message: map['message'] ?? '',
+      data: map['data'],
+      timestamp: map['timestamp'] is DateTime 
+        ? map['timestamp'] 
+        : DateTime.fromMillisecondsSinceEpoch(map['timestamp'] ?? 0),
+      isRead: map['isRead'] ?? false,
+      type: map['type'] ?? 'general',
+      targetRoute: map['targetRoute'],
+      targetId: map['targetId'],
+    );
+  }
+  
+  /// NotificationModel'i Map formatına dönüştürür.
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'user_id': userId,
       'title': title,
-      'content': content,
+      'message': message,
+      'data': data,
+      'timestamp': timestamp.millisecondsSinceEpoch,
+      'isRead': isRead,
       'type': type,
-      'notification_type': notificationType,
-      'scope_type': scopeType,
-      'scope_id': scopeId,
-      'related_id': relatedId,
-      'image_url': imageUrl,
-      'action_url': actionUrl,
-      'created_at': createdAt.toIso8601String(),
-      'is_read': isRead,
-      'created_by': createdBy,
-      'sender_name': senderName,
-      'sender_username': senderUsername,
-      'sender_avatar': senderAvatar,
+      'targetRoute': targetRoute,
+      'targetId': targetId,
     };
   }
 }
