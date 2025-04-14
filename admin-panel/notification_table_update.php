@@ -9,7 +9,20 @@
  */
 
 // Veritabanı bağlantısı
-require_once 'includes/db_config.php';
+require_once __DIR__ . '/db_config.php';
+
+// PDO bağlantısını mysqli'ye dönüştür (çünkü admin paneli mysqli kullanıyor)
+$db = new mysqli(
+    $hostname,
+    $username,
+    $password,
+    $dbname,
+    $port
+);
+
+if ($db->connect_error) {
+    die("Veritabanı bağlantı hatası: " . $db->connect_error);
+}
 
 try {
     // Yeni sütunlar ekle
