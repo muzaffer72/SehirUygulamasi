@@ -2,6 +2,13 @@
 // İlçe Yönetimi Sayfası
 // Şehirler gibi ilçeler de tüm detaylarla gösterilecektir
 
+// Veritabanı bağlantısını al
+$conn = pg_connect("host={$db_host} port={$db_port} dbname={$db_name} user={$db_user} password={$db_password}");
+if (!$conn) {
+    echo '<div class="alert alert-danger">Veritabanı bağlantı hatası: ' . pg_last_error() . '</div>';
+    exit;
+}
+
 // İşlem mesajları
 $message = isset($_GET['message']) ? urldecode($_GET['message']) : '';
 $error = isset($_GET['error']) ? urldecode($_GET['error']) : '';
@@ -13,20 +20,16 @@ if (isset($_GET['op']) && $_GET['op'] === 'delete' && isset($_GET['id'])) {
     
     try {
         // Silme işlemi öncesi ilçe adını al
-        $name_query = "SELECT name FROM districts WHERE id = ?";
-        $name_stmt = $db->prepare($name_query);
-        $name_stmt->bind_param("i", $district_id);
-        $name_stmt->execute();
-        $name_result = $name_stmt->get_result();
+        $name_query = "SELECT name FROM districts WHERE id = $1";
+        $name_result = pg_query_params($conn, $name_query, array($district_id));
         
-        if ($name_result->num_rows > 0) {
-            $district_name = $name_result->fetch_assoc()['name'];
+        if (pg_num_rows($name_result) > 0) {
+            $district_row = pg_fetch_assoc($name_result);
+            $district_name = $district_row['name'];
             
             // İlçeyi sil
-            $delete_query = "DELETE FROM districts WHERE id = ?";
-            $delete_stmt = $db->prepare($delete_query);
-            $delete_stmt->bind_param("i", $district_id);
-            $delete_stmt->execute();
+            $delete_query = "DELETE FROM districts WHERE id = $1";
+            $delete_result = pg_query_params($conn, $delete_query, array($district_id));
             
             if ($delete_stmt->affected_rows > 0) {
                 $message = "'$district_name' ilçesi başarıyla silindi.";
@@ -103,12 +106,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_district'])) {
 // Şehirleri getir
 try {
     $cities_query = "SELECT id, name FROM cities ORDER BY name ASC";
-    $cities_stmt = $db->prepare($cities_query);
-    $cities_stmt->execute();
-    $cities_result = $cities_stmt->get_result();
+    $cities_result = pg_query($conn, $cities_query);
     $cities = [];
-    while ($row = $cities_result->fetch_assoc()) {
-        $cities[] = $row;
+    
+    if ($cities_result) {
+        while ($row = pg_fetch_assoc($cities_result)) {
+            $cities[] = $row;
+        }
     }
 } catch (Exception $e) {
     echo '<div class="alert alert-danger">Şehir listesi alınamadı: ' . $e->getMessage() . '</div>';
@@ -118,12 +122,13 @@ try {
 // Siyasi partileri getir
 try {
     $parties_query = "SELECT name FROM political_parties ORDER BY name ASC";
-    $parties_stmt = $db->prepare($parties_query);
-    $parties_stmt->execute();
-    $parties_result = $parties_stmt->get_result();
+    $parties_result = pg_query($conn, $parties_query);
     $political_parties = [];
-    while ($row = $parties_result->fetch_assoc()) {
-        $political_parties[] = $row['name'];
+    
+    if ($parties_result) {
+        while ($row = pg_fetch_assoc($parties_result)) {
+            $political_parties[] = $row['name'];
+        }
     }
 } catch (Exception $e) {
     $political_parties = ["AK Parti", "CHP", "MHP", "İYİ Parti", "DEM Parti", "Saadet Partisi", "Gelecek Partisi", "DEVA Partisi", "Diğer"];
