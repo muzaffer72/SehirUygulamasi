@@ -1,0 +1,62 @@
+ŞikayetVar Admin Panel - Alternatif API Rotaları
+==================================================
+
+✓ DİKKAT: Bu dosya, admin panelinin dış sunucularda yaşadığı API sorunlarına çözüm için hazırlanmıştır.
+
+## SORUN NEDENLERİ
+
+İncelememizde admin panelinin dış sunuculara kurulduğunda bazı API endpoint'lerinde (özellikle yorumlar ve beğeniler) 
+sorunlar yaşadığını tespit ettik. Bu sorunlar şunlardan kaynaklanabilir:
+
+1. PHP Sürüm Farklılıkları: Replit'teki PHP 8.2 ile dış sunucudaki PHP sürümü arasında farklılıklar
+2. PostgreSQL Bağlantısı: MySQL kodu şeklinde yazılmış ancak PostgreSQL üzerinde çalışan uyumluluk katmanı
+3. Veritabanı Tablo Yapıları: Dış sunucuda farklı tablo yapıları veya eksik tablolar
+
+## NASIL KULLANILIR
+
+Her API endpoint için alternatif dosyalar hazırladık. Bu dosyalar doğrudan PDO kullanarak PostgreSQL ile bağlantı kurar
+ve MySQLiCompatWrapper kullanmaz, böylece uyumluluk sorunlarını ortadan kaldırır.
+
+1. Tanılama yapın: `/admin-panel/diagnostics.php` sayfasını açarak mevcut durumu görüntüleyin
+2. Hata ayıklama yapın: `/admin-panel/api/debug_api.php?action=all` ile API endpoint testlerini yapın
+3. Alternatif API'leri kullanın: Sorun yaşanan endpoint'ler için aşağıdaki bağlantıları kullanın
+
+## ALTERNATİF API ENDPOINT'LERİ
+
+NOT: Bu URL'lerde `sitenizin-adresi` kısmını kendi sunucu adresinizle değiştirin.
+
+### Yorumlar için:
+- GET: https://sitenizin-adresi/admin-panel/api/fix_comments.php?post_id=1
+- POST: https://sitenizin-adresi/admin-panel/api/fix_comments.php 
+  (JSON gövde: {"post_id": 1, "user_id": 1, "text": "Yorum metni"})
+
+### Beğeniler için:
+- GET: https://sitenizin-adresi/admin-panel/api/fix_likes.php?post_id=1
+- POST: https://sitenizin-adresi/admin-panel/api/fix_likes.php
+  (JSON gövde: {"post_id": 1, "user_id": 1})
+- DELETE: https://sitenizin-adresi/admin-panel/api/fix_likes.php
+  (JSON gövde: {"post_id": 1, "user_id": 1})
+
+## FRONTEND UYGULAMA ENTEGRASYONU
+
+1. Mevcut API bağlantıları sorun çıkarırsa, bu alternatif endpoint'leri kullanmak için:
+   - Flutter uygulamasında `/lib/services/api_service.dart` dosyasını güncelleyin
+   - Web sitesinde API çağrılarını yapan JavaScript dosyalarını güncelleyin
+
+2. Örnek değişiklik (Flutter için):
+   ```dart
+   // Eski:
+   final response = await http.get(Uri.parse('$apiUrl/comments?post_id=$postId'));
+   
+   // Yeni:
+   final response = await http.get(Uri.parse('$apiUrl/fix_comments.php?post_id=$postId'));
+   ```
+
+## SORUN GİDERME
+
+1. PostgreSQL PDO Uzantısı: Sunucunuzda 'pdo_pgsql' PHP uzantısının yüklü olduğundan emin olun
+2. Database URL: PostgreSQL bağlantı bilgilerinizi kontrol edin (.env dosyasında veya db_config.php içinde)
+3. Tablolar ve Şema: Replit'teki ile aynı veritabanı şemasına sahip olduğunuzdan emin olun
+4. PHP Error Log: Sunucunuzdaki PHP hata günlüklerini kontrol edin
+
+✓ NOT: Bu sorunlar genellikle geçicidir. Gelecek güncellemelerle standart API endpoint'leri tüm sunucularda sorunsuz çalışacak şekilde iyileştirilecektir.
