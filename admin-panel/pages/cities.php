@@ -12,7 +12,7 @@ if (!$conn) {
 // Filtreleme - region sütunu olmadığı için koddan çıkarıldı
 $regionFilter = isset($_GET['region']) ? $_GET['region'] : '';
 $query = "SELECT c.*, 
-            COALESCE(c.problem_solving_rate, 0) as problem_solving_rate,
+            0 as problem_solving_rate,
             COUNT(DISTINCT p.id) as total_posts,
             SUM(CASE WHEN p.status = 'solved' THEN 1 ELSE 0 END) as solved_posts
           FROM cities c

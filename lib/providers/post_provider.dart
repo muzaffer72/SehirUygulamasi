@@ -200,5 +200,5 @@ final postDetailProvider = FutureProvider.family<Post, String>((ref, postId) asy
     throw Exception('Post not found: $postId');
   }
   
-  return post;
+  return post!;
 });
