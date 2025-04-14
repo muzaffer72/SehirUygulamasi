@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_survey'])) {
     $district_id = isset($_POST['district_id']) && $_POST['district_id'] != '' ? intval($_POST['district_id']) : null;
     $category_id = isset($_POST['category_id']) ? intval($_POST['category_id']) : 0;
     $is_active = isset($_POST['is_active']) ? 1 : 0;
+    $is_pinned = isset($_POST['is_pinned']) ? 1 : 0;
     $start_date = $_POST['start_date'] ?? date('Y-m-d H:i:s');
     $end_date = $_POST['end_date'] ?? date('Y-m-d H:i:s', strtotime('+7 days'));
     $sort_order = isset($_POST['sort_order']) ? intval($_POST['sort_order']) : 0;
@@ -368,10 +369,16 @@ try {
                     
                     <div class="col-md-2">
                         <div class="mb-3 pt-4">
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch mb-2">
                                 <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
                                        <?php echo (isset($survey['is_active']) && $survey['is_active']) ? 'checked' : ''; ?>>
                                 <label class="form-check-label" for="is_active">Aktif</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_pinned" name="is_pinned" 
+                                       <?php echo (isset($survey['is_pinned']) && $survey['is_pinned']) ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="is_pinned">Başa Tuttur <i class="bi bi-pin-angle-fill text-primary"></i></label>
+                                <div class="form-text">Bu anket arama sonuçlarında üst sırada gösterilir.</div>
                             </div>
                         </div>
                     </div>
