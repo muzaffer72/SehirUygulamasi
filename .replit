@@ -17,10 +17,6 @@ args = "Admin Panel"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Flutter Web"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "API Proxy"
 
 [[workflows.workflow.tasks]]
@@ -41,21 +37,6 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "cd admin-panel && php -S 0.0.0.0:3001"
 waitForPort = 3001
-
-[[workflows.workflow]]
-name = "Flutter Web"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node web-server-simple.js"
-waitForPort = 5000
 
 [[workflows.workflow]]
 name = "API Proxy"
