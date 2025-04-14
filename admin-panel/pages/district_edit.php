@@ -2,6 +2,13 @@
 // İlçe Düzenleme Sayfası
 // Bu sayfa ilçelerin düzenlenmesini sağlar
 
+// Veritabanı bağlantısını al
+$conn = pg_connect("host={$db_host} port={$db_port} dbname={$db_name} user={$db_user} password={$db_password}");
+if (!$conn) {
+    echo '<div class="alert alert-danger">Veritabanı bağlantı hatası: ' . pg_last_error() . '</div>';
+    exit;
+}
+
 // ID'yi kontrol et
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     echo '<div class="alert alert-danger">İlçe ID bulunamadı.</div>';
@@ -26,21 +33,18 @@ try {
         FROM districts d
         LEFT JOIN cities c ON d.city_id = c.id
         LEFT JOIN posts p ON d.id = p.district_id
-        WHERE d.id = ?
+        WHERE d.id = $1
         GROUP BY d.id, c.name";
         
-    $stmt = $db->prepare($query);
-    $stmt->bind_param("i", $district_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $result = pg_query_params($conn, $query, array($district_id));
     
-    if ($result->num_rows === 0) {
+    if (pg_num_rows($result) === 0) {
         echo '<div class="alert alert-danger">İlçe bulunamadı.</div>';
         echo '<a href="?page=districts" class="btn btn-primary">İlçe Listesine Dön</a>';
         exit;
     }
     
-    $district = $result->fetch_assoc();
+    $district = pg_fetch_assoc($result);
     
     // city_id değerinin doğru tipte olduğundan emin olalım
     if (isset($district['city_id'])) {
@@ -73,22 +77,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_district'])) {
         try {
             // Güncelleme sorgusu
             $query = "UPDATE districts SET 
-                name = ?, 
-                city_id = ?, 
-                population = ?,
-                mayor_name = ?,
-                mayor_party = ?,
-                mayor_satisfaction_rate = ?,
-                problem_solving_rate = ?,
-                contact_email = ?,
-                contact_phone = ?,
-                website = ?,
-                description = ?,
+                name = $1, 
+                city_id = $2, 
+                population = $3,
+                mayor_name = $4,
+                mayor_party = $5,
+                mayor_satisfaction_rate = $6,
+                problem_solving_rate = $7,
+                contact_email = $8,
+                contact_phone = $9,
+                website = $10,
+                description = $11,
                 updated_at = NOW()
-                WHERE id = ?";
+                WHERE id = $12";
                 
-            $stmt = $db->prepare($query);
-            $stmt->bind_param("siissiiissi", 
+            $result = pg_query_params($conn, $query, array(
                 $name, 
                 $city_id, 
                 $population,
@@ -101,19 +104,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_district'])) {
                 $website,
                 $description,
                 $district_id
-            );
-            $stmt->execute();
+            ));
             
-            if ($stmt->affected_rows > 0) {
+            if ($result) {
                 $success_message = "İlçe başarıyla güncellendi.";
                 
                 // Güncel ilçe bilgilerini al
-                $query = "SELECT * FROM districts WHERE id = ?";
-                $stmt = $db->prepare($query);
-                $stmt->bind_param("i", $district_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $district = $result->fetch_assoc();
+                $query = "SELECT * FROM districts WHERE id = $1";
+                $result = pg_query_params($conn, $query, array($district_id));
+                $district = pg_fetch_assoc($result);
                 
                 // city_id değerinin doğru tipte olduğundan emin olalım
                 if (isset($district['city_id'])) {
@@ -131,11 +130,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_district'])) {
 // Şehirleri getir
 try {
     $query = "SELECT id, name FROM cities ORDER BY name ASC";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $result = pg_query($conn, $query);
     $cities = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = pg_fetch_assoc($result)) {
         $cities[] = $row;
     }
 } catch (Exception $e) {
@@ -146,11 +143,9 @@ try {
 // Siyasi partileri getir
 try {
     $query = "SELECT name FROM political_parties ORDER BY name ASC";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $result = pg_query($conn, $query);
     $political_parties = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = pg_fetch_assoc($result)) {
         $political_parties[] = $row['name'];
     }
 } catch (Exception $e) {
