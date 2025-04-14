@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const app = express();
+// Replit sadece 5000 portuna dışarıdan erişime izin veriyor
 const PORT = 5000;
 
 // Console logları için renkler
@@ -923,5 +924,7 @@ app.get('/mobile', (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(colors.fg.cyan + `ŞikayetVar bilgi sayfası şu adreste çalışıyor: http://0.0.0.0:${PORT}` + colors.reset);
+  console.log(colors.fg.cyan + `Mobil görünüm şu adreste çalışıyor: http://0.0.0.0:${PORT}/mobile` + colors.reset);
   console.log(colors.fg.cyan + `Admin Panel şu adreste çalışıyor: http://0.0.0.0:3001` + colors.reset);
+  console.log(colors.fg.cyan + `API Proxy şu adreste çalışıyor: http://0.0.0.0:9000` + colors.reset);
 });
