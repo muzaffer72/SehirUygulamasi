@@ -48,23 +48,39 @@ try {
 }
 
 // Bildirimleri al
+// Önce bildirim tablosunun var olup olmadığını kontrol et
 try {
-    $notifications_query = "
-        SELECT n.*, 
-               u.username as target_user_name,
-               c.name as target_city_name
-        FROM notifications n
-        LEFT JOIN users u ON n.target_id = u.id AND n.target_type = 'user'
-        LEFT JOIN cities c ON n.target_id = c.id AND n.target_type = 'city'
-        ORDER BY n.created_at DESC
-        LIMIT 50
-    ";
-    $notifications_stmt = $db->prepare($notifications_query);
-    $notifications_stmt->execute();
-    $notifications_result = $notifications_stmt->get_result();
+    // Tablo varlığını kontrol et
+    $table_exists = false;
+    $check_query = "SELECT to_regclass('public.notifications') as table_exists";
+    $check_stmt = $db->prepare($check_query);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+    $row = $check_result->fetch_assoc();
+    $table_exists = !empty($row['table_exists']);
+    
     $notifications = [];
-    while ($row = $notifications_result->fetch_assoc()) {
-        $notifications[] = $row;
+    if ($table_exists) {
+        $notifications_query = "
+            SELECT n.*, 
+                u.username as target_user_name,
+                c.name as target_city_name
+            FROM notifications n
+            LEFT JOIN users u ON n.target_id = u.id::text AND n.target_type = 'user'
+            LEFT JOIN cities c ON n.target_id = c.id::text AND n.target_type = 'city'
+            ORDER BY n.created_at DESC
+            LIMIT 50
+        ";
+        $notifications_stmt = $db->prepare($notifications_query);
+        $notifications_stmt->execute();
+        $notifications_result = $notifications_stmt->get_result();
+        if ($notifications_result) {
+            while ($row = $notifications_result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
+        }
+    } else {
+        echo '<div class="alert alert-warning">Bildirim tablosu henüz oluşturulmamış. Önce bir bildirim göndermeyi deneyin.</div>';
     }
 } catch (Exception $e) {
     echo '<div class="alert alert-danger">Bildirim verilerini alma hatası: ' . $e->getMessage() . '</div>';
@@ -89,8 +105,22 @@ if (isset($_POST['send_notification'])) {
     // Geçerli tarih ve saat bilgisini al
     $created_at = date('Y-m-d H:i:s');
     
-    // Veritabanına kaydet
+    // Önce bildirim tablosunu oluştur (eğer yoksa)
     try {
+        $create_table_query = "
+            CREATE TABLE IF NOT EXISTS notifications (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                target_type VARCHAR(50) NOT NULL DEFAULT 'all',
+                target_id VARCHAR(50),
+                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                status VARCHAR(20) DEFAULT 'pending'
+            )
+        ";
+        $db->query($create_table_query);
+        
+        // Veritabanına kaydet
         $insert_query = "
             INSERT INTO notifications (title, message, target_type, target_id, created_at) 
             VALUES (?, ?, ?, ?, ?)
