@@ -711,3 +711,6 @@ try {
         </div>
     </div>
 </div>
+
+<!-- Bildirim Sayfası JavaScript -->
+<script src="js/notifications.js"></script>
