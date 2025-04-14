@@ -4,9 +4,8 @@
 session_start();
 
 // Database connection
-require_once 'db_config.php';
 require_once 'db_connection.php';
-$db = $conn; // MySQLiCompatWrapper'i $db değişkenine atayalım
+// $db değişkeni db_connection.php içinde oluşturuldu
 
 // Başarı mesajı varsa
 $success_message = isset($_GET['success']) ? urldecode($_GET['success']) : null;

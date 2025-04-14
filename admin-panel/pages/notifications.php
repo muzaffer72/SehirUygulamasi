@@ -1,268 +1,436 @@
 <?php
-// Oturum kontrolü
-require_once 'includes/session_check.php';
-require_once 'includes/header.php';
-require_once 'includes/db_connection.php';
-require_once 'includes/functions.php';
+// Admin paneli bildirim yönetim sayfası
+requireAdmin();
 
-// Bildirim verisi için sorgu
-$notifications_query = "SELECT * FROM notifications ORDER BY created_at DESC";
-$notifications_result = pg_query($db_connection, $notifications_query);
-
-// Kullanıcı verileri için sorgu
-$users_query = "SELECT id, username, full_name FROM users";
-$users_result = pg_query($db_connection, $users_query);
-
-// Şehirler verisi için sorgu
-$cities_query = "SELECT id, name FROM cities ORDER BY name";
-$cities_result = pg_query($db_connection, $cities_query);
-
-// Kullanıcı listesini al
-$users = [];
-while ($user = pg_fetch_assoc($users_result)) {
-    $users[] = $user;
+// Kategorileri al
+try {
+    $categories_query = "SELECT * FROM categories ORDER BY name ASC";
+    $categories_stmt = $db->prepare($categories_query);
+    $categories_stmt->execute();
+    $categories_result = $categories_stmt->get_result();
+    $notification_categories = [];
+    while ($row = $categories_result->fetch_assoc()) {
+        $notification_categories[] = $row;
+    }
+} catch (Exception $e) {
+    echo '<div class="alert alert-danger">Kategori verilerini alma hatası: ' . $e->getMessage() . '</div>';
+    $notification_categories = [];
 }
 
-// Şehirler listesini al
-$cities = [];
-while ($city = pg_fetch_assoc($cities_result)) {
-    $cities[] = $city;
+// Şehirleri al
+try {
+    $cities_query = "SELECT * FROM cities ORDER BY name ASC";
+    $cities_stmt = $db->prepare($cities_query);
+    $cities_stmt->execute();
+    $cities_result = $cities_stmt->get_result();
+    $notification_cities = [];
+    while ($row = $cities_result->fetch_assoc()) {
+        $notification_cities[] = $row;
+    }
+} catch (Exception $e) {
+    echo '<div class="alert alert-danger">Şehir verilerini alma hatası: ' . $e->getMessage() . '</div>';
+    $notification_cities = [];
 }
 
-// Bildirim listesini al
-$notifications = [];
-while ($notification = pg_fetch_assoc($notifications_result)) {
-    $notifications[] = $notification;
+// Kullanıcıları al
+try {
+    $users_query = "SELECT id, username, name, email FROM users ORDER BY id DESC LIMIT 100";
+    $users_stmt = $db->prepare($users_query);
+    $users_stmt->execute();
+    $users_result = $users_stmt->get_result();
+    $notification_users = [];
+    while ($row = $users_result->fetch_assoc()) {
+        $notification_users[] = $row;
+    }
+} catch (Exception $e) {
+    echo '<div class="alert alert-danger">Kullanıcı verilerini alma hatası: ' . $e->getMessage() . '</div>';
+    $notification_users = [];
 }
 
-// Yeni bildirim oluşturma işlemi
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create') {
-    $title = htmlspecialchars($_POST['title'], ENT_QUOTES, 'UTF-8');
-    $message = htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8');
-    $target_type = $_POST['target_type'];
+// Bildirimleri al
+try {
+    $notifications_query = "
+        SELECT n.*, 
+               u.username as target_user_name,
+               c.name as target_city_name
+        FROM notifications n
+        LEFT JOIN users u ON n.target_id = u.id AND n.target_type = 'user'
+        LEFT JOIN cities c ON n.target_id = c.id AND n.target_type = 'city'
+        ORDER BY n.created_at DESC
+        LIMIT 50
+    ";
+    $notifications_stmt = $db->prepare($notifications_query);
+    $notifications_stmt->execute();
+    $notifications_result = $notifications_stmt->get_result();
+    $notifications = [];
+    while ($row = $notifications_result->fetch_assoc()) {
+        $notifications[] = $row;
+    }
+} catch (Exception $e) {
+    echo '<div class="alert alert-danger">Bildirim verilerini alma hatası: ' . $e->getMessage() . '</div>';
+    $notifications = [];
+}
+
+// Yeni bildirim gönderme işlemi
+if (isset($_POST['send_notification'])) {
+    $title = $_POST['title'] ?? '';
+    $message = $_POST['message'] ?? '';
+    $target_type = $_POST['target_type'] ?? 'all';
     $target_id = null;
     
-    // Hedef tipine göre hedef ID'yi belirle
-    if ($target_type === 'user' && !empty($_POST['user_id'])) {
-        $target_id = $_POST['user_id'];
-    } else if ($target_type === 'city' && !empty($_POST['city_id'])) {
-        $target_id = $_POST['city_id'];
+    if ($target_type == 'user' && isset($_POST['user_id']) && !empty($_POST['user_id'])) {
+        $target_id = intval($_POST['user_id']);
+    } else if ($target_type == 'city' && isset($_POST['city_id']) && !empty($_POST['city_id'])) {
+        $target_id = intval($_POST['city_id']);
+    } else if ($target_type == 'category' && isset($_POST['category_id']) && !empty($_POST['category_id'])) {
+        $target_id = intval($_POST['category_id']);
     }
     
-    // Bildirim oluşturma tarihi
+    // Geçerli tarih ve saat bilgisini al
     $created_at = date('Y-m-d H:i:s');
     
-    // Veritabanına bildirim ekle
-    $insert_query = "INSERT INTO notifications (title, message, target_type, target_id, created_at, status) 
-                     VALUES ($1, $2, $3, $4, $5, 'pending')";
-    $result = pg_query_params($db_connection, $insert_query, [
-        $title, $message, $target_type, $target_id, $created_at
-    ]);
-    
-    if ($result) {
-        // Bildirim ID'sini al
-        $notification_id = pg_last_oid($result);
+    // Veritabanına kaydet
+    try {
+        $insert_query = "
+            INSERT INTO notifications (title, message, target_type, target_id, created_at) 
+            VALUES (?, ?, ?, ?, ?)
+        ";
+        $insert_stmt = $db->prepare($insert_query);
+        $insert_stmt->bind_param("sssss", $title, $message, $target_type, $target_id, $created_at);
+        $result = $insert_stmt->execute();
         
-        // Firebase API ile bildirimi gönder
-        $api_result = sendFirebaseNotification($title, $message, $target_type, $target_id);
-        
-        if ($api_result) {
-            // Bildirim durumunu güncelle
-            $update_query = "UPDATE notifications SET status = 'sent' WHERE id = $1";
-            pg_query_params($db_connection, $update_query, [$notification_id]);
+        if ($result) {
+            // FCM ile bildirim gönder
+            $success = sendFirebaseNotification($title, $message, $target_type, $target_id);
             
-            $_SESSION['success_message'] = "Bildirim başarıyla gönderildi.";
+            if ($success) {
+                echo '<div class="alert alert-success">Bildirim başarıyla gönderildi.</div>';
+            } else {
+                echo '<div class="alert alert-warning">Bildirim veritabanına kaydedildi ancak FCM üzerinden gönderimde bir sorun oluştu.</div>';
+            }
+            
+            // Sayfayı yenile
+            header("Location: ?page=notifications&success=" . urlencode("Bildirim başarıyla gönderildi."));
+            exit;
         } else {
-            // Hata durumunu güncelle
-            $update_query = "UPDATE notifications SET status = 'error' WHERE id = $1";
-            pg_query_params($db_connection, $update_query, [$notification_id]);
-            
-            $_SESSION['error_message'] = "Bildirim gönderilirken bir hata oluştu.";
+            echo '<div class="alert alert-danger">Bildirim gönderilirken bir hata oluştu: ' . $db->error() . '</div>';
         }
-    } else {
-        $_SESSION['error_message'] = "Bildirim kaydedilirken bir hata oluştu.";
+    } catch (Exception $e) {
+        echo '<div class="alert alert-danger">Bildirim gönderilirken bir hata oluştu: ' . $e->getMessage() . '</div>';
+    }
+}
+
+// Firebase bildirim gönderme fonksiyonu
+function sendFirebaseNotification($title, $message, $target_type, $target_id) {
+    $firebase_server_key = getenv('FIREBASE_SERVER_KEY');
+    
+    if (empty($firebase_server_key)) {
+        error_log("Firebase Server Key bulunamadı");
+        return false;
     }
     
-    // Sayfayı yeniden yükle
-    header("Location: notifications.php");
-    exit;
-}
-
-// Bildirim silme işlemi
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
-    $notification_id = $_POST['notification_id'];
+    $url = 'https://fcm.googleapis.com/fcm/send';
     
-    $delete_query = "DELETE FROM notifications WHERE id = $1";
-    $result = pg_query_params($db_connection, $delete_query, [$notification_id]);
+    // Mesaj içeriğini hazırla
+    $notification = [
+        'title' => $title,
+        'body' => $message,
+        'sound' => 'default',
+        'badge' => '1',
+        'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
+    ];
     
-    if ($result) {
-        $_SESSION['success_message'] = "Bildirim başarıyla silindi.";
+    $data = [
+        'title' => $title,
+        'message' => $message,
+        'type' => 'notification',
+        'target_type' => $target_type,
+        'target_id' => $target_id,
+        'timestamp' => time()
+    ];
+    
+    // Hedefi belirle
+    $fields = [];
+    if ($target_type == 'user' && $target_id) {
+        // Kullanıcı token'ını al
+        global $db;
+        $token_query = "SELECT device_token FROM users WHERE id = ?";
+        $token_stmt = $db->prepare($token_query);
+        $token_stmt->bind_param("i", $target_id);
+        $token_stmt->execute();
+        $token_result = $token_stmt->get_result();
+        $user = $token_result->fetch_assoc();
+        
+        if ($user && !empty($user['device_token'])) {
+            $fields = [
+                'to' => $user['device_token'],
+                'notification' => $notification,
+                'data' => $data,
+                'priority' => 'high'
+            ];
+        } else {
+            error_log("Kullanıcı token'ı bulunamadı. ID: " . $target_id);
+            return false;
+        }
+    } else if ($target_type == 'city' && $target_id) {
+        // Şehir konusu
+        $topic = 'city_' . $target_id;
+        $fields = [
+            'to' => '/topics/' . $topic,
+            'notification' => $notification,
+            'data' => $data,
+            'priority' => 'high'
+        ];
+    } else if ($target_type == 'category' && $target_id) {
+        // Kategori konusu
+        $topic = 'category_' . $target_id;
+        $fields = [
+            'to' => '/topics/' . $topic,
+            'notification' => $notification,
+            'data' => $data,
+            'priority' => 'high'
+        ];
     } else {
-        $_SESSION['error_message'] = "Bildirim silinirken bir hata oluştu.";
+        // Tüm kullanıcılar
+        $fields = [
+            'to' => '/topics/all',
+            'notification' => $notification,
+            'data' => $data,
+            'priority' => 'high'
+        ];
     }
     
-    // Sayfayı yeniden yükle
-    header("Location: notifications.php");
-    exit;
-}
-
-// Başarı/hata mesajlarını göster
-if (isset($_SESSION['success_message'])) {
-    echo '<div class="alert alert-success">' . $_SESSION['success_message'] . '</div>';
-    unset($_SESSION['success_message']);
-}
-
-if (isset($_SESSION['error_message'])) {
-    echo '<div class="alert alert-danger">' . $_SESSION['error_message'] . '</div>';
-    unset($_SESSION['error_message']);
+    // HTTP isteği için başlıkları hazırla
+    $headers = [
+        'Authorization: key=' . $firebase_server_key,
+        'Content-Type: application/json'
+    ];
+    
+    // cURL ile isteği gönder
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+    
+    $result = curl_exec($ch);
+    
+    // Hata kontrolü
+    if ($result === false) {
+        error_log('Firebase Bildirim Hatası: ' . curl_error($ch));
+        curl_close($ch);
+        return false;
+    }
+    
+    curl_close($ch);
+    
+    // Başarı kontrolü
+    $result_data = json_decode($result, true);
+    if (isset($result_data['success']) && $result_data['success'] == 1) {
+        error_log('Firebase Bildirim Başarılı: ' . $result);
+        return true;
+    } else {
+        error_log('Firebase Bildirim Başarısız: ' . $result);
+        return false;
+    }
 }
 ?>
 
-<div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Bildirim Yönetimi</h1>
-    
-    <div class="row">
-        <!-- Bildirim Oluşturma Formu -->
-        <div class="col-lg-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Yeni Bildirim Oluştur</h6>
-                </div>
-                <div class="card-body">
-                    <form method="post" action="notifications.php">
-                        <input type="hidden" name="action" value="create">
-                        
-                        <div class="form-group">
-                            <label for="title">Başlık</label>
-                            <input type="text" class="form-control" id="title" name="title" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="message">Mesaj</label>
-                            <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="target_type">Bildirim Hedefi</label>
-                            <select class="form-control" id="target_type" name="target_type" required>
-                                <option value="all">Tüm Kullanıcılar</option>
-                                <option value="user">Belirli Kullanıcı</option>
-                                <option value="city">Belirli Şehir</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group user-target" style="display: none;">
-                            <label for="user_id">Kullanıcı Seçin</label>
-                            <select class="form-control" id="user_id" name="user_id">
-                                <option value="">Seçin...</option>
-                                <?php foreach ($users as $user): ?>
-                                    <option value="<?php echo $user['id']; ?>">
-                                        <?php echo htmlspecialchars($user['full_name'] . ' (' . $user['username'] . ')', ENT_QUOTES, 'UTF-8'); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group city-target" style="display: none;">
-                            <label for="city_id">Şehir Seçin</label>
-                            <select class="form-control" id="city_id" name="city_id">
-                                <option value="">Seçin...</option>
-                                <?php foreach ($cities as $city): ?>
-                                    <option value="<?php echo $city['id']; ?>">
-                                        <?php echo htmlspecialchars($city['name'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">Bildirim Gönder</button>
-                    </form>
-                </div>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Bildirim Yönetimi</h1>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Yeni Bildirim Gönder</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="?page=notifications">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Bildirim Başlığı</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Bildirim Mesajı</label>
+                        <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="target_type" class="form-label">Bildirim Hedefi</label>
+                        <select class="form-select" id="target_type" name="target_type">
+                            <option value="all" selected>Tüm Kullanıcılar</option>
+                            <option value="user">Belirli Kullanıcı</option>
+                            <option value="city">Belirli Şehir</option>
+                            <option value="category">Belirli Kategori</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Koşullu gösterilen seçim alanları -->
+                    <div id="user_select" class="mb-3 d-none">
+                        <label for="user_id" class="form-label">Kullanıcı</label>
+                        <select class="form-select" id="user_id" name="user_id">
+                            <option value="">Kullanıcı Seçin</option>
+                            <?php foreach ($notification_users as $user): ?>
+                                <option value="<?= $user['id'] ?>"><?= htmlspecialchars($user['name']) ?> (<?= htmlspecialchars($user['username']) ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div id="city_select" class="mb-3 d-none">
+                        <label for="city_id" class="form-label">Şehir</label>
+                        <select class="form-select" id="city_id" name="city_id">
+                            <option value="">Şehir Seçin</option>
+                            <?php foreach ($notification_cities as $city): ?>
+                                <option value="<?= $city['id'] ?>"><?= htmlspecialchars($city['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div id="category_select" class="mb-3 d-none">
+                        <label for="category_id" class="form-label">Kategori</label>
+                        <select class="form-select" id="category_id" name="category_id">
+                            <option value="">Kategori Seçin</option>
+                            <?php foreach ($notification_categories as $category): ?>
+                                <option value="<?= $category['id'] ?>"><?= htmlspecialchars($category['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" name="send_notification" class="btn btn-primary">Bildirim Gönder</button>
+                </form>
             </div>
         </div>
-        
-        <!-- Bildirim Listesi -->
-        <div class="col-lg-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Bildirim Listesi</h6>
-                </div>
-                <div class="card-body">
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Bildirim Geçmişi</h6>
+                <button class="btn btn-sm btn-outline-primary" id="refreshNotifications">
+                    <i class="bi bi-arrow-clockwise"></i> Yenile
+                </button>
+            </div>
+            <div class="card-body">
+                <?php if (empty($notifications)): ?>
+                    <div class="alert alert-info">Henüz bildirim gönderilmemiş.</div>
+                <?php else: ?>
                     <div class="table-responsive">
-                        <table class="table table-bordered" id="notificationsTable" width="100%" cellspacing="0">
+                        <table class="table table-hover table-striped">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Başlık</th>
-                                    <th>Mesaj</th>
                                     <th>Hedef</th>
+                                    <th>Tarih</th>
                                     <th>Durum</th>
-                                    <th>Oluşturuldu</th>
-                                    <th>İşlemler</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($notifications as $notification): ?>
                                     <tr>
-                                        <td><?php echo $notification['id']; ?></td>
-                                        <td><?php echo htmlspecialchars($notification['title'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?php echo htmlspecialchars($notification['message'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td>
-                                            <?php 
-                                                if ($notification['target_type'] === 'all') {
-                                                    echo 'Tüm Kullanıcılar';
-                                                } else if ($notification['target_type'] === 'user') {
-                                                    // Kullanıcı bilgisini bul
-                                                    $target_user = null;
-                                                    foreach ($users as $user) {
-                                                        if ($user['id'] == $notification['target_id']) {
-                                                            $target_user = $user;
-                                                            break;
-                                                        }
-                                                    }
-                                                    echo 'Kullanıcı: ' . ($target_user ? htmlspecialchars($target_user['username'], ENT_QUOTES, 'UTF-8') : 'Bilinmiyor');
-                                                } else if ($notification['target_type'] === 'city') {
-                                                    // Şehir bilgisini bul
-                                                    $target_city = null;
-                                                    foreach ($cities as $city) {
-                                                        if ($city['id'] == $notification['target_id']) {
-                                                            $target_city = $city;
-                                                            break;
-                                                        }
-                                                    }
-                                                    echo 'Şehir: ' . ($target_city ? htmlspecialchars($target_city['name'], ENT_QUOTES, 'UTF-8') : 'Bilinmiyor');
-                                                }
-                                            ?>
+                                            <strong><?= htmlspecialchars($notification['title']) ?></strong>
+                                            <div class="small text-muted"><?= htmlspecialchars($notification['message']) ?></div>
                                         </td>
                                         <td>
-                                            <?php 
-                                                if ($notification['status'] === 'pending') {
-                                                    echo '<span class="badge badge-warning">Bekliyor</span>';
-                                                } else if ($notification['status'] === 'sent') {
-                                                    echo '<span class="badge badge-success">Gönderildi</span>';
-                                                } else if ($notification['status'] === 'error') {
-                                                    echo '<span class="badge badge-danger">Hata</span>';
-                                                }
+                                            <?php
+                                            switch ($notification['target_type']) {
+                                                case 'user':
+                                                    echo '<span class="badge bg-primary">Kullanıcı</span> ';
+                                                    echo htmlspecialchars($notification['target_user_name'] ?? 'Bilinmiyor');
+                                                    break;
+                                                case 'city':
+                                                    echo '<span class="badge bg-success">Şehir</span> ';
+                                                    echo htmlspecialchars($notification['target_city_name'] ?? 'Bilinmiyor');
+                                                    break;
+                                                case 'category':
+                                                    echo '<span class="badge bg-info">Kategori</span> ';
+                                                    echo htmlspecialchars(get_category_name($notification['target_id']));
+                                                    break;
+                                                default:
+                                                    echo '<span class="badge bg-secondary">Tümü</span>';
+                                            }
                                             ?>
                                         </td>
-                                        <td><?php echo date('d.m.Y H:i', strtotime($notification['created_at'])); ?></td>
+                                        <td><?= date('d.m.Y H:i', strtotime($notification['created_at'])) ?></td>
                                         <td>
-                                            <form method="post" action="notifications.php" onsubmit="return confirm('Bu bildirimi silmek istediğinizden emin misiniz?');">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="notification_id" value="<?php echo $notification['id']; ?>">
-                                                <button type="submit" class="btn btn-danger btn-sm">Sil</button>
-                                            </form>
+                                            <?php if (isset($notification['status']) && $notification['status'] == 'error'): ?>
+                                                <span class="badge bg-danger">Hata</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-success">Gönderildi</span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
-                                
-                                <?php if (empty($notifications)): ?>
-                                    <tr>
-                                        <td colspan="7" class="text-center">Henüz bildirim bulunmuyor.</td>
-                                    </tr>
-                                <?php endif; ?>
                             </tbody>
                         </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Bildirim Ayarları</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Firebase Durum Kontrolü</label>
+                            <div class="d-flex align-items-center">
+                                <?php if (!empty(getenv('FIREBASE_SERVER_KEY')) && !empty(getenv('FIREBASE_API_KEY'))): ?>
+                                    <div class="badge bg-success me-2">Bağlantı Kuruldu</div>
+                                    <div>Firebase API anahtarları yapılandırılmış.</div>
+                                <?php else: ?>
+                                    <div class="badge bg-danger me-2">Bağlantı Hatası</div>
+                                    <div>Firebase API anahtarları yapılandırılmamış.</div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">İstatistikler</label>
+                            <div class="d-flex flex-column">
+                                <div class="mb-1">
+                                    <span class="badge bg-primary">Toplam: </span>
+                                    <span><?= count($notifications) ?> bildirim</span>
+                                </div>
+                                <div class="mb-1">
+                                    <span class="badge bg-success">Başarılı: </span>
+                                    <span>
+                                        <?php
+                                        $successful = array_filter($notifications, function($n) {
+                                            return !isset($n['status']) || $n['status'] != 'error';
+                                        });
+                                        echo count($successful);
+                                        ?> bildirim
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-danger">Hatalı: </span>
+                                    <span>
+                                        <?php
+                                        $failed = array_filter($notifications, function($n) {
+                                            return isset($n['status']) && $n['status'] == 'error';
+                                        });
+                                        echo count($failed);
+                                        ?> bildirim
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -271,31 +439,43 @@ if (isset($_SESSION['error_message'])) {
 </div>
 
 <script>
-    // Bildirim hedefi seçimine göre form alanlarını göster/gizle
-    document.getElementById('target_type').addEventListener('change', function() {
-        var userTarget = document.querySelector('.user-target');
-        var cityTarget = document.querySelector('.city-target');
-        
-        if (this.value === 'user') {
-            userTarget.style.display = 'block';
-            cityTarget.style.display = 'none';
-        } else if (this.value === 'city') {
-            userTarget.style.display = 'none';
-            cityTarget.style.display = 'block';
-        } else {
-            userTarget.style.display = 'none';
-            cityTarget.style.display = 'none';
-        }
-    });
+// Bildirim hedef tipine göre ilgili seçim alanını göster
+document.addEventListener('DOMContentLoaded', function() {
+    const targetTypeSelect = document.getElementById('target_type');
+    const userSelect = document.getElementById('user_select');
+    const citySelect = document.getElementById('city_select');
+    const categorySelect = document.getElementById('category_select');
     
-    // DataTables ile tablo düzenleme
-    $(document).ready(function() {
-        $('#notificationsTable').DataTable({
-            "order": [[5, "desc"]] // Oluşturulma tarihine göre sırala
+    function updateTargetFields() {
+        const selectedValue = targetTypeSelect.value;
+        
+        // Önce hepsini gizle
+        userSelect.classList.add('d-none');
+        citySelect.classList.add('d-none');
+        categorySelect.classList.add('d-none');
+        
+        // Seçilen hedef tipine göre ilgili alanı göster
+        if (selectedValue === 'user') {
+            userSelect.classList.remove('d-none');
+        } else if (selectedValue === 'city') {
+            citySelect.classList.remove('d-none');
+        } else if (selectedValue === 'category') {
+            categorySelect.classList.remove('d-none');
+        }
+    }
+    
+    // Sayfa yüklendiğinde mevcut değere göre güncelle
+    updateTargetFields();
+    
+    // Değer değiştiğinde güncelle
+    targetTypeSelect.addEventListener('change', updateTargetFields);
+    
+    // Bildirim geçmişini yenile butonu
+    const refreshButton = document.getElementById('refreshNotifications');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', function() {
+            window.location.href = '?page=notifications';
         });
-    });
+    }
+});
 </script>
-
-<?php
-require_once 'includes/footer.php';
-?>
