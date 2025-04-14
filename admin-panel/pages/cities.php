@@ -64,7 +64,6 @@ $activeAwardsQuery = "SELECT c.name as city_name, at.name as award_name, at.badg
                       FROM city_awards ca
                       JOIN cities c ON ca.city_id = c.id
                       JOIN award_types at ON ca.award_type_id = at.id
-                      WHERE ca.is_active = true
                       ORDER BY ca.award_date DESC
                       LIMIT 10";
 $pgresult = pg_query($conn, $activeAwardsQuery);

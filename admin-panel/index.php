@@ -356,9 +356,14 @@ $page_file = "pages/{$page}.php";
             display: block;
             transition: all 0.3s;
         }
-        .sidebar a:hover, .sidebar a.active {
+        .sidebar a:hover {
             color: white;
             background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar a.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-left: 3px solid #0d6efd;
         }
         .sidebar .app-title {
             font-size: 1.5rem;
@@ -366,6 +371,20 @@ $page_file = "pages/{$page}.php";
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             margin-bottom: 15px;
             font-weight: bold;
+        }
+        .menu-group {
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 5px;
+        }
+        .menu-title {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 10px 15px 5px;
+            font-weight: bold;
+        }
         }
         .sidebar i {
             margin-right: 10px;
@@ -605,52 +624,82 @@ $page_file = "pages/{$page}.php";
                 <div class="col-md-3 col-lg-2 p-0 sidebar d-none d-lg-block">
                     <div class="app-title">ŞikayetVar</div>
                     <nav>
-                        <a href="?page=dashboard" class="<?= $page === 'dashboard' ? 'active' : '' ?>">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                        <a href="?page=posts" class="<?= $page === 'posts' ? 'active' : '' ?>">
-                            <i class="bi bi-file-earmark-text"></i> Şikayetler
-                        </a>
-                        <a href="?page=surveys" class="<?= $page === 'surveys' ? 'active' : '' ?>">
-                            <i class="bi bi-bar-chart"></i> Anketler
-                        </a>
-                        <a href="?page=categories" class="<?= $page === 'categories' ? 'active' : '' ?>">
-                            <i class="bi bi-tag"></i> Kategoriler
-                        </a>
-                        <a href="?page=users" class="<?= $page === 'users' ? 'active' : '' ?>">
-                            <i class="bi bi-people"></i> Kullanıcılar
-                        </a>
-                        <a href="?page=settings" class="<?= $page === 'settings' ? 'active' : '' ?>">
-                            <i class="bi bi-gear"></i> Ayarlar
-                        </a>
-                        <a href="?page=cities" class="<?= $page === 'cities' ? 'active' : '' ?>">
-                            <i class="bi bi-buildings"></i> Şehirler
-                        </a>
-                        <a href="?page=profanity_filter" class="<?= $page === 'profanity_filter' ? 'active' : '' ?>">
-                            <i class="bi bi-shield-exclamation"></i> Küfür Filtresi
-                        </a>
-                        <a href="?page=districts" class="<?= $page === 'districts' ? 'active' : '' ?>">
-                            <i class="bi bi-geo-alt"></i> İlçeler
-                        </a>
-                        <a href="?page=award_system" class="<?= $page === 'award_system' ? 'active' : '' ?>">
-                            <i class="bi bi-trophy"></i> Ödül Sistemi
-                        </a>
-                        <a href="?page=comments" class="<?= $page === 'comments' ? 'active' : '' ?>">
-                            <i class="bi bi-chat-dots"></i> Yorumlar
-                        </a>
-                        <a href="?page=user_likes" class="<?= $page === 'user_likes' ? 'active' : '' ?>">
-                            <i class="bi bi-heart"></i> Beğeniler
-                        </a>
-                        <a href="?page=notifications" class="<?= $page === 'notifications' ? 'active' : '' ?>">
-                            <i class="bi bi-bell"></i> Bildirimler
-                        </a>
-                        <a href="?page=search_suggestions" class="<?= $page === 'search_suggestions' ? 'active' : '' ?>">
-                            <i class="bi bi-search"></i> Arama Önerileri
-                        </a>
-                        <a href="?page=backup" class="<?= $page === 'backup' ? 'active' : '' ?>">
-                            <i class="bi bi-cloud-arrow-down"></i> Yedekleme
-                        </a>
-                        <a href="?logout=1" class="mt-5">
+                        <!-- Ana Menü -->
+                        <div class="menu-group">
+                            <div class="menu-title">Ana Menü</div>
+                            <a href="?page=dashboard" class="<?= $page === 'dashboard' ? 'active' : '' ?>">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </div>
+                        
+                        <!-- İçerik Yönetimi -->
+                        <div class="menu-group">
+                            <div class="menu-title">İçerik Yönetimi</div>
+                            <a href="?page=posts" class="<?= $page === 'posts' ? 'active' : '' ?>">
+                                <i class="bi bi-file-earmark-text"></i> Şikayetler
+                            </a>
+                            <a href="?page=comments" class="<?= $page === 'comments' ? 'active' : '' ?>">
+                                <i class="bi bi-chat-dots"></i> Yorumlar
+                            </a>
+                            <a href="?page=categories" class="<?= $page === 'categories' ? 'active' : '' ?>">
+                                <i class="bi bi-tag"></i> Kategoriler
+                            </a>
+                            <a href="?page=user_likes" class="<?= $page === 'user_likes' ? 'active' : '' ?>">
+                                <i class="bi bi-heart"></i> Beğeniler
+                            </a>
+                        </div>
+                        
+                        <!-- Kullanıcı Yönetimi -->
+                        <div class="menu-group">
+                            <div class="menu-title">Kullanıcı Yönetimi</div>
+                            <a href="?page=users" class="<?= $page === 'users' ? 'active' : '' ?>">
+                                <i class="bi bi-people"></i> Kullanıcılar
+                            </a>
+                            <a href="?page=notifications" class="<?= $page === 'notifications' ? 'active' : '' ?>">
+                                <i class="bi bi-bell"></i> Bildirimler
+                            </a>
+                        </div>
+                        
+                        <!-- Lokasyon Yönetimi -->
+                        <div class="menu-group">
+                            <div class="menu-title">Lokasyon Yönetimi</div>
+                            <a href="?page=cities" class="<?= $page === 'cities' ? 'active' : '' ?>">
+                                <i class="bi bi-buildings"></i> Şehirler
+                            </a>
+                            <a href="?page=districts" class="<?= $page === 'districts' ? 'active' : '' ?>">
+                                <i class="bi bi-geo-alt"></i> İlçeler
+                            </a>
+                        </div>
+                        
+                        <!-- İçerik Araçları -->
+                        <div class="menu-group">
+                            <div class="menu-title">İçerik Araçları</div>
+                            <a href="?page=surveys" class="<?= $page === 'surveys' ? 'active' : '' ?>">
+                                <i class="bi bi-bar-chart"></i> Anketler
+                            </a>
+                            <a href="?page=award_system" class="<?= $page === 'award_system' ? 'active' : '' ?>">
+                                <i class="bi bi-trophy"></i> Ödül Sistemi
+                            </a>
+                            <a href="?page=search_suggestions" class="<?= $page === 'search_suggestions' ? 'active' : '' ?>">
+                                <i class="bi bi-search"></i> Arama Önerileri
+                            </a>
+                        </div>
+                        
+                        <!-- Sistem Araçları -->
+                        <div class="menu-group">
+                            <div class="menu-title">Sistem Yönetimi</div>
+                            <a href="?page=profanity_filter" class="<?= $page === 'profanity_filter' ? 'active' : '' ?>">
+                                <i class="bi bi-shield-exclamation"></i> Küfür Filtresi
+                            </a>
+                            <a href="?page=backup" class="<?= $page === 'backup' ? 'active' : '' ?>">
+                                <i class="bi bi-cloud-arrow-down"></i> Yedekleme
+                            </a>
+                            <a href="?page=settings" class="<?= $page === 'settings' ? 'active' : '' ?>">
+                                <i class="bi bi-gear"></i> Ayarlar
+                            </a>
+                        </div>
+                        
+                        <a href="?logout=1" class="mt-4">
                             <i class="bi bi-box-arrow-right"></i> Çıkış Yap
                         </a>
                     </nav>
