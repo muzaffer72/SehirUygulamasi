@@ -13,9 +13,22 @@ $district_id = intval($_GET['id']);
 $success_message = "";
 $error_message = "";
 
-// İlçe bilgilerini getir
+// İlçe bilgilerini getir - gelişmiş sorgu ile istatistikleri de al
 try {
-    $query = "SELECT * FROM districts WHERE id = ?";
+    $query = "SELECT d.*, 
+              COALESCE(d.problem_solving_rate, 0) as problem_solving_rate,
+              c.name as city_name,
+              COUNT(DISTINCT p.id) as total_posts,
+              SUM(CASE WHEN p.status = 'solved' THEN 1 ELSE 0 END) as solved_posts,
+              SUM(CASE WHEN p.status = 'awaitingSolution' THEN 1 ELSE 0 END) as pending_posts,
+              SUM(CASE WHEN p.status = 'inProgress' THEN 1 ELSE 0 END) as in_progress_posts,
+              SUM(CASE WHEN p.status = 'rejected' THEN 1 ELSE 0 END) as rejected_posts
+        FROM districts d
+        LEFT JOIN cities c ON d.city_id = c.id
+        LEFT JOIN posts p ON d.id = p.district_id
+        WHERE d.id = ?
+        GROUP BY d.id, c.name";
+        
     $stmt = $db->prepare($query);
     $stmt->bind_param("i", $district_id);
     $stmt->execute();
@@ -185,7 +198,7 @@ try {
                                     <option value="<?php echo $city['id']; ?>" 
                                         <?php echo (isset($district['city_id']) && $district['city_id'] == $city['id']) ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($city['name']); ?> 
-                                        <?php echo !empty($city['region']) ? '(' . htmlspecialchars($city['region']) . ')' : ''; ?>
+
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -287,12 +300,196 @@ try {
                     </div>
                 </div>
                 
+                <!-- Analitik ve İstatistikler Bölümü -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h5>Analitik ve İstatistikler</h5>
+                        <hr>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted mb-1">Toplam Şikayet</h6>
+                                <h3><?php echo intval($district['total_posts'] ?? 0); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0 bg-success bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted mb-1">Çözülmüş</h6>
+                                <h3><?php echo intval($district['solved_posts'] ?? 0); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0 bg-warning bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted mb-1">İşlem Bekleyen</h6>
+                                <h3><?php echo intval($district['pending_posts'] ?? 0) + intval($district['in_progress_posts'] ?? 0); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0 bg-danger bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted mb-1">Reddedilmiş</h6>
+                                <h3><?php echo intval($district['rejected_posts'] ?? 0); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hızlı İşlemler -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h5>Hızlı İşlemler</h5>
+                        <hr>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <a href="?page=posts&district_id=<?php echo $district_id; ?>" class="btn btn-outline-secondary w-100 py-2">
+                            <i class="bi bi-file-text"></i> Bu İlçedeki Şikayetleri Görüntüle
+                        </a>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <a href="?page=surveys&district_id=<?php echo $district_id; ?>" class="btn btn-outline-secondary w-100 py-2">
+                            <i class="bi bi-bar-chart-line"></i> Bu İlçedeki Anketleri Görüntüle
+                        </a>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <a href="?page=city_profile&id=<?php echo $district['city_id']; ?>" class="btn btn-outline-secondary w-100 py-2">
+                            <i class="bi bi-building"></i> <?php echo htmlspecialchars($district['city_name'] ?? ''); ?> Şehir Profilini Görüntüle
+                        </a>
+                    </div>
+                </div>
+                
                 <!-- Kaydet ve İptal Butonları -->
                 <div class="d-flex justify-content-between">
                     <a href="?page=districts" class="btn btn-outline-secondary">İptal</a>
                     <button type="submit" name="update_district" class="btn btn-primary">Güncelle</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- İlçe Gösterge Paneli -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">İlçe Performans Göstergesi</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6>Sorun Çözme Oranı</h6>
+                    <div class="progress" style="height: 20px;">
+                        <?php 
+                            $solve_rate = intval($district['problem_solving_rate'] ?? 0);
+                            $class = 'bg-danger';
+                            if ($solve_rate >= 75) {
+                                $class = 'bg-success';
+                            } elseif ($solve_rate >= 50) {
+                                $class = 'bg-warning';
+                            } elseif ($solve_rate >= 25) {
+                                $class = 'bg-info';
+                            }
+                        ?>
+                        <div class="progress-bar <?php echo $class; ?>" role="progressbar" 
+                             style="width: <?php echo $solve_rate; ?>%;" 
+                             aria-valuenow="<?php echo $solve_rate; ?>" aria-valuemin="0" aria-valuemax="100">
+                            <?php echo $solve_rate; ?>%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h6>Başkan Memnuniyet Oranı</h6>
+                    <div class="progress" style="height: 20px;">
+                        <?php 
+                            $mayor_rate = intval($district['mayor_satisfaction_rate'] ?? 0);
+                            $class = 'bg-danger';
+                            if ($mayor_rate >= 75) {
+                                $class = 'bg-success';
+                            } elseif ($mayor_rate >= 50) {
+                                $class = 'bg-warning';
+                            } elseif ($mayor_rate >= 25) {
+                                $class = 'bg-info';
+                            }
+                        ?>
+                        <div class="progress-bar <?php echo $class; ?>" role="progressbar" 
+                             style="width: <?php echo $mayor_rate; ?>%;" 
+                             aria-valuenow="<?php echo $mayor_rate; ?>" aria-valuemin="0" aria-valuemax="100">
+                            <?php echo $mayor_rate; ?>%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Bu göstergeler uygulama kullanıcılarının geribildirimleri, çözülen şikayetler ve sistem analizlerine dayanmaktadır.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Şikayet Dağılımı -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Şikayet Durumu Dağılımı</h5>
+            </div>
+            <div class="card-body text-center">
+                <?php
+                    $total = intval($district['total_posts'] ?? 0);
+                    if ($total > 0) {
+                        $solved_percent = round((intval($district['solved_posts'] ?? 0) / $total) * 100);
+                        $pending_percent = round((intval($district['pending_posts'] ?? 0) / $total) * 100);
+                        $in_progress_percent = round((intval($district['in_progress_posts'] ?? 0) / $total) * 100);
+                        $rejected_percent = round((intval($district['rejected_posts'] ?? 0) / $total) * 100);
+                ?>
+                    <div class="row text-center mb-3">
+                        <div class="col-3">
+                            <div class="p-2 bg-success bg-opacity-25 rounded-3 mb-2">
+                                <span><?php echo $solved_percent; ?>%</span>
+                            </div>
+                            <small class="text-muted">Çözüldü</small>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2 bg-warning bg-opacity-25 rounded-3 mb-2">
+                                <span><?php echo $pending_percent; ?>%</span>
+                            </div>
+                            <small class="text-muted">Beklemede</small>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2 bg-info bg-opacity-25 rounded-3 mb-2">
+                                <span><?php echo $in_progress_percent; ?>%</span>
+                            </div>
+                            <small class="text-muted">İşlemde</small>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2 bg-danger bg-opacity-25 rounded-3 mb-2">
+                                <span><?php echo $rejected_percent; ?>%</span>
+                            </div>
+                            <small class="text-muted">Reddedildi</small>
+                        </div>
+                    </div>
+                <?php } else { ?>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Bu ilçe için henüz şikayet kaydı bulunmamaktadır.
+                    </div>
+                <?php } ?>
+                
+                <a href="?page=posts&district_id=<?php echo $district_id; ?>" class="btn btn-sm btn-outline-primary mt-3">
+                    <i class="bi bi-list-ul"></i> Tüm Şikayetleri Görüntüle
+                </a>
+            </div>
         </div>
     </div>
 </div>
