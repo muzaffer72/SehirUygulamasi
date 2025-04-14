@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_district'])) {
 
 // Şehirleri getir
 try {
-    $cities_query = "SELECT id, name, region FROM cities ORDER BY name ASC";
+    $cities_query = "SELECT id, name FROM cities ORDER BY name ASC";
     $cities_stmt = $db->prepare($cities_query);
     $cities_stmt->execute();
     $cities_result = $cities_stmt->get_result();
@@ -158,7 +158,7 @@ try {
         $where_clause .= " AND (d.name LIKE '$search_term' OR c.name LIKE '$search_term')";
     }
     
-    $query = "SELECT d.*, c.name as city_name, c.region as city_region 
+    $query = "SELECT d.*, c.name as city_name
               FROM districts d
               LEFT JOIN cities c ON d.city_id = c.id
               $where_clause
@@ -265,7 +265,7 @@ try {
                                     <td><?php echo $district['id']; ?></td>
                                     <td><?php echo htmlspecialchars($district['name']); ?></td>
                                     <td><?php echo htmlspecialchars($district['city_name'] ?? 'Bilinmiyor'); ?></td>
-                                    <td><?php echo htmlspecialchars($district['city_region'] ?? 'Bilinmiyor'); ?></td>
+                                    <td>-</td>
                                     <td><?php echo htmlspecialchars($district['mayor_name'] ?? '-'); ?></td>
                                     <td><?php echo htmlspecialchars($district['mayor_party'] ?? '-'); ?></td>
                                     <td><?php echo !empty($district['population']) ? number_format($district['population'], 0, ',', '.') : '-'; ?></td>
@@ -385,7 +385,7 @@ try {
                                     <?php foreach ($cities as $city): ?>
                                         <option value="<?php echo $city['id']; ?>">
                                             <?php echo htmlspecialchars($city['name']); ?> 
-                                            <?php echo !empty($city['region']) ? '(' . htmlspecialchars($city['region']) . ')' : ''; ?>
+
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
