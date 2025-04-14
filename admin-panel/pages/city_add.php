@@ -45,15 +45,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $longitude = !empty($longitude) ? floatval($longitude) : null;
         
         // Veritabanına ekle - PostgreSQL uyumlu şekilde
-        $query = "INSERT INTO cities (name, plate_number, region, population, mayor, mayor_party, 
+        $query = "INSERT INTO cities (name, plate_number, population, mayor, mayor_party, 
                                      governor_name, area_code, latitude, longitude, problem_solving_rate) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)";
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)";
         
         $stmt = $pdo->prepare($query);
         $stmt->execute([
             $name, 
             $plateNumber,
-            $region,
             $population,
             $mayor,
             $mayorParty,

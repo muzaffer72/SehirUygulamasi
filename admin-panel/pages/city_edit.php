@@ -72,10 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     latitude = ?, 
                     longitude = ?";
         
-        // Region sütunu varsa sorguya ekle
-        if (isset($city['region'])) {
-            $query .= ", region = ?";
-        }
+        // Region sütunu kaldırıldı
         
         $query .= " WHERE id = ?";
         
@@ -90,10 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $longitude
         ];
         
-        // Region parametresini ekle
-        if (isset($city['region'])) {
-            $params[] = $region;
-        }
+        // Region parametresi kaldırıldı
         
         // Id parametresini en sona ekle
         $params[] = $cityId;

@@ -136,7 +136,7 @@ $statsData = [
                         <div class="col-md-6">
                             <h5>Genel Bilgiler</h5>
                             <p><strong>Plaka:</strong> <?php echo htmlspecialchars($city['plate_number'] ?? 'Belirtilmemiş'); ?></p>
-                            <p><strong>Bölge:</strong> <?php echo htmlspecialchars($city['region'] ?? 'Belirtilmemiş'); ?></p>
+                            <p><strong>Bölge:</strong> Belirtilmemiş</p>
                             <p><strong>Şikayet Çözüm Oranı:</strong> %<?php echo number_format($city['problem_solving_rate'], 2); ?></p>
                         </div>
                         <div class="col-md-6">
