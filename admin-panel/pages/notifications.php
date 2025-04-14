@@ -209,6 +209,33 @@ $notificationTypes = [
     'mention' => 'Bahsetme',
     'award' => 'Ödül'
 ];
+
+// Bildirim kapsamları
+$scopeTypes = [
+    'user' => 'Tek Kullanıcı',
+    'all' => 'Tüm Kullanıcılar',
+    'city' => 'Şehirdeki Kullanıcılar',
+    'district' => 'İlçedeki Kullanıcılar'
+];
+
+// Şehirleri getir
+try {
+    $citiesQuery = "SELECT id, name FROM cities ORDER BY name ASC";
+    $citiesResult = $db->query($citiesQuery);
+    $cities = $citiesResult->fetch_all(MYSQLI_ASSOC);
+} catch (Exception $e) {
+    $error = "Şehirler alınırken hata: " . $e->getMessage();
+    $cities = [];
+}
+
+// İlçeleri getir
+try {
+    $districtsQuery = "SELECT id, name, city_id FROM districts ORDER BY name ASC";
+    $districtsResult = $db->query($districtsQuery);
+    $districts = $districtsResult->fetch_all(MYSQLI_ASSOC);
+} catch (Exception $e) {
+    $error = "İlçeler alınırken hata: " . $e->getMessage();
+    $districts = [];
 ?>
 
 <div class="container-fluid mt-4">
