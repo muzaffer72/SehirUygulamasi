@@ -85,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_survey'])) {
                 district_id = ?,
                 category_id = ?,
                 is_active = ?,
+                is_pinned = ?,
                 start_date = ?,
                 end_date = ?,
                 sort_order = ?,
@@ -92,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_survey'])) {
                 WHERE id = ?";
                 
             $stmt = $db->prepare($query);
-            $stmt->bind_param("ssssiiiissii", 
+            $stmt->bind_param("ssssiiiiissii", 
                 $title, 
                 $short_title,
                 $description,
@@ -101,6 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_survey'])) {
                 $district_id,
                 $category_id,
                 $is_active,
+                $is_pinned,
                 $start_date,
                 $end_date,
                 $sort_order,
