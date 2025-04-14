@@ -358,7 +358,7 @@ class ApiService {
     }
   }
   
-  Future<Post?> getPostById(String id) async {
+  Future<Post> getPostById(String id) async {
     print('Getting post details for ID: $id');
     try {
       // Laravel admin paneli API entegrasyonu
@@ -394,17 +394,29 @@ class ApiService {
           }
         } else {
           print('Invalid post response format, trying fallback');
-          return await _getFallbackPostById(id);
+          final post = await _getFallbackPostById(id);
+          if (post == null) {
+            throw Exception('Post not found with ID: $id');
+          }
+          return post;
         }
       } else {
         print('Failed to load post: ${response.body}');
         // Ana endpoint çalışmadığında yedek endpoint dene
-        return await _getFallbackPostById(id);
+        final post = await _getFallbackPostById(id);
+        if (post == null) {
+          throw Exception('Post not found with ID: $id');
+        }
+        return post;
       }
     } catch (e) {
       print('Error fetching post: $e');
       // Hata oluştuğunda yedek endpoint dene
-      return await _getFallbackPostById(id);
+      final post = await _getFallbackPostById(id);
+      if (post == null) {
+        throw Exception('Post not found with ID: $id or error: $e');
+      }
+      return post;
     }
   }
   
@@ -502,10 +514,6 @@ class ApiService {
     try {
       // Önce mevcut gönderiyi kontrol et
       final post = await getPostById(id);
-      if (post == null) {
-        print('Cannot like post: Post not found');
-        return null;
-      }
       
       // Laravel admin paneli API entegrasyonu
       try {
@@ -580,10 +588,6 @@ class ApiService {
     try {
       // Önce mevcut gönderiyi kontrol et
       final post = await getPostById(id);
-      if (post == null) {
-        print('Cannot highlight post: Post not found');
-        return null;
-      }
       
       // Laravel admin paneli API entegrasyonu
       try {
