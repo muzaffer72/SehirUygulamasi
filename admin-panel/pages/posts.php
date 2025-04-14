@@ -659,6 +659,11 @@
                     </button>
                 </div>
                 
+                <!-- Silme butonu -->
+                <button type="button" class="btn btn-danger mx-1" id="delete-post-btn">
+                    <i class="bi bi-trash me-1"></i> Şikayeti Sil
+                </button>
+                
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
             </div>
         </div>

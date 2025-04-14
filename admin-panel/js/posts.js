@@ -1283,4 +1283,61 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Sayfa işlevlerini başlat
     initializePostsPage();
+    
+    // Şikayet silme butonu dinleyicisi
+    const deletePostBtn = document.getElementById('delete-post-btn');
+    if (deletePostBtn) {
+        deletePostBtn.addEventListener('click', function() {
+            if (!currentPostId) {
+                alert('Silinecek şikayet bulunamadı!');
+                return;
+            }
+            
+            if (!confirm('Bu şikayeti ve ilgili tüm içerikleri (yorumlar, beğeniler, medya dosyaları) silmek istediğinize emin misiniz? Bu işlem geri alınamaz!')) {
+                return;
+            }
+            
+            // Butonu devre dışı bırak ve yükleniyor göster
+            const originalHtml = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Siliniyor...';
+            
+            // API isteği gönder
+            fetch('/api/delete_post.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    post_id: currentPostId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.disabled = false;
+                this.innerHTML = originalHtml;
+                
+                if (data.success) {
+                    // Başarılı silme işlemi
+                    alert('Şikayet ve ilgili tüm içerikler başarıyla silindi.');
+                    
+                    // Modalı kapat
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('postDetailModal'));
+                    modal.hide();
+                    
+                    // Sayfayı yenile
+                    window.location.reload();
+                } else {
+                    // Hata mesajı
+                    alert('Hata: ' + (data.error || 'Bilinmeyen bir hata oluştu'));
+                }
+            })
+            .catch(error => {
+                console.error('Silme hatası:', error);
+                alert('Silme işlemi sırasında bir hata oluştu');
+                this.disabled = false;
+                this.innerHTML = originalHtml;
+            });
+        });
+    }
 });
