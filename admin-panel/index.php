@@ -157,7 +157,7 @@ try {
         LEFT JOIN categories c ON s.category_id = c.id
         LEFT JOIN cities city ON s.city_id = CAST(city.id AS INTEGER)
         LEFT JOIN districts d ON s.district_id = d.id
-        ORDER BY s.is_pinned DESC, s.sort_order ASC, s.created_at DESC
+        ORDER BY s.is_pinned DESC, s.created_at DESC
         LIMIT 10
     ";
     

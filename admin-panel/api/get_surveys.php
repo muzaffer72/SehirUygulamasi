@@ -68,7 +68,7 @@ try {
         LEFT JOIN cities city ON s.city_id = CAST(city.id AS INTEGER)
         LEFT JOIN districts d ON s.district_id = d.id
         $where_sql
-        ORDER BY s.is_pinned DESC, s.sort_order ASC, s.created_at DESC
+        ORDER BY s.is_pinned DESC, s.created_at DESC
         LIMIT ? OFFSET ?
     ";
     

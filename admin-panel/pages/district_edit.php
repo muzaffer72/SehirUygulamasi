@@ -41,6 +41,11 @@ try {
     }
     
     $district = $result->fetch_assoc();
+    
+    // city_id değerinin doğru tipte olduğundan emin olalım
+    if (isset($district['city_id'])) {
+        $district['city_id'] = intval($district['city_id']);
+    }
 } catch (Exception $e) {
     echo '<div class="alert alert-danger">İlçe bilgisi alınamadı: ' . $e->getMessage() . '</div>';
     echo '<a href="?page=districts" class="btn btn-primary">İlçe Listesine Dön</a>';
