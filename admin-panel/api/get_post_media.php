@@ -1,8 +1,7 @@
 <?php
 // Veritabanı bağlantısı
-require_once '../db_config.php';
 require_once '../db_connection.php';
-$db = $conn;
+// $db değişkeni db_connection.php içinde oluşturuldu
 
 // CORS başlıkları
 header('Content-Type: application/json');

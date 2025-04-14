@@ -12,8 +12,6 @@ if ($post_id <= 0) {
 }
 
 try {
-    global $pdo;
-    
     // Yorumları getir
     $query = "
         SELECT c.*, 
@@ -26,9 +24,14 @@ try {
         ORDER BY c.created_at DESC
     ";
     
-    $stmt = $pdo->prepare($query);
-    $stmt->execute([$post_id]);
-    $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $db->prepare($query);
+    $stmt->bind_param("i", $post_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $comments = [];
+    while ($row = $result->fetch_assoc()) {
+        $comments[] = $row;
+    }
     
     // Yorumları JSON olarak döndür
     echo json_encode([
