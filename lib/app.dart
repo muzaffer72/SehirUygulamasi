@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/screens/auth/login_screen.dart';
-import 'package:sikayet_var/screens/home/home_screen.dart';
-import 'package:sikayet_var/utils/constants.dart';
-import 'package:sikayet_var/utils/theme.dart';
+import 'providers/auth_provider.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/home/home_screen.dart';
+import 'utils/constants.dart';
+import 'utils/theme.dart';
+import 'services/firebase_notification_service.dart';
 
 // Provider for current theme mode
 final themeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
@@ -22,6 +23,13 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
   void initState() {
     super.initState();
     _loadThemePreference();
+    _checkNotificationPreferences();
+  }
+  
+  // Bildirim ayarlarını kontrol et
+  Future<void> _checkNotificationPreferences() async {
+    bool notificationsEnabled = await FirebaseNotificationService.areNotificationsEnabled();
+    debugPrint('Bildirimler aktif mi: $notificationsEnabled');
   }
   
   // Load theme preference from SharedPreferences
