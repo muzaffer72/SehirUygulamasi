@@ -71,7 +71,133 @@ if ($operation === 'clear_all' && isset($_GET['user_id'])) {
     }
 }
 
-// Yeni bildirim ekleme işlemi
+// Yönetici bildirimi ekleme işlemi
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_admin_notification'])) {
+    $scope_type = isset($_POST['scope_type']) ? $_POST['scope_type'] : 'user';
+    $title = isset($_POST['title']) ? $_POST['title'] : '';
+    $content = isset($_POST['content']) ? $_POST['content'] : '';
+    $type = isset($_POST['type']) ? $_POST['type'] : 'system';
+    $image_url = isset($_POST['image_url']) ? $_POST['image_url'] : null;
+    $action_url = isset($_POST['action_url']) ? $_POST['action_url'] : null;
+    
+    // Kapsam türüne göre işlem yap
+    $scope_id = null;
+    $userIds = [];
+    
+    // Gerekli değerlerin alınması
+    switch ($scope_type) {
+        case 'user':
+            $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+            if ($userId <= 0) {
+                $error = "Lütfen geçerli bir kullanıcı seçin.";
+                break;
+            }
+            $scope_id = $userId;
+            $userIds[] = $userId;
+            break;
+            
+        case 'all':
+            // Tüm kullanıcılar için bildirimi veritabanına ekleyeceğiz
+            try {
+                $userQuery = "SELECT id FROM users";
+                $userResult = $db->query($userQuery);
+                while ($user = $userResult->fetch_assoc()) {
+                    $userIds[] = $user['id'];
+                }
+            } catch (Exception $e) {
+                $error = "Kullanıcılar alınırken hata: " . $e->getMessage();
+            }
+            break;
+            
+        case 'city':
+            $cityId = isset($_POST['city_id']) ? (int)$_POST['city_id'] : 0;
+            if ($cityId <= 0) {
+                $error = "Lütfen geçerli bir şehir seçin.";
+                break;
+            }
+            $scope_id = $cityId;
+            
+            // Şehirdeki kullanıcıları bul
+            try {
+                $userQuery = "SELECT id FROM users WHERE city_id = ?";
+                $stmt = $db->prepare($userQuery);
+                $stmt->bind_param("i", $cityId);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                while ($user = $result->fetch_assoc()) {
+                    $userIds[] = $user['id'];
+                }
+            } catch (Exception $e) {
+                $error = "Şehirdeki kullanıcılar alınırken hata: " . $e->getMessage();
+            }
+            break;
+            
+        case 'district':
+            $districtId = isset($_POST['district_id']) ? (int)$_POST['district_id'] : 0;
+            if ($districtId <= 0) {
+                $error = "Lütfen geçerli bir ilçe seçin.";
+                break;
+            }
+            $scope_id = $districtId;
+            
+            // İlçedeki kullanıcıları bul
+            try {
+                $userQuery = "SELECT id FROM users WHERE district_id = ?";
+                $stmt = $db->prepare($userQuery);
+                $stmt->bind_param("i", $districtId);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                while ($user = $result->fetch_assoc()) {
+                    $userIds[] = $user['id'];
+                }
+            } catch (Exception $e) {
+                $error = "İlçedeki kullanıcılar alınırken hata: " . $e->getMessage();
+            }
+            break;
+    }
+    
+    // Bildirimleri ekle
+    if (!empty($userIds) && !empty($title) && !empty($content)) {
+        $successCount = 0;
+        $totalCount = count($userIds);
+        
+        try {
+            $db->begin_transaction();
+            
+            foreach ($userIds as $userId) {
+                $query = "INSERT INTO notifications (
+                    user_id, title, content, type, notification_type, 
+                    scope_type, scope_id, image_url, action_url, is_sent
+                ) VALUES (?, ?, ?, ?, 'system', ?, ?, ?, ?, TRUE)";
+                
+                $stmt = $db->prepare($query);
+                $stmt->bind_param("issssiss", 
+                    $userId, $title, $content, $type, 
+                    $scope_type, $scope_id, $image_url, $action_url
+                );
+                
+                if ($stmt->execute()) {
+                    $successCount++;
+                }
+            }
+            
+            $db->commit();
+            $message = "Yönetici bildirimi $successCount kullanıcıya başarıyla gönderildi.";
+            
+        } catch (Exception $e) {
+            $db->rollback();
+            $error = "Bildirim gönderilirken hata: " . $e->getMessage();
+        }
+    } else if (empty($userIds) && !isset($error)) {
+        $error = "Seçilen kapsam için kullanıcı bulunamadı.";
+    } else if (!isset($error)) {
+        $error = "Lütfen tüm zorunlu alanları doldurun.";
+    }
+}
+
+// Eski bildirim ekleme işlemi (kullanıcı etkileşimi için otomatik)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_notification'])) {
     $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
     $title = isset($_POST['title']) ? $_POST['title'] : '';
@@ -80,13 +206,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_notification'])) 
     
     if ($userId > 0 && !empty($title) && !empty($content)) {
         try {
-            $query = "INSERT INTO notifications (user_id, title, content, type) VALUES (?, ?, ?, ?)";
+            $query = "INSERT INTO notifications (
+                user_id, title, content, type, notification_type, scope_type, is_sent
+            ) VALUES (?, ?, ?, ?, 'interaction', 'user', TRUE)";
+            
             $stmt = $db->prepare($query);
             $stmt->bind_param("isss", $userId, $title, $content, $type);
             $result = $stmt->execute();
             
             if ($result) {
-                $message = "Yeni bildirim başarıyla eklendi.";
+                $message = "Kullanıcı etkileşim bildirimi başarıyla eklendi.";
             } else {
                 $error = "Bildirim eklenirken bir hata oluştu.";
             }
@@ -236,6 +365,7 @@ try {
 } catch (Exception $e) {
     $error = "İlçeler alınırken hata: " . $e->getMessage();
     $districts = [];
+}
 ?>
 
 <div class="container-fluid mt-4">
@@ -254,17 +384,30 @@ try {
     <?php endif; ?>
     
     <div class="row">
-        <!-- Bildirim Ekleme Formu -->
+        <!-- Yönetici Bildirim Formu -->
         <div class="col-md-4 mb-4">
             <div class="card shadow">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Yeni Bildirim Ekle</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Yönetici Bildirimi Gönder</h6>
                 </div>
                 <div class="card-body">
                     <form method="post" action="?page=notifications">
+                        <input type="hidden" name="notification_type" value="system">
+                        
+                        <!-- Bildirim Kapsamı (Kime Gönderilecek) -->
                         <div class="mb-3">
-                            <label for="user_id" class="form-label">Kullanıcı <span class="text-danger">*</span></label>
-                            <select class="form-select" id="user_id" name="user_id" required>
+                            <label for="scope_type" class="form-label">Bildirim Kapsamı <span class="text-danger">*</span></label>
+                            <select class="form-select" id="scope_type" name="scope_type" required onchange="handleScopeChange()">
+                                <?php foreach ($scopeTypes as $value => $label): ?>
+                                    <option value="<?php echo $value; ?>"><?php echo $label; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <!-- Tek Kullanıcı Seçimi -->
+                        <div class="mb-3" id="user_selector_container">
+                            <label for="user_id" class="form-label">Kullanıcı Seçin <span class="text-danger">*</span></label>
+                            <select class="form-select" id="user_id" name="user_id">
                                 <option value="">Kullanıcı Seçin</option>
                                 <?php foreach ($users as $user): ?>
                                     <option value="<?php echo $user['id']; ?>">
@@ -274,12 +417,33 @@ try {
                             </select>
                         </div>
                         
+                        <!-- Şehir Seçimi -->
+                        <div class="mb-3" id="city_selector_container" style="display: none;">
+                            <label for="city_id" class="form-label">Şehir Seçin <span class="text-danger">*</span></label>
+                            <select class="form-select" id="city_id" name="city_id" onchange="updateDistrictOptions()">
+                                <option value="">Şehir Seçin</option>
+                                <?php foreach ($cities as $city): ?>
+                                    <option value="<?php echo $city['id']; ?>">
+                                        <?php echo htmlspecialchars($city['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <!-- İlçe Seçimi -->
+                        <div class="mb-3" id="district_selector_container" style="display: none;">
+                            <label for="district_id" class="form-label">İlçe Seçin <span class="text-danger">*</span></label>
+                            <select class="form-select" id="district_id" name="district_id">
+                                <option value="">Önce Şehir Seçin</option>
+                            </select>
+                        </div>
+                        
                         <div class="mb-3">
                             <label for="type" class="form-label">Bildirim Türü</label>
                             <select class="form-select" id="type" name="type">
-                                <?php foreach ($notificationTypes as $value => $label): ?>
-                                    <option value="<?php echo $value; ?>"><?php echo $label; ?></option>
-                                <?php endforeach; ?>
+                                <option value="system">Sistem</option>
+                                <option value="status_update">Durum Güncellemesi</option>
+                                <option value="award">Ödül</option>
                             </select>
                         </div>
                         
@@ -293,12 +457,41 @@ try {
                             <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
                         </div>
                         
+                        <div class="mb-3">
+                            <label for="image_url" class="form-label">Resim URL (İsteğe Bağlı)</label>
+                            <input type="text" class="form-control" id="image_url" name="image_url" placeholder="https://...">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="action_url" class="form-label">Bağlantı URL (İsteğe Bağlı)</label>
+                            <input type="text" class="form-control" id="action_url" name="action_url" placeholder="https://...">
+                        </div>
+                        
                         <div class="d-grid">
-                            <button type="submit" name="add_notification" class="btn btn-primary">
-                                <i class="bi bi-bell"></i> Bildirim Ekle
+                            <button type="submit" name="add_admin_notification" class="btn btn-primary">
+                                <i class="bi bi-bell"></i> Bildirimi Gönder
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+            
+            <div class="card shadow mt-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Bildirim Türleri</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item list-group-item-info">
+                            <strong>Sistem Bildirimleri</strong> - Yöneticiler tarafından oluşturulan bildirimler
+                        </li>
+                        <li class="list-group-item list-group-item-warning">
+                            <strong>Kullanıcı Etkileşim Bildirimleri</strong> - Otomatik oluşan bildirimler (beğeni, yorum vb.)
+                        </li>
+                    </ul>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <strong>Not:</strong> Etkileşim bildirimleri (beğeni, yorum, yanıt vb.) kullanıcılar arasında otomatik olarak gönderilir. Yönetici olarak sadece sistem bildirimlerini oluşturabilirsiniz.
+                    </div>
                 </div>
             </div>
         </div>
