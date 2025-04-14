@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_district'])) {
 
 // Şehirleri getir
 try {
-    $query = "SELECT id, name, region FROM cities ORDER BY name ASC";
+    $query = "SELECT id, name FROM cities ORDER BY name ASC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $result = $stmt->get_result();

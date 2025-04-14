@@ -7,8 +7,8 @@ function getApiBaseUrl() {
   const protocol = window.location.protocol; // "http:" veya "https:"
   const hostname = window.location.hostname; // "domain.com" veya "localhost"
   
-  // API proxy 9000 portundan yayınlanıyor
-  return `${protocol}//${hostname}:9000`;
+  // API proxy entegrasyonu
+  return `${protocol}//${hostname}/api`;
 }
 
 // Flutter tarafından çağrılacak köprü fonksiyonu
