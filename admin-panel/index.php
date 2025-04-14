@@ -538,6 +538,11 @@ $page_file = "pages/{$page}.php";
                                     </a>
                                 </li>
                                 <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'categories' ? 'active' : '' ?>" href="?page=categories">
+                                        <i class="bi bi-tag"></i> Kategoriler
+                                    </a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link <?= $page === 'users' ? 'active' : '' ?>" href="?page=users">
                                         <i class="bi bi-people"></i> Kullanıcılar
                                     </a>
@@ -609,6 +614,9 @@ $page_file = "pages/{$page}.php";
                         </a>
                         <a href="?page=surveys" class="<?= $page === 'surveys' ? 'active' : '' ?>">
                             <i class="bi bi-bar-chart"></i> Anketler
+                        </a>
+                        <a href="?page=categories" class="<?= $page === 'categories' ? 'active' : '' ?>">
+                            <i class="bi bi-tag"></i> Kategoriler
                         </a>
                         <a href="?page=users" class="<?= $page === 'users' ? 'active' : '' ?>">
                             <i class="bi bi-people"></i> Kullanıcılar
