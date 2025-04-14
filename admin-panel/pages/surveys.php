@@ -58,6 +58,9 @@ if (isset($_GET['view_survey'])) {
                                     <?= $survey['is_active'] 
                                         ? '<span class="badge text-bg-success">Aktif</span>' 
                                         : '<span class="badge text-bg-danger">Pasif</span>' ?>
+                                    <?php if (isset($survey['is_pinned']) && $survey['is_pinned']): ?>
+                                    <span class="badge text-bg-primary ms-1"><i class="bi bi-pin-angle-fill"></i> Başa Tutturulmuş</span>
+                                    <?php endif; ?>
                                 </p>
                                 <p><strong>Başlangıç:</strong> <?= htmlspecialchars($survey['start_date']) ?></p>
                                 <p><strong>Bitiş:</strong> <?= htmlspecialchars($survey['end_date']) ?></p>
