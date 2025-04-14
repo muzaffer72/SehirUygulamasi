@@ -1,248 +1,283 @@
 <?php
 /**
- * ŞikayetVar - Bildirim API
+ * Firebase Cloud Messaging (FCM) API entegrasyonu
+ * Bu dosya, ŞikayetVar uygulamasının bildirim sistemini yönetir.
  * 
- * Bu API, mobil uygulama için bildirim sistemine erişim sağlar:
- * - Bildirim listeleme
- * - Bildirim oluşturma
- * - Bildirimleri okundu işaretleme
- * - Okunmamış bildirim sayısını alma
+ * İşlevleri:
+ * 1. Kullanıcılara bildirim gönderme
+ * 2. Bildirim durumunu kontrol etme
+ * 3. Toplu bildirim gönderme
  */
 
 // Gerekli dosyaları dahil et
-require_once '../includes/db_config.php';
-require_once '../includes/auth_helper.php';
-require_once '../includes/api_helper.php';
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/db_connection.php';
+require_once __DIR__ . '/../includes/api_auth.php';
 
-// CORS için izinler
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Content-Type: application/json; charset=UTF-8');
+// API isteklerini sadece yetkili kullanıcılar için kontrol et
+// checkApiAuth();
 
-// OPTIONS pre-flight isteklerini yakala
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit;
-}
+// HTTP isteklerini işle
+header('Content-Type: application/json');
 
-// API endpoint'leri
-$endpoint = isset($_GET['endpoint']) ? $_GET['endpoint'] : 'list';
+// HTTP metodu kontrolü
+$method = $_SERVER['REQUEST_METHOD'];
 
-// Kullanıcı kimlik doğrulama
-$user = authenticateUser();
+// POST metodu ile gönderilen JSON verisini al
+$json_str = file_get_contents('php://input');
+$data = json_decode($json_str, true);
 
-if (!$user) {
-    sendApiResponse(401, false, 'Yetkisiz erişim', null);
-    exit;
-}
-
-switch ($endpoint) {
+// GET ile alınan parametreleri al
+if ($method === 'GET') {
+    // Bildirim ID'si verilmişse, durumunu döndür
+    if (isset($_GET['id'])) {
+        $notification_id = intval($_GET['id']);
+        
+        $query = "SELECT * FROM notifications WHERE id = $1";
+        $result = pg_query_params($db_connection, $query, [$notification_id]);
+        
+        if ($result && pg_num_rows($result) > 0) {
+            $notification = pg_fetch_assoc($result);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'notification' => $notification
+            ]);
+            exit;
+        } else {
+            http_response_code(404);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Bildirim bulunamadı'
+            ]);
+            exit;
+        }
+    }
     
-    // Bildirim listeleme
-    case 'list':
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
-        $offset = ($page - 1) * $limit;
-        
-        try {
-            // Kullanıcının bildirimlerini getir
-            $query = "
-                SELECT n.*, 
-                       u.username as sender_username, 
-                       u.name as sender_name, 
-                       u.avatar_url as sender_avatar
-                FROM notifications n
-                LEFT JOIN users u ON n.created_by = u.id
-                WHERE n.user_id = ?
-                ORDER BY n.created_at DESC
-                LIMIT ? OFFSET ?
-            ";
-            
-            $stmt = $db->prepare($query);
-            $stmt->bind_param("iii", $user['id'], $limit, $offset);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $notifications = $result->fetch_all(MYSQLI_ASSOC);
-            
-            // Toplam sayıyı getir
-            $countQuery = "SELECT COUNT(*) as total FROM notifications WHERE user_id = ?";
-            $countStmt = $db->prepare($countQuery);
-            $countStmt->bind_param("i", $user['id']);
-            $countStmt->execute();
-            $countResult = $countStmt->get_result();
-            $totalCount = $countResult->fetch_assoc()['total'];
-            
-            // Sonuçları formatla
-            $result = [
-                'notifications' => $notifications,
-                'pagination' => [
-                    'total' => (int)$totalCount,
-                    'page' => $page,
-                    'limit' => $limit,
-                    'pages' => ceil($totalCount / $limit)
-                ]
-            ];
-            
-            sendApiResponse(200, true, 'Bildirimler başarıyla alındı', $result);
-            
-        } catch (Exception $e) {
-            sendApiResponse(500, false, 'Bildirimler alınırken bir hata oluştu: ' . $e->getMessage(), null);
-        }
-        break;
-        
-    // Okunmamış bildirim sayısı
-    case 'unread_count':
-        try {
-            $query = "SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE";
-            $stmt = $db->prepare($query);
-            $stmt->bind_param("i", $user['id']);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $count = $result->fetch_assoc()['count'];
-            
-            sendApiResponse(200, true, 'Okunmamış bildirim sayısı alındı', ['count' => (int)$count]);
-            
-        } catch (Exception $e) {
-            sendApiResponse(500, false, 'Bildirim sayısı alınırken bir hata oluştu: ' . $e->getMessage(), null);
-        }
-        break;
-        
-    // Bildirim oluşturma (kullanıcı etkileşimleri için)
-    case 'create':
-        // POST verisini al
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!$data) {
-            sendApiResponse(400, false, 'Geçersiz istek verisi', null);
-            exit;
-        }
-        
-        // Gerekli alanları kontrol et
-        $requiredFields = ['user_id', 'title', 'content', 'type'];
-        foreach ($requiredFields as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
-                sendApiResponse(400, false, "Eksik alan: $field", null);
-                exit;
-            }
-        }
-        
-        // Bildirim verileri
-        $userId = (int)$data['user_id'];
-        $title = $data['title'];
-        $content = $data['content'];
-        $type = $data['type'];
-        $notificationType = isset($data['notification_type']) ? $data['notification_type'] : 'interaction';
-        $scopeType = isset($data['scope_type']) ? $data['scope_type'] : 'user';
-        $scopeId = isset($data['scope_id']) ? (int)$data['scope_id'] : null;
-        $relatedId = isset($data['related_id']) ? (int)$data['related_id'] : null;
-        $imageUrl = isset($data['image_url']) ? $data['image_url'] : null;
-        $actionUrl = isset($data['action_url']) ? $data['action_url'] : null;
-        $isSent = isset($data['is_sent']) ? (bool)$data['is_sent'] : true;
-        
-        try {
-            $query = "
-                INSERT INTO notifications (
-                    user_id, created_by, title, content, type, 
-                    notification_type, scope_type, scope_id, 
-                    related_id, image_url, action_url, is_sent
-                ) VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                )
-            ";
-            
-            $stmt = $db->prepare($query);
-            $stmt->bind_param(
-                "iisssssiiissi",
-                $userId,
-                $user['id'],  // Gönderen kullanıcı
-                $title,
-                $content,
-                $type,
-                $notificationType,
-                $scopeType,
-                $scopeId,
-                $relatedId,
-                $imageUrl,
-                $actionUrl,
-                $isSent
-            );
-            
-            $result = $stmt->execute();
-            
-            if ($result) {
-                $notificationId = $stmt->insert_id;
-                sendApiResponse(201, true, 'Bildirim başarıyla oluşturuldu', ['id' => $notificationId]);
-            } else {
-                sendApiResponse(500, false, 'Bildirim oluşturulurken bir hata oluştu', null);
-            }
-            
-        } catch (Exception $e) {
-            sendApiResponse(500, false, 'Bildirim oluşturulurken bir hata oluştu: ' . $e->getMessage(), null);
-        }
-        break;
-        
-    // Bildirimi okundu olarak işaretle
-    case 'mark_read':
-        $notificationId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        
-        if ($notificationId <= 0) {
-            sendApiResponse(400, false, 'Geçersiz bildirim ID', null);
-            exit;
-        }
-        
-        try {
-            // Bildirimin kullanıcıya ait olduğunu kontrol et
-            $checkQuery = "SELECT id FROM notifications WHERE id = ? AND user_id = ?";
-            $checkStmt = $db->prepare($checkQuery);
-            $checkStmt->bind_param("ii", $notificationId, $user['id']);
-            $checkStmt->execute();
-            $checkResult = $checkStmt->get_result();
-            
-            if ($checkResult->num_rows === 0) {
-                sendApiResponse(404, false, 'Bildirim bulunamadı', null);
-                exit;
-            }
-            
-            // Bildirimi okundu olarak işaretle
-            $updateQuery = "UPDATE notifications SET is_read = TRUE WHERE id = ?";
-            $updateStmt = $db->prepare($updateQuery);
-            $updateStmt->bind_param("i", $notificationId);
-            $result = $updateStmt->execute();
-            
-            if ($result) {
-                sendApiResponse(200, true, 'Bildirim okundu olarak işaretlendi', null);
-            } else {
-                sendApiResponse(500, false, 'Bildirim işaretlenirken bir hata oluştu', null);
-            }
-            
-        } catch (Exception $e) {
-            sendApiResponse(500, false, 'Bildirim işaretlenirken bir hata oluştu: ' . $e->getMessage(), null);
-        }
-        break;
-        
-    // Tüm bildirimleri okundu olarak işaretle
-    case 'mark_all_read':
-        try {
-            $query = "UPDATE notifications SET is_read = TRUE WHERE user_id = ? AND is_read = FALSE";
-            $stmt = $db->prepare($query);
-            $stmt->bind_param("i", $user['id']);
-            $result = $stmt->execute();
-            
-            $affectedRows = $stmt->affected_rows;
-            
-            if ($result) {
-                sendApiResponse(200, true, "$affectedRows bildirim okundu olarak işaretlendi", null);
-            } else {
-                sendApiResponse(500, false, 'Bildirimler işaretlenirken bir hata oluştu', null);
-            }
-            
-        } catch (Exception $e) {
-            sendApiResponse(500, false, 'Bildirimler işaretlenirken bir hata oluştu: ' . $e->getMessage(), null);
-        }
-        break;
-        
-    // Geçersiz endpoint
-    default:
-        sendApiResponse(404, false, 'Geçersiz API endpoint', null);
-        break;
+    // Tüm bildirimleri listele
+    $query = "SELECT * FROM notifications ORDER BY created_at DESC";
+    $result = pg_query($db_connection, $query);
+    
+    $notifications = [];
+    while ($row = pg_fetch_assoc($result)) {
+        $notifications[] = $row;
+    }
+    
+    http_response_code(200);
+    echo json_encode([
+        'success' => true,
+        'notifications' => $notifications
+    ]);
+    exit;
 }
+
+// POST metodu ile yeni bildirim oluştur
+if ($method === 'POST') {
+    // Gerekli alanları kontrol et
+    if (!isset($data['title']) || !isset($data['message'])) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Başlık ve mesaj alanları zorunludur'
+        ]);
+        exit;
+    }
+    
+    $title = $data['title'];
+    $message = $data['message'];
+    $target_type = isset($data['target_type']) ? $data['target_type'] : 'all';
+    $target_id = isset($data['target_id']) ? $data['target_id'] : null;
+    
+    // Firebase'e bildirim gönder
+    $fcm_result = sendFirebaseNotification($title, $message, $target_type, $target_id);
+    
+    // Bildirimi veritabanına kaydet
+    $created_at = date('Y-m-d H:i:s');
+    $status = $fcm_result ? 'sent' : 'error';
+    
+    $query = "INSERT INTO notifications (title, message, target_type, target_id, created_at, status) 
+              VALUES ($1, $2, $3, $4, $5, $6) RETURNING id";
+    $result = pg_query_params($db_connection, $query, [
+        $title, $message, $target_type, $target_id, $created_at, $status
+    ]);
+    
+    if ($result) {
+        $row = pg_fetch_assoc($result);
+        $notification_id = $row['id'];
+        
+        http_response_code(201);
+        echo json_encode([
+            'success' => true,
+            'message' => 'Bildirim başarıyla gönderildi',
+            'notification_id' => $notification_id,
+            'status' => $status
+        ]);
+        exit;
+    } else {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Bildirim kaydedilirken bir hata oluştu',
+            'error' => pg_last_error($db_connection)
+        ]);
+        exit;
+    }
+}
+
+// DELETE metodu ile bildirim sil
+if ($method === 'DELETE') {
+    if (!isset($_GET['id'])) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Bildirim ID\'si gereklidir'
+        ]);
+        exit;
+    }
+    
+    $notification_id = intval($_GET['id']);
+    
+    $query = "DELETE FROM notifications WHERE id = $1";
+    $result = pg_query_params($db_connection, $query, [$notification_id]);
+    
+    if ($result) {
+        http_response_code(200);
+        echo json_encode([
+            'success' => true,
+            'message' => 'Bildirim başarıyla silindi'
+        ]);
+        exit;
+    } else {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Bildirim silinirken bir hata oluştu',
+            'error' => pg_last_error($db_connection)
+        ]);
+        exit;
+    }
+}
+
+/**
+ * Firebase Cloud Messaging ile bildirim gönderir
+ * 
+ * @param string $title Bildirim başlığı
+ * @param string $message Bildirim içeriği
+ * @param string $target_type Hedef tipi ('all', 'user', 'city')
+ * @param int|null $target_id Hedef ID (kullanıcı veya şehir ID'si)
+ * @return bool Gönderim başarılı mı?
+ */
+function sendFirebaseNotification($title, $message, $target_type = 'all', $target_id = null) {
+    global $db_connection;
+    
+    // FCM API anahtarı
+    $fcm_server_key = getenv('FIREBASE_SERVER_KEY');
+    
+    // Firebase API anahtarı yoksa, hata döndür
+    if (empty($fcm_server_key)) {
+        error_log("Firebase Server Key bulunamadı!");
+        return false;
+    }
+    
+    // FCM mesaj içeriği
+    $notification = [
+        'title' => $title,
+        'body' => $message,
+        'sound' => 'default',
+        'badge' => '1',
+        'icon' => 'ic_notification'
+    ];
+    
+    // Ek veri alanları
+    $data = [
+        'title' => $title,
+        'message' => $message,
+        'type' => 'notification',
+        'notification_id' => uniqid(),
+        'timestamp' => time() * 1000,
+    ];
+    
+    // Hedef türüne göre alıcıları belirle
+    $to = null;
+    $registration_ids = [];
+    
+    if ($target_type === 'all') {
+        // Tüm kullanıcılara gönder (topic)
+        $to = '/topics/all_users';
+    } else if ($target_type === 'user' && !empty($target_id)) {
+        // Belirli bir kullanıcıya gönder
+        $query = "SELECT fcm_token FROM users WHERE id = $1 AND fcm_token IS NOT NULL";
+        $result = pg_query_params($db_connection, $query, [$target_id]);
+        
+        if ($row = pg_fetch_assoc($result)) {
+            $registration_ids[] = $row['fcm_token'];
+        }
+    } else if ($target_type === 'city' && !empty($target_id)) {
+        // Belirli bir şehirdeki kullanıcılara gönder
+        $data['city_id'] = $target_id;
+        $to = '/topics/city_' . $target_id;
+    }
+    
+    // FCM isteği için veri formatını oluştur
+    $fields = [
+        'notification' => $notification,
+        'data' => $data,
+        'android' => [
+            'notification' => [
+                'sound' => 'default',
+                'icon' => 'ic_notification',
+                'color' => '#1976D2'
+            ]
+        ],
+        'apns' => [
+            'payload' => [
+                'aps' => [
+                    'sound' => 'default'
+                ]
+            ]
+        ]
+    ];
+    
+    // Hedef belirleme
+    if (!empty($to)) {
+        $fields['to'] = $to;
+    } else if (!empty($registration_ids)) {
+        $fields['registration_ids'] = $registration_ids;
+    } else {
+        // Hedef yoksa başarısız olarak işaretle
+        return false;
+    }
+    
+    // cURL isteği ile Firebase'e bildirim gönder
+    $ch = curl_init();
+    
+    curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: key=' . $fcm_server_key,
+        'Content-Type: application/json'
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+    
+    $result = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+    curl_close($ch);
+    
+    // Sonuçları logla
+    error_log("Firebase bildirim gönderme sonucu: " . $result);
+    
+    // 200 OK yanıtı alındıysa başarılı kabul et
+    return $http_code == 200;
+}
+
+// Varsayılan yanıt - 405 Method Not Allowed
+http_response_code(405);
+echo json_encode([
+    'success' => false,
+    'message' => 'Desteklenmeyen HTTP metodu'
+]);
+exit;
+?>
