@@ -139,7 +139,7 @@ try {
                 (SELECT COUNT(*) FROM posts WHERE category_id = c.id) as post_count,
                 (SELECT COUNT(*) FROM surveys WHERE category_id = c.id) as survey_count
               FROM categories c
-              ORDER BY c.display_order ASC, c.name ASC";
+              ORDER BY c.name ASC";
     
     $pgresult = pg_query($conn, $query);
     
