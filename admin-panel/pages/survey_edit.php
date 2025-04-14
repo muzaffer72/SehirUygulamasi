@@ -17,26 +17,20 @@ $error_message = "";
 try {
     $query = "SELECT * FROM surveys WHERE id = ?";
     $stmt = $db->prepare($query);
-    $stmt->bind_param("i", $survey_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $pgresult = pg_query_params($conn, "SELECT * FROM surveys WHERE id = $1", array($survey_id));
     
-    if ($result->num_rows === 0) {
+    if (pg_num_rows($pgresult) === 0) {
         echo '<div class="alert alert-danger">Anket bulunamadı.</div>';
         echo '<a href="?page=surveys" class="btn btn-primary">Anket Listesine Dön</a>';
         exit;
     }
     
-    $survey = $result->fetch_assoc();
+    $survey = pg_fetch_assoc($pgresult);
     
     // Anket seçeneklerini getir
-    $options_query = "SELECT * FROM survey_options WHERE survey_id = ? ORDER BY id ASC";
-    $options_stmt = $db->prepare($options_query);
-    $options_stmt->bind_param("i", $survey_id);
-    $options_stmt->execute();
-    $options_result = $options_stmt->get_result();
+    $options_result = pg_query_params($conn, "SELECT * FROM survey_options WHERE survey_id = $1 ORDER BY id ASC", array($survey_id));
     $options = [];
-    while ($option = $options_result->fetch_assoc()) {
+    while ($option = pg_fetch_assoc($options_result)) {
         $options[] = $option;
     }
 } catch (Exception $e) {
@@ -141,21 +135,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_survey'])) {
             $success_message = "Anket başarıyla güncellendi.";
             
             // Güncel anket bilgilerini al
-            $query = "SELECT * FROM surveys WHERE id = ?";
-            $stmt = $db->prepare($query);
-            $stmt->bind_param("i", $survey_id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $survey = $result->fetch_assoc();
+            $pgresult = pg_query_params($conn, "SELECT * FROM surveys WHERE id = $1", array($survey_id));
+            $survey = pg_fetch_assoc($pgresult);
             
             // Güncel anket seçeneklerini al
-            $options_query = "SELECT * FROM survey_options WHERE survey_id = ? ORDER BY id ASC";
-            $options_stmt = $db->prepare($options_query);
-            $options_stmt->bind_param("i", $survey_id);
-            $options_stmt->execute();
-            $options_result = $options_stmt->get_result();
+            $options_result = pg_query_params($conn, "SELECT * FROM survey_options WHERE survey_id = $1 ORDER BY id ASC", array($survey_id));
             $options = [];
-            while ($option = $options_result->fetch_assoc()) {
+            while ($option = pg_fetch_assoc($options_result)) {
                 $options[] = $option;
             }
         } catch (Exception $e) {
@@ -168,12 +154,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_survey'])) {
 
 // Şehirleri getir
 try {
-    $query = "SELECT id, name FROM cities ORDER BY name ASC";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $pgresult = pg_query($conn, "SELECT id, name FROM cities ORDER BY name ASC");
     $cities = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = pg_fetch_assoc($pgresult)) {
         $cities[] = $row;
     }
 } catch (Exception $e) {
@@ -183,15 +166,12 @@ try {
 
 // İlçeleri getir
 try {
-    $query = "SELECT d.id, d.name, d.city_id, c.name as city_name 
+    $pgresult = pg_query($conn, "SELECT d.id, d.name, d.city_id, c.name as city_name 
               FROM districts d 
               LEFT JOIN cities c ON d.city_id = c.id 
-              ORDER BY c.name ASC, d.name ASC";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
+              ORDER BY c.name ASC, d.name ASC");
     $districts = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = pg_fetch_assoc($pgresult)) {
         $districts[] = $row;
     }
 } catch (Exception $e) {
@@ -201,12 +181,9 @@ try {
 
 // Kategorileri getir
 try {
-    $query = "SELECT id, name FROM categories ORDER BY name ASC";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $pgresult = pg_query($conn, "SELECT id, name FROM categories ORDER BY name ASC");
     $categories = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = pg_fetch_assoc($pgresult)) {
         $categories[] = $row;
     }
 } catch (Exception $e) {

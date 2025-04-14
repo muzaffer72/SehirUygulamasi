@@ -162,12 +162,10 @@ if (isset($_GET['action']) && $_GET['action'] == 'edit' && $category_id > 0) {
     try {
         $query = "SELECT * FROM categories WHERE id = ?";
         $stmt = $db->prepare($query);
-        $stmt->bind_param("i", $category_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $result = pg_query_params($conn, "SELECT * FROM categories WHERE id = $1", array($category_id));
         
-        if ($result->num_rows > 0) {
-            $edit_category = $result->fetch_assoc();
+        if (pg_num_rows($result) > 0) {
+            $edit_category = pg_fetch_assoc($result);
         } else {
             $error_message = "Kategori bulunamadı.";
         }
