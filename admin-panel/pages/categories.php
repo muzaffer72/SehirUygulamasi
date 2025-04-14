@@ -177,8 +177,9 @@ if (isset($_GET['action']) && $_GET['action'] == 'edit' && $category_id > 0) {
 // Son eklenen kategori ID'sini al
 $max_order = 0;
 foreach ($categories as $cat) {
-    if ($cat['display_order'] > $max_order) {
-        $max_order = $cat['display_order'];
+    $display_order = isset($cat['display_order']) ? intval($cat['display_order']) : 0;
+    if ($display_order > $max_order) {
+        $max_order = $display_order;
     }
 }
 ?>
@@ -313,9 +314,9 @@ foreach ($categories as $cat) {
                                     <td><?php echo htmlspecialchars($category['description'] ?? ''); ?></td>
                                     <td class="text-center"><?php echo intval($category['post_count']); ?></td>
                                     <td class="text-center"><?php echo intval($category['survey_count']); ?></td>
-                                    <td class="text-center"><?php echo intval($category['display_order']); ?></td>
+                                    <td class="text-center"><?php echo isset($category['display_order']) ? intval($category['display_order']) : 0; ?></td>
                                     <td class="text-center">
-                                        <?php if ($category['is_active']): ?>
+                                        <?php if (isset($category['is_active']) && $category['is_active']): ?>
                                             <span class="badge bg-success">Aktif</span>
                                         <?php else: ?>
                                             <span class="badge bg-danger">Pasif</span>
