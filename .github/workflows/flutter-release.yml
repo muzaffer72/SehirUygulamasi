@@ -33,7 +33,7 @@ jobs:
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
       
       - name: Upload Artifacts to Release
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v1
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
