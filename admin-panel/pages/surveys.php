@@ -19,7 +19,12 @@ if (isset($_GET['view_survey'])) {
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Anket Detayları</span>
-                <a href="?page=surveys" class="btn btn-sm btn-outline-secondary">Geri Dön</a>
+                <div>
+                    <a href="?page=survey_edit&id=<?php echo $survey_id; ?>" class="btn btn-sm btn-primary me-1">
+                        <i class="bi bi-pencil"></i> Düzenle
+                    </a>
+                    <a href="?page=surveys" class="btn btn-sm btn-outline-secondary">Geri Dön</a>
+                </div>
             </div>
             <div class="card-body">
                 <h4><?= htmlspecialchars($survey['title']) ?></h4>
@@ -492,7 +497,7 @@ if (isset($_GET['add_survey'])) {
                                         <a href="?page=surveys&view_survey=<?= $survey['id'] ?>" class="btn btn-outline-primary">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="?page=surveys&edit_survey=<?= $survey['id'] ?>" class="btn btn-outline-secondary">
+                                        <a href="?page=survey_edit&id=<?= $survey['id'] ?>" class="btn btn-outline-secondary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                     </div>

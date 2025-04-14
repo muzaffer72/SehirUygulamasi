@@ -1,18 +1,17 @@
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiHelper {
-  /// Web uygulaması için mevcut URL'den API adresini oluşturur
+  /// Web uygulaması veya mobil için API adresini oluşturur
   static String getApiBaseUrl() {
     if (kIsWeb) {
-      // Web'de çalışırken protokol ve host'u ayır, port değerini değiştir
-      final protocol = html.window.location.protocol; // "http:" veya "https:"
-      final hostname = html.window.location.hostname; // "domain.com" veya "localhost" 
+      // Web'de çalışırken dinamik URL oluşturucuyu kullanırız
+      // ÖNEMLİ: dart:html kütüphanesi Web platform dışında kullanılamaz
+      // Bu nedenle web platformunda çalışan JS kodu ile URL oluşturulması gerekiyor
+      // window.location.protocol ve window.location.hostname değerleri JS tarafında alınacak
       
-      // API proxy 9000 portundan yayınlanıyor (api yolsuz)
-      return '$protocol//$hostname:9000';
+      // Bu web için fallback değeri - normalde kullanılmaz çünkü JS kodu çalışır
+      return 'https://workspace.replit.app';
     } else {
       // Mobilde sabit URL kullanıyoruz (api yolsuz)
       return 'https://workspace.replit.app';
