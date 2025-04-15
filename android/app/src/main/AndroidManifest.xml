@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.sikayetvar.sikayet_var">
+    package="belediye.iletisim.merkezi">
     
     <!-- Internet permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -22,7 +22,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:label="ŞikayetVar"
+        android:label="Belediye İletişim"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
