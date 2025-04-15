@@ -1,0 +1,115 @@
+1. KULLANICI SİSTEMİ VE ÜYELİK:
+
+    Kayıt ve Giriş:
+
+        E-posta ve şifre temelinde kayıt/giriş.
+
+        Kullanıcılara ilk girişte veya kayıt sırasında, dinamik olarak veritabanından çekilecek şehir ve ilçe seçenekleri sunulur.
+
+        Şehir ve ilçe bilgileri kullanıcı profilinde görüntülenir ve daha sonra güncellenebilir.
+
+        Kullanıcılara anonim paylaşım seçeneği sunularak “Gizli Ad” belirlemeleri sağlanır.
+
+        Profil düzenleme: Avatar, biyografi, iletişim bilgileri gibi alanlar bulunur.
+
+──────────────────────────── 2. İÇERİK OLUŞTURMA VE GÖNDERİ SİSTEMİ:
+
+    Gönderi Türleri:
+
+        Genel Paylaşım: Herhangi bir konu, öneri veya yorum paylaşımı.
+
+        Sorun Bildirimi: Belediyeler/Valilik için özel sorunların bildirimi.
+
+            Bu tip gönderilerde, kullanıcı gönderiyi “Çözüm Bekliyor” olarak yayınlar; sonrasında kullanıcı isteğe bağlı olarak “Çözüldü” durumunu işaretleyebilir.
+
+    Gönderinin Bileşenleri:
+
+        Başlık, açıklama metni, kategori ve alt kategori seçimi
+
+        İsteğe bağlı görsel ekleme (fotoğraf veya belge)
+
+        Gönderim tipi seçimi: Sorun veya genel paylaşım
+
+        Konum bilgisi: Gönderinin yapıldığı şehir/ilçe
+
+        Zaman damgası: Gönderinin paylaşım tarihi ve gönderimden bu yana geçen gün sayısı (“15 gündür çözüm bekliyor” gibi sayaç)
+
+    Öne Çıkarma İşlevi:
+
+        Kullanıcılar, beğeni sistemine ek olarak gönderileri “öne çıkarma” seçeneğine sahiptir.
+
+        Öne çıkarılan gönderiler ana akışta üst sıralarda ve daha dikkat çekici görünecek şekilde listelenecektir.
+
+──────────────────────────── 3. ANA SAYFA TASARIMI VE ANKET BAR:
+
+    Genel Akış Tasarımı:
+
+        Twitter tarzı, temiz, sade ve modern bir akış görünümü.
+
+        Her gönderi, kart şeklinde tasarlanır; üst kısımda kullanıcı adı (veya “Gizli Kullanıcı”), gönderim tarihi, konum (şehir/ilçe) bilgisi; alt kısımda beğeni, yorum, yanıt ve öne çıkarma butonları yer alır.
+
+        Akış, kullanıcıya “en yeni” veya “popüler” gönderiler şeklinde sunulabilir; filtreleme seçenekleri (kategori, çözüm durumu, şehir/ilçe) kullanıcı tarafından seçilebilir.
+
+    Üst Bar (Header):
+
+        Uygulamanın en üstünde sabit bir bar (header) bulunur.
+
+        Bu bar içerisinde, uygulamanın logosu, ana başlık ve/veya temel navigasyon ögeleri (bildirim, profil, ayarlar gibi) yer alabilir.
+
+        Barın altında, yatay kaydırılabilir veya otomatik sağa-sola kayan bir anket bölümü bulunur.
+
+    Anket Özellikleri:
+
+        Anketler, kullanıcıların güncel konularda fikirlerini belirtmesi için yer alır.
+
+        Örnek anket: “Bir sonraki seçimde mevcut belediyeye oy verecek misiniz?”
+
+        Anket sonuçları dinamik olarak hesaplanır; örneğin, çoğunluk hayır cevabı alınmışsa sistem “Mevcut belediye için olumsuz sonuç” değerlendirmesine gider; bu durum anket kartının altında yer alan bir bilgi butonunda (info) “Bu anket belediye için kritik eşiğe ulaştı” şeklinde gösterilir.
+
+        Olumlu sonuç alınırsa (örneğin, çoğunluk evet) benzer şekilde olumlu bir mesaj ekranda görüntülenir.
+
+        Anketler, otomatik kaydırma veya kullanıcı manuel kaydırması özelliğine sahip olacak şekilde, responsive ve duyarlı tasarlanır.
+
+──────────────────────────── 4. İL/ŞEHİR VE İLÇE PROFİL SAYFALARI:
+
+    Genel Bilgiler:
+
+        Her şehir ve ilçe için özel profil sayfası bulunur.
+
+        Sayfa, şehrin veya ilçenin adı, belediyenin logosu, iletişim bilgileri (telefon, e-posta, web sitesi) ve kısa bir tanıtım metni içerir.
+
+        Belediyenin hangi siyasi parti tarafından yönetildiği bilgisi; partinin logosu ve adı küçük ölçekte gösterilir.
+
+    Sorun Çözüm İstatistikleri:
+
+        Belediyenin profilinde, bildirilen sorunların "çözülen" ve "çözülmeyen" oranını gösteren puanlama sistemi yer alır.
+
+        Bu oranlar, görsel grafikler veya yüzdelik oranlar şeklinde sunulur; kullanıcılar belediyenin sorun çözme performansını görsel olarak değerlendirebilir.
+
+──────────────────────────── 5. NAVİGASYON VE EK SAYFALAR:
+
+    Ana Navigasyon Menüsü:
+
+        Akış (Ana sayfa, gönderilerin akış şeklinde listelenmesi)
+
+        Yeni Gönderi Oluşturma
+
+        Keşfet / Filtre (kategori, ilçe, şehir, çözüm durumu filtreleme)
+
+        İl/Şehir Değiştirici (Kullanıcı bulunduğu şehir ve seçtiği ilçe arasında geçiş; “Adana / Çukurova” ↔ “Adana / Seyhan” gibi)
+
+        Profilim
+
+        Ayarlar
+
+──────────────────────────── 6. EK ETKİLEŞİM VE İLETİŞİM ÖZELLİKLERİ:
+
+    Yorum ve Yanıt Sistemi:
+
+        Her gönderiye yorum yapılabilir, yorumlara alt yorum verilerek tartışma derinleştirilebilir.
+
+        Beğeni, paylaşım ve “öne çıkarma” gibi etkileşim butonları eklenir.
+
+    Bildirim Sistemi:
+
+        Gönderiye yorum yapıldığında, gönderiyi öne çıkarma sonucu elde edildiğinde veya anket sonuçları güncellendiğinde anlık bildirim gönderilir.

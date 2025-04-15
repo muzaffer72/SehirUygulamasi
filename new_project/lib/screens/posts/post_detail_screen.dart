@@ -1,43 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:belediye_iletisim_merkezi/models/comment.dart';
 import 'package:belediye_iletisim_merkezi/models/post.dart';
-import 'package:belediye_iletisim_merkezi/models/user.dart';
-import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
-import 'package:belediye_iletisim_merkezi/providers/current_user_provider.dart';
+import 'package:belediye_iletisim_merkezi/models/comment.dart';
 import 'package:belediye_iletisim_merkezi/services/api_service.dart';
-import 'package:timeago/timeago.dart' as timeago;
-import 'package:belediye_iletisim_merkezi/providers/user_provider.dart';
-import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
-import 'package:belediye_iletisim_merkezi/widgets/satisfaction_rating_widget.dart';
-import 'package:belediye_iletisim_merkezi/widgets/before_after_widget.dart';
-import 'package:belediye_iletisim_merkezi/models/before_after_record.dart';
+import 'package:belediye_iletisim_merkezi/widgets/app_shimmer.dart';
+import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
+import 'package:belediye_iletisim_merkezi/widgets/comment_card.dart';
 
-class PostDetailScreen extends ConsumerStatefulWidget {
-  final Post post;
+class PostDetailScreen extends StatefulWidget {
+  final String id;
   
   const PostDetailScreen({
     Key? key,
-    required this.post,
+    required this.id,
   }) : super(key: key);
 
   @override
-  ConsumerState<PostDetailScreen> createState() => _PostDetailScreenState();
+  State<PostDetailScreen> createState() => _PostDetailScreenState();
 }
 
-class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
+class _PostDetailScreenState extends State<PostDetailScreen> {
   final ApiService _apiService = ApiService();
   final TextEditingController _commentController = TextEditingController();
-  
-  bool _isLoadingComments = false;
-  bool _isSubmittingComment = false;
-  bool _isAnonymousComment = false;
-  
+  bool _isLoading = true;
+  bool _isLoadingComments = true;
+  bool _isSendingComment = false;
+  Post? _post;
   List<Comment> _comments = [];
   
   @override
   void initState() {
     super.initState();
+    _loadPost();
     _loadComments();
   }
   
@@ -47,759 +40,425 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     super.dispose();
   }
   
+  Future<void> _loadPost() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final post = await _apiService.getPostById(widget.id);
+      setState(() {
+        _post = post;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gönderi yüklenirken bir hata oluştu: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+  
   Future<void> _loadComments() async {
     setState(() {
       _isLoadingComments = true;
     });
     
     try {
-      final comments = await _apiService.getCommentsByPostId(widget.post.id);
-      
+      final comments = await _apiService.getCommentsByPostId(widget.id);
       setState(() {
         _comments = comments;
-      });
-    } catch (e) {
-      _showErrorSnackBar('Yorumlar yüklenirken bir hata oluştu: $e');
-    } finally {
-      setState(() {
         _isLoadingComments = false;
       });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Yorumlar yüklenirken bir hata oluştu: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+        setState(() {
+          _isLoadingComments = false;
+        });
+      }
     }
   }
   
   Future<void> _submitComment() async {
-    final content = _commentController.text.trim();
-    
-    if (content.isEmpty) {
-      return;
-    }
+    if (_commentController.text.trim().isEmpty) return;
     
     setState(() {
-      _isSubmittingComment = true;
+      _isSendingComment = true;
     });
     
     try {
       final comment = await _apiService.addComment(
-        widget.post.id,
-        content,
-        isAnonymous: _isAnonymousComment,
+        widget.id,
+        _commentController.text.trim(),
       );
       
       setState(() {
-        _comments = [comment, ..._comments];
-        _commentController.clear();
-        _isAnonymousComment = false;
+        _comments.insert(0, comment);
+        _isSendingComment = false;
       });
       
-      FocusScope.of(context).unfocus();
+      _commentController.clear();
+      
+      if (_post != null) {
+        setState(() {
+          _post = _post!.copyWith(
+            commentCount: _post!.commentCount + 1,
+          );
+        });
+      }
     } catch (e) {
-      _showErrorSnackBar('Yorum gönderilirken bir hata oluştu: $e');
-    } finally {
-      setState(() {
-        _isSubmittingComment = false;
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Yorum gönderilirken bir hata oluştu: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+        setState(() {
+          _isSendingComment = false;
+        });
+      }
     }
   }
   
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-    );
+  Future<void> _submitSatisfactionRating(int rating) async {
+    try {
+      await _apiService.submitSatisfactionRating(widget.id, rating);
+      
+      if (_post != null) {
+        setState(() {
+          _post = _post!.copyWith(
+            satisfactionRating: rating,
+          );
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Memnuniyet dereceniz kaydedildi, teşekkürler!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Memnuniyet derecesi gönderilirken bir hata oluştu: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
   
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(currentUserProvider).value;
-    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gönderi Detayı'),
+        title: Text(_isLoading ? 'Gönderi Detayı' : _post?.title ?? 'Gönderi Detayı'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_outlined),
+            icon: const Icon(Icons.share),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Paylaşım özelliği yakında eklenecek')),
-              );
+              // Paylaşma işlemi
             },
           ),
         ],
       ),
       body: Column(
         children: [
-          // Post content
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Post type and status
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: widget.post.type == PostType.problem
-                              ? Colors.red.withOpacity(0.1)
-                              : Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              widget.post.type == PostType.problem
-                                  ? Icons.warning_rounded
-                                  : Icons.lightbulb_outline,
-                              color: widget.post.type == PostType.problem
-                                  ? Colors.red
-                                  : Colors.green,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              widget.post.type == PostType.problem
-                                  ? 'Şikayet'
-                                  : 'Öneri',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                color: widget.post.type == PostType.problem
-                                    ? Colors.red
-                                    : Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      
-                      if (widget.post.status != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(widget.post.status!).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _getStatusIcon(widget.post.status!),
-                                color: _getStatusColor(widget.post.status!),
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                _getStatusText(widget.post.status!),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  color: _getStatusColor(widget.post.status!),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Post title
-                  Text(
-                    widget.post.title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+            child: _isLoading
+                ? _buildLoadingState()
+                : _post == null
+                    ? _buildErrorState()
+                    : _buildPostDetails(),
+          ),
+          _buildCommentBox(),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildLoadingState() {
+    return const Center(
+      child: AppShimmer(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 30,
+            ),
+            SizedBox(height: 16),
+            SizedBox(height: 20, width: 150),
+            SizedBox(height: 8),
+            SizedBox(height: 16, width: 250),
+            SizedBox(height: 24),
+            SizedBox(height: 200, width: double.infinity),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 80,
+            color: Colors.red,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Gönderi yüklenemedi',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.',
+            style: TextStyle(
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _loadPost,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Tekrar Dene'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildPostDetails() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Gönderi kartı
+          PostCard(
+            post: _post!,
+            isDetailView: true,
+            onLike: () async {
+              try {
+                await _apiService.likePost(_post!.id);
+                setState(() {
+                  _post = _post!.copyWith(
+                    likes: _post!.likes + 1,
+                  );
+                });
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Beğeni gönderilirken bir hata oluştu: $e'),
+                      backgroundColor: Theme.of(context).colorScheme.error,
                     ),
+                  );
+                }
+              }
+            },
+            onComment: () {
+              // Yorum giriş alanına odaklan
+              FocusScope.of(context).requestFocus(FocusNode());
+            },
+            onShare: () {
+              // Paylaşma işlemi
+            },
+          ),
+          
+          // Çözüm memnuniyeti (sadece çözülen gönderiler için)
+          if (_post!.status == PostStatus.solved && _post!.satisfactionRating == 0)
+            _buildSatisfactionRatingWidget(),
+          
+          const Divider(),
+          
+          // Yorumlar başlığı
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Yorumlar (${_post!.commentCount})',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // Post author and location
-                  Row(
-                    children: [
-                      // Author
-                      FutureBuilder<User>(
-                        future: _apiService.getUserById(widget.post.userId),
-                        builder: (context, snapshot) {
-                          final String authorName = widget.post.isAnonymous
-                              ? 'Anonim'
-                              : snapshot.hasData
-                                  ? snapshot.data!.name
-                                  : 'Yükleniyor...';
-                          
-                          return Text(
-                            authorName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      
-                      // Created time
-                      Text(
-                        timeago.format(widget.post.createdAt, locale: 'tr'),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 13,
-                        ),
-                      ),
-                      
-                      if (widget.post.cityId != null) ...[
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.location_on,
-                          size: 14,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(width: 2),
-                        
-                        // Location
-                        FutureBuilder(
-                          future: Future.wait([
-                            _apiService.getCityById(widget.post.cityId!),
-                            if (widget.post.districtId != null)
-                              _apiService.getDistrictById(widget.post.districtId!)
-                            else
-                              Future.value(null),
-                          ]),
-                          builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-                            if (!snapshot.hasData) {
-                              return Text(
-                                'Yükleniyor...',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[600],
-                                ),
-                              );
-                            }
-                            
-                            final city = snapshot.data![0];
-                            final district = snapshot.data!.length > 1 
-                                ? snapshot.data![1]
-                                : null;
-                            
-                            final locationText = district != null
-                                ? '${district.name}, ${city.name}'
-                                : city.name;
-                            
-                            return Text(
-                              locationText,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[600],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Post content
-                  Text(
-                    widget.post.content,
-                    style: const TextStyle(
-                      fontSize: 16,
+                ),
+                if (_isLoadingComments)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // Post images
-                  if (widget.post.imageUrls != null && widget.post.imageUrls!.isNotEmpty) ...[
-                    SizedBox(
-                      height: 200,
-                      child: PageView.builder(
-                        itemCount: widget.post.imageUrls!.length,
-                        itemBuilder: (context, index) {
-                          return InkWell(
-                            onTap: () {
-                              // TODO: Show full screen image
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                image: DecorationImage(
-                                  image: NetworkImage(widget.post.imageUrls![index]),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  
-                  // Action buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      // Like button
-                      _buildActionButton(
-                        icon: Icons.thumb_up_outlined,
-                        activeIcon: Icons.thumb_up,
-                        label: '${widget.post.likeCount}',
-                        isActive: widget.post.likeCount > 0,
-                        onPressed: () async {
-                          await _apiService.likePost(widget.post.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Gönderi beğenildi')),
-                          );
-                        },
-                      ),
-                      
-                      // Comments count
-                      _buildActionButton(
-                        icon: Icons.comment_outlined,
-                        activeIcon: Icons.comment,
-                        label: '${widget.post.commentCount}',
-                        isActive: widget.post.commentCount > 0,
-                        onPressed: () {
-                          // Scroll to comments
-                        },
-                      ),
-                      
-                      // Highlight button
-                      _buildActionButton(
-                        icon: Icons.star_outline,
-                        activeIcon: Icons.star,
-                        label: '${widget.post.highlightCount}',
-                        isActive: widget.post.highlightCount > 0,
-                        onPressed: () async {
-                          await _apiService.highlightPost(widget.post.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Gönderi öne çıkarıldı')),
-                          );
-                        },
-                      ),
-                      
-                      // Share button
-                      _buildActionButton(
-                        icon: Icons.share_outlined,
-                        activeIcon: Icons.share,
-                        label: 'Paylaş',
-                        isActive: false,
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Paylaşım özelliği yakında eklenecek')),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  
-                  // Öncesi/Sonrası kayıtları
-                  if (widget.post.isSolved) ...[
-                    const SizedBox(height: 24),
-                    BeforeAfterWidget(
-                      record: BeforeAfterRecord(
-                        id: 1,
-                        postId: int.tryParse(widget.post.id) ?? 0,
-                        beforeImage: widget.post.imageUrls?.isNotEmpty == true 
-                            ? widget.post.imageUrls!.first 
-                            : "https://via.placeholder.com/300x200?text=Öncesi",
-                        afterImage: "https://via.placeholder.com/300x200?text=Sonrası",
-                        beforeDescription: "Sorun tespit edildi",
-                        afterDescription: "Sorun çözüldü ve düzeltildi",
-                        createdAt: DateTime.now(),
-                      ),
-                    ),
-                  ],
-                  
-                  // Memnuniyet değerlendirmesi
-                  if (widget.post.isSolved) ...[
-                    const SizedBox(height: 16),
-                    SatisfactionRatingWidget(
-                      initialRating: widget.post.userSatisfactionRating,
-                      isReadOnly: widget.post.hasSatisfactionRating,
-                      onRatingChanged: (rating) async {
-                        try {
-                          await _apiService.submitSatisfactionRating(widget.post.id, rating);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Memnuniyet dereceniz kaydedildi.')),
-                          );
-                          setState(() {});
-                        } catch (e) {
-                          _showErrorSnackBar('Memnuniyet dereceniz kaydedilirken bir hata oluştu: $e');
-                        }
-                      },
-                    ),
-                  ],
-                  
-                  const Divider(height: 32),
-                  
-                  // Comments section
-                  const Text(
-                    'Yorumlar',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Comments
-                  if (_isLoadingComments)
-                    const Center(child: CircularProgressIndicator())
-                  else if (_comments.isEmpty)
-                    const Center(
-                      child: Text(
-                        'Henüz yorum yok. İlk yorumu sen yapabilirsin!',
-                        style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    )
-                  else
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _comments.length,
-                      separatorBuilder: (context, index) => const Divider(height: 24),
-                      itemBuilder: (context, index) {
-                        final comment = _comments[index];
-                        return _buildCommentWidget(comment);
-                      },
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
           
-          // Comment input
-          if (currentUser != null)
-            Container(
-              padding: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -3),
-                  ),
-                ],
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Anonymous switch
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isAnonymousComment = !_isAnonymousComment;
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(
-                        _isAnonymousComment
-                            ? Icons.visibility_off
-                            : Icons.visibility_off_outlined,
-                        color: _isAnonymousComment
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey,
-                      ),
+          // Yorumlar listesi
+          _isLoadingComments
+              ? const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: AppShimmer(
+                    child: Column(
+                      children: [
+                        SizedBox(height: 60, width: double.infinity),
+                        SizedBox(height: 8),
+                        SizedBox(height: 60, width: double.infinity),
+                        SizedBox(height: 8),
+                        SizedBox(height: 60, width: double.infinity),
+                      ],
                     ),
                   ),
-                  
-                  // Comment input
-                  Expanded(
-                    child: TextField(
-                      controller: _commentController,
-                      decoration: const InputDecoration(
-                        hintText: 'Yorumunuzu yazın...',
-                        border: InputBorder.none,
+                )
+              : _comments.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
+                        child: Text('Henüz yorum yapılmamış. İlk yorumu siz yapın!'),
                       ),
-                      minLines: 1,
-                      maxLines: 5,
-                      enabled: !_isSubmittingComment,
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _comments.length,
+                      separatorBuilder: (context, index) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final comment = _comments[index];
+                        return CommentCard(comment: comment);
+                      },
                     ),
-                  ),
-                  
-                  // Send button
-                  IconButton(
-                    icon: _isSubmittingComment
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(),
-                          )
-                        : const Icon(Icons.send),
-                    onPressed: _isSubmittingComment ? null : _submitComment,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );
   }
   
-  Widget _buildCommentWidget(Comment comment) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Comment header
-        Row(
+  Widget _buildSatisfactionRatingWidget() {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      color: Colors.blue.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Author
-            FutureBuilder<User>(
-              future: _apiService.getUserById(comment.userId),
-              builder: (context, snapshot) {
-                final String authorName = comment.isAnonymous
-                    ? 'Anonim'
-                    : snapshot.hasData
-                        ? snapshot.data!.name
-                        : 'Yükleniyor...';
-                
-                return Text(
-                  authorName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(width: 8),
-            
-            // Created time
-            Text(
-              timeago.format(comment.createdAt, locale: 'tr'),
+            const Text(
+              'Bu çözümden memnun kaldınız mı?',
               style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        
-        // Comment content
-        Text(comment.content),
-        const SizedBox(height: 8),
-        
-        // Comment actions
-        Row(
-          children: [
-            // Like button
-            InkWell(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Yorum beğenme özelliği yakında eklenecek')),
-                );
-              },
-              child: Row(
-                children: [
-                  Icon(
-                    comment.likeCount > 0
-                        ? Icons.thumb_up
-                        : Icons.thumb_up_outlined,
-                    size: 16,
-                    color: comment.likeCount > 0
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[600],
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    comment.likeCount.toString(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: comment.likeCount > 0
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey[600],
+            const SizedBox(height: 8),
+            const Text(
+              'Çözüm kalitesini değerlendirmek için puanınızı seçin',
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(
+                5,
+                (index) => InkWell(
+                  onTap: () => _submitSatisfactionRating(index + 1),
+                  borderRadius: BorderRadius.circular(30),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(
+                        color: Colors.blue.shade200,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                      size: 30,
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            
-            // Reply button
-            InkWell(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Yanıtlama özelliği yakında eklenecek')),
-                );
-              },
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.reply,
-                    size: 16,
-                    color: Colors.grey[600],
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Yanıtla',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        
-        // Replies
-        if (comment.replies != null && comment.replies!.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Container(
-            margin: const EdgeInsets.only(left: 16),
-            padding: const EdgeInsets.only(left: 8),
-            decoration: BoxDecoration(
-              border: Border(
-                left: BorderSide(
-                  color: Colors.grey[300]!,
-                  width: 2,
                 ),
               ),
             ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: comment.replies!.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final reply = comment.replies![index];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Reply header
-                    Row(
-                      children: [
-                        // Author
-                        FutureBuilder<User>(
-                          future: _apiService.getUserById(reply.userId),
-                          builder: (context, snapshot) {
-                            final String authorName = reply.isAnonymous
-                                ? 'Anonim'
-                                : snapshot.hasData
-                                    ? snapshot.data!.name
-                                    : 'Yükleniyor...';
-                            
-                            return Text(
-                              authorName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        
-                        // Created time
-                        Text(
-                          timeago.format(reply.createdAt, locale: 'tr'),
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    
-                    // Reply content
-                    Text(
-                      reply.content,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-  
-  Widget _buildActionButton({
-    required IconData icon,
-    required IconData activeIcon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onPressed,
-  }) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              size: 18,
-              color: isActive ? Theme.of(context).colorScheme.primary : Colors.grey[600],
-            ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: isActive ? Theme.of(context).colorScheme.primary : Colors.grey[600],
-              ),
-            ),
           ],
         ),
       ),
     );
   }
   
-  Color _getStatusColor(PostStatus status) {
-    switch (status) {
-      case PostStatus.awaitingSolution:
-        return Colors.orange;
-      case PostStatus.inProgress:
-        return Colors.blue;
-      case PostStatus.solved:
-        return Colors.green;
-      case PostStatus.rejected:
-        return Colors.red;
-    }
-  }
-  
-  IconData _getStatusIcon(PostStatus status) {
-    switch (status) {
-      case PostStatus.awaitingSolution:
-        return Icons.hourglass_empty;
-      case PostStatus.inProgress:
-        return Icons.pending_actions;
-      case PostStatus.solved:
-        return Icons.check_circle;
-      case PostStatus.rejected:
-        return Icons.cancel;
-    }
-  }
-  
-  String _getStatusText(PostStatus status) {
-    switch (status) {
-      case PostStatus.awaitingSolution:
-        return 'Çözüm Bekliyor';
-      case PostStatus.inProgress:
-        return 'İşleme Alındı';
-      case PostStatus.solved:
-        return 'Çözüldü';
-      case PostStatus.rejected:
-        return 'Reddedildi';
-    }
+  Widget _buildCommentBox() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _commentController,
+              decoration: const InputDecoration(
+                hintText: 'Yorum yaz...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(24)),
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _submitComment(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: _isSendingComment ? null : _submitComment,
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              padding: const EdgeInsets.all(12),
+            ),
+            child: _isSendingComment
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.send),
+          ),
+        ],
+      ),
+    );
   }
 }
