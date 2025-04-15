@@ -1,56 +1,113 @@
 #!/bin/bash
 
-# Bu script, Flutter projesinin yaygın sorunlarını çözmek için kullanılır
-# Özellikle Android derleme sorunları ve paket uyumsuzluklarını hedefler
+# Yedekleme klasörü oluştur
+echo "Mevcut projeyi yedekliyorum..."
+mkdir -p temp_backup
 
-echo "Flutter Sorun Giderme Aracı Başlatılıyor..."
-echo "----------------------------------------"
+# Gerekli dosyaları yedekle
+cp -r lib temp_backup/
+cp -r assets temp_backup/
+cp pubspec.yaml temp_backup/
+cp -r test temp_backup/ 2>/dev/null || true
+cp README.md temp_backup/ 2>/dev/null || true
+# Firebase dosyaları varsa yedekle
+cp -r android/app/google-services.json temp_backup/ 2>/dev/null || true
+cp -r ios/Runner/GoogleService-Info.plist temp_backup/ 2>/dev/null || true
+cp -r web/firebase-config.js temp_backup/ 2>/dev/null || true
 
-# 1. Flutter'ı temizle
-echo "1. Flutter önbelleğini temizleniyor..."
-flutter clean
-echo "✓ Flutter önbelleği temizlendi"
+# Yeni proje oluştur
+echo "Yeni Flutter projesi oluşturuyorum..."
+flutter create --org belediye.iletisim.merkezi -t app --platforms=android,ios,web --project-name belediye_iletisim_merkezi ./new_project
 
-# 2. Paketleri güncelle
-echo "2. Flutter paketleri güncelleniyor..."
-flutter pub get
-echo "✓ Flutter paketleri güncellendi"
+# Yeni projeye eski dosyaları taşı
+echo "Eski dosyaları yeni projeye taşıyorum..."
+rm -rf new_project/lib/*
+cp -r temp_backup/lib/* new_project/lib/
 
-# 3. Android ayarlarını kontrol et
-echo "3. Android derleyici ayarları kontrol ediliyor..."
-if [ -d "android" ]; then
-    # local.properties oluşturulmuş mu kontrol et
-    if [ ! -f "android/local.properties" ]; then
-        echo "ⓘ android/local.properties dosyası bulunamadı, oluşturuluyor..."
-        echo "flutter.sdk=$(flutter --version --machine | grep flutterRoot | cut -d'"' -f4)" > android/local.properties
-        echo "✓ Flutter SDK yolu local.properties dosyasına eklendi"
-    fi
+# Assets klasörünü taşı
+rm -rf new_project/assets 2>/dev/null || true
+cp -r temp_backup/assets new_project/
+
+# pubspec.yaml'dan bağımlılıkları alıp yeni pubspec.yaml'a ekle
+echo "pubspec.yaml dosyasını güncelliyorum..."
+# İlk önce eski pubspec.yaml'dan bağımlılıkları çıkar
+DEPENDENCIES=$(sed -n '/^dependencies:/,/^dev_dependencies:/p' temp_backup/pubspec.yaml | sed '1d;$d')
+DEV_DEPENDENCIES=$(sed -n '/^dev_dependencies:/,/^flutter:/p' temp_backup/pubspec.yaml | sed '1d;$d')
+FLUTTER_SECTION=$(sed -n '/^flutter:/,/^$/p' temp_backup/pubspec.yaml)
+
+# Yeni pubspec.yaml'ı düzenle
+cat > new_project/pubspec.yaml << EOL
+name: belediye_iletisim_merkezi
+description: Belediye ve Valiliğe yönelik iletişim platformu
+
+# The following defines the version and build number for your application.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+${DEPENDENCIES}
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+${DEV_DEPENDENCIES}
+
+${FLUTTER_SECTION}
+EOL
+
+# Google Services dosyalarını taşı
+echo "Firebase yapılandırmalarını taşıyorum..."
+cp -r temp_backup/google-services.json new_project/android/app/ 2>/dev/null || true
+cp -r temp_backup/GoogleService-Info.plist new_project/ios/Runner/ 2>/dev/null || true
+cp -r temp_backup/firebase-config.js new_project/web/ 2>/dev/null || true
+
+echo "Paket adını güncel hale getiriyorum..."
+# MainActivity.kt dosyasını düzenle
+mkdir -p new_project/android/app/src/main/kotlin/belediye/iletisim/merkezi
+cp temp_backup/../android/app/src/main/kotlin/belediye/iletisim/merkezi/MainActivity.kt new_project/android/app/src/main/kotlin/belediye/iletisim/merkezi/ 2>/dev/null || echo "package belediye.iletisim.merkezi
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity()
+" > new_project/android/app/src/main/kotlin/belediye/iletisim/merkezi/MainActivity.kt
+
+# Renkler dosyasını taşı
+echo "Android özel dosyalarını taşıyorum..."
+mkdir -p new_project/android/app/src/main/res/values
+cp temp_backup/../android/app/src/main/res/values/colors.xml new_project/android/app/src/main/res/values/ 2>/dev/null || echo '<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#2E7D32</color>
+    <color name="accent">#4CAF50</color>
+    <color name="notification_color">#2E7D32</color>
+</resources>' > new_project/android/app/src/main/res/values/colors.xml
+
+# AndroidManifest.xml'deki izinleri taşı
+echo "Android izinlerini taşıyorum..."
+PERMISSIONS=$(grep -E "<uses-permission" temp_backup/../android/app/src/main/AndroidManifest.xml || echo "")
+
+# AndroidManifest.xml'i düzenle
+if [ ! -z "$PERMISSIONS" ]; then
+  MANIFEST_FILE="new_project/android/app/src/main/AndroidManifest.xml"
+  TEMP_FILE="new_project/android/app/src/main/AndroidManifest.xml.temp"
+  
+  cp "$MANIFEST_FILE" "$TEMP_FILE"
+  
+  sed -i '/<manifest/a \
+    <!-- İzinler -->\
+    '"$PERMISSIONS" "$TEMP_FILE"
     
-    # build.gradle içinde compileSdkVersion kontrolü
-    if [ -f "android/app/build.gradle" ]; then
-        if grep -q "compileSdk = flutter.compileSdkVersion" "android/app/build.gradle"; then
-            echo "⚠️ Eski compileSdkVersion ayarı tespit edildi, sabit değer tanımlanmalı"
-            echo "ⓘ android/app/build.gradle dosyasında 'compileSdk = flutter.compileSdkVersion' ifadesini 'compileSdk = 33' ile değiştirin"
-        else
-            echo "✓ Android compileSdk ayarları doğru görünüyor"
-        fi
-    fi
-    
-    echo "✓ Android ayarları kontrol edildi"
-else
-    echo "⚠️ Android klasörü bulunamadı"
+  mv "$TEMP_FILE" "$MANIFEST_FILE"
 fi
 
-# 4. Paket uyumsuzluklarını kontrol et
-echo "4. Paket uyumsuzlukları kontrol ediliyor..."
-flutter pub outdated
-echo "✓ Paket kontrolü tamamlandı"
+# Android application attributes
+sed -i 's/android:label="belediye_iletisim_merkezi"/android:label="Belediye İletişim"/g' new_project/android/app/src/main/AndroidManifest.xml
 
-# 5. Uyumluluk sorunlarını kontrol et
-echo "5. Flutter uyumluluk analizi yapılıyor..."
-flutter analyze
-echo "✓ Flutter analizi tamamlandı"
-
-echo "----------------------------------------"
-echo "Flutter sorun giderme tamamlandı!"
-echo "Derleme sorunları devam ediyorsa android/jdk-fix.bat dosyasını çalıştırmayı (Windows için) veya jdk_gradle_fix.md dosyasındaki adımları izlemeyi deneyin."
+echo "Proje oluşturma işlemi tamamlandı."
+echo "Yeni proje new_project klasöründe. Eski proje korunuyor."
+echo "Kontrol ettikten sonra yeni projeyi kullanabilirsiniz."
