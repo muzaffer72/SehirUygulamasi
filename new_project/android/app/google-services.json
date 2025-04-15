@@ -1,8 +1,8 @@
 {
   "project_info": {
     "project_number": "123456789012",
-    "project_id": "belediye-iletisim-merkezi",
-    "storage_bucket": "belediye-iletisim-merkezi.appspot.com"
+    "project_id": "belediye-iletisim",
+    "storage_bucket": "belediye-iletisim.appspot.com"
   },
   "client": [
     {
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "${FIREBASE_API_KEY}"
+          "current_key": "AIzaSyBeMGVqfxMXxcMNzWCCLnA1CuH2QEwLgU8"
         }
       ],
       "services": {

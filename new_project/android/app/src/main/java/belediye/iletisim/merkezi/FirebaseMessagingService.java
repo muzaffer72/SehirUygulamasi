@@ -5,7 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -19,80 +18,80 @@ import com.google.firebase.messaging.RemoteMessage;
 import java.util.Map;
 
 public class FirebaseMessagingService extends com.google.firebase.messaging.FirebaseMessagingService {
-    private static final String TAG = "FCMService";
-    private static final String CHANNEL_ID = "belediye_iletisim_channel";
-    private static final String CHANNEL_NAME = "Belediye İletişim Bildirimleri";
-    private static final String CHANNEL_DESC = "Belediye İletişim uygulaması için bildirim kanalı";
+    private static final String TAG = "FirebaseMsgService";
+    private static final String CHANNEL_ID = "high_importance_channel";
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
-        Log.d(TAG, "Bildirim alındı: " + remoteMessage.getFrom());
+        Log.d(TAG, "From: " + remoteMessage.getFrom());
 
-        // Bildirim verisi kontrolü
-        Map<String, String> data = remoteMessage.getData();
-        if (data.size() > 0) {
-            Log.d(TAG, "Bildirim verisi: " + data);
-            sendNotification(data);
+        // Kontrol: veri yükü var mı?
+        if (remoteMessage.getData().size() > 0) {
+            Log.d(TAG, "Message data payload: " + remoteMessage.getData());
+            Map<String, String> data = remoteMessage.getData();
+            
+            String title = data.get("title");
+            String message = data.get("message");
+            
+            // Eğer verilerde title ve message varsa bildirim gönder
+            if (title != null && message != null) {
+                sendNotification(title, message, data);
+            }
         }
 
-        // Bildirim içeriği kontrolü
+        // Kontrol: bildirim yükü var mı?
         if (remoteMessage.getNotification() != null) {
-            Log.d(TAG, "Bildirim mesajı: " + remoteMessage.getNotification().getBody());
-            sendNotification(
-                remoteMessage.getNotification().getTitle(), 
-                remoteMessage.getNotification().getBody()
-            );
+            RemoteMessage.Notification notification = remoteMessage.getNotification();
+            Log.d(TAG, "Message Notification Body: " + notification.getBody());
+            sendNotification(notification.getTitle(), notification.getBody(), remoteMessage.getData());
         }
     }
 
     @Override
     public void onNewToken(@NonNull String token) {
-        Log.d(TAG, "Yeni FCM token: " + token);
-        // Token'ı sunucuya göndermek için FlutterFire'a ilet
-        // Bu işlem Flutter tarafında yapılır
+        Log.d(TAG, "Refreshed token: " + token);
+        // Token'ı sunucuya gönderme işlemi Flutter tarafında yapılacak
     }
 
-    private void sendNotification(Map<String, String> data) {
-        String title = data.get("title");
-        String message = data.get("message");
-        sendNotification(title, message);
-    }
-
-    private void sendNotification(String title, String messageBody) {
+    private void sendNotification(String title, String messageBody, Map<String, String> data) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
-            PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE
-        );
+        
+        // Veri ekleyelim
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            intent.putExtra(entry.getKey(), entry.getValue());
+        }
+        
+        // Bildirime tıklanınca açılacak
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
+                PendingIntent.FLAG_IMMUTABLE);
 
+        // Bildirim sesi
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        
+        // Bildirim oluştur
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, CHANNEL_ID)
-                        .setSmallIcon(androidx.core.R.drawable.notification_icon_background) // Geçici simge
+                        .setSmallIcon(android.R.drawable.ic_dialog_info)
                         .setContentTitle(title)
                         .setContentText(messageBody)
                         .setAutoCancel(true)
                         .setSound(defaultSoundUri)
-                        .setContentIntent(pendingIntent)
-                        .setColor(Color.GREEN); // Yeşil renk
+                        .setContentIntent(pendingIntent);
 
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        // Android Oreo üstü için bildirim kanalı oluşturma
+        // Android Oreo ve üstü için bildirim kanalı oluştur
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    CHANNEL_NAME,
+                    "Belediye İletişim Bildirimleri",
                     NotificationManager.IMPORTANCE_HIGH);
-            channel.setDescription(CHANNEL_DESC);
-            channel.enableLights(true);
-            channel.setLightColor(Color.GREEN); // Yeşil renk
-            channel.enableVibration(true);
             notificationManager.createNotificationChannel(channel);
         }
 
+        // Bildirimi göster
         notificationManager.notify(0, notificationBuilder.build());
     }
 }
