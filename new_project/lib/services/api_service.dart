@@ -2049,36 +2049,8 @@ class ApiService {
     }
   }
   
-  // Satisfaction Rating
-  Future<int?> getSatisfactionRating(int postId) async {
-    try {
-      final response = await _client.get(
-        Uri.parse('$baseUrl/api/satisfaction_rating?post_id=$postId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      );
-      
-      if (response.statusCode == 200) {
-        final dynamic data = jsonDecode(response.body);
-        
-        if (data is Map<String, dynamic> && data.containsKey('success') && data['success'] == true) {
-          if (data.containsKey('data') && data['data'] is Map<String, dynamic>) {
-            final postData = data['data'];
-            return postData['satisfaction_rating'] as int?;
-          }
-        }
-        return null;
-      } else {
-        print('Failed to load satisfaction rating: ${response.body}');
-        return null;
-      }
-    } catch (e) {
-      print('Error fetching satisfaction rating: $e');
-      return null;
-    }
-  }
+  // Bu getSatisfactionRating metodu ikinci kez tanımlanmış, kaldırılıyor
+  // Future<int?> getSatisfactionRating(int postId) async { ... }
   
   Future<bool> submitSatisfactionRating(int postId, int rating) async {
     final token = await _getToken();
