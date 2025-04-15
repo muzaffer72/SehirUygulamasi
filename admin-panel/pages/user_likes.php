@@ -38,31 +38,26 @@ $offset = ($page - 1) * $limit;
 // Filtreleme koşulları oluştur
 $conditions = [];
 $params = [];
-$types = "";
+$paramIndex = 1;
 
 if ($userId > 0) {
-    $conditions[] = "ul.user_id = ?";
-    $params[] = $userId;
-    $types .= "i";
+    $conditions[] = "ul.user_id = $userId";
 }
 
 if ($postId > 0) {
-    $conditions[] = "ul.post_id = ?";
-    $params[] = $postId;
-    $types .= "i";
+    $conditions[] = "ul.post_id = $postId";
 }
 
 if ($commentId > 0) {
-    $conditions[] = "ul.comment_id = ?";
-    $params[] = $commentId;
-    $types .= "i";
+    $conditions[] = "ul.comment_id = $commentId";
 }
 
 $whereClause = !empty($conditions) ? " WHERE " . implode(" AND ", $conditions) : "";
 
 // Beğenileri getir
 try {
-    $query = "
+    // PostgreSQL'de ? placeholder'ı sayısal değerler için çalışmıyor, bu yüzden sorguyu yeniden düzenliyoruz
+    $queryBase = "
         SELECT ul.*, 
                u.username as user_username, u.name as user_name,
                p.title as post_title,
@@ -73,22 +68,13 @@ try {
         LEFT JOIN comments c ON ul.comment_id = c.id
         $whereClause
         ORDER BY ul.created_at DESC
-        LIMIT ? OFFSET ?
     ";
     
-    // Sorgu parametreleri
-    $params[] = $limit;
-    $params[] = $offset;
-    $types .= "ii";
-    
-    $stmt = $db->prepare($query);
-    
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
+    // LIMIT ve OFFSET değerlerini doğrudan sorguya ekleyelim
+    $query = $queryBase . " LIMIT $limit OFFSET $offset";
     
     // PostgreSQL için sorgu çalıştır
-    $result = pg_query_params($conn, $query, $params);
+    $result = pg_query($conn, $query);
     
     if (!$result) {
         throw new Exception("PostgreSQL sorgu hatası: " . pg_last_error($conn));

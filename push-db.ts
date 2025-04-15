@@ -26,6 +26,22 @@ async function main() {
   console.log('Veritabanı tabloları oluşturuluyor...');
 
   try {
+    // Önceki/Sonrası Görseller tablosu oluştur
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS before_after_records (
+        id SERIAL PRIMARY KEY,
+        post_id INTEGER NOT NULL,
+        before_image_url TEXT NOT NULL,
+        after_image_url TEXT NOT NULL,
+        description TEXT,
+        recorded_by INTEGER,
+        record_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (recorded_by) REFERENCES users(id)
+      );
+    `);
+    
     // Ardışık tablo oluşturmalar
     await pool.query(`
       CREATE TABLE IF NOT EXISTS categories (
@@ -103,6 +119,7 @@ async function main() {
         highlights INTEGER DEFAULT 0 NOT NULL,
         comment_count INTEGER DEFAULT 0 NOT NULL,
         is_anonymous BOOLEAN DEFAULT FALSE NOT NULL,
+        satisfaction_rating INTEGER, 
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (category_id) REFERENCES categories(id),
@@ -226,6 +243,8 @@ async function main() {
         source_id INTEGER,
         source_type VARCHAR(50),
         data TEXT,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        group_id VARCHAR(100),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       );
