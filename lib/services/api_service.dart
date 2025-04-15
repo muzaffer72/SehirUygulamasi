@@ -1419,7 +1419,7 @@ class ApiService {
   // Cities
   // Getter olmadığını belirtmek için özel isim kullan
   // Genel olarak kullanılan getCities metodu
-  Future<List<dynamic>> getCities() async {
+  Future<List<City>> getCities() async {
     return getCitiesAsObjects();
   }
   
@@ -2237,6 +2237,178 @@ class ApiService {
   }
   
   // Çözülmüş şikayetler için memnuniyet bildirimi gönderme
+  // Kullanıcı profil bilgilerini güncelleme
+  Future<User?> updateUserProfile(
+    String userId, {
+    required String name,
+    required String email,
+    String? profileImageUrl,
+    String? bio,
+    String? phone,
+  }) async {
+    print('Updating user profile for ID: $userId');
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        print('No auth token available for user profile update');
+        return null;
+      }
+      
+      final Map<String, dynamic> data = {
+        'name': name,
+        'email': email,
+      };
+      
+      if (profileImageUrl != null) {
+        data['profile_image_url'] = profileImageUrl;
+      }
+      
+      if (bio != null) {
+        data['bio'] = bio;
+      }
+      
+      if (phone != null) {
+        data['phone'] = phone;
+      }
+      
+      final response = await _client.put(
+        Uri.parse('$baseUrl/api/users/$userId'),
+        body: jsonEncode(data),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': token.startsWith('Bearer ') ? token : 'Bearer $token',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData is Map<String, dynamic>) {
+          if (responseData.containsKey('data')) {
+            return User.fromJson(responseData['data']);
+          } else if (responseData.containsKey('user')) {
+            return User.fromJson(responseData['user']);
+          } else {
+            return User.fromJson(responseData);
+          }
+        }
+      } else {
+        print('Failed to update user profile: ${response.body}');
+      }
+      
+      return null;
+    } catch (e) {
+      print('Error updating user profile: $e');
+      return null;
+    }
+  }
+  
+  // Kullanıcı konum bilgilerini güncelleme
+  Future<User?> updateUserLocation(
+    String userId, {
+    required String cityId,
+    String? districtId,
+  }) async {
+    print('Updating user location for ID: $userId');
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        print('No auth token available for user location update');
+        return null;
+      }
+      
+      final Map<String, dynamic> data = {
+        'city_id': cityId,
+      };
+      
+      if (districtId != null) {
+        data['district_id'] = districtId;
+      }
+      
+      final response = await _client.put(
+        Uri.parse('$baseUrl/api/users/$userId/location'),
+        body: jsonEncode(data),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': token.startsWith('Bearer ') ? token : 'Bearer $token',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData is Map<String, dynamic>) {
+          if (responseData.containsKey('data')) {
+            return User.fromJson(responseData['data']);
+          } else if (responseData.containsKey('user')) {
+            return User.fromJson(responseData['user']);
+          } else {
+            return User.fromJson(responseData);
+          }
+        }
+      } else {
+        print('Failed to update user location: ${response.body}');
+      }
+      
+      return null;
+    } catch (e) {
+      print('Error updating user location: $e');
+      return null;
+    }
+  }
+  
+  // Gönderi yorumu ekle
+  Future<Comment?> addComment(
+    dynamic postId,
+    String content, {
+    required String userId,
+  }) async {
+    print('Adding comment to post ID: $postId');
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        print('No auth token available for adding comment');
+        return null;
+      }
+      
+      final Map<String, dynamic> data = {
+        'post_id': postId.toString(),
+        'user_id': userId,
+        'content': content,
+      };
+      
+      final response = await _client.post(
+        Uri.parse('$baseUrl/api/comments'),
+        body: jsonEncode(data),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': token.startsWith('Bearer ') ? token : 'Bearer $token',
+        },
+      );
+      
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData is Map<String, dynamic>) {
+          if (responseData.containsKey('data')) {
+            return Comment.fromJson(responseData['data']);
+          } else if (responseData.containsKey('comment')) {
+            return Comment.fromJson(responseData['comment']);
+          } else {
+            return Comment.fromJson(responseData);
+          }
+        }
+      } else {
+        print('Failed to add comment: ${response.body}');
+      }
+      
+      return null;
+    } catch (e) {
+      print('Error adding comment: $e');
+      return null;
+    }
+  }
+
   Future<bool> submitSatisfactionResponse({
     required dynamic postId, 
     required dynamic userId,

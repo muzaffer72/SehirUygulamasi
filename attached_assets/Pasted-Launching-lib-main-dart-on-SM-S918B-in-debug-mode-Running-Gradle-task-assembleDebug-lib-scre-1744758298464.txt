@@ -1,0 +1,163 @@
+Launching lib\main.dart on SM S918B in debug mode...
+Running Gradle task 'assembleDebug'...
+lib/screens/profile/profile_screen.dart:264:35: Error: The argument type 'Future<List<dynamic>>' can't be assigned to the parameter type 'Future<List<City>>?'.
+ - 'Future' is from 'dart:async'.
+ - 'List' is from 'dart:core'.
+ - 'City' is from 'package:belediye_iletisim_merkezi/models/city.dart' ('lib/models/city.dart').
+              future: _apiService.getCities(),
+                                  ^
+lib/screens/profile/profile_screen.dart:302:37: Error: The argument type 'Future<List<dynamic>>' can't be assigned to the parameter type 'Future<List<District>>?'.
+ - 'Future' is from 'dart:async'.
+ - 'List' is from 'dart:core'.
+ - 'District' is from 'package:belediye_iletisim_merkezi/models/district.dart' ('lib/models/district.dart').
+                future: _apiService.getDistrictsByCityId(_selectedCityId!),
+                                    ^
+lib/screens/profile/profile_screen.dart:420:55: Error: Too many positional arguments: 0 allowed, but 5 found.
+Try removing the extra positional arguments.
+        await ref.read(authProvider.notifier).register(
+                                                      ^
+lib/services/api_service.dart:550:10: Error: Type 'CityProfile' not found.
+  Future<CityProfile?> getCityProfileById(String cityId) async {
+         ^^^^^^^^^^^
+lib/services/api_service.dart:561:16: Error: The getter 'CityProfile' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'CityProfile'.
+        return CityProfile.fromJson(data['data']);
+               ^^^^^^^^^^^
+lib/services/api_service.dart:568:18: Error: The method 'CityProfile' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'CityProfile'.
+          return CityProfile(
+                 ^^^^^^^^^^^
+lib/services/api_service.dart:572:31: Error: The getter 'description' isn't defined for the class 'City'.
+ - 'City' is from 'package:belediye_iletisim_merkezi/models/city.dart' ('lib/models/city.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'description'.
+            description: city.description,
+                              ^^^^^^^^^^^
+lib/services/api_service.dart:573:27: Error: The getter 'logoUrl' isn't defined for the class 'City'.
+ - 'City' is from 'package:belediye_iletisim_merkezi/models/city.dart' ('lib/models/city.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'logoUrl'.
+            logoUrl: city.logoUrl,
+                          ^^^^^^^
+lib/screens/profile/location_settings_screen.dart:197:41: Error: The argument type 'Future<List<dynamic>>' can't be assigned to the parameter type 'Future<List<City>>?'.
+ - 'Future' is from 'dart:async'.
+ - 'List' is from 'dart:core'.
+ - 'City' is from 'package:belediye_iletisim_merkezi/models/city.dart' ('lib/models/city.dart').
+                    future: _apiService.getCities(),
+                                        ^
+lib/screens/profile/location_settings_screen.dart:256:43: Error: The argument type 'Future<List<dynamic>>' can't be assigned to the parameter type 'Future<List<District>>?'.
+ - 'Future' is from 'dart:async'.
+ - 'List' is from 'dart:core'.
+ - 'District' is from 'package:belediye_iletisim_merkezi/models/district.dart' ('lib/models/district.dart').
+                      future: _apiService.getDistrictsByCityId(_selectedCityId!),
+                                          ^
+lib/providers/user_provider.dart:34:47: Error: The method 'updateUserProfile' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateUserProfile'.
+        final updatedUser = await _apiService.updateUserProfile(
+                                              ^^^^^^^^^^^^^^^^^
+lib/providers/user_provider.dart:58:47: Error: The method 'updateUserLocation' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateUserLocation'.
+        final updatedUser = await _apiService.updateUserLocation(
+                                              ^^^^^^^^^^^^^^^^^^
+lib/screens/posts/post_detail_screen.dart:103:51: Error: Too many positional arguments: 0 allowed, but 2 found.
+Try removing the extra positional arguments.
+      final comment = await _apiService.addComment(
+                                                  ^
+lib/screens/posts/post_detail_screen.dart:288:13: Error: No named parameter with the name 'onShare'.
+            onShare: () {
+            ^^^^^^^
+lib/widgets/post_card.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const PostCard({
+        ^^^^^^^^
+lib/widgets/post_card.dart:292:45: Error: The argument type 'Future<User?>' can't be assigned to the parameter type 'Future<User>?' because 'User?' is nullable and 'User' isn't.
+ - 'Future' is from 'dart:async'.
+ - 'User' is from 'package:belediye_iletisim_merkezi/models/user.dart' ('lib/models/user.dart').
+                        future: _apiService.getUserById(widget.post.userId),
+                                            ^
+lib/widgets/post_card.dart:539:49: Error: The argument type 'Future<User?>' can't be assigned to the parameter type 'Future<User>?' because 'User?' is nullable and 'User' isn't.
+ - 'Future' is from 'dart:async'.
+ - 'User' is from 'package:belediye_iletisim_merkezi/models/user.dart' ('lib/models/user.dart').
+                            future: _apiService.getUserById(widget.post.userId),
+                                                ^
+lib/screens/posts/filtered_posts_screen.dart:106:63: Error: The argument type 'Map<String, dynamic>?' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>?' is nullable and 'Map<String, dynamic>' isn't.
+ - 'Map' is from 'dart:core'.
+      final posts = await _apiService.getFilteredPosts(widget.filterParams);
+                                                              ^
+lib/screens/posts/filtered_posts_screen.dart:248:13: Error: No named parameter with the name 'onShare'.
+            onShare: () {
+            ^^^^^^^
+lib/widgets/post_card.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const PostCard({
+        ^^^^^^^^
+lib/screens/location/city_profile_screen.dart:34:63: Error: The argument type 'List<Post>' can't be assigned to the parameter type 'AsyncValue<List<Post>>'.
+ - 'List' is from 'dart:core'.
+ - 'Post' is from 'package:belediye_iletisim_merkezi/models/post.dart' ('lib/models/post.dart').
+ - 'AsyncValue' is from 'package:riverpod/src/common.dart' ('/C:/Users/guzel/AppData/Local/Pub/Cache/hosted/pub.dev/riverpod-2.6.1/lib/src/common.dart').
+        data: (city) => _buildCityProfile(context, ref, city, postsAsync),
+                                                              ^
+lib/screens/location/city_profile_screen.dart:274:68: Error: No named parameter with the name 'post'.
+                            builder: (context) => PostDetailScreen(post: post),
+                                                                   ^^^^
+lib/screens/posts/post_detail_screen.dart:12:9: Context: Found this candidate, but the arguments don't match.
+  const PostDetailScreen({
+        ^^^^^^^^^^^^^^^^
+lib/screens/location/city_profile_screen.dart:287:68: Error: No named parameter with the name 'post'.
+                            builder: (context) => PostDetailScreen(post: post),
+                                                                   ^^^^
+lib/screens/posts/post_detail_screen.dart:12:9: Context: Found this candidate, but the arguments don't match.
+  const PostDetailScreen({
+        ^^^^^^^^^^^^^^^^
+lib/screens/location/city_profile_screen.dart:267:36: Error: Required named parameter 'onHighlight' must be provided.
+                    return PostCard(
+                                   ^
+lib/widgets/post_card.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const PostCard({
+        ^^^^^^^^
+lib/providers/post_provider.dart:125:9: Error: No named parameter with the name 'type'.
+        type: type != null ? type == 'problem' ? PostType.problem : PostType.general : null,
+        ^^^^
+lib/screens/surveys/survey_detail_screen.dart:420:18: Error: The setter 'voteCount' isn't defined for the class 'SurveyOption'.
+ - 'SurveyOption' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'voteCount'.
+          option.voteCount++;
+                 ^^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:426:21: Error: The setter 'totalVotes' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'totalVotes'.
+      widget.survey.totalVotes++;
+                    ^^^^^^^^^^
+lib/widgets/filter_bar.dart:115:28: Error: The argument type 'Widget Function(BuildContext, AsyncSnapshot<List<City>>)' can't be assigned to the parameter type 'Widget Function(BuildContext, AsyncSnapshot<List<dynamic>>)'.
+ - 'Widget' is from 'package:flutter/src/widgets/framework.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/framework.dart').
+ - 'BuildContext' is from 'package:flutter/src/widgets/framework.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/framework.dart').
+ - 'AsyncSnapshot' is from 'package:flutter/src/widgets/async.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/async.dart').
+ - 'List' is from 'dart:core'.
+ - 'City' is from 'package:belediye_iletisim_merkezi/models/city.dart' ('lib/models/city.dart').
+                  builder: (context, AsyncSnapshot<List<City>> snapshot) {
+                           ^
+lib/widgets/filter_bar.dart:160:30: Error: The argument type 'Widget Function(BuildContext, AsyncSnapshot<List<District>>)' can't be assigned to the parameter type 'Widget Function(BuildContext, AsyncSnapshot<List<dynamic>>)'.
+ - 'Widget' is from 'package:flutter/src/widgets/framework.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/framework.dart').
+ - 'BuildContext' is from 'package:flutter/src/widgets/framework.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/framework.dart').
+ - 'AsyncSnapshot' is from 'package:flutter/src/widgets/async.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/async.dart').
+ - 'List' is from 'dart:core'.
+ - 'District' is from 'package:belediye_iletisim_merkezi/models/district.dart' ('lib/models/district.dart').
+                    builder: (context, AsyncSnapshot<List<District>> snapshot) {
+                             ^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter29\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BU�LD FAILED in 8s
+Error: Gradle task assembleDebug failed with exit code 1
