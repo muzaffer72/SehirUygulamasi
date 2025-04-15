@@ -136,7 +136,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   
   Future<void> _submitSatisfactionRating(int rating) async {
     try {
-      await _apiService.submitSatisfactionRating(widget.id, rating);
+      await _apiService.submitSatisfaction(
+        postId: widget.id, 
+        rating: rating
+      );
       
       if (_post != null) {
         setState(() {
