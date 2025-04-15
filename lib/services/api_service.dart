@@ -999,6 +999,190 @@ class ApiService {
   }
   
   // Categories
+  // Memnuniyet derecelendirme sistemi için metotlar
+  Future<int?> getSatisfactionRating(String postId) async {
+    try {
+      final response = await get('api/satisfaction_rating.php?post_id=$postId');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          if (data['data']['satisfaction_rating'] != null) {
+            return int.tryParse(data['data']['satisfaction_rating'].toString());
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching satisfaction rating: $e');
+      return null;
+    }
+  }
+  
+  Future<bool> submitSatisfactionRating(String postId, int rating) async {
+    try {
+      final response = await post('api/satisfaction_rating.php', {
+        'post_id': postId,
+        'rating': rating
+      });
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error submitting satisfaction rating: $e');
+      return false;
+    }
+  }
+  
+  // Öncesi/Sonrası kayıtları için metotlar
+  Future<List<BeforeAfterRecord>> getBeforeAfterRecords(String postId) async {
+    try {
+      final response = await get('api/before_after.php?post_id=$postId');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          if (data['data'] is List) {
+            return (data['data'] as List)
+                .map((item) => BeforeAfterRecord.fromJson(item))
+                .toList();
+          }
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching before/after records: $e');
+      return [];
+    }
+  }
+  
+  Future<BeforeAfterRecord?> createBeforeAfterRecord(
+      String postId,
+      String beforeImageUrl,
+      String afterImageUrl,
+      {String? description}) async {
+    try {
+      final response = await post('api/before_after.php', {
+        'post_id': postId,
+        'before_image_url': beforeImageUrl,
+        'after_image_url': afterImageUrl,
+        'description': description
+      });
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return BeforeAfterRecord.fromJson(data['data']);
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error creating before/after record: $e');
+      return null;
+    }
+  }
+  
+  // Bildirim sistemi için metotlar
+  Future<List<Notification>> getNotifications({
+    String? userId,
+    bool? isRead,
+    bool? isArchived,
+    String? groupId,
+    int page = 1,
+    int limit = 20
+  }) async {
+    try {
+      String url = 'api/notifications.php';
+      
+      // Sorgu parametreleri
+      final queryParams = <String, String>{};
+      if (userId != null) queryParams['user_id'] = userId;
+      if (isRead != null) queryParams['is_read'] = isRead ? '1' : '0';
+      if (isArchived != null) queryParams['is_archived'] = isArchived ? '1' : '0';
+      if (groupId != null) queryParams['group_id'] = groupId;
+      queryParams['page'] = page.toString();
+      queryParams['limit'] = limit.toString();
+      
+      if (queryParams.isNotEmpty) {
+        url += '?' + Uri(queryParameters: queryParams).query;
+      }
+      
+      final response = await get(url);
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          if (data['data'] is List) {
+            return (data['data'] as List)
+                .map((item) => Notification.fromJson(item))
+                .toList();
+          }
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching notifications: $e');
+      return [];
+    }
+  }
+  
+  Future<bool> markNotificationAsRead(String notificationId) async {
+    try {
+      final response = await post('api/notifications.php', {
+        'action': 'mark_read',
+        'notification_id': notificationId
+      });
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error marking notification as read: $e');
+      return false;
+    }
+  }
+  
+  Future<bool> markAllNotificationsAsRead({String? userId}) async {
+    try {
+      final Map<String, dynamic> requestBody = {'action': 'mark_all_read'};
+      if (userId != null) requestBody['user_id'] = userId;
+      
+      final response = await post('api/notifications.php', requestBody);
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error marking all notifications as read: $e');
+      return false;
+    }
+  }
+  
+  Future<bool> archiveNotification(String notificationId) async {
+    try {
+      final response = await post('api/notifications.php', {
+        'action': 'archive',
+        'notification_id': notificationId
+      });
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error archiving notification: $e');
+      return false;
+    }
+  }
+  
   Future<List<app_category.Category>> getCategories() async {
     print('Fetching categories from API');
     try {
