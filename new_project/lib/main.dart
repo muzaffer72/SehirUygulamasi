@@ -521,7 +521,7 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
             onPressed: () {
               // Bildirim test ekleme
               NotificationService.addNotification(
-                AppNotification(
+                NotificationModel(
                   id: DateTime.now().millisecondsSinceEpoch,
                   title: 'Test Bildirimi',
                   message: 'Bu bir test bildirimidir.',
