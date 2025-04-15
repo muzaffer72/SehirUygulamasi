@@ -21,14 +21,14 @@ class NotificationService {
       StreamController<NotificationModel>.broadcast();
   
   /// Bildirim listesi değiştiğinde tetiklenen stream
-  static final StreamController<List<AppNotification>> _notificationsListController = 
-      StreamController<List<AppNotification>>.broadcast();
+  static final StreamController<List<NotificationModel>> _notificationsListController = 
+      StreamController<List<NotificationModel>>.broadcast();
   
   /// Yeni bildirim geldiğinde dinlemek için stream
-  static Stream<AppNotification> get onNotification => _notificationController.stream;
+  static Stream<NotificationModel> get onNotification => _notificationController.stream;
   
   /// Bildirim listesi değiştiğinde dinlemek için stream
-  static Stream<List<AppNotification>> get notifications => _notificationsListController.stream;
+  static Stream<List<NotificationModel>> get notifications => _notificationsListController.stream;
   
   /// Okunmamış bildirim sayısı
   static int get unreadCount => _notifications.where((n) => !n.isRead).length;
@@ -64,7 +64,7 @@ class NotificationService {
         
         _notifications.clear();
         _notifications.addAll(
-          decoded.map((item) => AppNotification.fromJson(item)).toList()
+          decoded.map((item) => NotificationModel.fromJson(item)).toList()
         );
         
         // Yeni bildirimleri tarihe göre sırala
@@ -99,7 +99,7 @@ class NotificationService {
   /// Yeni bildirim ekler.
   /// 
   /// Bildirim zaten mevcutsa, içeriğini günceller.
-  static Future<void> addNotification(AppNotification notification) async {
+  static Future<void> addNotification(NotificationModel notification) async {
     // Aynı ID'ye sahip önceki bildirimi bul
     final existingIndex = _notifications.indexWhere((n) => n.id == notification.id);
     
@@ -146,7 +146,7 @@ class NotificationService {
     bool anyUnread = _notifications.any((n) => !n.isRead);
     
     if (anyUnread) {
-      final updatedNotifications = <AppNotification>[];
+      final updatedNotifications = <NotificationModel>[];
       
       for (var notification in _notifications) {
         if (!notification.isRead) {
@@ -199,7 +199,7 @@ class NotificationService {
     debugPrint('Firebase bildirimi alındı: $message');
     
     try {
-      // Firebase mesajından AppNotification oluştur
+      // Firebase mesajından NotificationModel oluştur
       final notification = _createNotificationFromFirebaseMessage(message);
       await addNotification(notification);
     } catch (e) {
@@ -207,8 +207,8 @@ class NotificationService {
     }
   }
   
-  /// Firebase mesajından AppNotification nesnesi oluşturur
-  static AppNotification _createNotificationFromFirebaseMessage(Map<String, dynamic> message) {
+  /// Firebase mesajından NotificationModel nesnesi oluşturur
+  static NotificationModel _createNotificationFromFirebaseMessage(Map<String, dynamic> message) {
     final Map<String, dynamic> data = message['data'] ?? {};
     final Map<String, dynamic> notification = message['notification'] ?? {};
     
@@ -223,7 +223,7 @@ class NotificationService {
     extraData.remove('message');
     extraData.remove('type');
     
-    return AppNotification(
+    return NotificationModel(
       id: DateTime.now().millisecondsSinceEpoch,
       title: title,
       message: messageText,
