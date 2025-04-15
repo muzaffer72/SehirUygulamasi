@@ -4,6 +4,10 @@ class Constants {
   static const String tokenKey = 'auth_token';
   static const String userKey = 'user_data';
   
+  // Preferences
+  static const String themeKey = 'app_theme';
+  static const String notificationsKey = 'notifications_enabled';
+  
   // Pagination
   static const int defaultPageSize = 10;
   

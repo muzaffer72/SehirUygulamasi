@@ -1044,8 +1044,8 @@ class ApiService {
     }
   }
   
-  // Öncesi/Sonrası kayıtları için metotlar
-  Future<List<BeforeAfterRecord>> getBeforeAfterRecords(String postId) async {
+  // Öncesi/Sonrası kayıtları için metotlar (Eski API)
+  Future<List<BeforeAfterRecord>> getOldBeforeAfterRecords(String postId) async {
     try {
       final response = await get('api/before_after.php?post_id=$postId');
       
@@ -1136,7 +1136,7 @@ class ApiService {
     }
   }
   
-  Future<bool> markNotificationAsRead(String notificationId) async {
+  Future<bool> markOldNotificationAsRead(String notificationId) async {
     try {
       final response = await post('api/notifications.php', {
         'action': 'mark_read',
@@ -1154,7 +1154,7 @@ class ApiService {
     }
   }
   
-  Future<bool> markAllNotificationsAsRead({String? userId}) async {
+  Future<bool> markAllOldNotificationsAsRead({String? userId}) async {
     try {
       final Map<String, dynamic> requestBody = {'action': 'mark_all_read'};
       if (userId != null) requestBody['user_id'] = userId;
@@ -1169,6 +1169,30 @@ class ApiService {
     } catch (e) {
       print('Error marking all notifications as read: $e');
       return false;
+    }
+  }
+  
+  // Yeni ve eski metot sürümlerini birleştirme için yardımcı metotlar
+  Future<bool> markNotificationAsRead(dynamic notificationId) async {
+    if (notificationId is int) {
+      // Yeni API metodu kullan
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      final response = await _client.put(
+        Uri.parse('$baseUrl/api/notifications/$notificationId/read'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      return response.statusCode == 200;
+    } else {
+      // Eski API metodu kullan
+      return markOldNotificationAsRead(notificationId.toString());
     }
   }
   
@@ -1949,22 +1973,30 @@ class ApiService {
     return response.statusCode == 200;
   }
   
-  Future<bool> markAllNotificationsAsRead(int userId) async {
-    final token = await _getToken();
-    if (token == null) {
-      throw Exception('User not authenticated');
+  // Tüm bildirimleri okundu olarak işaretlemek için birleştirilmiş metot
+  Future<bool> markAllNotificationsAsRead(dynamic userId) async {
+    if (userId is int) {
+      // Yeni API metodu kullan
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      final response = await _client.put(
+        Uri.parse('$baseUrl/api/notifications/mark-all-read'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'user_id': userId}),
+      );
+      
+      return response.statusCode == 200;
+    } else {
+      // Eski API metodu kullan
+      String? userIdStr = userId is String ? userId : null;
+      return markAllOldNotificationsAsRead(userId: userIdStr);
     }
-    
-    final response = await _client.put(
-      Uri.parse('$baseUrl/api/notifications/mark-all-read'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({'user_id': userId}),
-    );
-    
-    return response.statusCode == 200;
   }
   
   // Before-After Records

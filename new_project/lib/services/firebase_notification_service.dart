@@ -17,6 +17,19 @@ class FirebaseNotificationService {
   static String? _fcmToken;
   static bool _isInitialized = false;
   
+  /// Bildirimlerin etkin olup olmadığını kontrol eder
+  static Future<bool> areNotificationsEnabled() async {
+    if (Platform.isIOS) {
+      final settings = await _messaging.getNotificationSettings();
+      return settings.authorizationStatus == AuthorizationStatus.authorized;
+    } else if (Platform.isAndroid) {
+      // Android'de izinler genellikle varsayılan olarak verilir
+      // Yine de kontrol etmek isteyebilirsiniz
+      return true;
+    }
+    return false;
+  }
+  
   /// Firebase bildirim servisini başlatır.
   /// 
   /// Gerekli izinleri ister, FCM token'ı alır, bildirim kanallarını oluşturur,
