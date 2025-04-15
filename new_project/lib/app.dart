@@ -187,13 +187,13 @@ class _BelediyeIletisimAppState extends ConsumerState<BelediyeIletisimApp> {
         } else if (settings.name == '/city_profile') {
           return MaterialPageRoute(
             builder: (context) => CityProfileScreen(
-              cityId: settings.arguments as int,
+              cityId: (settings.arguments as String),
             ),
           );
         } else if (settings.name == '/filtered_posts') {
           return MaterialPageRoute(
             builder: (context) => FilteredPostsScreen(
-              filterParams: settings.arguments as Map<String, dynamic>?,
+              filterParams: settings.arguments as Map<String, dynamic>,
             ),
           );
         }

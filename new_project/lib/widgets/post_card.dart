@@ -12,6 +12,8 @@ class PostCard extends StatefulWidget {
   final VoidCallback onLike;
   final VoidCallback onHighlight;
   final bool showFullContent;
+  final bool isDetailView;
+  final VoidCallback? onComment;
 
   const PostCard({
     Key? key,
@@ -20,6 +22,8 @@ class PostCard extends StatefulWidget {
     required this.onLike,
     required this.onHighlight,
     this.showFullContent = false,
+    this.isDetailView = false,
+    this.onComment,
   }) : super(key: key);
 
   @override
@@ -359,7 +363,7 @@ class _PostCardState extends State<PostCard> {
                               Navigator.pushNamed(
                                 context,
                                 '/city_profile',
-                                arguments: int.parse(city.id),
+                                arguments: city.id,
                               );
                             },
                             child: Text(
