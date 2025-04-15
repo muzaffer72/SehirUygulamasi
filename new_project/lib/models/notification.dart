@@ -2,7 +2,7 @@
 /// 
 /// Bu sınıf, API'den alınan bildirimleri temsil eder.
 /// NotificationModel sınıfından farklıdır (o Firebase bildirimleri içindir).
-class AppNotification {
+class DatabaseNotification {
   final String id;
   final String userId;
   final String title;
@@ -13,7 +13,7 @@ class AppNotification {
   final String? relatedPostId;
   final String? relatedCommentId;
   
-  AppNotification({
+  DatabaseNotification({
     required this.id,
     required this.userId,
     required this.title,
@@ -25,8 +25,8 @@ class AppNotification {
     this.relatedCommentId,
   });
   
-  factory AppNotification.fromJson(Map<String, dynamic> json) {
-    return AppNotification(
+  factory DatabaseNotification.fromJson(Map<String, dynamic> json) {
+    return DatabaseNotification(
       id: json['id'].toString(),
       userId: json['user_id'].toString(),
       title: json['title'],
