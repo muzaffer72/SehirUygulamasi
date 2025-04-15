@@ -12,15 +12,13 @@ if ($operation === 'delete' && isset($_GET['id'])) {
     $likeId = (int)$_GET['id'];
     
     try {
-        $query = "DELETE FROM user_likes WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->bind_param("i", $likeId);
-        $result = $stmt->execute();
+        $query = "DELETE FROM user_likes WHERE id = $1";
+        $result = pg_query_params($conn, $query, [$likeId]);
         
         if ($result) {
             $message = "Beğeni başarıyla silindi.";
         } else {
-            $error = "Beğeni silinirken bir hata oluştu.";
+            $error = "Beğeni silinirken bir hata oluştu: " . pg_last_error($conn);
         }
     } catch (Exception $e) {
         $error = "Veritabanı hatası: " . $e->getMessage();
@@ -89,9 +87,15 @@ try {
         $stmt->bind_param($types, ...$params);
     }
     
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $likes = $result->fetch_all(MYSQLI_ASSOC);
+    // PostgreSQL için sorgu çalıştır
+    $result = pg_query_params($conn, $query, $params);
+    
+    if (!$result) {
+        throw new Exception("PostgreSQL sorgu hatası: " . pg_last_error($conn));
+    }
+    
+    // Tüm sonuçları getir
+    $likes = pg_fetch_all($result) ?: [];
     
     // Toplam sayıyı getir
     $countQuery = "
@@ -105,15 +109,14 @@ try {
     array_pop($countParams); // offset parametresini çıkar
     $countTypes = substr($types, 0, -2); // son iki karakteri çıkar (ii)
     
-    $countStmt = $db->prepare($countQuery);
+    $countResult = pg_query_params($conn, $countQuery, $countParams);
     
-    if (!empty($countParams)) {
-        $countStmt->bind_param($countTypes, ...$countParams);
+    if (!$countResult) {
+        throw new Exception("PostgreSQL sayaç sorgusu hatası: " . pg_last_error($conn));
     }
     
-    $countStmt->execute();
-    $countResult = $countStmt->get_result();
-    $totalRows = $countResult->fetch_assoc()['total'];
+    $countRow = pg_fetch_assoc($countResult);
+    $totalRows = $countRow['total'];
     
     $totalPages = ceil($totalRows / $limit);
 } catch (Exception $e) {
@@ -126,8 +129,13 @@ try {
 // Kullanıcıları al (filtre için)
 try {
     $usersQuery = "SELECT id, username, name FROM users ORDER BY name ASC LIMIT 200";
-    $usersResult = $db->query($usersQuery);
-    $users = $usersResult->fetch_all(MYSQLI_ASSOC);
+    $usersResult = pg_query($conn, $usersQuery);
+    
+    if (!$usersResult) {
+        throw new Exception("PostgreSQL sorgu hatası: " . pg_last_error($conn));
+    }
+    
+    $users = pg_fetch_all($usersResult) ?: [];
 } catch (Exception $e) {
     $error = "Kullanıcılar alınırken hata: " . $e->getMessage();
     $users = [];
@@ -136,8 +144,13 @@ try {
 // Paylaşımları al (filtre için)
 try {
     $postsQuery = "SELECT id, title FROM posts ORDER BY created_at DESC LIMIT 100";
-    $postsResult = $db->query($postsQuery);
-    $posts = $postsResult->fetch_all(MYSQLI_ASSOC);
+    $postsResult = pg_query($conn, $postsQuery);
+    
+    if (!$postsResult) {
+        throw new Exception("PostgreSQL sorgu hatası: " . pg_last_error($conn));
+    }
+    
+    $posts = pg_fetch_all($postsResult) ?: [];
 } catch (Exception $e) {
     $error = "Paylaşımlar alınırken hata: " . $e->getMessage();
     $posts = [];
