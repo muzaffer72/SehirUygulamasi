@@ -1902,14 +1902,14 @@ class ApiService {
         
         if (data is Map<String, dynamic> && data.containsKey('data') && data['data'] is List) {
           final List<dynamic> notificationsData = data['data'];
-          return notificationsData.map((item) => app_notification.Notification.fromJson(item)).toList();
+          return notificationsData.map((item) => app_notification.AppNotification.fromJson(item)).toList();
         } 
         else if (data is Map<String, dynamic> && data.containsKey('notifications') && data['notifications'] is List) {
           final List<dynamic> notificationsData = data['notifications'];
-          return notificationsData.map((item) => app_notification.Notification.fromJson(item)).toList();
+          return notificationsData.map((item) => app_notification.AppNotification.fromJson(item)).toList();
         }
         else if (data is List) {
-          return data.map((item) => app_notification.Notification.fromJson(item)).toList();
+          return data.map((item) => app_notification.AppNotification.fromJson(item)).toList();
         } 
         else {
           print('Unexpected notifications response format: $data');
