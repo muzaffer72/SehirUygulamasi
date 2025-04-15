@@ -57,27 +57,37 @@ class _BelediyeIletisimAppState extends ConsumerState<BelediyeIletisimApp> {
     debugPrint('Bildirimler aktif mi: $notificationsEnabled');
     
     // Setup notification handlers
-    await FirebaseNotificationService.initialize(
-      onForegroundMessage: (message) {
-        debugPrint('Ön planda bildirim alındı: ${message.notification?.title}');
-        // Show in-app notification
-      },
-      onMessageOpenedApp: (message) {
-        debugPrint('Bildirim tıklanarak uygulama açıldı');
-        // Navigate to appropriate screen based on notification data
-        _handleNotificationNavigation(message.data);
-      },
-    );
+    await FirebaseNotificationService.initialize();
+    
+    // Bildirim yönetimini kurulduğunda bu fonksiyonları ekleyeceğiz
+    // Not: Firebase implementasyonu şu an için yokken bu kısmı yorum satırı haline getiriyoruz
+    /*
+    FirebaseNotificationService.onForegroundMessage = (message) {
+      debugPrint('Ön planda bildirim alındı: ${message.notification?.title}');
+      // Show in-app notification
+    };
+    
+    FirebaseNotificationService.onMessageOpenedApp = (message) {
+      debugPrint('Bildirim tıklanarak uygulama açıldı');
+      // Navigate to appropriate screen based on notification data
+      _handleNotificationNavigation(message.data);
+    };
+    */
   }
   
   // Initialize dynamic links service
   Future<void> _initDynamicLinks() async {
-    await DynamicLinksService.initialize(
-      onDynamicLink: (dynamicLink) {
-        debugPrint('Dinamik bağlantı alındı: ${dynamicLink.link}');
-        _handleDeepLink(dynamicLink.link);
-      },
-    );
+    final dynamicLinksService = DynamicLinksService();
+    dynamicLinksService.initialize();
+    
+    // Uri'leri dinlemek için listener ekliyoruz
+    dynamicLinksService.addListener((uri) {
+      debugPrint('Dinamik bağlantı alındı: $uri');
+      _handleDeepLink(uri);
+    });
+    
+    // Test amaçlı simüle edilmiş örnek bir link:
+    // dynamicLinksService.simulateDynamicLink('/post/123');
   }
   
   // Handle navigation from notification
@@ -171,7 +181,7 @@ class _BelediyeIletisimAppState extends ConsumerState<BelediyeIletisimApp> {
         if (settings.name == '/post_detail') {
           return MaterialPageRoute(
             builder: (context) => PostDetailScreen(
-              postId: settings.arguments as String,
+              id: settings.arguments as String,
             ),
           );
         } else if (settings.name == '/city_profile') {
@@ -183,7 +193,7 @@ class _BelediyeIletisimAppState extends ConsumerState<BelediyeIletisimApp> {
         } else if (settings.name == '/filtered_posts') {
           return MaterialPageRoute(
             builder: (context) => FilteredPostsScreen(
-              filterArgs: settings.arguments as Map<String, dynamic>,
+              filterParams: settings.arguments as Map<String, dynamic>?,
             ),
           );
         }

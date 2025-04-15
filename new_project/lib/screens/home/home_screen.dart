@@ -301,7 +301,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => PostDetailScreen(
-                                      postId: post.id,
+                                      id: post.id,
                                     ),
                                   ),
                                 );
