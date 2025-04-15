@@ -28,17 +28,28 @@ cp -r temp_backup/assets new_project/assets/
    - `new_project/android/app/build.gradle` dosyasını güncelleyin:
      - Paket adını `belediye.iletisim.merkezi` olarak ayarlayın
      - Firebase bağımlılıkları ekleyin
-     - Java sürümünü 11 olarak ayarlayın
+     - Java sürümünü 17 olarak ayarlayın
    - `new_project/android/settings.gradle` dosyasını güncelleyin:
-     - Kotlin sürümünü 1.8.20 olarak ayarlayın
+     - Kotlin sürümünü 1.9.22 olarak ayarlayın
+   - `new_project/android/build.gradle` dosyasını güncelleyin:
+     - Gradle sürümünü 8.2.2 olarak ayarlayın
 
-5. Firebase ve bildirim yapılandırmasını tamamlayın:
+5. Gradle wrapper yapılandırmasını güncelleyin:
+   - `new_project/android/gradle/wrapper/gradle-wrapper.properties` dosyasında distributionUrl değerini güncelleyin:
+     - `distributionUrl=https\://services.gradle.org/distributions/gradle-8.3-all.zip`
+
+6. Firebase ve bildirim yapılandırmasını tamamlayın:
    - `FirebaseMessagingService.java` dosyasını oluşturun
    - Bildirim kanallarını ayarlayın
 
-6. Eski projeyi değiştirin:
+7. Eski projeyi değiştirin:
 ```bash
 ./replace_project.sh
+```
+
+8. Bağımlılıkları yükleyin:
+```bash
+flutter clean && flutter pub get
 ```
 
 ## GitHub Actions APK Derlemesi
