@@ -478,6 +478,248 @@ class _PostCardState extends State<PostCard> {
     return TextOverflow.ellipsis;
   }
   
+  // Twitter tarzı header
+  Widget _buildTwitterHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Avatar (veya şikayet tipi ikonu)
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: widget.post.type == PostType.problem
+                  ? Colors.red.withOpacity(0.1)
+                  : Colors.green.withOpacity(0.1),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: widget.post.type == PostType.problem
+                    ? Colors.red.withOpacity(0.3)
+                    : Colors.green.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                widget.post.type == PostType.problem
+                    ? Icons.warning_rounded
+                    : Icons.lightbulb_outline,
+                color: widget.post.type == PostType.problem
+                    ? Colors.red
+                    : Colors.green,
+                size: 24,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          
+          // Kullanıcı bilgileri
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Kullanıcı adı ve kontrol ikonu
+                Row(
+                  children: [
+                    widget.post.isAnonymous
+                        ? const Text(
+                            'Anonim',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          )
+                        : FutureBuilder<User>(
+                            future: _apiService.getUserById(widget.post.userId),
+                            builder: (context, snapshot) {
+                              final userName = snapshot.hasData
+                                  ? snapshot.data!.name
+                                  : 'Yükleniyor...';
+                              
+                              return Text(
+                                userName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              );
+                            },
+                          ),
+                    
+                    if (!widget.post.isAnonymous)
+                      const Icon(
+                        Icons.verified,
+                        color: Colors.blue,
+                        size: 14,
+                      ),
+                    
+                    Text(
+                      ' · ',
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 15,
+                      ),
+                    ),
+                    
+                    // Zaman
+                    Text(
+                      timeago.format(widget.post.createdAt, locale: 'tr'),
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // Konum bilgisi
+                if (widget.post.cityId != null)
+                  FutureBuilder<List<dynamic>>(
+                    future: Future.wait([
+                      _apiService.getCityById(widget.post.cityId!),
+                      if (widget.post.districtId != null) 
+                        _apiService.getDistrictById(widget.post.districtId!) 
+                      else 
+                        Future.value(null),
+                    ]),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return Text(
+                          'Yükleniyor...',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                          ),
+                        );
+                      }
+                      
+                      final city = snapshot.data![0];
+                      final district = snapshot.data!.length > 1 ? snapshot.data![1] : null;
+                      
+                      final locationText = district != null 
+                          ? '${district.name}, ${city.name}' 
+                          : city.name;
+                      
+                      return Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            size: 12,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 2),
+                          GestureDetector(
+                            onTap: () {
+                              // Şehir profil sayfasına git
+                              Navigator.pushNamed(
+                                context,
+                                '/city_profile',
+                                arguments: int.parse(city.id),
+                              );
+                            },
+                            child: Text(
+                              locationText,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                
+                // Kategori
+                if (widget.post.categoryId != null)
+                  FutureBuilder<Category?>(
+                    future: _apiService.getCategoryById(widget.post.categoryId!),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const SizedBox.shrink();
+                      }
+                      
+                      final category = snapshot.data!;
+                      
+                      return GestureDetector(
+                        onTap: () {
+                          // Kategori filtresi için
+                          Navigator.pushNamed(
+                            context,
+                            '/filtered_posts',
+                            arguments: {
+                              'filterType': 'category',
+                              'categoryId': category.id,
+                              'categoryName': category.name,
+                            },
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            category.name,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
+          
+          // Seçenekler menüsü
+          IconButton(
+            icon: const Icon(Icons.more_vert, size: 16),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () {
+              // Daha fazla seçenek
+              showModalBottomSheet(
+                context: context,
+                builder: (context) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.report),
+                      title: const Text('Bildir'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Bildirim alma özelliği yakında eklenecek')),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.bookmark_border),
+                      title: const Text('Kaydet'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Kaydetme özelliği yakında eklenecek')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+  
   Color _getStatusColor(PostStatus status) {
     switch (status) {
       case PostStatus.awaitingSolution:
@@ -515,5 +757,353 @@ class _PostCardState extends State<PostCard> {
       case PostStatus.rejected:
         return 'Reddedildi';
     }
+  }
+  
+  // Twitter tarzı resim grid'i
+  Widget _buildTwitterImageGrid(List<String> imageUrls) {
+    if (imageUrls.isEmpty) return const SizedBox.shrink();
+    
+    // Twitter tarzı fotoğraf gösterimi (1-4 arası)
+    if (imageUrls.length == 1) {
+      // Tek fotoğraf
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: CachedNetworkImage(
+          imageUrl: imageUrls[0],
+          height: 200,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Container(
+            color: Colors.grey[300],
+            height: 200,
+            width: double.infinity,
+          ),
+          errorWidget: (context, url, error) => Container(
+            color: Colors.grey[300],
+            height: 200,
+            width: double.infinity,
+            child: const Center(
+              child: Icon(Icons.error, color: Colors.red),
+            ),
+          ),
+        ),
+      );
+    } else if (imageUrls.length == 2) {
+      // İki fotoğraf yan yana
+      return Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+              ),
+              child: CachedNetworkImage(
+                imageUrl: imageUrls[0],
+                height: 200,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey[300],
+                  height: 200,
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[300],
+                  height: 200,
+                  child: const Center(
+                    child: Icon(Icons.error, color: Colors.red),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+              child: CachedNetworkImage(
+                imageUrl: imageUrls[1],
+                height: 200,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey[300],
+                  height: 200,
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[300],
+                  height: 200,
+                  child: const Center(
+                    child: Icon(Icons.error, color: Colors.red),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    } else if (imageUrls.length == 3) {
+      // Bir büyük, iki küçük
+      return Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+              ),
+              child: CachedNetworkImage(
+                imageUrl: imageUrls[0],
+                height: 200,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey[300],
+                  height: 200,
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[300],
+                  height: 200,
+                  child: const Center(
+                    child: Icon(Icons.error, color: Colors.red),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            flex: 1,
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(16),
+                  ),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrls[1],
+                    height: 99,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[300],
+                      height: 99,
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[300],
+                      height: 99,
+                      child: const Center(
+                        child: Icon(Icons.error, color: Colors.red),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomRight: Radius.circular(16),
+                  ),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrls[2],
+                    height: 99,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[300],
+                      height: 99,
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[300],
+                      height: 99,
+                      child: const Center(
+                        child: Icon(Icons.error, color: Colors.red),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Dört fotoğraf (2x2 grid)
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                  ),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrls[0],
+                    height: 120,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[300],
+                      height: 120,
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[300],
+                      height: 120,
+                      child: const Center(
+                        child: Icon(Icons.error, color: Colors.red),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(16),
+                  ),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrls[1],
+                    height: 120,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[300],
+                      height: 120,
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[300],
+                      height: 120,
+                      child: const Center(
+                        child: Icon(Icons.error, color: Colors.red),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                  ),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrls[2],
+                    height: 120,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[300],
+                      height: 120,
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[300],
+                      height: 120,
+                      child: const Center(
+                        child: Icon(Icons.error, color: Colors.red),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              Expanded(
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        bottomRight: Radius.circular(16),
+                      ),
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrls[3],
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: Colors.grey[300],
+                          height: 120,
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey[300],
+                          height: 120,
+                          child: const Center(
+                            child: Icon(Icons.error, color: Colors.red),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // "More" göstergesi
+                    if (imageUrls.length > 4)
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            bottomRight: Radius.circular(16),
+                          ),
+                          child: Container(
+                            color: Colors.black.withOpacity(0.5),
+                            child: Center(
+                              child: Text(
+                                '+${imageUrls.length - 4}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+  }
+  
+  // Twitter tarzı aksiyon butonu
+  Widget _buildTwitterActionButton({
+    required IconData icon,
+    required IconData activeIcon,
+    required int count,
+    required Color color,
+    required VoidCallback onTap,
+    bool showCount = true,
+  }) {
+    final isActive = count > 0;
+    
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isActive ? activeIcon : icon,
+              size: 16,
+              color: isActive ? color : Colors.grey[600],
+            ),
+            if (showCount) ...[
+              const SizedBox(width: 4),
+              Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isActive ? color : Colors.grey[600],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }
