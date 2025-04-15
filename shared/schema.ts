@@ -88,6 +88,15 @@ export const posts = pgTable('posts', {
   highlights: integer('highlights').default(0).notNull(),
   commentCount: integer('comment_count').default(0).notNull(),
   isAnonymous: boolean('is_anonymous').default(false).notNull(),
+  // Konum bilgileri
+  latitude: text('latitude'), // Enlem
+  longitude: text('longitude'), // Boylam
+  address: text('address'), // Tam adres
+  neighborhood: varchar('neighborhood', { length: 100 }), // Mahalle
+  street: varchar('street', { length: 100 }), // Sokak
+  locationDetails: text('location_details'), // Konum ile ilgili ek detaylar
+  // Memnuniyet seviyesi (çözülmüş şikayetler için)
+  satisfactionRating: integer('satisfaction_rating'), // 1-5 arası puan
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -213,6 +222,8 @@ export const notifications = pgTable('notifications', {
   sourceId: integer('source_id'), // İlgili kaynak ID (post, comment vb.)
   sourceType: varchar('source_type', { length: 50 }), // 'post', 'comment', 'reply'
   data: text('data'), // JSON olarak ek veriler
+  isArchived: boolean('is_archived').default(false).notNull(), // Bildirimin arşivlenip arşivlenmediği
+  groupId: varchar('group_id', { length: 100 }), // Benzer bildirimleri gruplamak için kullanılır (ör. aynı gönderi için tüm yorumlar)
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -238,6 +249,18 @@ export const cityStats = pgTable('city_stats', {
   title: varchar('title', { length: 100 }).notNull(),
   description: text('description'),
   value: varchar('value', { length: 50 }),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Çözülen Sorunların Öncesi ve Sonrası Tablosu
+export const beforeAfterRecords = pgTable('before_after_records', {
+  id: serial('id').primaryKey(),
+  postId: integer('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  beforeImageUrl: text('before_image_url').notNull(), // Öncesini gösteren görsel
+  afterImageUrl: text('after_image_url').notNull(), // Sonrasını gösteren görsel
+  description: text('description'), // Değişiklik ile ilgili açıklama
+  recordedBy: integer('recorded_by').references(() => users.id), // Kaydeden kullanıcı
+  recordDate: timestamp('record_date').defaultNow().notNull(), // Kayıt tarihi
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
