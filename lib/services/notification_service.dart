@@ -99,7 +99,7 @@ class NotificationService {
   /// Yeni bildirim ekler.
   /// 
   /// Bildirim zaten mevcutsa, içeriğini günceller.
-  static Future<void> addNotification(AppNotification notification) async {
+  static Future<void> addNotification(NotificationModel notification) async {
     // Aynı ID'ye sahip önceki bildirimi bul
     final existingIndex = _notifications.indexWhere((n) => n.id == notification.id);
     
@@ -142,7 +142,7 @@ class NotificationService {
     bool anyUnread = _notifications.any((n) => !n.isRead);
     
     if (anyUnread) {
-      final updatedNotifications = <AppNotification>[];
+      final updatedNotifications = <NotificationModel>[];
       
       for (var notification in _notifications) {
         if (!notification.isRead) {
@@ -203,8 +203,8 @@ class NotificationService {
     }
   }
   
-  /// Firebase mesajından AppNotification nesnesi oluşturur
-  static AppNotification _createNotificationFromFirebaseMessage(Map<String, dynamic> message) {
+  /// Firebase mesajından NotificationModel nesnesi oluşturur
+  static NotificationModel _createNotificationFromFirebaseMessage(Map<String, dynamic> message) {
     final Map<String, dynamic> data = message['data'] ?? {};
     final Map<String, dynamic> notification = message['notification'] ?? {};
     
@@ -219,7 +219,7 @@ class NotificationService {
     extraData.remove('message');
     extraData.remove('type');
     
-    return AppNotification(
+    return NotificationModel(
       id: DateTime.now().millisecondsSinceEpoch,
       title: title,
       message: messageText,
