@@ -78,10 +78,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     });
     
     try {
+      final authProvider = ref.read(authProvider.notifier);
+      if (authProvider.currentUser == null) {
+        _showErrorSnackBar('Yorum eklemek için giriş yapmalısınız');
+        return;
+      }
+
       final comment = await _apiService.addComment(
         widget.post.id,
         content,
-        isAnonymous: _isAnonymousComment,
+        userId: authProvider.currentUser!.id.toString(),
       );
       
       setState(() {

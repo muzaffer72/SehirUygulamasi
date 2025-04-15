@@ -31,7 +31,9 @@ class CityProfileScreen extends ConsumerWidget {
         title: const Text('Şehir Profili'),
       ),
       body: cityProfileAsync.when(
-        data: (city) => _buildCityProfile(context, ref, city, postsAsync),
+        data: (city) {
+          return _buildCityProfile(context, ref, city, postsAsync);
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => Center(
           child: Text('Profil yüklenirken hata: $error'),

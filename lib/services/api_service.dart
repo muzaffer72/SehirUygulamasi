@@ -2236,6 +2236,27 @@ class ApiService {
     }
   }
   
+  // Filtrelenmiş gönderileri getirme
+  Future<List<Post>> getFilteredPosts(Map<String, dynamic> filterParams) async {
+    print('Getting filtered posts with params: $filterParams');
+    
+    // Parametreleri çıkart
+    String? status = filterParams['status'] as String?;
+    String? categoryId = filterParams['categoryId'] as String?;
+    String? type = filterParams['type'] as String?;
+    String? cityId = filterParams['cityId'] as String?;
+    String? districtId = filterParams['districtId'] as String?;
+    
+    // Tip güvenli getPosts metodunu çağır
+    return getPosts(
+      status: status,
+      categoryId: categoryId,
+      type: type != null ? type == 'problem' ? PostType.problem : PostType.general : null,
+      cityId: cityId,
+      districtId: districtId,
+    );
+  }
+
   // Çözülmüş şikayetler için memnuniyet bildirimi gönderme
   // Kullanıcı profil bilgilerini güncelleme
   Future<User?> updateUserProfile(
