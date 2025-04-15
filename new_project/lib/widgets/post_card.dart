@@ -620,7 +620,7 @@ class _PostCardState extends State<PostCard> {
                               Navigator.pushNamed(
                                 context,
                                 '/city_profile',
-                                arguments: int.parse(city.id),
+                                arguments: city.id,
                               );
                             },
                             child: Text(
