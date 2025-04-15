@@ -2235,4 +2235,64 @@ class ApiService {
       return false;
     }
   }
+  
+  // Çözülmüş şikayetler için memnuniyet bildirimi gönderme
+  Future<bool> submitSatisfactionResponse({
+    required dynamic postId, 
+    required dynamic userId,
+    required int rating,
+    String? comment
+  }) async {
+    print('Submitting satisfaction response for post ID: $postId, user ID: $userId, rating: $rating');
+    
+    try {
+      final token = await _getToken();
+      
+      if (token == null) {
+        print('Failed to submit satisfaction: User not authenticated');
+        return false;
+      }
+      
+      // postId ve userId'yi String'e dönüştür (int veya String olabilir)
+      final String postIdStr = postId.toString();
+      final String userIdStr = userId.toString();
+      
+      // API isteği gövdesini hazırla
+      final Map<String, dynamic> requestBody = {
+        'post_id': postIdStr,
+        'user_id': userIdStr,
+        'rating': rating,
+      };
+      
+      if (comment != null && comment.isNotEmpty) {
+        requestBody['comment'] = comment;
+      }
+      
+      // Laravel API'ye POST isteği gönder
+      final response = await _client.post(
+        Uri.parse('$baseUrl/api/satisfaction-responses'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(requestBody),
+      );
+      
+      print('Satisfaction response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Successfully submitted satisfaction response');
+        return true;
+      } else {
+        print('Failed to submit satisfaction response: ${response.body}');
+        // Var olan V2 metodu yedek olarak kullan
+        return await submitSatisfactionRatingV2(postId, rating);
+      }
+    } catch (e) {
+      print('Error submitting satisfaction response: $e');
+      // Var olan V2 metodu yedek olarak kullan
+      return await submitSatisfactionRatingV2(postId, rating);
+    }
+  }
 }
