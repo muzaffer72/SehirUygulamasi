@@ -284,7 +284,7 @@ class _PostCardState extends State<PostCard> {
                           fontWeight: FontWeight.bold,
                         ),
                       )
-                    : FutureBuilder<User>(
+                    : FutureBuilder<User?>(
                         future: _apiService.getUserById(widget.post.userId),
                         builder: (context, snapshot) {
                           final userName = snapshot.hasData
@@ -327,7 +327,7 @@ class _PostCardState extends State<PostCard> {
                         color: Colors.grey,
                       ),
                       const SizedBox(width: 2),
-                      FutureBuilder<List<dynamic>>(
+                      FutureBuilder<List<dynamic>?>(
                         future: Future.wait([
                           _apiService.getCityById(widget.post.cityId!),
                           if (widget.post.districtId != null) 
