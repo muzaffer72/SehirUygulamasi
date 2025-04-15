@@ -1,67 +1,86 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class ApiHelper {
-  /// Web uygulaması veya mobil için API adresini oluşturur
-  static String getApiBaseUrl() {
+  // API baz URL'ini döndürür
+  static String getBaseUrl() {
     if (kIsWeb) {
-      // Web'de çalışırken API proxy adresini kullanıyoruz
-      // Şu anki adresten Replit'in ana adresini ayıklıyoruz
-      final url = Uri.base.toString();
-      final parts = url.split('.');
-      if (parts.length >= 2) {
-        // Bu ana proje adresidir, örn: https://workspace.guzelimbatmanli.repl.co
-        return '$url/api';
-      }
-      // Eğer ayıklama işlemi başarısız olursa sabit adres kullan
-      return 'https://workspace.guzelimbatmanli.repl.co/api';
+      // Web platformu için
+      return _getWebApiBaseUrl();
+    } else if (Platform.isAndroid) {
+      // Android için
+      return _getAndroidApiBaseUrl();
+    } else if (Platform.isIOS) {
+      // iOS için
+      return _getIOSApiBaseUrl();
     } else {
-      // Lokalde geliştirme yaparken localhost kullan
-      if (kDebugMode) {
-        return 'http://0.0.0.0:9000/api';
-      }
-      
-      // Gerçek cihazda çalışırken Replit projesinin canlı adresini kullan
-      return 'https://workspace.guzelimbatmanli.repl.co/api';
+      // Diğer platformlar için
+      return _getWebApiBaseUrl();
     }
   }
   
-  /// Medya dosya URL'lerini düzenler (görseller, belgeler vb.)
-  static String fixMediaUrl(String? url) {
-    if (url == null || url.isEmpty) {
-      return 'assets/images/placeholder.png'; // Varsayılan görsel
-    }
-    
-    // URL zaten tam bir adres ise (http veya https ile başlıyorsa) olduğu gibi bırak
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    // URL dosya yolu ise (örn: /uploads/image.jpg) API adresine ekle
-    if (url.startsWith('/')) {
-      // Admin panel host adresine ekle (uploads klasörü admin panelde)
-      final baseUrlWithoutApi = getApiBaseUrl().replaceAll('/api', '');
-      final hostParts = baseUrlWithoutApi.split('://');
-      final protocol = hostParts[0]; // http veya https
-      final host = hostParts[1].split('/')[0]; // örn: workspace.guzelimbatmanli.repl.co
-      
-      return '$protocol://$host$url';
-    }
-    
-    // Diğer durumlarda olduğu gibi bırak
-    return url;
+  // Web platformu için API URL'i
+  static String _getWebApiBaseUrl() {
+    // Web'de aynı domain'de çalışacak şekilde ("/api" prefix ile)
+    return '';
   }
   
-  /// Debug modda olup olmadığımızı kontrol et 
-  static bool get kDebugMode {
-    bool inDebugMode = false;
-    
-    // Debug modunu kontrol etmek için assert kullanılır
-    assert((){
-      inDebugMode = true;
-      return true;
-    }());
-    
-    return inDebugMode;
+  // Android platformu için API URL'i
+  static String _getAndroidApiBaseUrl() {
+    // Yerel geliştirme için
+    if (kDebugMode) {
+      // Emülatör için 10.0.2.2 (localhost yerine)
+      return 'http://10.0.2.2:9000';
+    }
+    // Gerçek cihazlar için
+    return 'https://workspace.guzelimbatmanli.repl.co/api';
+  }
+  
+  // iOS platformu için API URL'i
+  static String _getIOSApiBaseUrl() {
+    // Yerel geliştirme için
+    if (kDebugMode) {
+      return 'http://localhost:9000';
+    }
+    // Gerçek cihazlar için
+    return 'https://workspace.guzelimbatmanli.repl.co/api';
+  }
+  
+  // API yolunu standart hale getir
+  static String normalizePath(String path) {
+    // Yolun başında '/' varsa kaldır
+    if (path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    return path;
+  }
+  
+  // HTTP hata kodlarını kontrol et
+  static bool isSuccessResponse(int statusCode) {
+    return statusCode >= 200 && statusCode < 300;
+  }
+  
+  // HTTP yanıt kodlarına göre hata mesajı döndür
+  static String getErrorMessageForStatusCode(int statusCode) {
+    switch (statusCode) {
+      case 400:
+        return 'Geçersiz istek formatı (400)';
+      case 401:
+        return 'Yetkilendirme hatası, lütfen tekrar giriş yapın (401)';
+      case 403:
+        return 'Bu işlem için yetkiniz bulunmuyor (403)';
+      case 404:
+        return 'İstenen kaynak bulunamadı (404)';
+      case 422:
+        return 'Doğrulama hatası (422)';
+      case 429:
+        return 'Çok fazla istek gönderildi, lütfen daha sonra tekrar deneyin (429)';
+      case 500:
+        return 'Sunucu hatası (500)';
+      case 503:
+        return 'Servis geçici olarak kullanılamıyor (503)';
+      default:
+        return 'Bir hata oluştu: $statusCode';
+    }
   }
 }

@@ -1,65 +1,74 @@
-import 'package:flutter/material.dart';
-
 class User {
   final String id;
   final String name;
+  final String email;
   final String? username;
-  final String? email;
   final String? phone;
+  final String? bio;
   final String? profileImageUrl;
   final String? coverImageUrl;
-  final String? bio;
-  final bool isVerified;
-  final bool isAdmin;
-  final DateTime createdAt;
-  final int postCount;
-  final int followerCount;
-  final int followingCount;
-  final int cityId;
+  final String cityId;
+  final String? districtId;
   final String? cityName;
   final String? districtName;
+  final int postCount;
+  final int followersCount;
+  final int followingCount;
+  final int solutionCount;
+  final String? role; // 'user', 'moderator', 'admin'
+  final bool isVerified;
+  final DateTime createdAt;
+  final DateTime? lastLogin;
 
   User({
     required this.id,
     required this.name,
+    required this.email,
     this.username,
-    this.email,
     this.phone,
+    this.bio,
     this.profileImageUrl,
     this.coverImageUrl,
-    this.bio,
-    this.isVerified = false,
-    this.isAdmin = false,
-    required this.createdAt,
-    this.postCount = 0,
-    this.followerCount = 0,
-    this.followingCount = 0,
     required this.cityId,
+    this.districtId,
     this.cityName,
     this.districtName,
+    this.postCount = 0,
+    this.followersCount = 0,
+    this.followingCount = 0,
+    this.solutionCount = 0,
+    this.role = 'user',
+    this.isVerified = false,
+    required this.createdAt,
+    this.lastLogin,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'].toString(),
-      name: json['name'] ?? 'İsimsiz Kullanıcı',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
       username: json['username'],
-      email: json['email'],
       phone: json['phone'],
+      bio: json['bio'],
       profileImageUrl: json['profile_image_url'],
       coverImageUrl: json['cover_image_url'],
-      bio: json['bio'],
+      cityId: json['city_id']?.toString() ?? '0',
+      districtId: json['district_id']?.toString(),
+      cityName: json['city_name'],
+      districtName: json['district_name'],
+      postCount: json['post_count'] ?? 0,
+      followersCount: json['followers_count'] ?? 0,
+      followingCount: json['following_count'] ?? 0,
+      solutionCount: json['solution_count'] ?? 0,
+      role: json['role'] ?? 'user',
       isVerified: json['is_verified'] ?? false,
-      isAdmin: json['is_admin'] ?? false,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
-      postCount: json['post_count'] ?? 0,
-      followerCount: json['follower_count'] ?? 0,
-      followingCount: json['following_count'] ?? 0,
-      cityId: int.tryParse(json['city_id']?.toString() ?? '0') ?? 0,
-      cityName: json['city_name'],
-      districtName: json['district_name'],
+      lastLogin: json['last_login'] != null
+          ? DateTime.parse(json['last_login'])
+          : null,
     );
   }
 
@@ -67,61 +76,70 @@ class User {
     return {
       'id': id,
       'name': name,
-      'username': username,
       'email': email,
+      'username': username,
       'phone': phone,
+      'bio': bio,
       'profile_image_url': profileImageUrl,
       'cover_image_url': coverImageUrl,
-      'bio': bio,
-      'is_verified': isVerified,
-      'is_admin': isAdmin,
-      'created_at': createdAt.toIso8601String(),
-      'post_count': postCount,
-      'follower_count': followerCount,
-      'following_count': followingCount,
       'city_id': cityId,
+      'district_id': districtId,
       'city_name': cityName,
       'district_name': districtName,
+      'post_count': postCount,
+      'followers_count': followersCount,
+      'following_count': followingCount,
+      'solution_count': solutionCount,
+      'role': role,
+      'is_verified': isVerified,
+      'created_at': createdAt.toIso8601String(),
+      'last_login': lastLogin?.toIso8601String(),
     };
   }
 
   User copyWith({
     String? id,
     String? name,
-    String? username,
     String? email,
+    String? username,
     String? phone,
+    String? bio,
     String? profileImageUrl,
     String? coverImageUrl,
-    String? bio,
-    bool? isVerified,
-    bool? isAdmin,
-    DateTime? createdAt,
-    int? postCount,
-    int? followerCount,
-    int? followingCount,
-    int? cityId,
+    String? cityId,
+    String? districtId,
     String? cityName,
     String? districtName,
+    int? postCount,
+    int? followersCount,
+    int? followingCount,
+    int? solutionCount,
+    String? role,
+    bool? isVerified,
+    DateTime? createdAt,
+    DateTime? lastLogin,
   }) {
     return User(
       id: id ?? this.id,
       name: name ?? this.name,
-      username: username ?? this.username,
       email: email ?? this.email,
+      username: username ?? this.username,
       phone: phone ?? this.phone,
+      bio: bio ?? this.bio,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       coverImageUrl: coverImageUrl ?? this.coverImageUrl,
-      bio: bio ?? this.bio,
-      isVerified: isVerified ?? this.isVerified,
-      isAdmin: isAdmin ?? this.isAdmin,
-      createdAt: createdAt ?? this.createdAt,
-      postCount: postCount ?? this.postCount,
-      followerCount: followerCount ?? this.followerCount,
-      followingCount: followingCount ?? this.followingCount,
       cityId: cityId ?? this.cityId,
+      districtId: districtId ?? this.districtId,
       cityName: cityName ?? this.cityName,
       districtName: districtName ?? this.districtName,
+      postCount: postCount ?? this.postCount,
+      followersCount: followersCount ?? this.followersCount,
+      followingCount: followingCount ?? this.followingCount,
+      solutionCount: solutionCount ?? this.solutionCount,
+      role: role ?? this.role,
+      isVerified: isVerified ?? this.isVerified,
+      createdAt: createdAt ?? this.createdAt,
+      lastLogin: lastLogin ?? this.lastLogin,
     );
   }
 }
