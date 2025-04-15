@@ -228,12 +228,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   Row(
                     children: [
                       // Author
-                      FutureBuilder<User>(
+                      FutureBuilder<User?>(
                         future: _apiService.getUserById(widget.post.userId),
                         builder: (context, snapshot) {
                           final String authorName = widget.post.isAnonymous
                               ? 'Anonim'
-                              : snapshot.hasData
+                              : snapshot.hasData && snapshot.data != null
                                   ? snapshot.data!.name
                                   : 'Yükleniyor...';
                           
@@ -543,12 +543,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         Row(
           children: [
             // Author
-            FutureBuilder<User>(
+            FutureBuilder<User?>(
               future: _apiService.getUserById(comment.userId),
               builder: (context, snapshot) {
                 final String authorName = comment.isAnonymous
                     ? 'Anonim'
-                    : snapshot.hasData
+                    : snapshot.hasData && snapshot.data != null
                         ? snapshot.data!.name
                         : 'Yükleniyor...';
                 
@@ -670,12 +670,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     Row(
                       children: [
                         // Author
-                        FutureBuilder<User>(
+                        FutureBuilder<User?>(
                           future: _apiService.getUserById(reply.userId),
                           builder: (context, snapshot) {
                             final String authorName = reply.isAnonymous
                                 ? 'Anonim'
-                                : snapshot.hasData
+                                : snapshot.hasData && snapshot.data != null
                                     ? snapshot.data!.name
                                     : 'Yükleniyor...';
                             

@@ -1059,13 +1059,33 @@ class ApiService {
     }
   }
   
-  Future<User> getUserById(String id) async {
-    final response = await _client.get(Uri.parse('$baseUrl/users/$id'));
-    
-    if (response.statusCode == 200) {
-      return User.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to load user: ${response.body}');
+  Future<User?> getUserById(String id) async {
+    try {
+      final response = await _client.get(Uri.parse('$baseUrl/users/$id'));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        // API yanıt formatını kontrol et
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('data')) {
+            return User.fromJson(data['data']);
+          } else if (data.containsKey('user')) {
+            return User.fromJson(data['user']);
+          } else {
+            return User.fromJson(data);
+          }
+        } else {
+          print('Unexpected user data format');
+          return null;
+        }
+      } else {
+        print('Failed to load user: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching user: $e');
+      return null;
     }
   }
   
