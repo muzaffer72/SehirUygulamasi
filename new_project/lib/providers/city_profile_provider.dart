@@ -11,7 +11,8 @@ final cityProfileProvider = FutureProvider.family<dynamic, dynamic>(
   (ref, cityId) async {
     final apiService = ref.watch(apiServiceProvider);
     // cityId'nin hem int hem de String olabilmesi için
-    return apiService.getCityProfile(cityId);
+    final cityIdStr = cityId.toString();
+    return await apiService.getCityProfile(cityIdStr);
   },
 );
 

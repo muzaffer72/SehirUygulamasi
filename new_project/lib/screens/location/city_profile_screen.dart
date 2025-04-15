@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:belediye_iletisim_merkezi/models/city.dart';
-import 'package:belediye_iletisim_merkezi/providers/city_profile_provider.dart';
-import 'package:belediye_iletisim_merkezi/providers/post_provider.dart';
-import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
-import 'package:belediye_iletisim_merkezi/screens/posts/post_detail_screen.dart';
+import '../../models/city_profile.dart';
+import '../../providers/city_profile_provider.dart';
+import '../../providers/post_provider.dart';
+import '../../widgets/post_card.dart';
+import '../posts/post_detail_screen.dart';
+import '../../models/post.dart';
 
 class CityProfileScreen extends ConsumerWidget {
   @override
@@ -122,7 +123,7 @@ class CityProfileScreen extends ConsumerWidget {
                     ),
                   
                   // Contact info
-                  if (city.contactPhone != null || city.contactEmail != null || city.websiteUrl != null)
+                  if (city.contactPhone != null || city.contactEmail != null || city.website != null)
                     Card(
                       margin: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Padding(
@@ -157,14 +158,14 @@ class CityProfileScreen extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                            if (city.websiteUrl != null)
+                            if (city.website != null)
                               Padding(
                                 padding: const EdgeInsets.only(top: 4.0),
                                 child: Row(
                                   children: [
                                     const Icon(Icons.link, size: 16),
                                     const SizedBox(width: 8),
-                                    Text(city.websiteUrl!),
+                                    Text(city.website!),
                                   ],
                                 ),
                               ),
@@ -187,17 +188,20 @@ class CityProfileScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         LinearProgressIndicator(
-                          value: city.solutionRate,
+                          value: (city.solutionRate is double) ? city.solutionRate : city.solutionRate / 100,
                           minHeight: 10,
                           backgroundColor: Colors.grey[300],
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            city.solutionRate > 0.7 ? Colors.green : 
-                            city.solutionRate > 0.4 ? Colors.orange : Colors.red,
+                            (city.solutionRate is double ? city.solutionRate : city.solutionRate / 100) > 0.7 
+                              ? Colors.green 
+                              : (city.solutionRate is double ? city.solutionRate : city.solutionRate / 100) > 0.4 
+                                ? Colors.orange 
+                                : Colors.red,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${(city.solutionRate * 100).toStringAsFixed(1)}% - ${city.solvedIssuesCount} / ${city.totalIssuesCount} çözüldü',
+                          '${(city.solutionRate is double ? city.solutionRate * 100 : city.solutionRate).toStringAsFixed(1)}% - ${city.solvedComplaints ?? city.totalSolvedIssues ?? 0} / ${city.totalComplaints ?? city.totalPosts ?? 0} çözüldü',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
@@ -274,8 +278,15 @@ class CityProfileScreen extends ConsumerWidget {
                       onLike: () {
                         ref.read(postsProvider.notifier).likePost(post.id);
                       },
-                      onHighlight: () {
-                        ref.read(postsProvider.notifier).highlightPost(post.id);
+                      onComment: () {
+                        // Yorum yapma işlevi
+                        ref.read(selectedPostProvider.notifier).state = post;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PostDetailScreen(post: post),
+                          ),
+                        );
                       },
                     );
                   },
