@@ -1,68 +1,75 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
-    id "com.google.gms.google-services"
+    id "com.google.gms.google-services" apply false
 }
 
 def localProperties = new Properties()
-def localPropertiesFile = rootProject.file("local.properties")
+def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader("UTF-8") { reader ->
+    localPropertiesFile.withReader('UTF-8') { reader ->
         localProperties.load(reader)
     }
 }
 
-def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = "1"
+    flutterVersionCode = '1'
 }
 
-def flutterVersionName = localProperties.getProperty("flutter.versionName")
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = "1.0"
+    flutterVersionName = '1.0'
 }
 
 android {
-    namespace = "belediye.iletisim.merkezi"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    namespace "belediye.iletisim.merkezi"
+    compileSdkVersion flutter.compileSdkVersion
+    ndkVersion "25.1.8937393"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
     }
 
     defaultConfig {
-        applicationId = "belediye.iletisim.merkezi"
-        minSdk = 21 // Eski projeden sabit değer
-        targetSdk = 35 // Eski projeden sabit değer
-        versionCode = flutterVersionCode.toInteger()
-        versionName = flutterVersionName
+        applicationId "belediye.iletisim.merkezi"
+        minSdkVersion flutter.minSdkVersion
+        targetSdkVersion flutter.targetSdkVersion
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        multiDexEnabled true
     }
 
     buildTypes {
         release {
-            // Önceki projeden taşınan yapılandırma
-            signingConfig = signingConfigs.debug
-            minifyEnabled = true
-            shrinkResources = true
-            proguardFiles = [getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro']
-        }
-        debug {
-            minifyEnabled = false
+            signingConfig signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 }
 
 flutter {
-    source = "../.."
+    source '../..'
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.20"
-    implementation platform('com.google.firebase:firebase-bom:32.3.1')
-    implementation 'com.google.firebase:firebase-analytics'
-    implementation 'com.google.firebase:firebase-messaging'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging")
+    implementation 'androidx.multidex:multidex:2.0.1'
 }
+
+apply plugin: 'com.google.gms.google-services'
