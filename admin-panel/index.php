@@ -576,6 +576,16 @@ $page_file = "pages/{$page}.php";
                                     </a>
                                 </li>
                                 <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'notifications' ? 'active' : '' ?>" href="?page=notifications">
+                                        <i class="bi bi-bell"></i> Bildirim Yönetimi
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'before_after' ? 'active' : '' ?>" href="?page=before_after">
+                                        <i class="bi bi-images"></i> Öncesi/Sonrası
+                                    </a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link <?= $page === 'cities' ? 'active' : '' ?>" href="?page=cities">
                                         <i class="bi bi-buildings"></i> Şehirler
                                     </a>
@@ -656,7 +666,10 @@ $page_file = "pages/{$page}.php";
                                 <i class="bi bi-people"></i> Kullanıcılar
                             </a>
                             <a href="?page=notifications" class="<?= $page === 'notifications' ? 'active' : '' ?>">
-                                <i class="bi bi-bell"></i> Bildirimler
+                                <i class="bi bi-bell"></i> Bildirim Yönetimi
+                            </a>
+                            <a href="?page=before_after" class="<?= $page === 'before_after' ? 'active' : '' ?>">
+                                <i class="bi bi-images"></i> Öncesi/Sonrası
                             </a>
                         </div>
                         
