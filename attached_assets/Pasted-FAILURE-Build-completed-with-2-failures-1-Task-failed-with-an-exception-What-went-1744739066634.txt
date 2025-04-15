@@ -1,0 +1,38 @@
+FAILURE: Build completed with 2 failures.
+
+1: Task failed with an exception.
+-----------
+* What went wrong:
+A problem occurred configuring project ':firebase_auth'.
+> Failed to notify project evaluation listener.
+   > Could not get unknown property 'android' for project ':firebase_auth' of type org.gradle.api.Project.
+   > Could not find method implementation() for arguments [project ':firebase_core'] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.
+   > Could not get unknown property 'android' for project ':firebase_auth' of type org.gradle.api.Project.
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Failed to query the value of property 'buildFlowServiceProperty'.
+> Could not isolate value org.jetbrains.kotlin.gradle.plugin.statistics.BuildFlowService$Parameters_Decorated@6ecbaac7 of type BuildFlowService.Parameters
+   > A problem occurred configuring project ':firebase_auth'.
+      > Failed to notify project evaluation listener.
+         > Could not get unknown property 'android' for project ':firebase_auth' of type org.gradle.api.Project.
+         > Could not find method implementation() for arguments [project ':firebase_core'] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.
+         > Could not get unknown property 'android' for project ':firebase_auth' of type org.gradle.api.Project.
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+BU�LD FAILED in 4m
+Error: Gradle task assembleDebug failed with exit code 1

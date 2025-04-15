@@ -45,11 +45,11 @@ dependencies:
   fl_chart: ^0.65.0
   
   # Analytics and services
-  firebase_core: ^2.24.2
-  firebase_auth: ^4.16.0
-  firebase_storage: ^11.6.0
-  firebase_messaging: ^14.7.10
-  flutter_local_notifications: ^15.1.2
+  firebase_core: ^2.13.1
+  firebase_auth: ^4.6.2
+  firebase_storage: ^11.2.2
+  firebase_messaging: ^14.6.2
+  flutter_local_notifications: ^14.1.1
 
 dev_dependencies:
   flutter_test:
