@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:belediye_iletisim_merkezi/models/notification.dart' as app_notification;
+import 'package:belediye_iletisim_merkezi/models/notification.dart';
 import 'package:belediye_iletisim_merkezi/models/post.dart';
 import 'package:belediye_iletisim_merkezi/providers/current_user_provider.dart';
 import 'package:belediye_iletisim_merkezi/screens/posts/post_detail_screen.dart';
@@ -19,7 +19,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   bool _isLoading = true;
   bool _hasMore = true;
   bool _isLoadingMore = false;
-  List<app_notification.DatabaseNotification> _notifications = [];
+  List<DatabaseNotification> _notifications = [];
   int _page = 1;
   final int _limit = 20;
   final ScrollController _scrollController = ScrollController();
@@ -128,7 +128,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
   }
 
-  Future<void> _onNotificationTap(app_notification.DatabaseNotification notification) async {
+  Future<void> _onNotificationTap(DatabaseNotification notification) async {
     // Bildirimi okundu olarak işaretle
     await _markAsRead(int.parse(notification.id));
 
