@@ -1,18 +1,18 @@
 import 'dart:convert';
-import 'dart:io' if (dart.library.html) 'package:sikayet_var/utils/web_stub.dart';
+import 'dart:io' if (dart.library.html) 'package:belediye_iletisim_merkezi/utils/web_stub.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sikayet_var/config/api_config.dart';
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/models/user.dart';
-import 'package:sikayet_var/models/comment.dart';
-import 'package:sikayet_var/models/survey.dart';
-import 'package:sikayet_var/models/city.dart';
-import 'package:sikayet_var/models/district.dart';
-import 'package:sikayet_var/models/city_profile.dart';
-import 'package:sikayet_var/models/category.dart' as app_category;
-import 'package:sikayet_var/models/notification.dart' as app_notification;
-import 'package:sikayet_var/models/before_after_record.dart';
+import 'package:belediye_iletisim_merkezi/config/api_config.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/models/user.dart';
+import 'package:belediye_iletisim_merkezi/models/comment.dart';
+import 'package:belediye_iletisim_merkezi/models/survey.dart';
+import 'package:belediye_iletisim_merkezi/models/city.dart';
+import 'package:belediye_iletisim_merkezi/models/district.dart';
+import 'package:belediye_iletisim_merkezi/models/city_profile.dart';
+import 'package:belediye_iletisim_merkezi/models/category.dart' as app_category;
+import 'package:belediye_iletisim_merkezi/models/notification.dart' as app_notification;
+import 'package:belediye_iletisim_merkezi/models/before_after_record.dart';
 
 class ApiService {
   final String baseUrl = ApiConfig.baseUrl;

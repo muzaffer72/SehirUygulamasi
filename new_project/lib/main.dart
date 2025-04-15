@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'app.dart';
 import 'services/firebase_service.dart';
 import 'services/notification_service.dart';
 import 'models/notification_model.dart';
