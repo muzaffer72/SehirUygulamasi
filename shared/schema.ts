@@ -88,13 +88,6 @@ export const posts = pgTable('posts', {
   highlights: integer('highlights').default(0).notNull(),
   commentCount: integer('comment_count').default(0).notNull(),
   isAnonymous: boolean('is_anonymous').default(false).notNull(),
-  // Konum bilgileri
-  latitude: text('latitude'), // Enlem
-  longitude: text('longitude'), // Boylam
-  address: text('address'), // Tam adres
-  neighborhood: varchar('neighborhood', { length: 100 }), // Mahalle
-  street: varchar('street', { length: 100 }), // Sokak
-  locationDetails: text('location_details'), // Konum ile ilgili ek detaylar
   // Memnuniyet seviyesi (çözülmüş şikayetler için)
   satisfactionRating: integer('satisfaction_rating'), // 1-5 arası puan
   createdAt: timestamp('created_at').defaultNow().notNull()
@@ -390,7 +383,8 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   }),
   comments: many(comments),
   media: many(media),
-  likes: many(userLikes)
+  likes: many(userLikes),
+  beforeAfterRecords: many(beforeAfterRecords)
 }));
 
 export const commentsRelations = relations(comments, ({ one, many }) => ({
@@ -574,5 +568,17 @@ export const districtPartyRelationsRelations = relations(districtPartyRelations,
   party: one(politicalParties, {
     fields: [districtPartyRelations.partyId],
     references: [politicalParties.id]
+  })
+}));
+
+// Öncesi-Sonrası Kayıtları İlişkileri
+export const beforeAfterRecordsRelations = relations(beforeAfterRecords, ({ one }) => ({
+  post: one(posts, {
+    fields: [beforeAfterRecords.postId],
+    references: [posts.id]
+  }),
+  recorder: one(users, {
+    fields: [beforeAfterRecords.recordedBy],
+    references: [users.id]
   })
 }));

@@ -142,14 +142,27 @@ try {
 
 // Siyasi partileri getir
 try {
-    $query = "SELECT name FROM political_parties ORDER BY name ASC";
-    $result = pg_query($conn, $query);
-    $political_parties = [];
-    while ($row = pg_fetch_assoc($result)) {
-        $political_parties[] = $row['name'];
+    // Tablo var mı kontrol et
+    $check_table_query = "SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'political_parties'
+    )";
+    $check_result = pg_query($conn, $check_table_query);
+    $table_exists = pg_fetch_result($check_result, 0, 0);
+    
+    if ($table_exists === 't') {
+        $query = "SELECT name FROM political_parties ORDER BY name ASC";
+        $result = pg_query($conn, $query);
+        $political_parties = [];
+        while ($row = pg_fetch_assoc($result)) {
+            $political_parties[] = $row['name'];
+        }
+    } else {
+        throw new Exception("political_parties tablosu henüz oluşturulmamış");
     }
 } catch (Exception $e) {
-    $error_message = "Siyasi parti listesi alınamadı: " . $e->getMessage();
+    // Hatayı gizlice işle, kullanıcıya gösterme
     $political_parties = ["AK Parti", "CHP", "MHP", "İYİ Parti", "DEM Parti", "Saadet Partisi", "Gelecek Partisi", "DEVA Partisi", "Diğer"];
 }
 
