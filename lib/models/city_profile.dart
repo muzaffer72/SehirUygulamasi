@@ -9,8 +9,13 @@ class CityProfile {
   final String? area;
   final String? established;
   final String? website;
+  // Eski ve yeni modellerin alan isimleri uyumlu olsun
   final String? contactPhone;
   final String? contactEmail;
+  // phone ve email alanlari için getter ekle
+  String? get phone => contactPhone;
+  String? get email => contactEmail;
+  
   final String? address;
   final double? latitude;
   final double? longitude;
@@ -139,5 +144,111 @@ class CityProfile {
       'total_solved_issues': totalSolvedIssues,
       'solution_rate': solutionRate,
     };
+  }
+  
+  // Memnuniyet oranını yüzde olarak formatla
+  String get formattedSatisfactionRate => '%${(satisfactionRate * 100).toStringAsFixed(1)}';
+
+  // Yanıt oranını yüzde olarak formatla  
+  String get formattedResponseRate => '%${(responseRate * 100).toStringAsFixed(1)}';
+
+  // Problem çözme oranını yüzde olarak formatla
+  String get formattedProblemSolvingRate => '%${(problemSolvingRate * 100).toStringAsFixed(1)}';
+
+  // Ortalama yanıt süresini gün cinsinden formatla
+  String get formattedResponseTime {
+    if (averageResponseTime < 24) {
+      return '$averageResponseTime saat';
+    } else {
+      final days = (averageResponseTime / 24).floor();
+      return '$days gün';
+    }
+  }
+
+  // Nüfus ve alan bilgisine göre nüfus yoğunluğunu hesapla
+  String? get populationDensity {
+    if (population == null || area == null) return null;
+    
+    try {
+      final populationValue = int.parse(population!);
+      final areaValue = double.parse(area!);
+      
+      if (areaValue == 0) return null;
+      
+      final density = (populationValue / areaValue).round();
+      return '$density kişi/km²';
+    } catch (e) {
+      return null;
+    }
+  }
+
+  CityProfile copyWith({
+    String? id,
+    String? cityId,
+    String? name,
+    String? description,
+    String? mayor,
+    String? mayorPhoto,
+    String? population,
+    String? area,
+    String? established,
+    String? website,
+    String? contactPhone,
+    String? contactEmail,
+    String? address,
+    double? latitude,
+    double? longitude,
+    String? logoUrl,
+    String? bannerUrl,
+    String? videoUrl,
+    int? totalComplaints,
+    int? solvedComplaints,
+    int? activeComplaints,
+    int? totalSuggestions,
+    double? satisfactionRate,
+    double? responseRate,
+    double? problemSolvingRate,
+    int? averageResponseTime,
+    String? politicalParty,
+    String? politicalPartyLogoUrl,
+    String? info,
+    int? totalPosts,
+    int? totalSolvedIssues,
+    double? solutionRate,
+  }) {
+    return CityProfile(
+      id: id ?? this.id,
+      cityId: cityId ?? this.cityId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      mayor: mayor ?? this.mayor,
+      mayorPhoto: mayorPhoto ?? this.mayorPhoto,
+      population: population ?? this.population,
+      area: area ?? this.area,
+      established: established ?? this.established,
+      website: website ?? this.website,
+      contactPhone: contactPhone ?? this.contactPhone,
+      contactEmail: contactEmail ?? this.contactEmail,
+      address: address ?? this.address,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      logoUrl: logoUrl ?? this.logoUrl,
+      bannerUrl: bannerUrl ?? this.bannerUrl,
+      videoUrl: videoUrl ?? this.videoUrl,
+      totalComplaints: totalComplaints ?? this.totalComplaints,
+      solvedComplaints: solvedComplaints ?? this.solvedComplaints,
+      activeComplaints: activeComplaints ?? this.activeComplaints,
+      totalSuggestions: totalSuggestions ?? this.totalSuggestions,
+      satisfactionRate: satisfactionRate ?? this.satisfactionRate,
+      responseRate: responseRate ?? this.responseRate,
+      problemSolvingRate: problemSolvingRate ?? this.problemSolvingRate,
+      averageResponseTime: averageResponseTime ?? this.averageResponseTime,
+      politicalParty: politicalParty ?? this.politicalParty,
+      politicalPartyLogoUrl: politicalPartyLogoUrl ?? this.politicalPartyLogoUrl,
+      info: info ?? this.info,
+      totalPosts: totalPosts ?? this.totalPosts,
+      totalSolvedIssues: totalSolvedIssues ?? this.totalSolvedIssues,
+      solutionRate: solutionRate ?? this.solutionRate,
+    );
   }
 }

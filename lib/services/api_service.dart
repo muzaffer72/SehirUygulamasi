@@ -1489,7 +1489,9 @@ class ApiService {
   }
   
   // Şehir profil bilgilerini getir
-  Future<CityProfile?> getCityProfile(int cityId) async {
+  Future<CityProfile?> getCityProfile(dynamic cityId) async {
+    // cityId'yi String'e dönüştür (int veya String olabilir)
+    final String cityIdStr = cityId.toString();
     print('Fetching city profile for ID: $cityId');
     
     try {
@@ -1532,7 +1534,9 @@ class ApiService {
   }
   
   // Yedek şehir profil bilgilerini getir
-  Future<CityProfile?> _getFallbackCityProfile(int cityId) async {
+  Future<CityProfile?> _getFallbackCityProfile(dynamic cityId) async {
+    // cityId'yi String'e dönüştür (int veya String olabilir)
+    final String cityIdStr = cityId.toString();
     print('Using fallback endpoint for city profile ID: $cityId');
     try {
       final response = await _client.get(Uri.parse('$baseUrl/cities/${cityId.toString()}/profile'));
