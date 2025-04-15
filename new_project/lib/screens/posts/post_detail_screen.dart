@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/comment.dart';
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/models/user.dart';
-import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/providers/current_user_provider.dart';
-import 'package:sikayet_var/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/models/comment.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/models/user.dart';
+import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/current_user_provider.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:sikayet_var/providers/user_provider.dart';
-import 'package:sikayet_var/providers/api_service_provider.dart';
-import 'package:sikayet_var/widgets/satisfaction_rating_widget.dart';
-import 'package:sikayet_var/widgets/before_after_widget.dart';
+import 'package:belediye_iletisim_merkezi/providers/user_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
+import 'package:belediye_iletisim_merkezi/widgets/satisfaction_rating_widget.dart';
+import 'package:belediye_iletisim_merkezi/widgets/before_after_widget.dart';
+import 'package:belediye_iletisim_merkezi/models/before_after_record.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
   final Post post;

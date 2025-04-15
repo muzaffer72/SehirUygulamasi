@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 // Bildirim test butonu
                 NotificationService.addNotification(
-                  AppNotification(
+                  NotificationModel(
                     id: DateTime.now().millisecondsSinceEpoch,
                     title: 'Test Bildirimi',
                     message: 'Bu bir test bildirimidir.',
