@@ -547,7 +547,7 @@ class ApiService {
   }
   
   // Şehir profil bilgilerini getir
-  Future<Map<String, dynamic>?> getCityProfileById(String cityId) async {
+  Future<CityProfile?> getCityProfileById(String cityId) async {
     final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/profile');
     final response = await http.get(
       url,
@@ -556,7 +556,8 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['data'] as Map<String, dynamic>?;
+      if (data['data'] == null) return null;
+      return CityProfile.fromJson(data['data']);
     } else {
       throw Exception(_handleErrorResponse(response));
     }

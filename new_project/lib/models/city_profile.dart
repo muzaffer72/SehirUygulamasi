@@ -1,184 +1,213 @@
-import 'dart:ui';
-import 'package:flutter/material.dart';
-
 class CityProfile {
   final String id;
+  final String cityId;
   final String name;
-  final int population;
-  final String governmentType;
-  final double problemSolvingRate;
   final String? description;
-  final String? imageUrl;
-  final List<District> districts;
-  final List<CategoryStat> categories;
-  final int complaintCount;
-  final int solvedComplaintCount;
-  final int pendingComplaintCount;
-  final int rejectedComplaintCount;
-  final Mayor? mayor;
+  final String? mayor;
+  final String? mayorPhoto;
+  final String? population;
+  final String? area;
+  final String? established;
+  final String? website;
   final String? phone;
   final String? email;
   final String? address;
-  final String? website;
+  final double? latitude;
+  final double? longitude;
+  final String? logoUrl;
+  final String? bannerUrl;
+  final String? videoUrl;
+  final int totalComplaints;
+  final int solvedComplaints;
+  final int activeComplaints;
+  final int totalSuggestions;
+  final double satisfactionRate;
+  final double responseRate;
+  final double problemSolvingRate;
+  final int averageResponseTime;
 
   CityProfile({
     required this.id,
+    required this.cityId,
     required this.name,
-    required this.population,
-    required this.governmentType,
-    required this.problemSolvingRate,
     this.description,
-    this.imageUrl,
-    required this.districts,
-    required this.categories,
-    required this.complaintCount,
-    required this.solvedComplaintCount,
-    required this.pendingComplaintCount,
-    required this.rejectedComplaintCount,
     this.mayor,
+    this.mayorPhoto,
+    this.population,
+    this.area,
+    this.established,
+    this.website,
     this.phone,
     this.email,
     this.address,
-    this.website,
+    this.latitude,
+    this.longitude,
+    this.logoUrl,
+    this.bannerUrl,
+    this.videoUrl,
+    this.totalComplaints = 0,
+    this.solvedComplaints = 0,
+    this.activeComplaints = 0,
+    this.totalSuggestions = 0,
+    this.satisfactionRate = 0.0,
+    this.responseRate = 0.0,
+    this.problemSolvingRate = 0.0,
+    this.averageResponseTime = 0,
   });
 
   factory CityProfile.fromJson(Map<String, dynamic> json) {
-    List<District> districts = [];
-    if (json['districts'] != null) {
-      districts = List<District>.from(
-          json['districts'].map((district) => District.fromJson(district)));
-    }
-
-    List<CategoryStat> categories = [];
-    if (json['categories'] != null) {
-      categories = List<CategoryStat>.from(
-          json['categories'].map((category) => CategoryStat.fromJson(category)));
-    }
-
     return CityProfile(
       id: json['id'].toString(),
-      name: json['name'],
-      population: json['population'] ?? 0,
-      governmentType: json['government_type'] ?? 'Belediye',
-      problemSolvingRate: (json['problem_solving_rate'] ?? 0).toDouble(),
+      cityId: json['city_id']?.toString() ?? '',
+      name: json['name'] ?? '',
       description: json['description'],
-      imageUrl: json['image_url'],
-      districts: districts,
-      categories: categories,
-      complaintCount: json['complaint_count'] ?? 0,
-      solvedComplaintCount: json['solved_complaint_count'] ?? 0,
-      pendingComplaintCount: json['pending_complaint_count'] ?? 0,
-      rejectedComplaintCount: json['rejected_complaint_count'] ?? 0,
-      mayor: json['mayor'] != null ? Mayor.fromJson(json['mayor']) : null,
+      mayor: json['mayor'],
+      mayorPhoto: json['mayor_photo'],
+      population: json['population']?.toString(),
+      area: json['area']?.toString(),
+      established: json['established'],
+      website: json['website'],
       phone: json['phone'],
       email: json['email'],
       address: json['address'],
-      website: json['website'],
+      latitude: json['latitude']?.toDouble(),
+      longitude: json['longitude']?.toDouble(),
+      logoUrl: json['logo_url'],
+      bannerUrl: json['banner_url'],
+      videoUrl: json['video_url'],
+      totalComplaints: json['total_complaints'] ?? 0,
+      solvedComplaints: json['solved_complaints'] ?? 0,
+      activeComplaints: json['active_complaints'] ?? 0,
+      totalSuggestions: json['total_suggestions'] ?? 0,
+      satisfactionRate: json['satisfaction_rate']?.toDouble() ?? 0.0,
+      responseRate: json['response_rate']?.toDouble() ?? 0.0,
+      problemSolvingRate: json['problem_solving_rate']?.toDouble() ?? 0.0,
+      averageResponseTime: json['average_response_time'] ?? 0,
     );
   }
 
-  // Veri bulunamazsa örnek veri döndüren fabrika methodu
-  factory CityProfile.fallback() {
-    return CityProfile(
-      id: '0',
-      name: 'Bilinmeyen Şehir',
-      population: 0,
-      governmentType: 'Belediye',
-      problemSolvingRate: 0,
-      districts: [],
-      categories: [],
-      complaintCount: 0,
-      solvedComplaintCount: 0,
-      pendingComplaintCount: 0,
-      rejectedComplaintCount: 0,
-    );
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'city_id': cityId,
+      'name': name,
+      'description': description,
+      'mayor': mayor,
+      'mayor_photo': mayorPhoto,
+      'population': population,
+      'area': area,
+      'established': established,
+      'website': website,
+      'phone': phone,
+      'email': email,
+      'address': address,
+      'latitude': latitude,
+      'longitude': longitude,
+      'logo_url': logoUrl,
+      'banner_url': bannerUrl,
+      'video_url': videoUrl,
+      'total_complaints': totalComplaints,
+      'solved_complaints': solvedComplaints,
+      'active_complaints': activeComplaints,
+      'total_suggestions': totalSuggestions,
+      'satisfaction_rate': satisfactionRate,
+      'response_rate': responseRate,
+      'problem_solving_rate': problemSolvingRate,
+      'average_response_time': averageResponseTime,
+    };
   }
-}
 
-class District {
-  final String id;
-  final String name;
-  final int population;
-  final String? imageUrl;
+  // Memnuniyet oranını yüzde olarak formatla
+  String get formattedSatisfactionRate => '%${(satisfactionRate * 100).toStringAsFixed(1)}';
 
-  District({
-    required this.id,
-    required this.name,
-    required this.population,
-    this.imageUrl,
-  });
+  // Yanıt oranını yüzde olarak formatla  
+  String get formattedResponseRate => '%${(responseRate * 100).toStringAsFixed(1)}';
 
-  factory District.fromJson(Map<String, dynamic> json) {
-    return District(
-      id: json['id'].toString(),
-      name: json['name'],
-      population: json['population'] ?? 0,
-      imageUrl: json['image_url'],
-    );
-  }
-}
+  // Problem çözme oranını yüzde olarak formatla
+  String get formattedProblemSolvingRate => '%${(problemSolvingRate * 100).toStringAsFixed(1)}';
 
-class CategoryStat {
-  final String id;
-  final String name;
-  final int complaintCount;
-  final Color? color;
-
-  CategoryStat({
-    required this.id,
-    required this.name,
-    required this.complaintCount,
-    this.color,
-  });
-
-  factory CategoryStat.fromJson(Map<String, dynamic> json) {
-    // Renk değeri hexadecimal string olarak gelebilir
-    Color? categoryColor;
-    if (json['color'] != null) {
-      try {
-        categoryColor = Color(int.parse(json['color'].replaceAll('#', '0xFF')));
-      } catch (e) {
-        categoryColor = Colors.blue;
-      }
+  // Ortalama yanıt süresini gün cinsinden formatla
+  String get formattedResponseTime {
+    if (averageResponseTime < 24) {
+      return '$averageResponseTime saat';
+    } else {
+      final days = (averageResponseTime / 24).floor();
+      return '$days gün';
     }
-
-    return CategoryStat(
-      id: json['id'].toString(),
-      name: json['name'],
-      complaintCount: json['complaint_count'] ?? 0,
-      color: categoryColor,
-    );
   }
-}
 
-class Mayor {
-  final String id;
-  final String name;
-  final String? imageUrl;
-  final String? party;
-  final String termStart;
-  final String? termEnd;
-  final String? bio;
+  // Nüfus ve alan bilgisine göre nüfus yoğunluğunu hesapla
+  String? get populationDensity {
+    if (population == null || area == null) return null;
+    
+    try {
+      final populationValue = int.parse(population!);
+      final areaValue = double.parse(area!);
+      
+      if (areaValue == 0) return null;
+      
+      final density = (populationValue / areaValue).round();
+      return '$density kişi/km²';
+    } catch (e) {
+      return null;
+    }
+  }
 
-  Mayor({
-    required this.id,
-    required this.name,
-    this.imageUrl,
-    this.party,
-    required this.termStart,
-    this.termEnd,
-    this.bio,
-  });
-
-  factory Mayor.fromJson(Map<String, dynamic> json) {
-    return Mayor(
-      id: json['id'].toString(),
-      name: json['name'],
-      imageUrl: json['image_url'],
-      party: json['party'],
-      termStart: json['term_start'] ?? '',
-      termEnd: json['term_end'],
-      bio: json['bio'],
+  CityProfile copyWith({
+    String? id,
+    String? cityId,
+    String? name,
+    String? description,
+    String? mayor,
+    String? mayorPhoto,
+    String? population,
+    String? area,
+    String? established,
+    String? website,
+    String? phone,
+    String? email,
+    String? address,
+    double? latitude,
+    double? longitude,
+    String? logoUrl,
+    String? bannerUrl,
+    String? videoUrl,
+    int? totalComplaints,
+    int? solvedComplaints,
+    int? activeComplaints,
+    int? totalSuggestions,
+    double? satisfactionRate,
+    double? responseRate,
+    double? problemSolvingRate,
+    int? averageResponseTime,
+  }) {
+    return CityProfile(
+      id: id ?? this.id,
+      cityId: cityId ?? this.cityId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      mayor: mayor ?? this.mayor,
+      mayorPhoto: mayorPhoto ?? this.mayorPhoto,
+      population: population ?? this.population,
+      area: area ?? this.area,
+      established: established ?? this.established,
+      website: website ?? this.website,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      address: address ?? this.address,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      logoUrl: logoUrl ?? this.logoUrl,
+      bannerUrl: bannerUrl ?? this.bannerUrl,
+      videoUrl: videoUrl ?? this.videoUrl,
+      totalComplaints: totalComplaints ?? this.totalComplaints,
+      solvedComplaints: solvedComplaints ?? this.solvedComplaints,
+      activeComplaints: activeComplaints ?? this.activeComplaints,
+      totalSuggestions: totalSuggestions ?? this.totalSuggestions,
+      satisfactionRate: satisfactionRate ?? this.satisfactionRate,
+      responseRate: responseRate ?? this.responseRate,
+      problemSolvingRate: problemSolvingRate ?? this.problemSolvingRate,
+      averageResponseTime: averageResponseTime ?? this.averageResponseTime,
     );
   }
 }
