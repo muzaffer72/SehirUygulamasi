@@ -540,88 +540,104 @@ $page_file = "pages/{$page}.php";
                         </button>
                         <div class="collapse navbar-collapse" id="mobileNavbar">
                             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                                <!-- Ana Menü -->
                                 <li class="nav-item">
                                     <a class="nav-link <?= $page === 'dashboard' ? 'active' : '' ?>" href="?page=dashboard">
                                         <i class="bi bi-speedometer2"></i> Dashboard
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'posts' ? 'active' : '' ?>" href="?page=posts">
-                                        <i class="bi bi-file-earmark-text"></i> Şikayetler
+                                
+                                <!-- Şikayet Yönetimi -->
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-file-earmark-text"></i> Şikayet Yönetimi
                                     </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item <?= $page === 'posts' ? 'active' : '' ?>" href="?page=posts">
+                                            <i class="bi bi-file-earmark-text"></i> Şikayetler
+                                        </a></li>
+                                        <li><a class="dropdown-item <?= $page === 'comments' ? 'active' : '' ?>" href="?page=comments">
+                                            <i class="bi bi-chat-dots"></i> Yorumlar
+                                        </a></li>
+                                        <li><a class="dropdown-item <?= $page === 'before_after' ? 'active' : '' ?>" href="?page=before_after">
+                                            <i class="bi bi-images"></i> Öncesi/Sonrası
+                                        </a></li>
+                                        <li><a class="dropdown-item <?= $page === 'satisfaction_rating' ? 'active' : '' ?>" href="?page=satisfaction_rating">
+                                            <i class="bi bi-stars"></i> Memnuniyet Raporları
+                                        </a></li>
+                                    </ul>
                                 </li>
+                                
+                                <!-- İçerik Yönetimi -->
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-collection"></i> İçerik Yönetimi
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item <?= $page === 'categories' ? 'active' : '' ?>" href="?page=categories">
+                                            <i class="bi bi-tag"></i> Kategoriler
+                                        </a></li>
+                                        <li><a class="dropdown-item <?= $page === 'user_likes' ? 'active' : '' ?>" href="?page=user_likes">
+                                            <i class="bi bi-heart"></i> Beğeniler
+                                        </a></li>
+                                    </ul>
+                                </li>
+                                
+                                <!-- Kullanıcı Yönetimi -->
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-people"></i> Kullanıcı Yönetimi
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item <?= $page === 'users' ? 'active' : '' ?>" href="?page=users">
+                                            <i class="bi bi-people"></i> Kullanıcılar
+                                        </a></li>
+                                        <li><a class="dropdown-item <?= $page === 'notifications' ? 'active' : '' ?>" href="?page=notifications">
+                                            <i class="bi bi-bell"></i> Bildirim Yönetimi
+                                        </a></li>
+                                    </ul>
+                                </li>
+                                
+                                <!-- Lokasyon -->
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-geo-alt"></i> Lokasyon
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item <?= $page === 'cities' ? 'active' : '' ?>" href="?page=cities">
+                                            <i class="bi bi-buildings"></i> Şehirler
+                                        </a></li>
+                                        <li><a class="dropdown-item <?= $page === 'districts' ? 'active' : '' ?>" href="?page=districts">
+                                            <i class="bi bi-geo-alt"></i> İlçeler
+                                        </a></li>
+                                    </ul>
+                                </li>
+                                
+                                <!-- Anketler -->
                                 <li class="nav-item">
                                     <a class="nav-link <?= $page === 'surveys' ? 'active' : '' ?>" href="?page=surveys">
                                         <i class="bi bi-bar-chart"></i> Anketler
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'categories' ? 'active' : '' ?>" href="?page=categories">
-                                        <i class="bi bi-tag"></i> Kategoriler
+                                
+                                <!-- Sistem -->
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-gear"></i> Sistem
                                     </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item <?= $page === 'settings' ? 'active' : '' ?>" href="?page=settings">
+                                            <i class="bi bi-gear"></i> Ayarlar
+                                        </a></li>
+                                        <li><a class="dropdown-item <?= $page === 'profanity_filter' ? 'active' : '' ?>" href="?page=profanity_filter">
+                                            <i class="bi bi-shield-exclamation"></i> Küfür Filtresi
+                                        </a></li>
+                                    </ul>
                                 </li>
+                                
+                                <!-- Çıkış Yap -->
                                 <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'users' ? 'active' : '' ?>" href="?page=users">
-                                        <i class="bi bi-people"></i> Kullanıcılar
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'settings' ? 'active' : '' ?>" href="?page=settings">
-                                        <i class="bi bi-gear"></i> Ayarlar
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'profanity_filter' ? 'active' : '' ?>" href="?page=profanity_filter">
-                                        <i class="bi bi-shield-exclamation"></i> Küfür Filtresi
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'notifications' ? 'active' : '' ?>" href="?page=notifications">
-                                        <i class="bi bi-bell"></i> Bildirim Yönetimi
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'before_after' ? 'active' : '' ?>" href="?page=before_after">
-                                        <i class="bi bi-images"></i> Öncesi/Sonrası
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'cities' ? 'active' : '' ?>" href="?page=cities">
-                                        <i class="bi bi-buildings"></i> Şehirler
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'districts' ? 'active' : '' ?>" href="?page=districts">
-                                        <i class="bi bi-geo-alt"></i> İlçeler
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'award_system' ? 'active' : '' ?>" href="?page=award_system">
-                                        <i class="bi bi-trophy"></i> Ödül Sistemi
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'comments' ? 'active' : '' ?>" href="?page=comments">
-                                        <i class="bi bi-chat-dots"></i> Yorumlar
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'user_likes' ? 'active' : '' ?>" href="?page=user_likes">
-                                        <i class="bi bi-heart"></i> Beğeniler
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'notifications' ? 'active' : '' ?>" href="?page=notifications">
-                                        <i class="bi bi-bell"></i> Bildirimler
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'backup' ? 'active' : '' ?>" href="?page=backup">
-                                        <i class="bi bi-cloud-arrow-down"></i> Yedekleme
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="?logout=1">
+                                    <a class="nav-link text-danger" href="?logout=1">
                                         <i class="bi bi-box-arrow-right"></i> Çıkış Yap
                                     </a>
                                 </li>
@@ -642,15 +658,26 @@ $page_file = "pages/{$page}.php";
                             </a>
                         </div>
                         
-                        <!-- İçerik Yönetimi -->
+                        <!-- Şikayet Yönetimi -->
                         <div class="menu-group">
-                            <div class="menu-title">İçerik Yönetimi</div>
+                            <div class="menu-title">Şikayet Yönetimi</div>
                             <a href="?page=posts" class="<?= $page === 'posts' ? 'active' : '' ?>">
                                 <i class="bi bi-file-earmark-text"></i> Şikayetler
                             </a>
                             <a href="?page=comments" class="<?= $page === 'comments' ? 'active' : '' ?>">
                                 <i class="bi bi-chat-dots"></i> Yorumlar
                             </a>
+                            <a href="?page=before_after" class="<?= $page === 'before_after' ? 'active' : '' ?>">
+                                <i class="bi bi-images"></i> Öncesi/Sonrası
+                            </a>
+                            <a href="?page=satisfaction_rating" class="<?= $page === 'satisfaction_rating' ? 'active' : '' ?>">
+                                <i class="bi bi-stars"></i> Memnuniyet Raporları
+                            </a>
+                        </div>
+                        
+                        <!-- İçerik Yönetimi -->
+                        <div class="menu-group">
+                            <div class="menu-title">İçerik Yönetimi</div>
                             <a href="?page=categories" class="<?= $page === 'categories' ? 'active' : '' ?>">
                                 <i class="bi bi-tag"></i> Kategoriler
                             </a>
@@ -667,9 +694,6 @@ $page_file = "pages/{$page}.php";
                             </a>
                             <a href="?page=notifications" class="<?= $page === 'notifications' ? 'active' : '' ?>">
                                 <i class="bi bi-bell"></i> Bildirim Yönetimi
-                            </a>
-                            <a href="?page=before_after" class="<?= $page === 'before_after' ? 'active' : '' ?>">
-                                <i class="bi bi-images"></i> Öncesi/Sonrası
                             </a>
                         </div>
                         

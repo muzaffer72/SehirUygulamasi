@@ -1,153 +1,167 @@
 <?php
-// CORS ayarları
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header('Content-Type: application/json; charset=utf-8');
+// Database bağlantısını içe aktar
+require_once '../includes/db.php';
+require_once '../includes/functions.php';
 
-// OPTIONS istekleri için hızlı yanıt (Pre-flight)
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+// CORS ayarları ve API başlıkları
+header('Access-Control-Allow-Origin: *');
+header('Content-Type: application/json');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+header('Access-Control-Allow-Headers: Access-Control-Allow-Headers, Content-Type, Access-Control-Allow-Methods, Authorization, X-Requested-With');
 
-// Veritabanı bağlantısını al
-require_once '../db_connection.php';
+// API Request yöntemini belirle
+$method = $_SERVER['REQUEST_METHOD'];
 
-// JSON yanıtı için fonksiyon
-function sendResponse($success, $message, $data = null) {
-    $response = [
-        'success' => $success,
-        'message' => $message
-    ];
-    
-    if ($data !== null) {
-        $response['data'] = $data;
-    }
-    
-    echo json_encode($response);
-    exit;
-}
+// Post ID'sini al
+$post_id = isset($_GET['post_id']) ? intval($_GET['post_id']) : null;
 
-// Memnuniyet derecelendirmesi ekleme
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // JSON verilerini al
-    $input = json_decode(file_get_contents('php://input'), true);
-    
-    // Gerekli alanları kontrol et
-    if (!isset($input['post_id']) || !isset($input['rating'])) {
-        sendResponse(false, 'Eksik parametre: post_id ve rating gerekli');
-    }
-    
-    $postId = (int)$input['post_id'];
-    $rating = (int)$input['rating'];
-    $userId = isset($input['user_id']) ? (int)$input['user_id'] : 0;
-    
-    // Doğrulama kontrolleri
-    if ($postId <= 0) {
-        sendResponse(false, 'Geçersiz post_id değeri');
-    }
-    
-    if ($rating < 1 || $rating > 5) {
-        sendResponse(false, 'Derecelendirme 1-5 arasında olmalıdır');
-    }
-    
+// API yanıtı için temel yapı
+$response = [
+    'success' => false,
+    'message' => '',
+    'data' => null
+];
+
+// GET Methodu: Belirli bir şikayetin memnuniyet puanını veya tüm puanları getir
+if ($method === 'GET') {
     try {
-        // Paylaşımın var olup olmadığını ve kullanıcının yetkisi olup olmadığını kontrol et
-        $checkQuery = "SELECT id, user_id, status FROM posts WHERE id = $postId";
-        $checkResult = pg_query($conn, $checkQuery);
-        
-        if (!$checkResult) {
-            throw new Exception("Veritabanı sorgusu başarısız: " . pg_last_error($conn));
-        }
-        
-        $post = pg_fetch_assoc($checkResult);
-        
-        if (!$post) {
-            sendResponse(false, 'Belirtilen şikayet bulunamadı');
-        }
-        
-        // Şikayetin durumunu kontrol et - sadece çözülmüş şikayetler derecelendirilebilir
-        if ($post['status'] !== 'solved') {
-            sendResponse(false, 'Sadece çözülmüş şikayetler için memnuniyet derecelendirmesi yapılabilir');
-        }
-        
-        // Kullanıcı yetki kontrolü - sadece şikayeti oluşturan kullanıcı derecelendirebilir
-        if ($userId > 0 && $post['user_id'] != $userId) {
-            sendResponse(false, 'Bu şikayet için derecelendirme yapma yetkiniz yok');
-        }
-        
-        // Memnuniyet puanını güncelle
-        $updateQuery = "UPDATE posts SET satisfaction_rating = $rating WHERE id = $postId";
-        $updateResult = pg_query($conn, $updateQuery);
-        
-        if (!$updateResult) {
-            throw new Exception("Güncelleme sorgusu başarısız: " . pg_last_error($conn));
-        }
-        
-        // Bildirim oluştur (sistem bildirimi)
-        if ($rating >= 4) {
-            // Yüksek puanlar için teşekkür bildirimi
-            $notificationTitle = "Geri bildiriminiz için teşekkürler!";
-            $notificationContent = "Şikayetinizin çözümünden memnun olduğunuzu öğrenmek bizi mutlu etti. Sizin için daha iyi hizmet sunmaya devam edeceğiz.";
-        } else {
-            // Düşük puanlar için geliştirme bildirimi
-            $notificationTitle = "Geri bildiriminiz alındı";
-            $notificationContent = "Şikayetinizin çözümüyle ilgili değerlendirmenizi aldık. Hizmet kalitemizi artırmak için çalışmaya devam ediyoruz.";
-        }
-        
-        if ($post['user_id'] > 0) {
-            $insertNotificationQuery = "
-                INSERT INTO notifications 
-                (user_id, title, content, type, source_id, source_type, created_at) 
-                VALUES 
-                ({$post['user_id']}, '$notificationTitle', '$notificationContent', 'system', $postId, 'post', NOW())
+        if ($post_id) {
+            // Belirli bir şikayetin memnuniyet puanını getir
+            $query = "
+                SELECT p.id, p.title, p.status, p.satisfaction_rating, 
+                       c.name as city_name, d.name as district_name
+                FROM posts p
+                LEFT JOIN cities c ON p.city_id = c.id
+                LEFT JOIN districts d ON p.district_id = d.id
+                WHERE p.id = ? AND p.status = 'resolved'
             ";
             
-            pg_query($conn, $insertNotificationQuery);
+            $stmt = $db->prepare($query);
+            $stmt->bind_param('i', $post_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $data = $result->fetch_assoc();
+                $response['success'] = true;
+                $response['message'] = 'Memnuniyet puanı başarıyla alındı';
+                $response['data'] = $data;
+            } else {
+                $response['message'] = 'Belirtilen şikayet bulunamadı veya çözülmemiş durumda';
+            }
+        } else {
+            // Tüm çözülen şikayetlerin memnuniyet puanlarını getir
+            $query = "
+                SELECT p.id, p.title, p.status, p.satisfaction_rating, 
+                       c.name as city_name, d.name as district_name, 
+                       DATE_FORMAT(p.updated_at, '%d.%m.%Y') as resolved_date
+                FROM posts p
+                LEFT JOIN cities c ON p.city_id = c.id
+                LEFT JOIN districts d ON p.district_id = d.id
+                WHERE p.status = 'resolved'
+                ORDER BY p.updated_at DESC
+                LIMIT 100
+            ";
+            
+            $result = $db->query($query);
+            
+            if ($result->num_rows > 0) {
+                $data = [];
+                while ($row = $result->fetch_assoc()) {
+                    $data[] = $row;
+                }
+                $response['success'] = true;
+                $response['message'] = 'Memnuniyet puanları başarıyla alındı';
+                $response['data'] = $data;
+            } else {
+                $response['message'] = 'Çözülmüş şikayet bulunamadı';
+            }
         }
-        
-        sendResponse(true, 'Memnuniyet derecelendirmesi başarıyla kaydedildi', ['rating' => $rating]);
     } catch (Exception $e) {
-        sendResponse(false, 'Bir hata oluştu: ' . $e->getMessage());
+        $response['message'] = 'Bir hata oluştu: ' . $e->getMessage();
     }
 }
 
-// Memnuniyet derecelendirmesini görüntüleme
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Şikayet ID'sini al
-    $postId = isset($_GET['post_id']) ? (int)$_GET['post_id'] : 0;
+// POST Methodu: Yeni memnuniyet puanı ekle veya mevcut puanı güncelle
+else if ($method === 'POST') {
+    // JSON verisini al
+    $data = json_decode(file_get_contents('php://input'));
     
-    if ($postId <= 0) {
-        sendResponse(false, 'Geçersiz post_id değeri');
-    }
-    
-    try {
-        // Şikayetin derecelendirmesini al
-        $query = "SELECT id, title, status, satisfaction_rating FROM posts WHERE id = $postId";
-        $result = pg_query($conn, $query);
+    // Gerekli alanları kontrol et
+    if ($data && isset($data->post_id) && isset($data->rating)) {
+        $post_id = intval($data->post_id);
+        $rating = intval($data->rating);
+        $user_id = isset($data->user_id) ? intval($data->user_id) : 0;
         
-        if (!$result) {
-            throw new Exception("Veritabanı sorgusu başarısız: " . pg_last_error($conn));
+        // Rating değerini doğrula (1-5 arası)
+        if ($rating < 1 || $rating > 5) {
+            $response['message'] = 'Memnuniyet puanı 1 ile 5 arasında olmalıdır';
+            echo json_encode($response);
+            exit;
         }
         
-        $post = pg_fetch_assoc($result);
-        
-        if (!$post) {
-            sendResponse(false, 'Belirtilen şikayet bulunamadı');
+        try {
+            // Önce şikayetin var olduğunu ve çözülmüş durumda olduğunu kontrol et
+            $check_query = "
+                SELECT id, status FROM posts 
+                WHERE id = ? AND status = 'resolved'
+            ";
+            
+            $check_stmt = $db->prepare($check_query);
+            $check_stmt->bind_param('i', $post_id);
+            $check_stmt->execute();
+            $check_result = $check_stmt->get_result();
+            
+            if ($check_result->num_rows === 0) {
+                $response['message'] = 'Şikayet bulunamadı veya çözülmemiş durumda';
+                echo json_encode($response);
+                exit;
+            }
+            
+            // Şikayet memnuniyet puanını güncelle
+            $update_query = "
+                UPDATE posts SET 
+                satisfaction_rating = ?,
+                updated_at = NOW()
+                WHERE id = ?
+            ";
+            
+            $update_stmt = $db->prepare($update_query);
+            $update_stmt->bind_param('ii', $rating, $post_id);
+            
+            if ($update_stmt->execute()) {
+                $response['success'] = true;
+                $response['message'] = 'Memnuniyet puanı başarıyla kaydedildi';
+                
+                // İşlem başarılı olduysa veritabanından güncel kaydı al
+                $get_query = "
+                    SELECT p.id, p.title, p.status, p.satisfaction_rating,
+                           c.name as city_name, d.name as district_name
+                    FROM posts p
+                    LEFT JOIN cities c ON p.city_id = c.id
+                    LEFT JOIN districts d ON p.district_id = d.id
+                    WHERE p.id = ?
+                ";
+                
+                $get_stmt = $db->prepare($get_query);
+                $get_stmt->bind_param('i', $post_id);
+                $get_stmt->execute();
+                $get_result = $get_stmt->get_result();
+                
+                if ($get_result->num_rows > 0) {
+                    $response['data'] = $get_result->fetch_assoc();
+                }
+            } else {
+                $response['message'] = 'Memnuniyet puanı güncellenirken bir hata oluştu';
+            }
+        } catch (Exception $e) {
+            $response['message'] = 'Bir hata oluştu: ' . $e->getMessage();
         }
-        
-        sendResponse(true, 'Memnuniyet derecelendirmesi alındı', [
-            'post_id' => $post['id'],
-            'title' => $post['title'],
-            'status' => $post['status'],
-            'satisfaction_rating' => $post['satisfaction_rating']
-        ]);
-    } catch (Exception $e) {
-        sendResponse(false, 'Bir hata oluştu: ' . $e->getMessage());
+    } else {
+        $response['message'] = 'Eksik veya hatalı veri gönderildi';
     }
 }
 
-// Desteklenmeyen HTTP metodu
-sendResponse(false, 'Desteklenmeyen HTTP metodu');
+// Yanıtı JSON olarak döndür
+echo json_encode($response);
 ?>

@@ -1,41 +1,37 @@
 class BeforeAfterRecord {
-  final String id;
-  final String postId;
+  final int id;
+  final int postId;
   final String beforeImageUrl;
   final String afterImageUrl;
   final String? description;
-  final String recordedBy;
+  final int? recordedBy;
   final DateTime recordDate;
   final DateTime createdAt;
-  
+
   BeforeAfterRecord({
     required this.id,
     required this.postId,
     required this.beforeImageUrl,
     required this.afterImageUrl,
     this.description,
-    required this.recordedBy,
+    this.recordedBy,
     required this.recordDate,
     required this.createdAt,
   });
-  
+
   factory BeforeAfterRecord.fromJson(Map<String, dynamic> json) {
     return BeforeAfterRecord(
-      id: json['id'].toString(),
-      postId: json['post_id'].toString(),
+      id: json['id'],
+      postId: json['post_id'],
       beforeImageUrl: json['before_image_url'],
       afterImageUrl: json['after_image_url'],
       description: json['description'],
-      recordedBy: json['recorded_by'].toString(),
-      recordDate: json['record_date'] != null
-          ? DateTime.parse(json['record_date'])
-          : DateTime.now(),
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
+      recordedBy: json['recorded_by'],
+      recordDate: DateTime.parse(json['record_date']),
+      createdAt: DateTime.parse(json['created_at']),
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
