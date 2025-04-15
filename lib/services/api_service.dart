@@ -1951,8 +1951,8 @@ class ApiService {
     }
   }
   
-  // User profile updates
-  Future<User> updateUserProfile(
+  // User profile updates - Basic profile güncelleme
+  Future<User> updateBasicUserProfile(
     String userId, 
     {String? name, 
     String? email, 
@@ -2329,8 +2329,8 @@ class ApiService {
     }
   }
   
-  // Kullanıcı konum bilgilerini güncelleme
-  Future<User?> updateUserLocation(
+  // Kullanıcı konum bilgilerini güncelleme - detaylı versiyon
+  Future<User?> updateUserLocationWithDetails(
     String userId, {
     required String cityId,
     String? districtId,

@@ -44,10 +44,9 @@ class _SatisfactionRatingWidgetState extends State<SatisfactionRatingWidget> {
         return;
       }
       
-      final bool success = await apiService.submitSatisfactionResponse(
-        postId: widget.post.id, 
-        userId: authProvider.currentUser!.id,
-        rating: rating,
+      final bool success = await apiService.submitSatisfactionRating(
+        widget.post.id,
+        rating
       );
       
       if (success) {
