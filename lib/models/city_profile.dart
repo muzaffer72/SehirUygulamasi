@@ -12,9 +12,12 @@ class CityProfile {
   // Eski ve yeni modellerin alan isimleri uyumlu olsun
   final String? contactPhone;
   final String? contactEmail;
-  // phone ve email alanlari için getter ekle
+  // CityProfileScreen.dart'ta kullanılan getterlar
   String? get phone => contactPhone;
   String? get email => contactEmail;
+  String? get websiteUrl => website;
+  int get solvedIssuesCount => totalSolvedIssues ?? solvedComplaints;
+  int get totalIssuesCount => totalPosts ?? (totalComplaints + totalSuggestions);
   
   final String? address;
   final double? latitude;

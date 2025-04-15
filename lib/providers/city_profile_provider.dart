@@ -3,10 +3,10 @@ import 'package:sikayet_var/models/city_profile.dart';
 import 'package:sikayet_var/providers/api_service_provider.dart';
 
 // Şehir profil bilgisini getiren provider
-final cityProfileProvider = FutureProvider.family<dynamic, dynamic>(
+final cityProfileProvider = FutureProvider.family<CityProfile?, dynamic>(
   (ref, cityId) async {
     final apiService = ref.watch(apiServiceProvider);
-    // cityId'nin hem int hem de String olabilmesi için
+    // cityId'nin hem int hem de String olabilmesi için dönüşüm yapılıyor
     return apiService.getCityProfile(cityId);
   },
 );
@@ -14,7 +14,8 @@ final cityProfileProvider = FutureProvider.family<dynamic, dynamic>(
 // Şehir listesini getiren provider
 final cityListProvider = FutureProvider<List<dynamic>>((ref) async {
   final apiService = ref.watch(apiServiceProvider);
-  return apiService.getCities();
+  // Burada getCitiesAsObjects kullanarak City objelerini alalım
+  return apiService.getCitiesAsObjects();
 });
 
 // Belirli bir şehre ait ilçe listesini getiren provider
