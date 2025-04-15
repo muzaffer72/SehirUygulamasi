@@ -563,6 +563,13 @@ class ApiService {
     }
   }
   
+  // Eski API ile uyumluluk için
+  Future<dynamic> getCityProfile(dynamic cityId) async {
+    // String'e dönüştür
+    final cityIdStr = cityId.toString();
+    return await getCityProfileById(cityIdStr);
+  }
+  
   // Kullanıcı bilgisini getir
   Future<User?> getUserById(String userId) async {
     final url = Uri.parse('$baseUrl$apiPath/users/$userId');
