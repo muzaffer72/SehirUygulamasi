@@ -580,20 +580,15 @@ class ApiService {
   }
   
   // Memnuniyet puanı ekle
+  // Eski metod. Yeni projelerde submitSatisfaction kullanın.
+  @Deprecated('Use submitSatisfaction instead')
   Future<void> submitSatisfactionRating(String postId, int rating, {String? comment}) async {
-    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/satisfaction');
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-      body: json.encode({
-        'rating': rating,
-        'comment': comment,
-      }),
+    // Yeni metoda yönlendir
+    return submitSatisfaction(
+      postId: postId,
+      rating: rating,
+      comment: comment,
     );
-    
-    if (response.statusCode != 200) {
-      throw Exception(_handleErrorResponse(response));
-    }
   }
   
   // Kullanıcının anketteki oyunu getir

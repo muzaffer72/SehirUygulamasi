@@ -522,7 +522,8 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
               // Bildirim test ekleme
               NotificationService.addNotification(
                 NotificationModel(
-                  id: DateTime.now().millisecondsSinceEpoch,
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  userId: '1', // Geçici olarak sabit bir kullanıcı ID
                   title: 'Test Bildirimi',
                   message: 'Bu bir test bildirimidir.',
                   createdAt: DateTime.now(),
