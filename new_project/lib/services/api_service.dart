@@ -180,7 +180,7 @@ class ApiService {
   }
   
   // Belirli bir şehre ait ilçeleri getir
-  Future<List<dynamic>> getDistrictsByCityId(String cityId) async {
+  Future<List<District>> getDistrictsByCityId(String cityId) async {
     final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/districts');
     final response = await http.get(
       url,
@@ -189,7 +189,8 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['data'] ?? [];
+      final List<dynamic> districtsJson = data['data'] ?? [];
+      return districtsJson.map((json) => District.fromJson(json)).toList();
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -375,7 +376,7 @@ class ApiService {
   }
   
   // Kategoriler listesini getir
-  Future<List<dynamic>> getCategories() async {
+  Future<List<Category>> getCategories() async {
     final url = Uri.parse('$baseUrl$apiPath/categories');
     final response = await http.get(
       url,
@@ -384,14 +385,15 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['data'] ?? [];
+      final List<dynamic> categoriesJson = data['data'] ?? [];
+      return categoriesJson.map((json) => Category.fromJson(json)).toList();
     } else {
       throw Exception(_handleErrorResponse(response));
     }
   }
   
   // Kategori detayını getir
-  Future<dynamic> getCategoryById(String categoryId) async {
+  Future<Category?> getCategoryById(String categoryId) async {
     final url = Uri.parse('$baseUrl$apiPath/categories/$categoryId');
     final response = await http.get(
       url,
@@ -400,7 +402,8 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['data'];
+      if (data['data'] == null) return null;
+      return Category.fromJson(data['data']);
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -427,7 +430,7 @@ class ApiService {
   }
   
   // Şehir detayını getir
-  Future<dynamic> getCityById(String cityId) async {
+  Future<City?> getCityById(String cityId) async {
     final url = Uri.parse('$baseUrl$apiPath/cities/$cityId');
     final response = await http.get(
       url,
@@ -436,14 +439,15 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['data'];
+      if (data['data'] == null) return null;
+      return City.fromJson(data['data']);
     } else {
       throw Exception(_handleErrorResponse(response));
     }
   }
   
   // İlçe detayını getir
-  Future<dynamic> getDistrictById(String districtId) async {
+  Future<District?> getDistrictById(String districtId) async {
     final url = Uri.parse('$baseUrl$apiPath/districts/$districtId');
     final response = await http.get(
       url,
@@ -452,7 +456,8 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['data'];
+      if (data['data'] == null) return null;
+      return District.fromJson(data['data']);
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -488,7 +493,7 @@ class ApiService {
   }
   
   // Yorumları getir
-  Future<List<dynamic>> getCommentsByPostId(String postId) async {
+  Future<List<Comment>> getCommentsByPostId(String postId) async {
     final url = Uri.parse('$baseUrl$apiPath/posts/$postId/comments');
     final response = await http.get(
       url,
@@ -497,14 +502,15 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['data'] ?? [];
+      final List<dynamic> commentsJson = data['data'] ?? [];
+      return commentsJson.map((json) => Comment.fromJson(json)).toList();
     } else {
       throw Exception(_handleErrorResponse(response));
     }
   }
   
   // Yorum ekle
-  Future<dynamic> addComment({
+  Future<Comment> addComment({
     required String postId, 
     required String content,
     String? parentId
@@ -521,7 +527,7 @@ class ApiService {
     
     if (response.statusCode == 201) {
       final data = json.decode(response.body);
-      return data['data'];
+      return Comment.fromJson(data['data']);
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -541,7 +547,7 @@ class ApiService {
   }
   
   // Şehir profil bilgilerini getir
-  Future<dynamic> getCityProfileById(String cityId) async {
+  Future<Map<String, dynamic>?> getCityProfileById(String cityId) async {
     final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/profile');
     final response = await http.get(
       url,
@@ -550,14 +556,14 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['data'];
+      return data['data'] as Map<String, dynamic>?;
     } else {
       throw Exception(_handleErrorResponse(response));
     }
   }
   
   // Kullanıcı bilgisini getir
-  Future<dynamic> getUserById(String userId) async {
+  Future<User?> getUserById(String userId) async {
     final url = Uri.parse('$baseUrl$apiPath/users/$userId');
     final response = await http.get(
       url,
@@ -566,7 +572,8 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['data'];
+      if (data['data'] == null) return null;
+      return User.fromJson(data['data']);
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -725,7 +732,7 @@ class ApiService {
   }
   
   // Post'a yorum ekle
-  Future<Map<String, dynamic>> commentPost({
+  Future<Comment> commentPost({
     required String postId,
     required String content,
     String? parentId,
@@ -741,7 +748,8 @@ class ApiService {
     );
     
     if (response.statusCode == 201) {
-      return json.decode(response.body);
+      final data = json.decode(response.body);
+      return Comment.fromJson(data['data']);
     } else {
       throw Exception(_handleErrorResponse(response));
     }
