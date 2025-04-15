@@ -1492,12 +1492,12 @@ class ApiService {
   Future<CityProfile?> getCityProfile(dynamic cityId) async {
     // cityId'yi String'e dönüştür (int veya String olabilir)
     final String cityIdStr = cityId.toString();
-    print('Fetching city profile for ID: $cityId');
+    print('Fetching city profile for ID: $cityIdStr');
     
     try {
       // Laravel admin panel API entegrasyonu
       final response = await _client.get(
-        Uri.parse('$baseUrl/api/cities/${cityId.toString()}/profile'),
+        Uri.parse('$baseUrl/api/cities/$cityIdStr/profile'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -1511,7 +1511,13 @@ class ApiService {
         
         if (data is Map<String, dynamic>) {
           if (data.containsKey('data')) {
-            return CityProfile.fromJson(data['data']);
+            final profile = CityProfile.fromJson(data['data']);
+            // CityProfileScreen.dart için solutionRate değerini hesapla
+            if (profile.solutionRate == null && profile.totalComplaints > 0) {
+              final solutionRate = profile.solvedComplaints / profile.totalComplaints;
+              return profile.copyWith(solutionRate: solutionRate);
+            }
+            return profile;
           } else if (data.containsKey('profile')) {
             return CityProfile.fromJson(data['profile']);
           } else if (data.containsKey('city_profile')) {
