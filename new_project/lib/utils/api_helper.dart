@@ -5,16 +5,11 @@ class ApiHelper {
   /// Web uygulaması veya mobil için API adresini oluşturur
   static String getApiBaseUrl() {
     if (kIsWeb) {
-      // Web'de çalışırken dinamik URL oluşturucuyu kullanırız
-      // ÖNEMLİ: dart:html kütüphanesi Web platform dışında kullanılamaz
-      // Bu nedenle web platformunda çalışan JS kodu ile URL oluşturulması gerekiyor
-      // window.location.protocol ve window.location.hostname değerleri JS tarafında alınacak
-      
-      // Bu web için fallback değeri - normalde kullanılmaz çünkü JS kodu çalışır
-      return 'https://workspace.guzelimbatmanli.repl.co/api';
+      // Web'de çalışırken API proxy adresini kullanıyoruz
+      return 'http://0.0.0.0:9000/api';
     } else {
-      // Mobilde sabit URL kullanıyoruz (api yolsuz)
-      return 'https://workspace.guzelimbatmanli.repl.co/api';
+      // Mobilde API proxy adresini kullanıyoruz
+      return 'http://0.0.0.0:9000/api';
     }
   }
 }
