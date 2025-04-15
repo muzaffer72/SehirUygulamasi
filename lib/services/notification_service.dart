@@ -14,21 +14,21 @@ import 'firebase_notification_service.dart';
 /// Firebase bildirimlerini alır, işler, saklar ve uygulama içinde gösterilmesini sağlar.
 class NotificationService {
   static const String _storageKey = 'sikayet_var_notifications';
-  static final List<NotificationModel> _notifications = [];
+  static final List<AppNotification> _notifications = [];
   
   /// Yeni bildirim geldiğinde tetiklenen stream
-  static final StreamController<NotificationModel> _notificationController = 
-      StreamController<NotificationModel>.broadcast();
+  static final StreamController<AppNotification> _notificationController = 
+      StreamController<AppNotification>.broadcast();
   
   /// Bildirim listesi değiştiğinde tetiklenen stream
-  static final StreamController<List<NotificationModel>> _notificationsListController = 
-      StreamController<List<NotificationModel>>.broadcast();
+  static final StreamController<List<AppNotification>> _notificationsListController = 
+      StreamController<List<AppNotification>>.broadcast();
   
   /// Yeni bildirim geldiğinde dinlemek için stream
-  static Stream<NotificationModel> get onNotification => _notificationController.stream;
+  static Stream<AppNotification> get onNotification => _notificationController.stream;
   
   /// Bildirim listesi değiştiğinde dinlemek için stream
-  static Stream<List<NotificationModel>> get notifications => _notificationsListController.stream;
+  static Stream<List<AppNotification>> get notifications => _notificationsListController.stream;
   
   /// Okunmamış bildirim sayısı
   static int get unreadCount => _notifications.where((n) => !n.isRead).length;
@@ -64,7 +64,7 @@ class NotificationService {
         
         _notifications.clear();
         _notifications.addAll(
-          decoded.map((item) => NotificationModel.fromMap(item)).toList()
+          decoded.map((item) => AppNotification.fromJson(item)).toList()
         );
         
         // Yeni bildirimleri tarihe göre sırala
@@ -79,7 +79,7 @@ class NotificationService {
   
   /// Bildirimleri tarihe göre sıralar (en yeniden en eskiye).
   static void _sortNotifications() {
-    _notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    _notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
   
   /// Bildirimleri yerel depoya kaydeder.
@@ -87,7 +87,7 @@ class NotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final List<Map<String, dynamic>> notificationsMap = 
-          _notifications.map((n) => n.toMap()).toList();
+          _notifications.map((n) => n.toJson()).toList();
       
       await prefs.setString(_storageKey, jsonEncode(notificationsMap));
       debugPrint('Bildirimler kaydedildi');
@@ -99,7 +99,7 @@ class NotificationService {
   /// Yeni bildirim ekler.
   /// 
   /// Bildirim zaten mevcutsa, içeriğini günceller.
-  static Future<void> addNotification(NotificationModel notification) async {
+  static Future<void> addNotification(AppNotification notification) async {
     // Aynı ID'ye sahip önceki bildirimi bul
     final existingIndex = _notifications.indexWhere((n) => n.id == notification.id);
     
@@ -123,11 +123,11 @@ class NotificationService {
   }
   
   /// Bildirimi okundu olarak işaretler.
-  static Future<void> markAsRead(String notificationId) async {
+  static Future<void> markAsRead(int notificationId) async {
     final index = _notifications.indexWhere((n) => n.id == notificationId);
     
     if (index >= 0 && !_notifications[index].isRead) {
-      _notifications[index].isRead = true;
+      _notifications[index] = _notifications[index].copyWith(isRead: true);
       
       // Değişiklikleri kaydet ve stream'leri güncelle
       await _saveNotifications();
@@ -142,9 +142,18 @@ class NotificationService {
     bool anyUnread = _notifications.any((n) => !n.isRead);
     
     if (anyUnread) {
+      final updatedNotifications = <AppNotification>[];
+      
       for (var notification in _notifications) {
-        notification.isRead = true;
+        if (!notification.isRead) {
+          updatedNotifications.add(notification.copyWith(isRead: true));
+        } else {
+          updatedNotifications.add(notification);
+        }
       }
+      
+      _notifications.clear();
+      _notifications.addAll(updatedNotifications);
       
       // Değişiklikleri kaydet ve stream'leri güncelle
       await _saveNotifications();
@@ -155,7 +164,7 @@ class NotificationService {
   }
   
   /// Bildirimi siler.
-  static Future<void> deleteNotification(String notificationId) async {
+  static Future<void> deleteNotification(int notificationId) async {
     final initialLength = _notifications.length;
     _notifications.removeWhere((n) => n.id == notificationId);
     
@@ -186,11 +195,39 @@ class NotificationService {
     debugPrint('Firebase bildirimi alındı: $message');
     
     try {
-      final notification = NotificationModel.fromFirebaseMessage(message);
+      // Firebase mesajından AppNotification oluştur
+      final notification = _createNotificationFromFirebaseMessage(message);
       await addNotification(notification);
     } catch (e) {
       debugPrint('Firebase bildirimi işlenirken hata: $e');
     }
+  }
+  
+  /// Firebase mesajından AppNotification nesnesi oluşturur
+  static AppNotification _createNotificationFromFirebaseMessage(Map<String, dynamic> message) {
+    final Map<String, dynamic> data = message['data'] ?? {};
+    final Map<String, dynamic> notification = message['notification'] ?? {};
+    
+    final String title = notification['title'] ?? data['title'] ?? 'Yeni Bildirim';
+    final String messageText = notification['body'] ?? data['message'] ?? '';
+    final String type = data['type'] ?? 'general';
+    
+    // Ek veriler
+    final Map<String, dynamic> extraData = {...data};
+    // title ve message'ı extraData'dan çıkar
+    extraData.remove('title');
+    extraData.remove('message');
+    extraData.remove('type');
+    
+    return AppNotification(
+      id: DateTime.now().millisecondsSinceEpoch,
+      title: title,
+      message: messageText,
+      type: type,
+      data: extraData.isNotEmpty ? extraData : null,
+      createdAt: DateTime.now(),
+      isRead: false,
+    );
   }
   
   /// Belirli bir bildirim türüne abone olur.

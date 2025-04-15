@@ -78,7 +78,7 @@ if (flutterVersionName == null) {
 android {
     namespace "belediye.iletisim.merkezi"
     compileSdkVersion flutter.compileSdkVersion
-    ndkVersion flutter.ndkVersion
+    ndkVersion "25.1.8937393"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

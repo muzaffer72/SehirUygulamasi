@@ -1,251 +1,182 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import 'firebase_service.dart';
-
-/// Firebase Cloud Messaging ile bildirim altyapısını yöneten sınıf.
+/// ŞikayetVar uygulaması için Firebase Cloud Messaging servisi.
 /// 
-/// Bu sınıf, FCM (Firebase Cloud Messaging) bildirimleri için gerekli yapılandırmaları yapar,
-/// bildirim izinlerini yönetir ve gelen bildirimleri işler.
+/// Bu sınıf, Firebase bildirimlerini yönetir ve yerel bildirimleri göstermek için
+/// flutter_local_notifications paketini kullanır.
 class FirebaseNotificationService {
-  /// Firebase Messaging instance
-  static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  static FlutterLocalNotificationsPlugin? _localNotifications;
   
-  /// Flutter yerel bildirim eklentisi instance
-  static final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = 
-    FlutterLocalNotificationsPlugin();
+  static String? _fcmToken;
+  static bool _isInitialized = false;
   
-  /// Android için bildirim kanalı ID
-  static const String _androidChannelId = 'sikayet_var_channel';
-  
-  /// Android için bildirim kanalı adı
-  static const String _androidChannelName = 'ŞikayetVar Bildirimleri';
-  
-  /// Android için bildirim kanalı açıklaması
-  static const String _androidChannelDescription = 'ŞikayetVar uygulaması bildirim kanalı';
-
-  /// Bildirim servisini başlatır ve gerekli yapılandırmaları yapar.
+  /// Firebase bildirim servisini başlatır.
   /// 
-  /// Uygulama başlatıldığında, `main.dart` dosyasından çağrılmalıdır.
+  /// Gerekli izinleri ister, FCM token'ı alır, bildirim kanallarını oluşturur,
+  /// ve bildirim dinleyicilerini ayarlar.
   static Future<void> initialize() async {
-    if (!FirebaseService.isFirebaseAvailable()) {
-      debugPrint('Firebase kullanılamıyor, bildirim servisi başlatılamadı');
+    if (_isInitialized) {
       return;
     }
     
-    // Bildirim izinlerini al
-    await _requestPermissions();
-    
-    // Yerel bildirimleri yapılandır
-    await _setupLocalNotifications();
-    
-    // Ön plan bildirimleri için yapılandırma
-    await _setupForegroundNotifications();
-    
-    // Bildirim tıklama işleyicisini ayarla
-    _setupNotificationHandlers();
-    
-    // FCM token değişikliği takibi
-    _setupTokenRefresh();
-    
-    debugPrint('Firebase bildirim servisi başarıyla başlatıldı');
-  }
-  
-  /// Kullanıcı bildirim izinlerini ister.
-  static Future<void> _requestPermissions() async {
-    NotificationSettings settings = await _firebaseMessaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      provisional: false,
-    );
-    
-    debugPrint('Bildirim izin durumu: ${settings.authorizationStatus}');
-  }
-  
-  /// Flutter yerel bildirim eklentisini yapılandırır.
-  static Future<void> _setupLocalNotifications() async {
-    // Android için başlangıç ayarları
-    const AndroidInitializationSettings androidInitializationSettings = 
-      AndroidInitializationSettings('@drawable/ic_notification');
-    
-    // iOS için başlangıç ayarları
-    const DarwinInitializationSettings iosInitializationSettings = 
-      DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
-      );
-    
-    // Tüm platformlar için başlangıç ayarları
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: androidInitializationSettings,
-      iOS: iosInitializationSettings,
-    );
-    
-    // Eklentiyi yapılandır
-    await _flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: _onNotificationTapped,
-    );
-    
-    // Android için bildirim kanalı oluştur
-    if (Platform.isAndroid) {
-      await _createAndroidNotificationChannel();
+    try {
+      // Firebase'i başlat (daha önce başlatılmadıysa)
+      await Firebase.initializeApp();
+      
+      // Bildirim izinleri
+      if (Platform.isIOS || Platform.isMacOS) {
+        await _messaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      }
+      
+      // FCM token'ı al
+      _fcmToken = await _messaging.getToken();
+      debugPrint('FCM Token: $_fcmToken');
+      
+      // Token yenilenme dinleyicisi
+      _messaging.onTokenRefresh.listen((newToken) {
+        _fcmToken = newToken;
+        debugPrint('FCM Token yenilendi: $newToken');
+        // TODO: Yeni token'ı sunucuya kaydet
+      });
+      
+      // Yerel bildirimleri ayarla
+      await _setupLocalNotifications();
+      
+      // Bildirim dinleyicilerini ayarla
+      _setupNotificationListeners();
+      
+      _isInitialized = true;
+      debugPrint('Firebase bildirim servisi başlatıldı');
+    } catch (e) {
+      debugPrint('Firebase bildirim servisi başlatılamadı: $e');
     }
   }
   
-  /// Android için bildirim kanalı oluşturur.
-  static Future<void> _createAndroidNotificationChannel() async {
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      _androidChannelId,
-      _androidChannelName,
-      description: _androidChannelDescription,
-      importance: Importance.high,
-    );
+  /// Flutter Local Notifications plugin'ini ayarlar.
+  static Future<void> _setupLocalNotifications() async {
+    _localNotifications = FlutterLocalNotificationsPlugin();
     
-    await _flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+    // Bildirim kanallarını oluştur (sadece Android için)
+    if (Platform.isAndroid) {
+      const androidInitialize = AndroidInitializationSettings('ic_launcher');
+      
+      const initializationSettings = InitializationSettings(
+        android: androidInitialize,
+        iOS: DarwinInitializationSettings(),
+      );
+      
+      await _localNotifications?.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          // TODO: Bildirime tıklama olayını işle
+          debugPrint('Yerel bildirime tıklandı: ${response.payload}');
+        },
+      );
+      
+      // Android için yüksek öncelikli bildirim kanalı oluştur
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'high_importance_channel',
+        'Önemli Bildirimler',
+        description: 'Bu kanal önemli bildirimler için kullanılır',
+        importance: Importance.high,
+      );
+      
+      await _localNotifications
+          ?.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+    }
   }
   
-  /// Ön planda (uygulama açıkken) gösterilecek bildirimler için yapılandırma.
-  static Future<void> _setupForegroundNotifications() async {
-    // Uygulama açıkken gelen bildirimleri göster
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+  /// Firebase bildirim dinleyicilerini ayarlar.
+  static void _setupNotificationListeners() {
+    // Uygulama arka planda veya kapalı iken gelen bildirimler için
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     
-    // Ön planda gelen bildirimleri işle
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-  }
-  
-  /// FCM token değişikliklerini takip eder ve yeni tokeni sunucuya gönderir.
-  static void _setupTokenRefresh() {
-    FirebaseMessaging.instance.onTokenRefresh.listen((String token) {
-      debugPrint('FCM token yenilendi: $token');
-      _sendTokenToServer(token);
+    // Uygulama açıkken gelen bildirimler için
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      _processMessage(message);
     });
     
-    // İlk token'ı al ve sunucuya gönder
-    _firebaseMessaging.getToken().then((String? token) {
-      if (token != null) {
-        debugPrint('FCM token: $token');
-        _sendTokenToServer(token);
-      }
+    // Bildirime tıklandığında
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint('Bildirime tıklandı: ${message.notification?.title}');
+      // TODO: Bildirime tıklama olayını işle (ekran açma vb.)
     });
   }
   
-  /// FCM token'ı backend sunucusuna gönderir.
-  static Future<void> _sendTokenToServer(String token) async {
-    // TODO: Tokeni API'ye göndererek kullanıcı ile ilişkilendir
-    // API çağrısı burada yapılacak
-    debugPrint('Token sunucuya gönderildi: $token');
+  /// Arka planda gelen Firebase mesajlarını işlemek için işleyici.
+  static Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+    // Uygulamanın arka planda veya kapalı olması durumunda çağrılır
+    await Firebase.initializeApp();
+    
+    debugPrint('Arka planda bildirim alındı: ${message.notification?.title}');
+    // Arka planda bildirimler otomatik olarak bildirim çekmecesine eklenir,
+    // bu nedenle ek işlem yapmaya gerek yok
   }
   
-  /// Ön planda (uygulama açıkken) gelen bildirimleri işler.
-  static Future<void> _handleForegroundMessage(RemoteMessage message) async {
+  /// Firebase'den gelen bildirimi işler ve gerekirse yerel bildirim gösterir.
+  static Future<void> _processMessage(RemoteMessage message) async {
     debugPrint('Ön planda bildirim alındı: ${message.notification?.title}');
     
-    // Bildirim içeriği kontrolü
-    if (message.notification != null && 
-        message.notification!.title != null && 
-        message.notification!.body != null) {
-      
-      await _showLocalNotification(
-        title: message.notification!.title!,
-        body: message.notification!.body!,
-        payload: jsonEncode(message.data),
+    final notification = message.notification;
+    final android = message.notification?.android;
+    final data = message.data;
+    
+    if (notification != null && _localNotifications != null) {
+      // Uygulama ön plandayken yerel bildirim göster
+      await _localNotifications?.show(
+        notification.hashCode,
+        notification.title ?? data['title'] ?? 'Yeni Bildirim',
+        notification.body ?? data['message'] ?? '',
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'Önemli Bildirimler',
+            channelDescription: 'Bu kanal önemli bildirimler için kullanılır',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: android?.smallIcon ?? 'ic_launcher',
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: message.data.toString(),
       );
     }
-  }
-  
-  /// Yerel bildirim gösterir.
-  static Future<void> _showLocalNotification({
-    required String title,
-    required String body,
-    String? payload,
-  }) async {
-    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      _androidChannelId,
-      _androidChannelName,
-      channelDescription: _androidChannelDescription,
-      importance: Importance.max,
-      priority: Priority.high,
-      icon: '@drawable/ic_notification',
-      color: const Color(0xFF1976D2),
-    );
     
-    final NotificationDetails platformDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: const DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      ),
-    );
-    
-    await _flutterLocalNotificationsPlugin.show(
-      0, // Bildirim ID
-      title,
-      body,
-      platformDetails,
-      payload: payload,
-    );
+    // TODO: Bildirim servisine mesajı ilet
+    // await NotificationService.handleFirebaseMessage(message.data);
   }
   
-  /// Bildirim tıklandığında tetiklenen işleyici.
-  static void _onNotificationTapped(NotificationResponse response) {
-    if (response.payload != null) {
-      try {
-        final Map<String, dynamic> data = jsonDecode(response.payload!);
-        debugPrint('Bildirim tıklandı, veri: $data');
-        
-        // TODO: Bildirim tıklama işlemleri (ör. ilgili ekrana yönlendirme)
-        
-      } catch (e) {
-        debugPrint('Bildirim verisi ayrıştırılırken hata: $e');
-      }
-    }
-  }
-  
-  /// Bildirim işleyicilerini ayarlar.
-  static void _setupNotificationHandlers() {
-    // Arkaplanda iken bildirime tıklandığında
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('Arkaplanda bildirim tıklandı: ${message.notification?.title}');
-      
-      // TODO: Tıklanan bildirime göre ilgili sayfaya yönlendirme
-    });
-    
-    // Uygulama tamamen kapalıyken bildirime tıklanarak açıldığında
-    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
-      if (message != null) {
-        debugPrint('Uygulama bildirimden açıldı: ${message.notification?.title}');
-        
-        // TODO: Tıklanan bildirime göre ilgili sayfaya yönlendirme
-      }
-    });
-  }
-  
-  /// Belirli bir konuya abone olur.
+  /// Belirtilen konuya abone olur.
+  /// 
+  /// Abone olunan konuya gönderilen bildirimler kullanıcıya iletilir.
   static Future<void> subscribeToTopic(String topic) async {
-    await _firebaseMessaging.subscribeToTopic(topic);
-    debugPrint('$topic konusuna abone olundu');
+    await _messaging.subscribeToTopic(topic);
+    debugPrint('Abone olundu: $topic');
   }
   
-  /// Belirli bir konudan aboneliği kaldırır.
+  /// Belirtilen konudan aboneliği kaldırır.
   static Future<void> unsubscribeFromTopic(String topic) async {
-    await _firebaseMessaging.unsubscribeFromTopic(topic);
-    debugPrint('$topic konusundan abonelik kaldırıldı');
+    await _messaging.unsubscribeFromTopic(topic);
+    debugPrint('Abonelik kaldırıldı: $topic');
   }
+  
+  /// Mevcut FCM token'ını döndürür.
+  static String? get fcmToken => _fcmToken;
 }

@@ -1,14 +1,28 @@
 #!/bin/bash
 
-# Environment değişkenlerini ayarla
-export ANDROID_HOME=$HOME/Android/Sdk
-export JAVA_OPTS="-Xmx1536M -XX:MaxHeapSize=1536M"
-export GRADLE_OPTS="-Xmx1536M -XX:MaxHeapSize=1536M"
+# Bu script, tüm Gradle ayarlarını düzenleyerek APK build eder
+# Çalıştırma: bash flutter_build_apk.sh
 
-# APK derlemesini daha az bellek kullanarak çalıştır
-echo "Minimal APK derlemesi başlatılıyor..."
-flutter clean
-flutter build apk --debug --split-per-abi --dart-define=Dart.vm.product=false
+echo "Flutter APK Build Script"
+echo "======================="
 
-echo "APK derleme tamamlandı. APK dosyaları:"
-find build/app/outputs/flutter-apk -name "*.apk"
+# Önce Flutter projesini düzelt
+bash flutter_fix.sh
+
+# APK'yı build et
+echo "APK derleniyor..."
+cd new_project
+flutter build apk --release
+
+if [ $? -eq 0 ]; then
+  echo "APK başarıyla derlendi!"
+  echo "APK dosyası: new_project/build/app/outputs/flutter-apk/app-release.apk"
+  
+  # APK'yı ana dizine kopyala
+  mkdir -p ../build/apk
+  cp build/app/outputs/flutter-apk/app-release.apk ../build/apk/belediye_iletisim.apk
+  
+  echo "APK ana dizine kopyalandı: build/apk/belediye_iletisim.apk"
+else
+  echo "APK derlenirken hata oluştu!"
+fi
