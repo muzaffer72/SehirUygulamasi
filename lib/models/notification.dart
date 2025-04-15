@@ -1,4 +1,8 @@
-class Notification {
+/// Veritabanındaki bildirim modeli.
+/// 
+/// Bu sınıf, API'den alınan bildirimleri temsil eder.
+/// NotificationModel sınıfından farklıdır (o Firebase bildirimleri içindir).
+class AppNotification {
   final String id;
   final String userId;
   final String title;
@@ -9,7 +13,7 @@ class Notification {
   final String? relatedPostId;
   final String? relatedCommentId;
   
-  Notification({
+  AppNotification({
     required this.id,
     required this.userId,
     required this.title,
@@ -21,8 +25,8 @@ class Notification {
     this.relatedCommentId,
   });
   
-  factory Notification.fromJson(Map<String, dynamic> json) {
-    return Notification(
+  factory AppNotification.fromJson(Map<String, dynamic> json) {
+    return AppNotification(
       id: json['id'].toString(),
       userId: json['user_id'].toString(),
       title: json['title'],
