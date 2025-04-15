@@ -838,24 +838,104 @@ class ApiService {
   
   // Surveys
   Future<List<Survey>> getSurveys() async {
-    final response = await _client.get(Uri.parse('$baseUrl/surveys'));
-    
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => Survey.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load surveys: ${response.body}');
+    try {
+      // Öncelikle Laravel API üzerinden almayı dene
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/surveys'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('Surveys response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          // Laravel resource collection formatı
+          final List<dynamic> surveysData = data['data'];
+          return surveysData.map((item) => Survey.fromJson(item)).toList();
+        } else if (data is List) {
+          // Düz liste formatı
+          return data.map((item) => Survey.fromJson(item)).toList();
+        }
+      }
+      
+      // Laravel API'den alınamadıysa, yedek endpoint'i dene
+      return _getFallbackSurveys();
+    } catch (e) {
+      print('Error fetching surveys: $e');
+      return _getFallbackSurveys();
+    }
+  }
+  
+  Future<List<Survey>> _getFallbackSurveys() async {
+    try {
+      print('Using fallback endpoint for surveys');
+      final response = await _client.get(Uri.parse('$baseUrl/surveys'));
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((item) => Survey.fromJson(item)).toList();
+      } else {
+        print('Failed to load fallback surveys: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching fallback surveys: $e');
+      return [];
     }
   }
   
   Future<List<Survey>> getActiveSurveys() async {
-    final response = await _client.get(Uri.parse('$baseUrl/surveys?active=true'));
-    
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => Survey.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load active surveys: ${response.body}');
+    try {
+      // Öncelikle Laravel API üzerinden almayı dene
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/surveys?active=true'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('Active surveys response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          // Laravel resource collection formatı
+          final List<dynamic> surveysData = data['data'];
+          return surveysData.map((item) => Survey.fromJson(item)).toList();
+        } else if (data is List) {
+          // Düz liste formatı
+          return data.map((item) => Survey.fromJson(item)).toList();
+        }
+      }
+      
+      // Laravel API'den alınamadıysa, yedek endpoint'i dene
+      return _getFallbackActiveSurveys();
+    } catch (e) {
+      print('Error fetching active surveys: $e');
+      return _getFallbackActiveSurveys();
+    }
+  }
+  
+  Future<List<Survey>> _getFallbackActiveSurveys() async {
+    try {
+      print('Using fallback endpoint for active surveys');
+      final response = await _client.get(Uri.parse('$baseUrl/surveys?active=true'));
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((item) => Survey.fromJson(item)).toList();
+      } else {
+        print('Failed to load fallback active surveys: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching fallback active surveys: $e');
+      return [];
     }
   }
   
