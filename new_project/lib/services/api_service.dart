@@ -548,18 +548,44 @@ class ApiService {
   
   // Şehir profil bilgilerini getir
   Future<CityProfile?> getCityProfileById(String cityId) async {
-    final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/profile');
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['data'] == null) return null;
-      return CityProfile.fromJson(data['data']);
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/profile');
+      final response = await http.get(
+        url,
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['data'] == null) return null;
+        return CityProfile.fromJson(data['data']);
+      } else {
+        print('Error in getCityProfileById: ${response.statusCode} - ${response.body}');
+        // Şehir bilgilerini getir, profil bulunamazsa
+        final city = await getCityById(cityId);
+        if (city != null) {
+          // City'den CityProfile oluştur
+          return CityProfile(
+            id: city.id,
+            cityId: city.id,
+            name: city.name,
+            description: city.description,
+            logoUrl: city.logoUrl,
+            totalComplaints: 0,
+            solvedComplaints: 0, 
+            activeComplaints: 0,
+            totalSuggestions: 0,
+            satisfactionRate: 0,
+            responseRate: 0,
+            problemSolvingRate: 0,
+            averageResponseTime: 0
+          );
+        }
+        return null;
+      }
+    } catch (e) {
+      print('Exception in getCityProfileById: $e');
+      return null;
     }
   }
   
@@ -570,35 +596,29 @@ class ApiService {
     return await getCityProfileById(cityIdStr);
   }
   
-  // Şehirleri getir (eski API uyumluluğu)
+  // Eski API uyumluluğu için getCities metodu
+  // getCitiesAsObjects metodunu kullanarak city objelerini alır
   Future<List<dynamic>> getCities() async {
-    final url = Uri.parse('$baseUrl$apiPath/cities');
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['data'] ?? [];
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      // Obje listesini al ve json olarak döndür
+      final cities = await getCitiesAsObjects();
+      return cities.map((city) => city.toJson()).toList();
+    } catch (e) {
+      print('Error in getCities: $e');
+      return [];
     }
   }
   
   // İlçeleri şehire göre filtreleme (eski API uyumluluğu)
+  // getDistrictsByCityIdAsObjects metodunu kullanarak district objelerini alır
   Future<List<dynamic>> getDistrictsByCityId(String cityId) async {
-    final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/districts');
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['data'] ?? [];
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      // Obje listesini al ve json olarak döndür
+      final districts = await getDistrictsByCityIdAsObjects(cityId);
+      return districts.map((district) => district.toJson()).toList();
+    } catch (e) {
+      print('Error in getDistrictsByCityId: $e');
+      return [];
     }
   }
   
