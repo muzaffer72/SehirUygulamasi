@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-class AppNotification {
+class NotificationModel {
   final int id;
   final int? userId;
   final String title;
@@ -10,7 +10,7 @@ class AppNotification {
   final DateTime createdAt;
   final bool isRead;
 
-  AppNotification({
+  NotificationModel({
     required this.id,
     this.userId,
     required this.title,
@@ -21,8 +21,8 @@ class AppNotification {
     this.isRead = false,
   });
 
-  factory AppNotification.fromJson(Map<String, dynamic> json) {
-    return AppNotification(
+  factory NotificationModel.fromJson(Map<String, dynamic> json) {
+    return NotificationModel(
       id: json['id'],
       userId: json['user_id'],
       title: json['title'],
@@ -51,7 +51,7 @@ class AppNotification {
     };
   }
 
-  AppNotification copyWith({
+  NotificationModel copyWith({
     int? id,
     int? userId,
     String? title,
@@ -61,7 +61,7 @@ class AppNotification {
     DateTime? createdAt,
     bool? isRead,
   }) {
-    return AppNotification(
+    return NotificationModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       title: title ?? this.title,

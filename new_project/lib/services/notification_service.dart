@@ -14,11 +14,11 @@ import 'firebase_notification_service.dart';
 /// Firebase bildirimlerini alır, işler, saklar ve uygulama içinde gösterilmesini sağlar.
 class NotificationService {
   static const String _storageKey = 'sikayet_var_notifications';
-  static final List<AppNotification> _notifications = [];
+  static final List<NotificationModel> _notifications = [];
   
   /// Yeni bildirim geldiğinde tetiklenen stream
-  static final StreamController<AppNotification> _notificationController = 
-      StreamController<AppNotification>.broadcast();
+  static final StreamController<NotificationModel> _notificationController = 
+      StreamController<NotificationModel>.broadcast();
   
   /// Bildirim listesi değiştiğinde tetiklenen stream
   static final StreamController<List<AppNotification>> _notificationsListController = 
