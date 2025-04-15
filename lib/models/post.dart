@@ -107,6 +107,9 @@ class Post {
           ? List<String>.from(json['image_urls'])
           : null,
       videoUrl: json['video_url'],
+      satisfactionRating: json['satisfaction_rating'] != null
+          ? int.tryParse(json['satisfaction_rating'].toString())
+          : null,
     );
   }
 
@@ -154,6 +157,7 @@ class Post {
       'created_at': createdAt.toIso8601String(),
       'image_urls': imageUrls,
       'video_url': videoUrl,
+      'satisfaction_rating': satisfactionRating,
     };
   }
 
@@ -174,6 +178,7 @@ class Post {
     DateTime? createdAt,
     List<String>? imageUrls,
     String? videoUrl,
+    int? satisfactionRating,
   }) {
     return Post(
       id: id ?? this.id,
@@ -192,6 +197,7 @@ class Post {
       createdAt: createdAt ?? this.createdAt,
       imageUrls: imageUrls ?? this.imageUrls,
       videoUrl: videoUrl ?? this.videoUrl,
+      satisfactionRating: satisfactionRating ?? this.satisfactionRating,
     );
   }
 }
