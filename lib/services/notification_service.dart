@@ -14,21 +14,21 @@ import 'firebase_notification_service.dart';
 /// Firebase bildirimlerini alır, işler, saklar ve uygulama içinde gösterilmesini sağlar.
 class NotificationService {
   static const String _storageKey = 'sikayet_var_notifications';
-  static final List<AppNotification> _notifications = [];
+  static final List<NotificationModel> _notifications = [];
   
   /// Yeni bildirim geldiğinde tetiklenen stream
-  static final StreamController<AppNotification> _notificationController = 
-      StreamController<AppNotification>.broadcast();
+  static final StreamController<NotificationModel> _notificationController = 
+      StreamController<NotificationModel>.broadcast();
   
   /// Bildirim listesi değiştiğinde tetiklenen stream
-  static final StreamController<List<AppNotification>> _notificationsListController = 
-      StreamController<List<AppNotification>>.broadcast();
+  static final StreamController<List<NotificationModel>> _notificationsListController = 
+      StreamController<List<NotificationModel>>.broadcast();
   
   /// Yeni bildirim geldiğinde dinlemek için stream
-  static Stream<AppNotification> get onNotification => _notificationController.stream;
+  static Stream<NotificationModel> get onNotification => _notificationController.stream;
   
   /// Bildirim listesi değiştiğinde dinlemek için stream
-  static Stream<List<AppNotification>> get notifications => _notificationsListController.stream;
+  static Stream<List<NotificationModel>> get notifications => _notificationsListController.stream;
   
   /// Okunmamış bildirim sayısı
   static int get unreadCount => _notifications.where((n) => !n.isRead).length;
@@ -64,7 +64,7 @@ class NotificationService {
         
         _notifications.clear();
         _notifications.addAll(
-          decoded.map((item) => AppNotification.fromJson(item)).toList()
+          decoded.map((item) => NotificationModel.fromJson(item)).toList()
         );
         
         // Yeni bildirimleri tarihe göre sırala

@@ -1,0 +1,111 @@
+Running Gradle task 'assembleDebug'...
+lib/services/notification_service.dart:17:21: Error: Type 'AppNotification' not found.
+  static final List<AppNotification> _notifications = [];
+                    ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:20:33: Error: Type 'AppNotification' not found.
+  static final StreamController<AppNotification> _notificationController = 
+                                ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:24:38: Error: Type 'AppNotification' not found.
+  static final StreamController<List<AppNotification>> _notificationsListController = 
+                                     ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:28:17: Error: Type 'AppNotification' not found.
+  static Stream<AppNotification> get onNotification => _notificationController.stream;
+                ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:31:22: Error: Type 'AppNotification' not found.
+  static Stream<List<AppNotification>> get notifications => _notificationsListController.stream;
+                     ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:102:39: Error: Type 'AppNotification' not found.
+  static Future<void> addNotification(AppNotification notification) async {
+                                      ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:211:10: Error: Type 'AppNotification' not found.
+  static AppNotification _createNotificationFromFirebaseMessage(Map<String, dynamic> message) {
+         ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:17:21: Error: 'AppNotification' isn't a type.
+  static final List<AppNotification> _notifications = [];
+                    ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:20:33: Error: 'AppNotification' isn't a type.
+  static final StreamController<AppNotification> _notificationController = 
+                                ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:21:24: Error: 'AppNotification' isn't a type.
+      StreamController<AppNotification>.broadcast();
+                       ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:24:38: Error: 'AppNotification' isn't a type.
+  static final StreamController<List<AppNotification>> _notificationsListController = 
+                                     ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:25:29: Error: 'AppNotification' isn't a type.
+      StreamController<List<AppNotification>>.broadcast();
+                            ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:34:64: Error: The getter 'isRead' isn't defined for the class 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'isRead'.
+  static int get unreadCount => _notifications.where((n) => !n.isRead).length;
+                                                               ^^^^^^
+lib/services/notification_service.dart:67:33: Error: Undefined name 'AppNotification'.
+          decoded.map((item) => AppNotification.fromJson(item)).toList()
+                                ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:82:37: Error: The getter 'createdAt' isn't defined for the class 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'createdAt'.
+    _notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+                                    ^^^^^^^^^
+lib/services/notification_service.dart:82:59: Error: The getter 'createdAt' isn't defined for the class 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'createdAt'.
+    _notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+                                                          ^^^^^^^^^
+lib/services/notification_service.dart:90:39: Error: The method 'toJson' isn't defined for the class 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing method, or defining a method named 'toJson'.
+          _notifications.map((n) => n.toJson()).toList();
+                                      ^^^^^^
+lib/services/notification_service.dart:90:49: Error: A value of type 'List<dynamic>' can't be assigned to a variable of type 'List<Map<String, dynamic>>'.
+ - 'List' is from 'dart:core'.
+ - 'Map' is from 'dart:core'.
+          _notifications.map((n) => n.toJson()).toList();
+                                                ^
+lib/services/notification_service.dart:102:39: Error: 'AppNotification' isn't a type.
+  static Future<void> addNotification(AppNotification notification) async {
+                                      ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:104:62: Error: The getter 'id' isn't defined for the class 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'id'.
+    final existingIndex = _notifications.indexWhere((n) => n.id == notification.id);
+                                                             ^^
+lib/services/notification_service.dart:127:54: Error: The getter 'id' isn't defined for the class 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'id'.
+    final index = _notifications.indexWhere((n) => n.id == notificationId);
+                                                     ^^
+lib/services/notification_service.dart:149:37: Error: 'AppNotification' isn't a type.
+      final updatedNotifications = <AppNotification>[];
+                                    ^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:146:51: Error: The getter 'isRead' isn't defined for the class 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'isRead'.
+    bool anyUnread = _notifications.any((n) => !n.isRead);
+                                                  ^^^^^^
+lib/services/notification_service.dart:173:41: Error: The getter 'id' isn't defined for the class 'Object?'.
+ - 'Object' is from 'dart:core'.
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'id'.
+    _notifications.removeWhere((n) => n.id == notificationId);
+                                        ^^
+lib/services/notification_service.dart:226:12: Error: Method not found: 'AppNotification'.
+    return AppNotification(
+           ^^^^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter29\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BU�LD FAILED in 11s
+Error: Gradle task assembleDebug failed with exit code 1
