@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/firebase_service.dart';
 import 'services/notification_service.dart';
-import 'models/notification_model.dart';
-// AppNotification sınıfı artık notification_model.dart dosyasında tanımlanmıştır
+import 'models/notification_model.dart'; // AppNotification sınıfı bu dosyadan geliyor
 
 void main() async {
   // Flutter bağlamını başlat
@@ -65,6 +64,8 @@ class BelediyeIletisimApp extends StatelessWidget {
 }
 
 /// Geçici ana sayfa
+// Asıl HomeScreen sınıfı lib/screens/home/home_screen.dart dosyasında tanımlanmıştır
+// Bu sınıf sadece test amaçlı kullanılmaktadır
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -103,15 +104,14 @@ class HomeScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 // Bildirim test butonu
-                NotificationService.addNotification(
-                  AppNotification(
-                    id: DateTime.now().millisecondsSinceEpoch,
-                    title: 'Test Bildirimi',
-                    message: 'Bu bir test bildirimidir.',
-                    createdAt: DateTime.now(),
-                    type: 'test',
-                  ),
+                final notification = AppNotification(
+                  id: DateTime.now().millisecondsSinceEpoch,
+                  title: 'Test Bildirimi',
+                  message: 'Bu bir test bildirimidir.',
+                  createdAt: DateTime.now(),
+                  type: 'test',
                 );
+                NotificationService.addNotification(notification);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Test bildirimi oluşturuldu')),
                 );
