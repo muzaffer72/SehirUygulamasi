@@ -1019,10 +1019,13 @@ class ApiService {
     }
   }
   
-  Future<bool> submitSatisfactionRating(String postId, int rating) async {
+  Future<bool> submitSatisfactionRating(dynamic postId, int rating) async {
     try {
+      // postId'yi String'e dönüştür (int veya String olabilir)
+      final String postIdStr = postId.toString();
+      
       final response = await post('api/satisfaction_rating.php', {
-        'post_id': postId,
+        'post_id': postIdStr,
         'rating': rating
       });
       
@@ -1334,7 +1337,8 @@ class ApiService {
   }
   
   // Cities
-  Future<List<City>> getCities() async {
+  // Getter olmadığını belirtmek için özel isim kullan
+  Future<List<City>> getCitiesAsObjects() async {
     print('Fetching cities from API');
     try {
       // Laravel admin paneli ile uyumlu endpoint kullan
@@ -2041,10 +2045,13 @@ class ApiService {
     }
   }
   
-  Future<bool> submitSatisfactionRating(int postId, int rating) async {
+  Future<bool> submitSatisfactionRatingV2(dynamic postId, int rating) async {
     final token = await _getToken();
     
     try {
+      // postId'yi String'e dönüştür (int veya String olabilir)
+      final String postIdStr = postId.toString();
+      
       final response = await _client.post(
         Uri.parse('$baseUrl/api/satisfaction_rating'),
         headers: {
@@ -2053,7 +2060,7 @@ class ApiService {
           if (token != null) 'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
-          'post_id': postId,
+          'post_id': postIdStr,
           'rating': rating,
         }),
       );
