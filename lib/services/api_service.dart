@@ -1418,6 +1418,12 @@ class ApiService {
   
   // Cities
   // Getter olmadığını belirtmek için özel isim kullan
+  // Genel olarak kullanılan getCities metodu
+  Future<List<dynamic>> getCities() async {
+    return getCitiesAsObjects();
+  }
+  
+  // Tip güvenli olan şehir listesi getirme metodu
   Future<List<City>> getCitiesAsObjects() async {
     print('Fetching cities from API');
     try {
@@ -1569,6 +1575,7 @@ class ApiService {
   }
   
   // Şehir profil bilgilerini getir
+  // Şehir profil bilgilerini getir
   Future<CityProfile?> getCityProfile(dynamic cityId) async {
     // cityId'yi String'e dönüştür (int veya String olabilir)
     final String cityIdStr = cityId.toString();
@@ -1635,6 +1642,63 @@ class ApiService {
       }
     } catch (e) {
       print('Error fetching fallback city profile: $e');
+      return null;
+    }
+  }
+  
+  // ID'ye göre şehir profili getirme metodu - Yeni ekleme
+  Future<CityProfile?> getCityProfileById(String cityId) async {
+    print('Fetching city profile by ID: $cityId');
+    try {
+      // Önce API'ye istek yap
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/cities/$cityId/profile'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          return CityProfile.fromJson(data['data']);
+        } else if (data is Map<String, dynamic> && data.containsKey('profile')) {
+          return CityProfile.fromJson(data['profile']);
+        }
+      }
+      
+      // API'den alamadıysak, şehri al ve city_profile'a dönüştür
+      final city = await getCityById(cityId);
+      if (city != null) {
+        return CityProfile(
+          id: city.id,
+          cityId: city.id,
+          name: city.name,
+          description: city.description,
+          logoUrl: city.logoUrl,
+          info: city.info,
+          politicalParty: city.politicalParty,
+          politicalPartyLogoUrl: city.politicalPartyLogoUrl,
+          website: city.website,
+          contactPhone: city.contactPhone,
+          contactEmail: city.contactEmail,
+          totalComplaints: 0,
+          solvedComplaints: 0,
+          activeComplaints: 0,
+          totalSuggestions: 0,
+          satisfactionRate: 0.0,
+          responseRate: 0.0,
+          problemSolvingRate: 0.0,
+          averageResponseTime: 0,
+          solutionRate: 0.0,
+        );
+      }
+      
+      return null;
+    } catch (e) {
+      print('Error fetching city profile by ID: $e');
       return null;
     }
   }
