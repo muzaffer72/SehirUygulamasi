@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:sikayet_var/models/post.dart';
+import 'package:sikayet_var/providers/auth_provider.dart';
+import 'package:sikayet_var/services/api_service.dart';
+import 'package:provider/provider.dart';
 
 class SatisfactionRatingWidget extends StatefulWidget {
-  final int postId;
+  final Post post;
   final double? initialRating;
-  final Function(double) onRatingChanged;
+  final Function(int)? onRated;
   final bool isEnabled;
 
   const SatisfactionRatingWidget({
     Key? key,
-    required this.postId,
+    required this.post,
     this.initialRating,
-    required this.onRatingChanged,
+    this.onRated,
     this.isEnabled = true,
   }) : super(key: key);
 
@@ -25,6 +29,46 @@ class _SatisfactionRatingWidgetState extends State<SatisfactionRatingWidget> {
   void initState() {
     super.initState();
     _rating = widget.initialRating ?? 0;
+  }
+
+  // Yeni memnuniyet derecelendirmesini sunucuya gönderir
+  Future<void> _submitRating(int rating) async {
+    try {
+      final apiService = Provider.of<ApiService>(context, listen: false);
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      
+      if (authProvider.currentUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Derecelendirme göndermek için giriş yapmalısınız')),
+        );
+        return;
+      }
+      
+      final bool success = await apiService.submitSatisfactionResponse(
+        postId: widget.post.id, 
+        userId: authProvider.currentUser!.id,
+        rating: rating,
+      );
+      
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Değerlendirmeniz için teşekkürler!')),
+        );
+        
+        if (widget.onRated != null) {
+          widget.onRated!(rating);
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Değerlendirme gönderilemedi. Lütfen tekrar deneyin.')),
+        );
+      }
+    } catch (e) {
+      print('Satisfaction rating error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bir hata oluştu. Lütfen tekrar deneyin.')),
+      );
+    }
   }
 
   @override
@@ -78,7 +122,7 @@ class _SatisfactionRatingWidgetState extends State<SatisfactionRatingWidget> {
                             setState(() {
                               _rating = newRating;
                             });
-                            widget.onRatingChanged(newRating);
+                            _submitRating(newRating.toInt());
                           }
                         : null,
                   ),

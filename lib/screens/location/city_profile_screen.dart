@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sikayet_var/models/city_profile.dart';
+import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/providers/city_profile_provider.dart';
 import 'package:sikayet_var/providers/post_provider.dart';
 import 'package:sikayet_var/widgets/post_card.dart';
@@ -42,7 +43,7 @@ class CityProfileScreen extends ConsumerWidget {
   Widget _buildCityProfile(
     BuildContext context,
     WidgetRef ref,
-    dynamic city,
+    CityProfile city,
     AsyncValue<List<Post>> postsAsync,
   ) {
     return RefreshIndicator(
