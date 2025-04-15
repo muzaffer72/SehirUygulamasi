@@ -1000,9 +1000,13 @@ class ApiService {
   
   // Categories
   // Memnuniyet derecelendirme sistemi için metotlar
-  Future<int?> getSatisfactionRating(String postId) async {
+  // Not: String ve int parametre versiyonlarını birleştiriyoruz
+  Future<int?> getSatisfactionRating(dynamic postId) async {
     try {
-      final response = await get('api/satisfaction_rating.php?post_id=$postId');
+      // postId türünü kontrol et ve string'e dönüştür
+      final String postIdStr = postId is int ? postId.toString() : postId.toString();
+      
+      final response = await get('api/satisfaction_rating.php?post_id=$postIdStr');
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1019,10 +1023,13 @@ class ApiService {
     }
   }
   
-  Future<bool> submitSatisfactionRating(String postId, int rating) async {
+  Future<bool> submitSatisfactionRating(dynamic postId, int rating) async {
     try {
+      // postId türünü kontrol et ve string'e dönüştür
+      final String postIdStr = postId is int ? postId.toString() : postId.toString();
+      
       final response = await post('api/satisfaction_rating.php', {
-        'post_id': postId,
+        'post_id': postIdStr,
         'rating': rating
       });
       
@@ -1085,8 +1092,8 @@ class ApiService {
     }
   }
   
-  // Bildirim sistemi için metotlar
-  Future<List<Notification>> getNotifications({
+  // Bildirim sistemi için metotlar - AppNotification modeli kullanılıyor
+  Future<List<app_notification.AppNotification>> getOldNotifications({
     String? userId,
     bool? isRead,
     bool? isArchived,
@@ -1117,7 +1124,7 @@ class ApiService {
         if (data['success'] == true && data['data'] != null) {
           if (data['data'] is List) {
             return (data['data'] as List)
-                .map((item) => Notification.fromJson(item))
+                .map((item) => app_notification.AppNotification.fromJson(item))
                 .toList();
           }
         }

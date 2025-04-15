@@ -1,0 +1,103 @@
+Invalid depfile: C:\uygulamalar\SehirUygulamasison\new_project\.dart_tool\flutter_build\054768554ae09b2a4580bf3ce6c6c804\kernel_snapshot_program.d
+Invalid depfile: C:\uygulamalar\SehirUygulamasison\new_project\.dart_tool\flutter_build\054768554ae09b2a4580bf3ce6c6c804\kernel_snapshot_program.d
+Invalid depfile: C:\uygulamalar\SehirUygulamasison\new_project\.dart_tool\flutter_build\054768554ae09b2a4580bf3ce6c6c804\kernel_snapshot_program.d
+Invalid depfile: C:\uygulamalar\SehirUygulamasison\new_project\.dart_tool\flutter_build\054768554ae09b2a4580bf3ce6c6c804\kernel_snapshot_program.d
+lib/main.dart:692:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/services/api_service.dart:2014:16: Error: 'getSatisfactionRating' is already declared in this scope.
+  Future<int?> getSatisfactionRating(int postId) async {
+               ^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1003:16: Context: Previous declaration of 'getSatisfactionRating'.
+  Future<int?> getSatisfactionRating(String postId) async {
+               ^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:2044:16: Error: 'submitSatisfactionRating' is already declared in this scope.
+  Future<bool> submitSatisfactionRating(int postId, int rating) async {
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1022:16: Context: Previous declaration of 'submitSatisfactionRating'.
+  Future<bool> submitSatisfactionRating(String postId, int rating) async {
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1964:35: Error: 'getBeforeAfterRecords' is already declared in this scope.
+  Future<List<BeforeAfterRecord>> getBeforeAfterRecords({String? postId, int page = 1, int limit = 20}) async {
+                                  ^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1041:35: Context: Previous declaration of 'getBeforeAfterRecords'.
+  Future<List<BeforeAfterRecord>> getBeforeAfterRecords(String postId) async {
+                                  ^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1872:50: Error: 'getNotifications' is already declared in this scope.
+  Future<List<app_notification.AppNotification>> getNotifications({int? userId, bool unreadOnly = false, int page = 1, int limit = 20}) async {
+                                                 ^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1089:30: Context: Previous declaration of 'getNotifications'.
+  Future<List<Notification>> getNotifications({
+                             ^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1928:16: Error: 'markNotificationAsRead' is already declared in this scope.
+  Future<bool> markNotificationAsRead(int notificationId) async {
+               ^^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1132:16: Context: Previous declaration of 'markNotificationAsRead'.
+  Future<bool> markNotificationAsRead(String notificationId) async {
+               ^^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1945:16: Error: 'markAllNotificationsAsRead' is already declared in this scope.
+  Future<bool> markAllNotificationsAsRead(int userId) async {
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1150:16: Context: Previous declaration of 'markAllNotificationsAsRead'.
+  Future<bool> markAllNotificationsAsRead({String? userId}) async {
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1089:15: Error: Type 'Notification' not found.
+  Future<List<Notification>> getNotifications({
+              ^^^^^^^^^^^^
+lib/app.dart:31:67: Error: Member not found: 'FirebaseNotificationService.areNotificationsEnabled'.
+    bool notificationsEnabled = await FirebaseNotificationService.areNotificationsEnabled();
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^
+lib/app.dart:38:51: Error: Member not found: 'themeKey'.
+    final themeString = prefs.getString(Constants.themeKey);
+                                                  ^^^^^^^^
+lib/app.dart:67:23: Error: Member not found: 'AppTheme.light'.
+      theme: AppTheme.light(),
+                      ^^^^^
+lib/app.dart:68:27: Error: Member not found: 'AppTheme.dark'.
+      darkTheme: AppTheme.dark(),
+                          ^^^^
+lib/app.dart:61:35: Error: The getter 'currentUserProvider' isn't defined for the class '_SikayetVarAppState'.
+ - '_SikayetVarAppState' is from 'package:belediye_iletisim_merkezi/app.dart' ('lib/app.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'currentUserProvider'.
+    final currentUser = ref.watch(currentUserProvider);
+                                  ^^^^^^^^^^^^^^^^^^^
+lib/screens/home/home_screen.dart:166:66: Error: Required named parameter 'cityName' must be provided.
+                              return const BestMunicipalityBanner();
+                                                                 ^
+lib/widgets/best_municipality_banner.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const BestMunicipalityBanner({
+        ^^^^^^^^^^^^^^^^^^^^^^
+lib/screens/posts/post_detail_screen.dart:403:39: Error: No named parameter with the name 'post'.
+                    BeforeAfterWidget(post: widget.post),
+                                      ^^^^
+lib/widgets/before_after_widget.dart:8:9: Context: Found this candidate, but the arguments don't match.
+  const BeforeAfterWidget({
+        ^^^^^^^^^^^^^^^^^
+lib/screens/posts/post_detail_screen.dart:410:23: Error: No named parameter with the name 'post'.
+                      post: widget.post,
+                      ^^^^
+lib/widgets/satisfaction_rating_widget.dart:8:9: Context: Found this candidate, but the arguments don't match.
+  const SatisfactionRatingWidget({
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+lib/services/api_service.dart:1120:32: Error: The getter 'Notification' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'Notification'.
+                .map((item) => Notification.fromJson(item))
+                               ^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter29\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BU�LD FAILED in 21s
+Error: Gradle task assembleDebug failed with exit code 1

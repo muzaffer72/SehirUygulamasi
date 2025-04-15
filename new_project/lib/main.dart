@@ -689,7 +689,6 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
     );
   }
 }
-}
 
 /// Bildirim modeli sınıfı için önceki tanımdan vazgeçildi
 /// Artık lib/models/notification_model.dart kullanılıyor
