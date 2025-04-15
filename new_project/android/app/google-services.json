@@ -1,13 +1,13 @@
 {
   "project_info": {
     "project_number": "123456789012",
-    "project_id": "belediye-iletisim-temp",
-    "storage_bucket": "belediye-iletisim-temp.appspot.com"
+    "project_id": "belediye-iletisim-merkezi",
+    "storage_bucket": "belediye-iletisim-merkezi.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789012:android:1234567890123456789012",
+        "mobilesdk_app_id": "1:123456789012:android:abcdef1234567890",
         "android_client_info": {
           "package_name": "belediye.iletisim.merkezi"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "dummyapikey123456789012345678901234567890"
+          "current_key": "${FIREBASE_API_KEY}"
         }
       ],
       "services": {
@@ -24,5 +24,6 @@
         }
       }
     }
-  ]
+  ],
+  "configuration_version": "1"
 }

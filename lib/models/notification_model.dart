@@ -1,94 +1,75 @@
-/// Uygulama içinde kullanılacak bildirim modeli.
-/// 
-/// Firebase'den gelen bildirim verisini uygulamada kullanılacak forma dönüştürür.
-class NotificationModel {
-  /// Bildirim ID'si
-  final String id;
-  
-  /// Bildirim başlığı
+import 'dart:convert';
+
+class AppNotification {
+  final int id;
+  final int? userId;
   final String title;
-  
-  /// Bildirim mesajı
   final String message;
-  
-  /// Bildirim verileri (JSON olarak)
-  final Map<String, dynamic>? data;
-  
-  /// Bildirim tarihi
-  final DateTime timestamp;
-  
-  /// Bildirim okundu mu?
-  bool isRead;
-  
-  /// Bildirim tipi (örn. "complaint", "announcement", "message", vb.)
   final String type;
-  
-  /// Bildirimle ilgili hedef sayfa
-  final String? targetRoute;
-  
-  /// Bildirimle ilgili hedef ID (ör. şikayet ID'si)
-  final String? targetId;
-  
-  /// Bildirim oluşturucu
-  NotificationModel({
+  final Map<String, dynamic>? data;
+  final DateTime createdAt;
+  final bool isRead;
+
+  AppNotification({
     required this.id,
+    this.userId,
     required this.title,
     required this.message,
-    this.data,
-    required this.timestamp,
-    this.isRead = false,
     required this.type,
-    this.targetRoute,
-    this.targetId,
+    this.data,
+    required this.createdAt,
+    this.isRead = false,
   });
-  
-  /// Firebase bildirim verisinden NotificationModel oluşturur.
-  factory NotificationModel.fromFirebaseMessage(Map<String, dynamic> message) {
-    final data = message['data'] as Map<String, dynamic>? ?? {};
-    
-    return NotificationModel(
-      id: data['notification_id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      title: message['notification']?['title'] ?? data['title'] ?? 'Bildirim',
-      message: message['notification']?['body'] ?? data['message'] ?? '',
-      data: data,
-      timestamp: DateTime.fromMillisecondsSinceEpoch(
-        int.tryParse(data['timestamp'] ?? '') ?? DateTime.now().millisecondsSinceEpoch
-      ),
-      type: data['type'] ?? 'general',
-      targetRoute: data['target_route'],
-      targetId: data['target_id'],
+
+  factory AppNotification.fromJson(Map<String, dynamic> json) {
+    return AppNotification(
+      id: json['id'],
+      userId: json['user_id'],
+      title: json['title'],
+      message: json['message'],
+      type: json['type'],
+      data: json['data'] != null 
+          ? json['data'] is String 
+              ? jsonDecode(json['data']) 
+              : json['data']
+          : null,
+      createdAt: DateTime.parse(json['created_at']),
+      isRead: json['is_read'] == 1 || json['is_read'] == true,
     );
   }
-  
-  /// Map formatından NotificationModel oluşturur.
-  factory NotificationModel.fromMap(Map<String, dynamic> map) {
-    return NotificationModel(
-      id: map['id'] ?? '',
-      title: map['title'] ?? '',
-      message: map['message'] ?? '',
-      data: map['data'],
-      timestamp: map['timestamp'] is DateTime 
-        ? map['timestamp'] 
-        : DateTime.fromMillisecondsSinceEpoch(map['timestamp'] ?? 0),
-      isRead: map['isRead'] ?? false,
-      type: map['type'] ?? 'general',
-      targetRoute: map['targetRoute'],
-      targetId: map['targetId'],
-    );
-  }
-  
-  /// NotificationModel'i Map formatına dönüştürür.
-  Map<String, dynamic> toMap() {
+
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'user_id': userId,
       'title': title,
       'message': message,
-      'data': data,
-      'timestamp': timestamp.millisecondsSinceEpoch,
-      'isRead': isRead,
       'type': type,
-      'targetRoute': targetRoute,
-      'targetId': targetId,
+      'data': data != null ? jsonEncode(data) : null,
+      'created_at': createdAt.toIso8601String(),
+      'is_read': isRead ? 1 : 0,
     };
+  }
+
+  AppNotification copyWith({
+    int? id,
+    int? userId,
+    String? title,
+    String? message,
+    String? type,
+    Map<String, dynamic>? data,
+    DateTime? createdAt,
+    bool? isRead,
+  }) {
+    return AppNotification(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      message: message ?? this.message,
+      type: type ?? this.type,
+      data: data ?? this.data,
+      createdAt: createdAt ?? this.createdAt,
+      isRead: isRead ?? this.isRead,
+    );
   }
 }

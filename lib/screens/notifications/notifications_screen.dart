@@ -1,162 +1,65 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/notification.dart' as app_notification;
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/providers/current_user_provider.dart';
-import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
-import 'package:sikayet_var/services/api_service.dart';
 import 'package:intl/intl.dart';
+import '../../models/notification_model.dart';
+import '../../services/api_service.dart';
+import '../../widgets/loading_widget.dart';
+import '../../widgets/empty_state_widget.dart';
 
-class NotificationsScreen extends ConsumerStatefulWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+class _NotificationsScreenState extends State<NotificationsScreen> {
   final ApiService _apiService = ApiService();
   bool _isLoading = true;
-  bool _hasMore = true;
-  bool _isLoadingMore = false;
-  List<app_notification.AppNotification> _notifications = [];
-  int _page = 1;
-  final int _limit = 20;
-  final ScrollController _scrollController = ScrollController();
+  List<AppNotification> _notifications = [];
+  bool _hasError = false;
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
     _loadNotifications();
-    _scrollController.addListener(_scrollListener);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_scrollListener);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _scrollListener() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      if (!_isLoadingMore && _hasMore) {
-        _loadMoreNotifications();
-      }
-    }
   }
 
   Future<void> _loadNotifications() async {
-    final user = ref.read(currentUserProvider).value;
-    if (user == null) return;
-
     setState(() {
       _isLoading = true;
-      _page = 1;
+      _hasError = false;
     });
 
     try {
-      final notifications = await _apiService.getNotifications(
-        userId: int.parse(user.id),
-        page: _page,
-        limit: _limit,
-      );
-
+      final notifications = await _apiService.getNotifications();
       setState(() {
         _notifications = notifications;
         _isLoading = false;
-        _hasMore = notifications.length >= _limit;
       });
-
-      _markAllAsRead();
     } catch (e) {
       setState(() {
         _isLoading = false;
+        _hasError = true;
+        _errorMessage = e.toString();
       });
-      _showErrorSnackBar('Bildirimler yüklenirken bir hata oluştu: $e');
-    }
-  }
-
-  Future<void> _loadMoreNotifications() async {
-    if (_isLoadingMore || !_hasMore) return;
-
-    final user = ref.read(currentUserProvider).value;
-    if (user == null) return;
-
-    setState(() {
-      _isLoadingMore = true;
-      _page++;
-    });
-
-    try {
-      final notifications = await _apiService.getNotifications(
-        userId: int.parse(user.id),
-        page: _page,
-        limit: _limit,
-      );
-
-      setState(() {
-        _notifications.addAll(notifications);
-        _isLoadingMore = false;
-        _hasMore = notifications.length >= _limit;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoadingMore = false;
-      });
-      _showErrorSnackBar('Daha fazla bildirim yüklenirken bir hata oluştu: $e');
-    }
-  }
-
-  Future<void> _markAllAsRead() async {
-    final user = ref.read(currentUserProvider).value;
-    if (user == null) return;
-
-    try {
-      await _apiService.markAllNotificationsAsRead(int.parse(user.id));
-    } catch (e) {
-      print('Tüm bildirimleri okundu olarak işaretlerken hata: $e');
     }
   }
 
   Future<void> _markAsRead(int notificationId) async {
     try {
       await _apiService.markNotificationAsRead(notificationId);
+      setState(() {
+        final index = _notifications.indexWhere((n) => n.id == notificationId);
+        if (index != -1) {
+          _notifications[index] = _notifications[index].copyWith(isRead: true);
+        }
+      });
     } catch (e) {
-      print('Bildirimi okundu olarak işaretlerken hata: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Bildirim işaretlenemedi: ${e.toString()}')),
+      );
     }
-  }
-
-  Future<void> _onNotificationTap(app_notification.AppNotification notification) async {
-    // Bildirimi okundu olarak işaretle
-    await _markAsRead(int.parse(notification.id));
-
-    // İlgili sayfaya yönlendir
-    if (notification.relatedPostId != null) {
-      try {
-        final post = await _apiService.getPostById(notification.relatedPostId!);
-        if (!mounted) return;
-        
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PostDetailScreen(post: post),
-          ),
-        );
-      } catch (e) {
-        _showErrorSnackBar('Gönderi yüklenirken bir hata oluştu: $e');
-      }
-    }
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-    );
   }
 
   @override
@@ -171,129 +74,245 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _notifications.isEmpty
-              ? _buildEmptyView()
-              : RefreshIndicator(
-                  onRefresh: _loadNotifications,
-                  child: ListView.separated(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _notifications.length + (_hasMore ? 1 : 0),
-                    separatorBuilder: (context, index) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      if (index == _notifications.length) {
-                        return _buildLoadingIndicator();
-                      }
-                      return _buildNotificationItem(_notifications[index]);
-                    },
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const LoadingWidget(message: 'Bildirimler yükleniyor...');
+    }
+
+    if (_hasError) {
+      return EmptyStateWidget(
+        icon: Icons.error_outline,
+        title: 'Bir hata oluştu',
+        message: _errorMessage,
+        buttonText: 'Tekrar Dene',
+        onButtonPressed: _loadNotifications,
+      );
+    }
+
+    if (_notifications.isEmpty) {
+      return const EmptyStateWidget(
+        icon: Icons.notifications_none,
+        title: 'Bildirim Yok',
+        message: 'Şu anda hiç bildiriminiz bulunmuyor.',
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadNotifications,
+      child: ListView.builder(
+        itemCount: _notifications.length,
+        padding: const EdgeInsets.all(16),
+        itemBuilder: (context, index) {
+          final notification = _notifications[index];
+          return _buildNotificationItem(notification);
+        },
+      ),
+    );
+  }
+
+  Widget _buildNotificationItem(AppNotification notification) {
+    final dateFormat = DateFormat('dd.MM.yyyy HH:mm');
+    final formattedDate = dateFormat.format(notification.createdAt);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: notification.isRead ? Colors.white : Colors.green.shade50,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            if (!notification.isRead) {
+              _markAsRead(notification.id);
+            }
+            _handleNotificationTap(notification);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        _getNotificationIcon(notification.type),
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        notification.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: notification.isRead 
+                              ? FontWeight.normal 
+                              : FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    if (!notification.isRead)
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  notification.message,
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
                   ),
                 ),
-    );
-  }
-
-  Widget _buildEmptyView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.notifications_off_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Hiç bildiriminiz yok',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[600],
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      formattedDate,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    Text(
+                      _getNotificationTypeText(notification.type),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: _getNotificationTypeColor(notification.type),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Yeni bildirimler geldiğinde burada görünecek',
-            style: TextStyle(
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.refresh),
-            label: const Text('Yenile'),
-            onPressed: _loadNotifications,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadingIndicator() {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: CircularProgressIndicator(),
-      ),
-    );
-  }
-
-  Widget _buildNotificationItem(app_notification.AppNotification notification) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: notification.isRead
-            ? Colors.grey[200]
-            : Theme.of(context).colorScheme.primary.withOpacity(0.1),
-        child: Icon(
-          _getNotificationIcon(notification.type),
-          color: notification.isRead
-              ? Colors.grey[600]
-              : Theme.of(context).colorScheme.primary,
         ),
       ),
-      title: Text(
-        notification.title,
-        style: TextStyle(
-          fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
-        ),
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(notification.content),
-          const SizedBox(height: 4),
-          Text(
-            DateFormat('dd MMMM yyyy, HH:mm', 'tr').format(notification.createdAt),
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      onTap: () => _onNotificationTap(notification),
     );
   }
 
   IconData _getNotificationIcon(String type) {
-    switch (type.toLowerCase()) {
+    switch (type) {
+      case 'post_update':
+        return Icons.update;
       case 'comment':
         return Icons.comment;
       case 'like':
         return Icons.thumb_up;
-      case 'mention':
-        return Icons.alternate_email;
       case 'system':
         return Icons.info;
-      case 'status':
-        return Icons.update;
-      case 'solution':
-        return Icons.check_circle;
+      case 'survey':
+        return Icons.poll;
+      case 'award':
+        return Icons.star;
       default:
         return Icons.notifications;
+    }
+  }
+
+  String _getNotificationTypeText(String type) {
+    switch (type) {
+      case 'post_update':
+        return 'Gönderi Güncellemesi';
+      case 'comment':
+        return 'Yorum';
+      case 'like':
+        return 'Beğeni';
+      case 'system':
+        return 'Sistem';
+      case 'survey':
+        return 'Anket';
+      case 'award':
+        return 'Ödül';
+      default:
+        return 'Bildirim';
+    }
+  }
+
+  Color _getNotificationTypeColor(String type) {
+    switch (type) {
+      case 'post_update':
+        return Colors.blue;
+      case 'comment':
+        return Colors.purple;
+      case 'like':
+        return Colors.red;
+      case 'system':
+        return Colors.teal;
+      case 'survey':
+        return Colors.orange;
+      case 'award':
+        return Colors.amber;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _handleNotificationTap(AppNotification notification) {
+    // İlgili bildirime göre navigasyon işlemleri
+    if (notification.data != null) {
+      switch (notification.type) {
+        case 'post_update':
+          if (notification.data!.containsKey('post_id')) {
+            final postId = notification.data!['post_id'];
+            Navigator.pushNamed(
+              context, 
+              '/post_detail',
+              arguments: {'postId': postId},
+            );
+          }
+          break;
+        case 'comment':
+          if (notification.data!.containsKey('post_id')) {
+            final postId = notification.data!['post_id'];
+            Navigator.pushNamed(
+              context, 
+              '/post_detail',
+              arguments: {'postId': postId, 'showComments': true},
+            );
+          }
+          break;
+        case 'survey':
+          if (notification.data!.containsKey('survey_id')) {
+            final surveyId = notification.data!['survey_id'];
+            Navigator.pushNamed(
+              context, 
+              '/survey',
+              arguments: {'surveyId': surveyId},
+            );
+          }
+          break;
+        // Diğer bildirim türleri için ek durumlar
+      }
     }
   }
 }
