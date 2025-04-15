@@ -11,7 +11,7 @@ import 'package:sikayet_var/models/city.dart';
 import 'package:sikayet_var/models/district.dart';
 import 'package:sikayet_var/models/city_profile.dart';
 import 'package:sikayet_var/models/category.dart' as app_category;
-import 'package:sikayet_var/models/notification.dart';
+import 'package:sikayet_var/models/notification.dart' as app_notification;
 import 'package:sikayet_var/models/before_after_record.dart';
 
 class ApiService {
@@ -1865,6 +1865,213 @@ class ApiService {
       return data.map<String>((item) => item.toString()).toList();
     } else {
       throw Exception('Failed to load banned words: ${response.body}');
+    }
+  }
+  
+  // Notifications
+  Future<List<app_notification.Notification>> getNotifications({int? userId, bool unreadOnly = false, int page = 1, int limit = 20}) async {
+    // Kullanıcı kimliği
+    String url;
+    if (userId != null) {
+      url = '$baseUrl/api/notifications?user_id=$userId';
+    } else {
+      url = '$baseUrl/api/notifications';
+    }
+    
+    // Okunmayan bildirimleri filtreleme
+    if (unreadOnly) {
+      url += '&is_read=0';
+    }
+    
+    // Sayfalama parametreleri
+    url += '&page=$page&per_page=$limit';
+    
+    print('Getting notifications from: $url');
+    
+    try {
+      final response = await _client.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final dynamic data = jsonDecode(response.body);
+        
+        if (data is Map<String, dynamic> && data.containsKey('data') && data['data'] is List) {
+          final List<dynamic> notificationsData = data['data'];
+          return notificationsData.map((item) => app_notification.Notification.fromJson(item)).toList();
+        } 
+        else if (data is Map<String, dynamic> && data.containsKey('notifications') && data['notifications'] is List) {
+          final List<dynamic> notificationsData = data['notifications'];
+          return notificationsData.map((item) => app_notification.Notification.fromJson(item)).toList();
+        }
+        else if (data is List) {
+          return data.map((item) => app_notification.Notification.fromJson(item)).toList();
+        } 
+        else {
+          print('Unexpected notifications response format: $data');
+          return [];
+        }
+      } else {
+        print('Failed to load notifications: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching notifications: $e');
+      return [];
+    }
+  }
+  
+  Future<bool> markNotificationAsRead(int notificationId) async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+    
+    final response = await _client.put(
+      Uri.parse('$baseUrl/api/notifications/$notificationId/read'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    
+    return response.statusCode == 200;
+  }
+  
+  Future<bool> markAllNotificationsAsRead(int userId) async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+    
+    final response = await _client.put(
+      Uri.parse('$baseUrl/api/notifications/mark-all-read'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'user_id': userId}),
+    );
+    
+    return response.statusCode == 200;
+  }
+  
+  // Before-After Records
+  Future<List<BeforeAfterRecord>> getBeforeAfterRecords({String? postId, int page = 1, int limit = 20}) async {
+    String url = '$baseUrl/api/before_after';
+    
+    if (postId != null) {
+      url += '?post_id=$postId';
+    }
+    
+    // Sayfalama parametreleri
+    url += (postId != null ? '&' : '?') + 'page=$page&per_page=$limit';
+    
+    print('Getting before-after records from: $url');
+    
+    try {
+      final response = await _client.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final dynamic data = jsonDecode(response.body);
+        
+        if (data is Map<String, dynamic> && data.containsKey('data') && data['data'] is List) {
+          final List<dynamic> recordsData = data['data'];
+          return recordsData.map((item) => BeforeAfterRecord.fromJson(item)).toList();
+        } 
+        else if (data is Map<String, dynamic> && data.containsKey('records') && data['records'] is List) {
+          final List<dynamic> recordsData = data['records'];
+          return recordsData.map((item) => BeforeAfterRecord.fromJson(item)).toList();
+        }
+        else if (data is List) {
+          return data.map((item) => BeforeAfterRecord.fromJson(item)).toList();
+        } 
+        else {
+          print('Unexpected before-after records response format: $data');
+          return [];
+        }
+      } else {
+        print('Failed to load before-after records: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching before-after records: $e');
+      return [];
+    }
+  }
+  
+  // Satisfaction Rating
+  Future<int?> getSatisfactionRating(int postId) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/api/satisfaction_rating?post_id=$postId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final dynamic data = jsonDecode(response.body);
+        
+        if (data is Map<String, dynamic> && data.containsKey('success') && data['success'] == true) {
+          if (data.containsKey('data') && data['data'] is Map<String, dynamic>) {
+            final postData = data['data'];
+            return postData['satisfaction_rating'] as int?;
+          }
+        }
+        return null;
+      } else {
+        print('Failed to load satisfaction rating: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching satisfaction rating: $e');
+      return null;
+    }
+  }
+  
+  Future<bool> submitSatisfactionRating(int postId, int rating) async {
+    final token = await _getToken();
+    
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/api/satisfaction_rating'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'post_id': postId,
+          'rating': rating,
+        }),
+      );
+      
+      if (response.statusCode == 200) {
+        final dynamic data = jsonDecode(response.body);
+        
+        if (data is Map<String, dynamic> && data.containsKey('success')) {
+          return data['success'] == true;
+        }
+        return false;
+      } else {
+        print('Failed to submit satisfaction rating: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Error submitting satisfaction rating: $e');
+      return false;
     }
   }
 }
