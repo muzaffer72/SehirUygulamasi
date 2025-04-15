@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/firebase_service.dart';
 import 'services/notification_service.dart';
 import 'models/notification_model.dart';
+// AppNotification sınıfı artık notification_model.dart dosyasında tanımlanmıştır
 
 void main() async {
   // Flutter bağlamını başlat
