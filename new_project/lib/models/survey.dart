@@ -10,6 +10,7 @@ class Survey {
   final SurveyStatus status;
   final String cityId;
   final String? districtId;
+  final String? categoryId; // Kategori ID'si eklendi
   final bool isActive;
   final bool isOfficial;
   final bool isPublished;
@@ -29,6 +30,7 @@ class Survey {
     required this.status,
     required this.cityId,
     this.districtId,
+    this.categoryId,
     this.isActive = true,
     this.isOfficial = false,
     this.isPublished = true,
@@ -59,6 +61,7 @@ class Survey {
       status: SurveyStatus.fromString(json['status']),
       cityId: json['city_id']?.toString() ?? '0',
       districtId: json['district_id']?.toString(),
+      categoryId: json['category_id']?.toString(),
       isActive: json['is_active'] ?? true,
       isOfficial: json['is_official'] ?? false,
       isPublished: json['is_published'] ?? true,
@@ -81,6 +84,7 @@ class Survey {
       'status': status.toString(),
       'city_id': cityId,
       'district_id': districtId,
+      'category_id': categoryId,
       'is_active': isActive,
       'is_official': isOfficial,
       'is_published': isPublished,
@@ -175,6 +179,7 @@ class Survey {
     SurveyStatus? status,
     String? cityId,
     String? districtId,
+    String? categoryId,
     bool? isActive,
     bool? isOfficial,
     bool? isPublished,
@@ -194,6 +199,7 @@ class Survey {
       status: status ?? this.status,
       cityId: cityId ?? this.cityId,
       districtId: districtId ?? this.districtId,
+      categoryId: categoryId ?? this.categoryId,
       isActive: isActive ?? this.isActive,
       isOfficial: isOfficial ?? this.isOfficial,
       isPublished: isPublished ?? this.isPublished,
@@ -209,12 +215,17 @@ class SurveyOption {
   final String text;
   final int votes;
   final double? percentage;
+  final String? surveyId; // Ekledik: anket ID'si
+  
+  // voteCount özelliği ekle (kullanıcı tarafında uyumluluk için)
+  int get voteCount => votes;
 
   SurveyOption({
     required this.id,
     required this.text,
     this.votes = 0,
     this.percentage,
+    this.surveyId,
   });
 
   factory SurveyOption.fromJson(Map<String, dynamic> json) {
@@ -223,6 +234,7 @@ class SurveyOption {
       text: json['text'] ?? '',
       votes: json['votes'] ?? 0,
       percentage: json['percentage']?.toDouble(),
+      surveyId: json['survey_id']?.toString(),
     );
   }
 
@@ -232,7 +244,14 @@ class SurveyOption {
       'text': text,
       'votes': votes,
       'percentage': percentage,
+      'survey_id': surveyId,
     };
+  }
+  
+  // Yüzdeyi hesapla
+  double getPercentage(int totalVotes) {
+    if (totalVotes == 0) return 0.0;
+    return (votes / totalVotes) * 100;
   }
 
   SurveyOption copyWith({
@@ -240,12 +259,14 @@ class SurveyOption {
     String? text,
     int? votes,
     double? percentage,
+    String? surveyId,
   }) {
     return SurveyOption(
       id: id ?? this.id,
       text: text ?? this.text,
       votes: votes ?? this.votes,
       percentage: percentage ?? this.percentage,
+      surveyId: surveyId ?? this.surveyId,
     );
   }
 }
