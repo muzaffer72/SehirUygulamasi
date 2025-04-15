@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:belediye_iletisim_merkezi/models/notification.dart' as app_notification;
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/providers/current_user_provider.dart';
-import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
-import 'package:sikayet_var/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/providers/current_user_provider.dart';
+import 'package:belediye_iletisim_merkezi/screens/posts/post_detail_screen.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 import 'package:intl/intl.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -128,7 +128,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
   }
 
-  Future<void> _onNotificationTap(app_notification.AppNotification notification) async {
+  Future<void> _onNotificationTap(app_notification.DatabaseNotification notification) async {
     // Bildirimi okundu olarak işaretle
     await _markAsRead(int.parse(notification.id));
 
@@ -240,7 +240,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 
-  Widget _buildNotificationItem(app_notification.AppNotification notification) {
+  Widget _buildNotificationItem(app_notification.DatabaseNotification notification) {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: notification.isRead
