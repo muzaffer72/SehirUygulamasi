@@ -1956,6 +1956,8 @@ class ApiService {
     }
   }
   
+  // Bu metot 1176. satırda zaten var, kaldırılıyor ve oradaki metot kullanılacak
+  /*
   Future<bool> markNotificationAsRead(int notificationId) async {
     final token = await _getToken();
     if (token == null) {
@@ -1968,10 +1970,8 @@ class ApiService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-    );
-    
-    return response.statusCode == 200;
-  }
+  */
+  // Metot gövdesi tamamen yoruma alınmıştır.
   
   // Tüm bildirimleri okundu olarak işaretlemek için birleştirilmiş metot
   Future<bool> markAllNotificationsAsRead(dynamic userId) async {
@@ -2049,9 +2049,11 @@ class ApiService {
     }
   }
   
-  // Bu getSatisfactionRating metodu ikinci kez tanımlanmış, kaldırılıyor
-  // Future<int?> getSatisfactionRating(int postId) async { ... }
+  // Bu submitSatisfactionRating metodu ikinci kez tanımlanmış, 1026. satırda zaten var
+  // Yeni versiyonu kullanıyoruz ve parametreleri birleştiriyoruz
   
+  // Bu metot kaldırıldı ve 1026. satırdaki metot ile birleştirildi
+  /*
   Future<bool> submitSatisfactionRating(int postId, int rating) async {
     final token = await _getToken();
     
@@ -2085,4 +2087,5 @@ class ApiService {
       return false;
     }
   }
+  */
 }
