@@ -240,7 +240,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 
-  Widget _buildNotificationItem(app_notification.DatabaseNotification notification) {
+  Widget _buildNotificationItem(DatabaseNotification notification) {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: notification.isRead

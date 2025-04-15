@@ -422,10 +422,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     SatisfactionRatingWidget(
                       initialRating: widget.post.userSatisfactionRating,
                       isReadOnly: widget.post.hasSatisfactionRating,
-                      onRatingChanged: (rating) {
-                        // Post nesnesini değiştiremeyiz, sadece UI'yi güncelliyoruz
-                        // API'ye gönderme işlemi burada yapılır
-                        setState(() {});
+                      onRatingChanged: (rating) async {
+                        try {
+                          await _apiService.submitSatisfactionRating(widget.post.id, rating);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Memnuniyet dereceniz kaydedildi.')),
+                          );
+                          setState(() {});
+                        } catch (e) {
+                          _showErrorSnackBar('Memnuniyet dereceniz kaydedilirken bir hata oluştu: $e');
+                        }
                       },
                     ),
                   ],
