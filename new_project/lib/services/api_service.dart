@@ -4,6 +4,10 @@ import 'package:belediye_iletisim_merkezi/models/post.dart';
 import 'package:belediye_iletisim_merkezi/models/user.dart';
 import 'package:belediye_iletisim_merkezi/models/survey.dart';
 import 'package:belediye_iletisim_merkezi/models/notification_model.dart';
+import 'package:belediye_iletisim_merkezi/models/city.dart';
+import 'package:belediye_iletisim_merkezi/models/district.dart';
+import 'package:belediye_iletisim_merkezi/models/category.dart';
+import 'package:belediye_iletisim_merkezi/models/comment.dart';
 import 'package:belediye_iletisim_merkezi/utils/api_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -159,7 +163,7 @@ class ApiService {
   }
   
   // Şehir listesini getir
-  Future<List<dynamic>> getCities() async {
+  Future<List<City>> getCities() async {
     final url = Uri.parse('$baseUrl$apiPath/cities');
     final response = await http.get(
       url,
@@ -168,7 +172,8 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['data'] ?? [];
+      final List<dynamic> citiesJson = data['data'] ?? [];
+      return citiesJson.map((json) => City.fromJson(json)).toList();
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -293,6 +298,48 @@ class ApiService {
     }
   }
   
+  // Aktif anketleri getir
+  Future<List<Survey>> getActiveSurveys() async {
+    final url = Uri.parse('$baseUrl$apiPath/surveys?status=active');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final List<dynamic> surveysJson = data['data'] ?? [];
+      return surveysJson.map((json) => Survey.fromJson(json)).toList();
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Aktif anketleri tipine göre getir (city veya district)
+  Future<List<Survey>> getActiveSurveysByType(String type) async {
+    String param = '';
+    
+    if (type == 'city') {
+      param = 'has_city=1&has_district=0';
+    } else if (type == 'district') {
+      param = 'has_district=1';
+    }
+    
+    final url = Uri.parse('$baseUrl$apiPath/surveys?status=active&$param');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final List<dynamic> surveysJson = data['data'] ?? [];
+      return surveysJson.map((json) => Survey.fromJson(json)).toList();
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+
   // Şehir anketlerini getir
   Future<List<Survey>> getCitySurveys(String cityId) async {
     final url = Uri.parse('$baseUrl$apiPath/surveys?city_id=$cityId');

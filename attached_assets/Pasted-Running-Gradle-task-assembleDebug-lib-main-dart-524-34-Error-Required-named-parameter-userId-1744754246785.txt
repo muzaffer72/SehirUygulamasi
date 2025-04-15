@@ -1,0 +1,351 @@
+Running Gradle task 'assembleDebug'...
+lib/main.dart:524:34: Error: Required named parameter 'userId' must be provided.
+                NotificationModel(
+                                 ^
+lib/models/notification_model.dart:15:3: Context: Found this candidate, but the arguments don't match.
+  NotificationModel({
+  ^^^^^^^^^^^^^^^^^
+lib/services/notification_service.dart:226:29: Error: Required named parameter 'userId' must be provided.
+    return NotificationModel(
+                            ^
+lib/models/notification_model.dart:15:3: Context: Found this candidate, but the arguments don't match.
+  NotificationModel({
+  ^^^^^^^^^^^^^^^^^
+lib/screens/posts/filtered_posts_screen.dart:106:63: Error: The argument type 'Map<String, dynamic>?' can't be assigned to the parameter type 'Map<String, dynamic>' because 'Map<String, dynamic>?' is nullable and 'Map<String, dynamic>' isn't.
+ - 'Map' is from 'dart:core'.
+      final posts = await _apiService.getFilteredPosts(widget.filterParams);
+                                                              ^
+lib/screens/posts/filtered_posts_screen.dart:241:13: Error: No named parameter with the name 'onComment'.
+            onComment: () {
+            ^^^^^^^^^
+lib/widgets/post_card.dart:16:9: Context: Found this candidate, but the arguments don't match.
+  const PostCard({
+        ^^^^^^^^
+lib/screens/posts/post_detail_screen.dart:77:21: Error: A value of type 'List<dynamic>' can't be assigned to a variable of type 'List<Comment>'.
+ - 'List' is from 'dart:core'.
+ - 'Comment' is from 'package:belediye_iletisim_merkezi/models/comment.dart' ('lib/models/comment.dart').
+        _comments = comments;
+                    ^
+lib/screens/posts/post_detail_screen.dart:103:51: Error: Too many positional arguments: 0 allowed, but 2 found.
+Try removing the extra positional arguments.
+      final comment = await _apiService.addComment(
+                                                  ^
+lib/screens/posts/post_detail_screen.dart:261:13: Error: No named parameter with the name 'isDetailView'.
+            isDetailView: true,
+            ^^^^^^^^^^^^
+lib/widgets/post_card.dart:16:9: Context: Found this candidate, but the arguments don't match.
+  const PostCard({
+        ^^^^^^^^
+lib/screens/profile/profile_screen.dart:264:35: Error: The argument type 'Future<List<dynamic>>' can't be assigned to the parameter type 'Future<List<City>>?'.
+ - 'Future' is from 'dart:async'.
+ - 'List' is from 'dart:core'.
+ - 'City' is from 'package:belediye_iletisim_merkezi/models/city.dart' ('lib/models/city.dart').
+              future: _apiService.getCities(),
+                                  ^
+lib/screens/profile/profile_screen.dart:302:37: Error: The argument type 'Future<List<dynamic>>' can't be assigned to the parameter type 'Future<List<District>>?'.
+ - 'Future' is from 'dart:async'.
+ - 'List' is from 'dart:core'.
+ - 'District' is from 'package:belediye_iletisim_merkezi/models/district.dart' ('lib/models/district.dart').
+                future: _apiService.getDistrictsByCityId(_selectedCityId!),
+                                    ^
+lib/screens/profile/profile_screen.dart:420:55: Error: Too many positional arguments: 0 allowed, but 5 found.
+Try removing the extra positional arguments.
+        await ref.read(authProvider.notifier).register(
+                                                      ^
+lib/providers/post_provider.dart:125:9: Error: No named parameter with the name 'type'.
+        type: type != null ? type == 'problem' ? PostType.problem : PostType.general : null,
+        ^^^^
+lib/widgets/filter_bar.dart:115:28: Error: The argument type 'Widget Function(BuildContext, AsyncSnapshot<List<City>>)' can't be assigned to the parameter type 'Widget Function(BuildContext, AsyncSnapshot<List<dynamic>>)'.
+ - 'Widget' is from 'package:flutter/src/widgets/framework.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/framework.dart').
+ - 'BuildContext' is from 'package:flutter/src/widgets/framework.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/framework.dart').
+ - 'AsyncSnapshot' is from 'package:flutter/src/widgets/async.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/async.dart').
+ - 'List' is from 'dart:core'.
+ - 'City' is from 'package:belediye_iletisim_merkezi/models/city.dart' ('lib/models/city.dart').
+                  builder: (context, AsyncSnapshot<List<City>> snapshot) {
+                           ^
+lib/widgets/filter_bar.dart:160:30: Error: The argument type 'Widget Function(BuildContext, AsyncSnapshot<List<District>>)' can't be assigned to the parameter type 'Widget Function(BuildContext, AsyncSnapshot<List<dynamic>>)'.
+ - 'Widget' is from 'package:flutter/src/widgets/framework.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/framework.dart').
+ - 'BuildContext' is from 'package:flutter/src/widgets/framework.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/framework.dart').
+ - 'AsyncSnapshot' is from 'package:flutter/src/widgets/async.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/async.dart').
+ - 'List' is from 'dart:core'.
+ - 'District' is from 'package:belediye_iletisim_merkezi/models/district.dart' ('lib/models/district.dart').
+                    builder: (context, AsyncSnapshot<List<District>> snapshot) {
+                             ^
+lib/widgets/filter_bar.dart:203:28: Error: The argument type 'Widget Function(BuildContext, AsyncSnapshot<List<Category>>)' can't be assigned to the parameter type 'Widget Function(BuildContext, AsyncSnapshot<List<dynamic>>)'.
+ - 'Widget' is from 'package:flutter/src/widgets/framework.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/framework.dart').
+ - 'BuildContext' is from 'package:flutter/src/widgets/framework.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/framework.dart').
+ - 'AsyncSnapshot' is from 'package:flutter/src/widgets/async.dart' ('/C:/flutter29/packages/flutter/lib/src/widgets/async.dart').
+ - 'List' is from 'dart:core'.
+ - 'Category' is from 'package:belediye_iletisim_merkezi/models/category.dart' ('lib/models/category.dart').
+                  builder: (context, AsyncSnapshot<List<Category>> snapshot) {
+                           ^
+lib/widgets/post_card.dart:288:45: Error: The argument type 'Future<dynamic>' can't be assigned to the parameter type 'Future<User>?'.
+ - 'Future' is from 'dart:async'.
+ - 'User' is from 'package:belediye_iletisim_merkezi/models/user.dart' ('lib/models/user.dart').
+                        future: _apiService.getUserById(widget.post.userId),
+                                            ^
+lib/widgets/post_card.dart:386:35: Error: The argument type 'Future<dynamic>' can't be assigned to the parameter type 'Future<Category?>?'.
+ - 'Future' is from 'dart:async'.
+ - 'Category' is from 'package:belediye_iletisim_merkezi/models/category.dart' ('lib/models/category.dart').
+              future: _apiService.getCategoryById(widget.post.categoryId!),
+                                  ^
+lib/widgets/post_card.dart:535:49: Error: The argument type 'Future<dynamic>' can't be assigned to the parameter type 'Future<User>?'.
+ - 'Future' is from 'dart:async'.
+ - 'User' is from 'package:belediye_iletisim_merkezi/models/user.dart' ('lib/models/user.dart').
+                            future: _apiService.getUserById(widget.post.userId),
+                                                ^
+lib/widgets/post_card.dart:638:41: Error: The argument type 'Future<dynamic>' can't be assigned to the parameter type 'Future<Category?>?'.
+ - 'Future' is from 'dart:async'.
+ - 'Category' is from 'package:belediye_iletisim_merkezi/models/category.dart' ('lib/models/category.dart').
+                    future: _apiService.getCategoryById(widget.post.categoryId!),
+                                        ^
+lib/widgets/survey_slider.dart:57:25: Error: The method 'getActiveSurveysByType' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getActiveSurveysByType'.
+          ? _apiService.getActiveSurveysByType('city')
+                        ^^^^^^^^^^^^^^^^^^^^^^
+lib/widgets/survey_slider.dart:59:27: Error: The method 'getActiveSurveysByType' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getActiveSurveysByType'.
+            ? _apiService.getActiveSurveysByType('district')
+                          ^^^^^^^^^^^^^^^^^^^^^^
+lib/widgets/survey_slider.dart:60:27: Error: The method 'getActiveSurveys' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getActiveSurveys'.
+            : _apiService.getActiveSurveys(),
+                          ^^^^^^^^^^^^^^^^
+lib/widgets/survey_slider.dart:119:35: Error: The method 'getRemainingTimeText' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getRemainingTimeText'.
+    String remainingTime = survey.getRemainingTimeText();
+                                  ^^^^^^^^^^^^^^^^^^^^
+lib/widgets/survey_slider.dart:123:45: Error: The method 'getParticipationRate' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getParticipationRate'.
+    final double participationRate = survey.getParticipationRate();
+                                            ^^^^^^^^^^^^^^^^^^^^
+lib/widgets/survey_slider.dart:150:38: Error: The getter 'totalUsers' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'totalUsers'.
+      "${survey.totalVotes}/${survey.totalUsers} ki�i kat�ld�",
+                                     ^^^^^^^^^^
+lib/widgets/survey_slider.dart:190:32: Error: The getter 'shortTitle' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'shortTitle'.
+                        survey.shortTitle,
+                               ^^^^^^^^^^
+lib/widgets/survey_slider.dart:252:58: Error: The getter 'totalUsers' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'totalUsers'.
+                          '${survey.totalVotes}/${survey.totalUsers}',
+                                                         ^^^^^^^^^^
+lib/screens/profile/location_settings_screen.dart:197:41: Error: The argument type 'Future<List<dynamic>>' can't be assigned to the parameter type 'Future<List<City>>?'.
+ - 'Future' is from 'dart:async'.
+ - 'List' is from 'dart:core'.
+ - 'City' is from 'package:belediye_iletisim_merkezi/models/city.dart' ('lib/models/city.dart').
+                    future: _apiService.getCities(),
+                                        ^
+lib/screens/profile/location_settings_screen.dart:256:43: Error: The argument type 'Future<List<dynamic>>' can't be assigned to the parameter type 'Future<List<District>>?'.
+ - 'Future' is from 'dart:async'.
+ - 'List' is from 'dart:core'.
+ - 'District' is from 'package:belediye_iletisim_merkezi/models/district.dart' ('lib/models/district.dart').
+                      future: _apiService.getDistrictsByCityId(_selectedCityId!),
+                                          ^
+lib/screens/surveys/survey_detail_screen.dart:94:31: Error: The getter 'imageUrl' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'imageUrl'.
+            if (widget.survey.imageUrl != null)
+                              ^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:102:55: Error: The getter 'imageUrl' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'imageUrl'.
+                    image: NetworkImage(widget.survey.imageUrl!),
+                                                      ^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:131:42: Error: The method 'getPercentage' isn't defined for the class 'SurveyOption'.
+ - 'SurveyOption' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getPercentage'.
+                  final percent = option.getPercentage(widget.survey.totalVotes);
+                                         ^^^^^^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:187:37: Error: The getter 'voteCount' isn't defined for the class 'SurveyOption'.
+ - 'SurveyOption' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'voteCount'.
+                          '${option.voteCount} oy',
+                                    ^^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:356:31: Error: The getter 'categoryId' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'categoryId'.
+            if (widget.survey.categoryId != null)
+                              ^^^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:366:77: Error: The getter 'categoryId' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'categoryId'.
+                          future: _apiService.getCategoryById(widget.survey.categoryId!),
+                                                                            ^^^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:420:18: Error: The getter 'voteCount' isn't defined for the class 'SurveyOption'.
+ - 'SurveyOption' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'voteCount'.
+          option.voteCount++;
+                 ^^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:420:18: Error: The setter 'voteCount' isn't defined for the class 'SurveyOption'.
+ - 'SurveyOption' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'voteCount'.
+          option.voteCount++;
+                 ^^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:426:21: Error: The setter 'totalVotes' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'totalVotes'.
+      widget.survey.totalVotes++;
+                    ^^^^^^^^^^
+lib/providers/user_provider.dart:34:47: Error: The method 'updateUserProfile' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateUserProfile'.
+        final updatedUser = await _apiService.updateUserProfile(
+                                              ^^^^^^^^^^^^^^^^^
+lib/providers/user_provider.dart:58:47: Error: The method 'updateUserLocation' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateUserLocation'.
+        final updatedUser = await _apiService.updateUserLocation(
+                                              ^^^^^^^^^^^^^^^^^^
+lib/services/survey_service.dart:117:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_1',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:123:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_1',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:129:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_1',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:135:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_1',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:141:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_1',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:108:9: Error: No named parameter with the name 'shortTitle'.
+        shortTitle: 'Bayram Etkinlikleri',
+        ^^^^^^^^^^
+lib/models/survey.dart:18:3: Context: Found this candidate, but the arguments don't match.
+  Survey({
+  ^^^^^^
+lib/services/survey_service.dart:167:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_2',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:173:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_2',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:179:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_2',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:185:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_2',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:191:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_2',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:157:9: Error: No named parameter with the name 'shortTitle'.
+        shortTitle: 'Toplu Ta��ma',
+        ^^^^^^^^^^
+lib/models/survey.dart:18:3: Context: Found this candidate, but the arguments don't match.
+  Survey({
+  ^^^^^^
+lib/services/survey_service.dart:216:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_3',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:222:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_3',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:228:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_3',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:234:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_3',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:207:9: Error: No named parameter with the name 'shortTitle'.
+        shortTitle: 'Park Kullan�m�',
+        ^^^^^^^^^^
+lib/models/survey.dart:18:3: Context: Found this candidate, but the arguments don't match.
+  Survey({
+  ^^^^^^
+lib/services/survey_service.dart:260:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_4',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:266:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_4',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:272:13: Error: No named parameter with the name 'surveyId'.
+            surveyId: 'survey_4',
+            ^^^^^^^^
+lib/models/survey.dart:168:3: Context: Found this candidate, but the arguments don't match.
+  SurveyOption({
+  ^^^^^^^^^^^^
+lib/services/survey_service.dart:250:9: Error: No named parameter with the name 'shortTitle'.
+        shortTitle: '��p Toplama',
+        ^^^^^^^^^^
+lib/models/survey.dart:18:3: Context: Found this candidate, but the arguments don't match.
+  Survey({
+  ^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter29\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BU�LD FAILED in 9s
+Error: Gradle task assembleDebug failed with exit code 1

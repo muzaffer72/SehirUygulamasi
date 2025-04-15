@@ -14,6 +14,8 @@ class Survey {
   final bool isOfficial;
   final bool isPublished;
   final bool hasUserVoted;
+  final int totalUsers;
+  final String? imageUrl;
 
   Survey({
     required this.id,
@@ -31,6 +33,8 @@ class Survey {
     this.isOfficial = false,
     this.isPublished = true,
     this.hasUserVoted = false,
+    this.totalUsers = 0,
+    this.imageUrl,
   });
 
   factory Survey.fromJson(Map<String, dynamic> json) {
@@ -59,6 +63,8 @@ class Survey {
       isOfficial: json['is_official'] ?? false,
       isPublished: json['is_published'] ?? true,
       hasUserVoted: json['has_user_voted'] ?? false,
+      totalUsers: json['total_users'] ?? 0,
+      imageUrl: json['image_url'],
     );
   }
 
@@ -79,7 +85,42 @@ class Survey {
       'is_official': isOfficial,
       'is_published': isPublished,
       'has_user_voted': hasUserVoted,
+      'total_users': totalUsers,
+      'image_url': imageUrl,
     };
+  }
+
+  // Kalan süreyi metin olarak döndürür
+  String getRemainingTimeText() {
+    final now = DateTime.now();
+    if (now.isAfter(endDate)) {
+      return 'Anket sona erdi';
+    }
+    
+    final difference = endDate.difference(now);
+    if (difference.inDays > 0) {
+      return '${difference.inDays} gün kaldı';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} saat kaldı';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} dakika kaldı';
+    } else {
+      return 'Son dakikalar';
+    }
+  }
+  
+  // Katılım oranını hesaplar
+  double getParticipationRate() {
+    if (targetVotes == 0) return 0.0;
+    return (totalVotes / targetVotes) * 100;
+  }
+  
+  // Kısa başlık döndürür
+  String get shortTitle {
+    if (title.length <= 25) {
+      return title;
+    }
+    return '${title.substring(0, 22)}...';
   }
 
   double get participationRate {
@@ -138,6 +179,8 @@ class Survey {
     bool? isOfficial,
     bool? isPublished,
     bool? hasUserVoted,
+    int? totalUsers,
+    String? imageUrl,
   }) {
     return Survey(
       id: id ?? this.id,
@@ -155,6 +198,8 @@ class Survey {
       isOfficial: isOfficial ?? this.isOfficial,
       isPublished: isPublished ?? this.isPublished,
       hasUserVoted: hasUserVoted ?? this.hasUserVoted,
+      totalUsers: totalUsers ?? this.totalUsers,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }
