@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/models/user.dart';
-import 'package:sikayet_var/models/category.dart';
-import 'package:sikayet_var/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/models/user.dart';
+import 'package:belediye_iletisim_merkezi/models/category.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class PostCard extends StatefulWidget {
