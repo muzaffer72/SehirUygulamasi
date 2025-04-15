@@ -28,7 +28,7 @@ apply plugin: 'com.google.gms.google-services'
 
 android {
     namespace "com.sikayetvar.sikayet_var"
-    compileSdkVersion 33
+    compileSdkVersion 35
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -39,7 +39,7 @@ android {
     defaultConfig {
         applicationId "com.sikayetvar.sikayet_var"
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }

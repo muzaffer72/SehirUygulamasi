@@ -102,13 +102,13 @@ class HomeScreen extends StatelessWidget {
               onPressed: () {
                 // Bildirim test butonu
                 NotificationService.addNotification(
-                  NotificationModel(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    title: 'Test Bildirimi',
-                    message: 'Bu bir test bildirimidir.',
-                    timestamp: DateTime.now(),
-                    type: 'test',
-                  ),
+                  NotificationModel.fromMap({
+                    'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                    'title': 'Test Bildirimi',
+                    'message': 'Bu bir test bildirimidir.',
+                    'timestamp': DateTime.now(),
+                    'type': 'test',
+                  }),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Test bildirimi oluşturuldu')),
@@ -123,27 +123,8 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// Bildirim modeli sınıfı (hızlı erişim için)
-class NotificationModel {
-  final String id;
-  final String title;
-  final String message;
-  final Map<String, dynamic>? data;
-  final DateTime timestamp;
-  bool isRead;
-  final String type;
-  final String? targetRoute;
-  final String? targetId;
-  
-  NotificationModel({
-    required this.id,
-    required this.title,
-    required this.message,
-    this.data,
-    required this.timestamp,
-    this.isRead = false,
-    required this.type,
-    this.targetRoute,
-    this.targetId,
-  });
-}
+/// Bildirim modeli sınıfı için önceki tanımdan vazgeçildi
+/// Artık lib/models/notification_model.dart kullanılıyor
+///
+/// Bu sınıf silindi ve modeline referans yapıldı
+/// Bkz: import 'package:sikayet_var/models/notification_model.dart';
