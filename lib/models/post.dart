@@ -29,6 +29,7 @@ class Post {
   final DateTime createdAt;
   final List<String>? imageUrls;
   final String? videoUrl;
+  final int? satisfactionRating;
   
   // Widget'lar için getter'lar
   int get likeCount => likes;
@@ -51,6 +52,7 @@ class Post {
     required this.createdAt,
     this.imageUrls,
     this.videoUrl,
+    this.satisfactionRating,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
