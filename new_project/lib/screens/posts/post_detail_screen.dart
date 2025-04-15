@@ -400,7 +400,19 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   // Öncesi/Sonrası kayıtları
                   if (widget.post.isSolved) ...[
                     const SizedBox(height: 24),
-                    BeforeAfterWidget(post: widget.post),
+                    BeforeAfterWidget(
+                      record: BeforeAfterRecord(
+                        id: 1,
+                        postId: int.tryParse(widget.post.id) ?? 0,
+                        beforeImage: widget.post.imageUrls?.isNotEmpty == true 
+                            ? widget.post.imageUrls!.first 
+                            : "https://via.placeholder.com/300x200?text=Öncesi",
+                        afterImage: "https://via.placeholder.com/300x200?text=Sonrası",
+                        beforeDescription: "Sorun tespit edildi",
+                        afterDescription: "Sorun çözüldü ve düzeltildi",
+                        createdAt: DateTime.now(),
+                      ),
+                    ),
                   ],
                   
                   // Memnuniyet değerlendirmesi

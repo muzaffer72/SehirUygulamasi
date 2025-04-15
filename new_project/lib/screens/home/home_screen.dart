@@ -163,7 +163,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             
                             if (index == 1) {
                               // Ayın Belediyesi Banner'ı
-                              return const BestMunicipalityBanner();
+                              return const BestMunicipalityBanner(
+                                cityName: "İstanbul",
+                                awardMonth: "Nisan",
+                                awardScore: 92,
+                                awardText: "Hızlı şikayet çözüm oranı",
+                              );
                             }
                             
                             final post = posts[index - 2];

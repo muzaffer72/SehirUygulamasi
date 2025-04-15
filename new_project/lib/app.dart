@@ -8,6 +8,9 @@ import 'utils/constants.dart';
 import 'utils/theme.dart';
 import 'services/firebase_notification_service.dart';
 
+// Auth provider tanımı
+final currentUserProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
+
 // Provider for current theme mode
 final themeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
 
