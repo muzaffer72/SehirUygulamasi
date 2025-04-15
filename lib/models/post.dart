@@ -34,6 +34,18 @@ class Post {
   // Widget'lar için getter'lar
   int get likeCount => likes;
   int get highlightCount => highlights;
+  
+  // Memnuniyet puanı getter
+  int? get userSatisfactionRating => satisfactionRating;
+  
+  // Memnuniyet puanı kontrolü
+  bool get hasSatisfactionRating => satisfactionRating != null && satisfactionRating! > 0;
+  
+  // Post çözülmüş mü kontrolü
+  bool get isSolved => status == PostStatus.solved;
+  
+  // Memnuniyet puanı verilebilir mi
+  bool get canRateSatisfaction => isSolved && !hasSatisfactionRating;
 
   Post({
     required this.id,

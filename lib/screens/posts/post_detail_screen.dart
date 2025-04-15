@@ -9,6 +9,8 @@ import 'package:sikayet_var/services/api_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:sikayet_var/providers/user_provider.dart';
 import 'package:sikayet_var/providers/api_service_provider.dart';
+import 'package:sikayet_var/widgets/satisfaction_rating_widget.dart';
+import 'package:sikayet_var/widgets/before_after_widget.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
   final Post post;
@@ -394,6 +396,26 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       ),
                     ],
                   ),
+                  
+                  // Öncesi/Sonrası kayıtları
+                  if (widget.post.isSolved) ...[
+                    const SizedBox(height: 24),
+                    BeforeAfterWidget(post: widget.post),
+                  ],
+                  
+                  // Memnuniyet değerlendirmesi
+                  if (widget.post.isSolved) ...[
+                    const SizedBox(height: 16),
+                    SatisfactionRatingWidget(
+                      post: widget.post,
+                      onRated: (rating) {
+                        // Post nesnesini değiştiremeyiz, sadece UI'yi güncelliyoruz
+                        // API'ye gönderme işlemi SatisfactionRatingWidget içinde
+                        // yapılıyor, bu sayede veritabanı güncel kalacak
+                        setState(() {});
+                      },
+                    ),
+                  ],
                   
                   const Divider(height: 32),
                   
