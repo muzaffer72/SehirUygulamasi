@@ -90,12 +90,8 @@ try {
         $whereClause
     ";
     
-    $countParams = $params;
-    array_pop($countParams); // limit parametresini çıkar
-    array_pop($countParams); // offset parametresini çıkar
-    $countTypes = substr($types, 0, -2); // son iki karakteri çıkar (ii)
-    
-    $countResult = pg_query_params($conn, $countQuery, $countParams);
+    // Direkt sorgu çalıştır
+    $countResult = pg_query($conn, $countQuery);
     
     if (!$countResult) {
         throw new Exception("PostgreSQL sayaç sorgusu hatası: " . pg_last_error($conn));
