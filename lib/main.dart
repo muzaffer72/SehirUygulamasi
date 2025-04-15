@@ -21,7 +21,7 @@ void main() async {
     // Riverpod ile uygulamayı başlat
     runApp(
       const ProviderScope(
-        child: SikayetVarApp(),
+        child: BelediyeIletisimApp(),
       ),
     );
   }, (error, stack) {
@@ -31,17 +31,17 @@ void main() async {
   });
 }
 
-/// ŞikayetVar ana uygulama sınıfı
-class SikayetVarApp extends StatelessWidget {
-  const SikayetVarApp({Key? key}) : super(key: key);
+/// Belediye İletişim ana uygulama sınıfı
+class BelediyeIletisimApp extends StatelessWidget {
+  const BelediyeIletisimApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ŞikayetVar',
+      title: 'Belediye İletişim',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         useMaterial3: true,
       ),
@@ -71,7 +71,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ŞikayetVar'),
+        title: const Text('Belediye İletişim'),
         actions: [
           // Bildirim butonu
           IconButton(
@@ -90,12 +90,12 @@ class HomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'ŞikayetVar',
+              'Belediye İletişim',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             const Text(
-              'Belediye ve Valiliğe yönelik şikayet platformu',
+              'Belediye ve Valiliğe yönelik iletişim platformu',
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 40),
@@ -128,4 +128,4 @@ class HomeScreen extends StatelessWidget {
 /// Artık lib/models/notification_model.dart kullanılıyor
 ///
 /// Bu sınıf silindi ve modeline referans yapıldı
-/// Bkz: import 'package:sikayet_var/models/notification_model.dart';
+/// Bkz: import 'models/notification_model.dart';
