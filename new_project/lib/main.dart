@@ -103,13 +103,13 @@ class HomeScreen extends StatelessWidget {
               onPressed: () {
                 // Bildirim test butonu
                 NotificationService.addNotification(
-                  NotificationModel.fromMap({
-                    'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                    'title': 'Test Bildirimi',
-                    'message': 'Bu bir test bildirimidir.',
-                    'timestamp': DateTime.now(),
-                    'type': 'test',
-                  }),
+                  AppNotification(
+                    id: DateTime.now().millisecondsSinceEpoch,
+                    title: 'Test Bildirimi',
+                    message: 'Bu bir test bildirimidir.',
+                    createdAt: DateTime.now(),
+                    type: 'test',
+                  ),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Test bildirimi oluşturuldu')),
