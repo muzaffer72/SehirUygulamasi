@@ -163,7 +163,7 @@ class ApiService {
   }
   
   // Şehir listesini getir
-  Future<List<City>> getCities() async {
+  Future<List<City>> getCitiesAsObjects() async {
     final url = Uri.parse('$baseUrl$apiPath/cities');
     final response = await http.get(
       url,
@@ -180,7 +180,7 @@ class ApiService {
   }
   
   // Belirli bir şehre ait ilçeleri getir
-  Future<List<District>> getDistrictsByCityId(String cityId) async {
+  Future<List<District>> getDistrictsByCityIdAsObjects(String cityId) async {
     final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/districts');
     final response = await http.get(
       url,
