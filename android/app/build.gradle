@@ -21,10 +21,20 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-apply plugin: 'com.google.gms.google-services'
+// Kotlin sürümünü tanımlama
+def kotlin_version = '1.8.20'
+
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'com.google.gms.google-services'
+}
+
+// Flutter plugin
+def flutterPluginFile = new File("$flutterRoot/packages/flutter_tools/gradle/flutter.gradle")
+if (flutterPluginFile.exists()) {
+    apply from: flutterPluginFile
+}
 
 android {
     namespace "belediye.iletisim.merkezi"
