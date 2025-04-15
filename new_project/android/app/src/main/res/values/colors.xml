@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#2E7D32</color>
-    <color name="accent">#4CAF50</color>
-    <color name="notification_color">#2E7D32</color>
+    <color name="primary">#4CAF50</color>
+    <color name="primary_dark">#388E3C</color>
+    <color name="primary_light">#C8E6C9</color>
+    <color name="accent">#8BC34A</color>
+    <color name="notificationColor">#4CAF50</color>
+    <color name="ic_launcher_background">#FFFFFF</color>
 </resources>

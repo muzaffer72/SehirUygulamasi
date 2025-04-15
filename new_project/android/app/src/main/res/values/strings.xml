@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Belediye İletişim</string>
+    <string name="notification_channel_name">Belediye İletişim Bildirimleri</string>
+    <string name="notification_channel_description">Belediye İletişim uygulaması için bildirim kanalı</string>
+</resources>

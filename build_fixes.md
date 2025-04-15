@@ -1,5 +1,46 @@
 # Build Notları ve Çözümler
 
+## Flutter Gradle Projesi Hatası Çözümü
+
+"Your app is using an unsupported Gradle project" hatası için aşağıdaki adımlar izlenmelidir:
+
+1. Önceki projeyi yedekleyin:
+```bash
+mkdir -p temp_backup
+cp -r lib temp_backup/
+cp -r assets temp_backup/
+cp pubspec.yaml temp_backup/
+```
+
+2. Yeni bir Flutter projesi oluşturun:
+```bash
+flutter create --org belediye.iletisim.merkezi -t app --platforms=android,ios,web ./new_project
+```
+
+3. Eski projedeki dosyaları yeni projeye taşıyın:
+```bash
+rm -rf new_project/lib/*
+cp -r temp_backup/lib/* new_project/lib/
+cp -r temp_backup/assets new_project/assets/
+```
+
+4. Android yapılandırmasını düzenleyin:
+   - `new_project/android/app/build.gradle` dosyasını güncelleyin:
+     - Paket adını `belediye.iletisim.merkezi` olarak ayarlayın
+     - Firebase bağımlılıkları ekleyin
+     - Java sürümünü 11 olarak ayarlayın
+   - `new_project/android/settings.gradle` dosyasını güncelleyin:
+     - Kotlin sürümünü 1.8.20 olarak ayarlayın
+
+5. Firebase ve bildirim yapılandırmasını tamamlayın:
+   - `FirebaseMessagingService.java` dosyasını oluşturun
+   - Bildirim kanallarını ayarlayın
+
+6. Eski projeyi değiştirin:
+```bash
+./replace_project.sh
+```
+
 ## GitHub Actions APK Derlemesi
 
 GitHub Actions ile APK derlemek için aşağıdaki adımlar takip edilmelidir:
