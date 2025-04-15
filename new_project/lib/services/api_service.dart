@@ -12,6 +12,7 @@ import 'package:belediye_iletisim_merkezi/models/district.dart';
 import 'package:belediye_iletisim_merkezi/models/city_profile.dart';
 import 'package:belediye_iletisim_merkezi/models/category.dart' as app_category;
 import 'package:belediye_iletisim_merkezi/models/notification_model.dart';
+import 'package:belediye_iletisim_merkezi/models/notification.dart';
 import 'package:belediye_iletisim_merkezi/models/before_after_record.dart';
 
 class ApiService {
@@ -1093,7 +1094,7 @@ class ApiService {
   }
   
   // Bildirim sistemi için metotlar - DatabaseNotification modeli kullanılıyor
-  Future<List<app_notification.DatabaseNotification>> getOldNotifications({
+  Future<List<DatabaseNotification>> getOldNotifications({
     String? userId,
     bool? isRead,
     bool? isArchived,
