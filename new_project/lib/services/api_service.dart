@@ -570,6 +570,38 @@ class ApiService {
     return await getCityProfileById(cityIdStr);
   }
   
+  // Şehirleri getir (eski API uyumluluğu)
+  Future<List<dynamic>> getCities() async {
+    final url = Uri.parse('$baseUrl$apiPath/cities');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data'] ?? [];
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // İlçeleri şehire göre filtreleme (eski API uyumluluğu)
+  Future<List<dynamic>> getDistrictsByCityId(String cityId) async {
+    final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/districts');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data'] ?? [];
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
   // Kullanıcı bilgisini getir
   Future<User?> getUserById(String userId) async {
     final url = Uri.parse('$baseUrl$apiPath/users/$userId');
