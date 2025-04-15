@@ -1,102 +1,64 @@
-class SurveyOption {
-  final String id;
-  final String? surveyId; // Hangi anket için olduğu
-  final String text;      // Seçenek metni
-  int voteCount;          // Oy sayısı
-
-  SurveyOption({
-    required this.id,
-    this.surveyId,
-    required this.text,
-    required this.voteCount,
-  });
-
-  factory SurveyOption.fromJson(Map<String, dynamic> json) {
-    return SurveyOption(
-      id: json['id'].toString(),
-      surveyId: json['survey_id']?.toString(),
-      text: json['text'],
-      voteCount: json['vote_count'] ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'survey_id': surveyId,
-      'text': text,
-      'vote_count': voteCount,
-    };
-  }
-  
-  // Yüzde hesapla
-  double getPercentage(int totalVotes) {
-    if (totalVotes == 0) return 0;
-    return (voteCount / totalVotes) * 100;
-  }
-}
-
 class Survey {
   final String id;
   final String title;
-  final String shortTitle;  // Anasayfada gösterilecek kısa başlık
   final String description;
-  final String? question;   // Anket sorusu
-  final String? imageUrl;   // Anket görseli URL'i (opsiyonel)
-  final String? cityId;     // İl ID (opsiyonel, genel anketlerde null)
-  final String? districtId; // İlçe ID (opsiyonel, il veya genel anketlerde null)
-  final String? categoryId; // Kategori ID
-  final String scopeType;   // Anket kapsamı: 'general', 'city', 'district'
-  final bool isActive;      // Anket aktif mi
-  final DateTime startDate; // Başlangıç tarihi
-  final DateTime endDate;   // Bitiş tarihi
-  int totalVotes;           // Toplam oy sayısı
-  final int totalUsers;     // Görüntülenen toplam kullanıcı sayısı
-  final List<SurveyOption> options; // Anket seçenekleri
+  final DateTime startDate;
+  final DateTime endDate;
+  final List<SurveyOption> options;
+  final int totalVotes;
+  final int targetVotes;
+  final SurveyStatus status;
+  final String cityId;
+  final String? districtId;
+  final bool isActive;
+  final bool isOfficial;
+  final bool isPublished;
+  final bool hasUserVoted;
 
   Survey({
     required this.id,
     required this.title,
-    required this.shortTitle,
     required this.description,
-    this.question,
-    this.imageUrl,
-    this.cityId,
-    this.districtId,
-    this.categoryId,
-    required this.scopeType,
-    required this.isActive,
     required this.startDate,
     required this.endDate,
-    required this.totalVotes,
-    required this.totalUsers,
     required this.options,
+    required this.totalVotes,
+    required this.targetVotes,
+    required this.status,
+    required this.cityId,
+    this.districtId,
+    this.isActive = true,
+    this.isOfficial = false,
+    this.isPublished = true,
+    this.hasUserVoted = false,
   });
 
   factory Survey.fromJson(Map<String, dynamic> json) {
+    final optionsJson = json['options'] as List<dynamic>? ?? [];
+    final options = optionsJson
+        .map((optionJson) => SurveyOption.fromJson(optionJson))
+        .toList();
+
     return Survey(
       id: json['id'].toString(),
-      title: json['title'],
-      shortTitle: json['short_title'] ?? json['title'].toString().substring(0, json['title'].toString().length > 40 ? 40 : json['title'].toString().length),
-      description: json['description'],
-      question: json['question'],
-      imageUrl: json['image_url'],
-      cityId: json['city_id']?.toString(),
-      districtId: json['district_id']?.toString(),
-      categoryId: json['category_id']?.toString(),
-      scopeType: json['scope_type'] ?? 'general', // Varsayılan olarak genel
-      isActive: json['is_active'] ?? false,
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
       startDate: json['start_date'] != null
           ? DateTime.parse(json['start_date'])
           : DateTime.now(),
       endDate: json['end_date'] != null
           ? DateTime.parse(json['end_date'])
-          : DateTime.now().add(const Duration(days: 30)),
+          : DateTime.now().add(const Duration(days: 7)),
+      options: options,
       totalVotes: json['total_votes'] ?? 0,
-      totalUsers: json['total_users'] ?? 1000, // Varsayılan olarak 1000 kullanıcı
-      options: (json['options'] as List<dynamic>)
-          .map((option) => SurveyOption.fromJson(option))
-          .toList(),
+      targetVotes: json['target_votes'] ?? 1000,
+      status: SurveyStatus.fromString(json['status']),
+      cityId: json['city_id']?.toString() ?? '0',
+      districtId: json['district_id']?.toString(),
+      isActive: json['is_active'] ?? true,
+      isOfficial: json['is_official'] ?? false,
+      isPublished: json['is_published'] ?? true,
+      hasUserVoted: json['has_user_voted'] ?? false,
     );
   }
 
@@ -104,74 +66,162 @@ class Survey {
     return {
       'id': id,
       'title': title,
-      'short_title': shortTitle,
       'description': description,
-      'question': question,
-      'image_url': imageUrl,
-      'city_id': cityId,
-      'district_id': districtId,
-      'category_id': categoryId,
-      'scope_type': scopeType,
-      'is_active': isActive,
       'start_date': startDate.toIso8601String(),
       'end_date': endDate.toIso8601String(),
-      'total_votes': totalVotes,
-      'total_users': totalUsers,
       'options': options.map((option) => option.toJson()).toList(),
+      'total_votes': totalVotes,
+      'target_votes': targetVotes,
+      'status': status.toString(),
+      'city_id': cityId,
+      'district_id': districtId,
+      'is_active': isActive,
+      'is_official': isOfficial,
+      'is_published': isPublished,
+      'has_user_voted': hasUserVoted,
     };
   }
-  
-  // Anket kapsamına göre kullanıcının görebildiği anket mi kontrol et
-  bool isVisibleToUser(String? userCityId, String? userDistrictId) {
-    switch (scopeType) {
-      case 'general':
-        // Genel anketler herkes tarafından görülebilir
-        return true;
-      case 'city':
-        // Şehir bazlı anketler, ya "Tüm Türkiye" (cityId = all) seçiliyse
-        // veya kullanıcının şehri ile eşleşiyorsa görülebilir
-        if (cityId == 'all') return true;
-        return cityId == userCityId;
-      case 'district':
-        // İlçe bazlı anketler, kullanıcının ilçesi ile eşleşiyorsa görülebilir
-        // Aynı ilde farklı ilçedeki kullanıcılar göremez
-        return cityId == userCityId && districtId == userDistrictId;
+
+  double get participationRate {
+    if (targetVotes == 0) return 0.0;
+    return (totalVotes / targetVotes) * 100;
+  }
+
+  String get formattedParticipationRate {
+    return '${participationRate.toStringAsFixed(1)}%';
+  }
+
+  String get formattedParticipation {
+    return '$totalVotes/$targetVotes';
+  }
+
+  // En çok oy alan seçeneği döndürür
+  SurveyOption? get leadingOption {
+    if (options.isEmpty) return null;
+    return options.reduce((a, b) => a.votes > b.votes ? a : b);
+  }
+
+  // En az oy alan seçeneği döndürür
+  SurveyOption? get trailingOption {
+    if (options.isEmpty) return null;
+    return options.reduce((a, b) => a.votes < b.votes ? a : b);
+  }
+
+  Survey copyWith({
+    String? id,
+    String? title,
+    String? description,
+    DateTime? startDate,
+    DateTime? endDate,
+    List<SurveyOption>? options,
+    int? totalVotes,
+    int? targetVotes,
+    SurveyStatus? status,
+    String? cityId,
+    String? districtId,
+    bool? isActive,
+    bool? isOfficial,
+    bool? isPublished,
+    bool? hasUserVoted,
+  }) {
+    return Survey(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      options: options ?? this.options,
+      totalVotes: totalVotes ?? this.totalVotes,
+      targetVotes: targetVotes ?? this.targetVotes,
+      status: status ?? this.status,
+      cityId: cityId ?? this.cityId,
+      districtId: districtId ?? this.districtId,
+      isActive: isActive ?? this.isActive,
+      isOfficial: isOfficial ?? this.isOfficial,
+      isPublished: isPublished ?? this.isPublished,
+      hasUserVoted: hasUserVoted ?? this.hasUserVoted,
+    );
+  }
+}
+
+class SurveyOption {
+  final String id;
+  final String text;
+  final int votes;
+  final double? percentage;
+
+  SurveyOption({
+    required this.id,
+    required this.text,
+    this.votes = 0,
+    this.percentage,
+  });
+
+  factory SurveyOption.fromJson(Map<String, dynamic> json) {
+    return SurveyOption(
+      id: json['id'].toString(),
+      text: json['text'] ?? '',
+      votes: json['votes'] ?? 0,
+      percentage: json['percentage']?.toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'text': text,
+      'votes': votes,
+      'percentage': percentage,
+    };
+  }
+
+  SurveyOption copyWith({
+    String? id,
+    String? text,
+    int? votes,
+    double? percentage,
+  }) {
+    return SurveyOption(
+      id: id ?? this.id,
+      text: text ?? this.text,
+      votes: votes ?? this.votes,
+      percentage: percentage ?? this.percentage,
+    );
+  }
+}
+
+enum SurveyStatus {
+  draft,
+  active,
+  completed,
+  cancelled;
+
+  @override
+  String toString() {
+    switch (this) {
+      case SurveyStatus.draft:
+        return 'draft';
+      case SurveyStatus.active:
+        return 'active';
+      case SurveyStatus.completed:
+        return 'completed';
+      case SurveyStatus.cancelled:
+        return 'cancelled';
+    }
+  }
+
+  static SurveyStatus fromString(String? status) {
+    if (status == null) return SurveyStatus.draft;
+
+    switch (status.toLowerCase()) {
+      case 'active':
+        return SurveyStatus.active;
+      case 'completed':
+        return SurveyStatus.completed;
+      case 'cancelled':
+        return SurveyStatus.cancelled;
       default:
-        return false;
-    }
-  }
-  
-  // Anket katılım oranını hesaplar (0.0 - 1.0 arası)
-  double getParticipationRate() {
-    if (totalUsers <= 0) return 0.0;
-    return totalVotes / totalUsers;
-  }
-  
-  // Kalan gün sayısını hesaplar
-  int getRemainingDays() {
-    final now = DateTime.now();
-    return endDate.difference(now).inDays;
-  }
-  
-  // Kalan süreyi saat, dakika ve saniye cinsinden hesaplar
-  String getRemainingTimeText() {
-    final now = DateTime.now();
-    final difference = endDate.difference(now);
-    
-    if (difference.isNegative) {
-      return "Anket sona erdi";
-    }
-    
-    final days = difference.inDays;
-    final hours = difference.inHours % 24;
-    final minutes = difference.inMinutes % 60;
-    
-    if (days > 0) {
-      return "$days gün kaldı";
-    } else if (hours > 0) {
-      return "$hours saat $minutes dakika";
-    } else {
-      return "$minutes dakika";
+        return SurveyStatus.draft;
     }
   }
 }

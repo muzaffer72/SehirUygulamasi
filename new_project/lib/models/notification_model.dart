@@ -1,40 +1,41 @@
-import 'dart:convert';
+import 'package:flutter/material.dart';
 
 class NotificationModel {
-  final int id;
-  final int? userId;
+  final String id;
+  final String userId;
   final String title;
   final String message;
-  final String type;
-  final Map<String, dynamic>? data;
+  final String type; // 'comment', 'like', 'mention', 'system', 'status_update'
+  final String? postId;
+  final String? cityId;
   final DateTime createdAt;
   final bool isRead;
 
   NotificationModel({
     required this.id,
-    this.userId,
+    required this.userId,
     required this.title,
     required this.message,
     required this.type,
-    this.data,
+    this.postId,
+    this.cityId,
     required this.createdAt,
     this.isRead = false,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
-      id: json['id'],
-      userId: json['user_id'],
+      id: json['id'].toString(),
+      userId: json['user_id'].toString(),
       title: json['title'],
       message: json['message'],
       type: json['type'],
-      data: json['data'] != null 
-          ? json['data'] is String 
-              ? jsonDecode(json['data']) 
-              : json['data']
-          : null,
-      createdAt: DateTime.parse(json['created_at']),
-      isRead: json['is_read'] == 1 || json['is_read'] == true,
+      postId: json['post_id']?.toString(),
+      cityId: json['city_id']?.toString(),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      isRead: json['is_read'] ?? false,
     );
   }
 
@@ -45,19 +46,21 @@ class NotificationModel {
       'title': title,
       'message': message,
       'type': type,
-      'data': data != null ? jsonEncode(data) : null,
+      'post_id': postId,
+      'city_id': cityId,
       'created_at': createdAt.toIso8601String(),
-      'is_read': isRead ? 1 : 0,
+      'is_read': isRead,
     };
   }
 
   NotificationModel copyWith({
-    int? id,
-    int? userId,
+    String? id,
+    String? userId,
     String? title,
     String? message,
     String? type,
-    Map<String, dynamic>? data,
+    String? postId,
+    String? cityId,
     DateTime? createdAt,
     bool? isRead,
   }) {
@@ -67,7 +70,8 @@ class NotificationModel {
       title: title ?? this.title,
       message: message ?? this.message,
       type: type ?? this.type,
-      data: data ?? this.data,
+      postId: postId ?? this.postId,
+      cityId: cityId ?? this.cityId,
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,
     );

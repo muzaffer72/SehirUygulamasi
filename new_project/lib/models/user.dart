@@ -1,108 +1,127 @@
+import 'package:flutter/material.dart';
+
 class User {
-  final int id;
+  final String id;
   final String name;
-  final String email;
+  final String? username;
+  final String? email;
+  final String? phone;
+  final String? profileImageUrl;
+  final String? coverImageUrl;
+  final String? bio;
   final bool isVerified;
-  final String? cityId;
-  final String? districtId;
-  final String? createdAt;
-  final String? userLevel;
-  final int points;
-  final int totalPosts;
-  final int totalComments;
-  final String? profilePhotoUrl;
-  final int solvedIssues;
-  final String? badge;
+  final bool isAdmin;
+  final DateTime createdAt;
+  final int postCount;
+  final int followerCount;
+  final int followingCount;
+  final int cityId;
+  final String? cityName;
+  final String? districtName;
 
   User({
     required this.id,
     required this.name,
-    required this.email,
+    this.username,
+    this.email,
+    this.phone,
+    this.profileImageUrl,
+    this.coverImageUrl,
+    this.bio,
     this.isVerified = false,
-    this.cityId,
-    this.districtId,
-    this.createdAt,
-    this.userLevel = 'newUser',
-    this.points = 0,
-    this.totalPosts = 0,
-    this.totalComments = 0,
-    this.profilePhotoUrl,
-    this.solvedIssues = 0,
-    this.badge,
+    this.isAdmin = false,
+    required this.createdAt,
+    this.postCount = 0,
+    this.followerCount = 0,
+    this.followingCount = 0,
+    required this.cityId,
+    this.cityName,
+    this.districtName,
   });
 
-  // Factory constructor to create a User from a JSON map
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
-      name: json['name'],
+      id: json['id'].toString(),
+      name: json['name'] ?? 'İsimsiz Kullanıcı',
+      username: json['username'],
       email: json['email'],
+      phone: json['phone'],
+      profileImageUrl: json['profile_image_url'],
+      coverImageUrl: json['cover_image_url'],
+      bio: json['bio'],
       isVerified: json['is_verified'] ?? false,
-      cityId: json['city_id'],
-      districtId: json['district_id'],
-      createdAt: json['created_at'],
-      userLevel: json['user_level'] ?? 'newUser',
-      points: json['points'] ?? 0,
-      totalPosts: json['total_posts'] ?? 0,
-      totalComments: json['total_comments'] ?? 0,
-      profilePhotoUrl: json['profile_photo_url'],
-      solvedIssues: json['solved_issues'] ?? 0,
-      badge: json['badge'],
+      isAdmin: json['is_admin'] ?? false,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      postCount: json['post_count'] ?? 0,
+      followerCount: json['follower_count'] ?? 0,
+      followingCount: json['following_count'] ?? 0,
+      cityId: int.tryParse(json['city_id']?.toString() ?? '0') ?? 0,
+      cityName: json['city_name'],
+      districtName: json['district_name'],
     );
   }
 
-  // Method to convert a User instance to a JSON map
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
+      'username': username,
       'email': email,
+      'phone': phone,
+      'profile_image_url': profileImageUrl,
+      'cover_image_url': coverImageUrl,
+      'bio': bio,
       'is_verified': isVerified,
+      'is_admin': isAdmin,
+      'created_at': createdAt.toIso8601String(),
+      'post_count': postCount,
+      'follower_count': followerCount,
+      'following_count': followingCount,
       'city_id': cityId,
-      'district_id': districtId,
-      'created_at': createdAt,
-      'user_level': userLevel,
-      'points': points,
-      'total_posts': totalPosts,
-      'total_comments': totalComments,
-      'profile_photo_url': profilePhotoUrl,
-      'solved_issues': solvedIssues,
-      'badge': badge,
+      'city_name': cityName,
+      'district_name': districtName,
     };
   }
 
-  // Create a copy of this user with updated attributes
   User copyWith({
-    int? id,
+    String? id,
     String? name,
+    String? username,
     String? email,
+    String? phone,
+    String? profileImageUrl,
+    String? coverImageUrl,
+    String? bio,
     bool? isVerified,
-    String? cityId,
-    String? districtId,
-    String? createdAt,
-    String? userLevel,
-    int? points,
-    int? totalPosts,
-    int? totalComments,
-    String? profilePhotoUrl,
-    int? solvedIssues,
-    String? badge,
+    bool? isAdmin,
+    DateTime? createdAt,
+    int? postCount,
+    int? followerCount,
+    int? followingCount,
+    int? cityId,
+    String? cityName,
+    String? districtName,
   }) {
     return User(
       id: id ?? this.id,
       name: name ?? this.name,
+      username: username ?? this.username,
       email: email ?? this.email,
+      phone: phone ?? this.phone,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+      bio: bio ?? this.bio,
       isVerified: isVerified ?? this.isVerified,
-      cityId: cityId ?? this.cityId,
-      districtId: districtId ?? this.districtId,
+      isAdmin: isAdmin ?? this.isAdmin,
       createdAt: createdAt ?? this.createdAt,
-      userLevel: userLevel ?? this.userLevel,
-      points: points ?? this.points,
-      totalPosts: totalPosts ?? this.totalPosts,
-      totalComments: totalComments ?? this.totalComments,
-      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
-      solvedIssues: solvedIssues ?? this.solvedIssues,
-      badge: badge ?? this.badge,
+      postCount: postCount ?? this.postCount,
+      followerCount: followerCount ?? this.followerCount,
+      followingCount: followingCount ?? this.followingCount,
+      cityId: cityId ?? this.cityId,
+      cityName: cityName ?? this.cityName,
+      districtName: districtName ?? this.districtName,
     );
   }
 }
