@@ -10,6 +10,8 @@ class PostCard extends StatefulWidget {
   final VoidCallback onTap;
   final VoidCallback onLike;
   final VoidCallback onHighlight;
+  final VoidCallback? onComment;
+  final VoidCallback? onShare;
   final bool showFullContent;
 
   const PostCard({
@@ -18,6 +20,8 @@ class PostCard extends StatefulWidget {
     required this.onTap,
     required this.onLike,
     required this.onHighlight,
+    this.onComment,
+    this.onShare,
     this.showFullContent = false,
   }) : super(key: key);
 
