@@ -1869,7 +1869,7 @@ class ApiService {
   }
   
   // Notifications
-  Future<List<app_notification.Notification>> getNotifications({int? userId, bool unreadOnly = false, int page = 1, int limit = 20}) async {
+  Future<List<app_notification.AppNotification>> getNotifications({int? userId, bool unreadOnly = false, int page = 1, int limit = 20}) async {
     // Kullanıcı kimliği
     String url;
     if (userId != null) {

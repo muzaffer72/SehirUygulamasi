@@ -19,7 +19,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   bool _isLoading = true;
   bool _hasMore = true;
   bool _isLoadingMore = false;
-  List<app_notification.Notification> _notifications = [];
+  List<app_notification.AppNotification> _notifications = [];
   int _page = 1;
   final int _limit = 20;
   final ScrollController _scrollController = ScrollController();
@@ -128,7 +128,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
   }
 
-  Future<void> _onNotificationTap(app_notification.Notification notification) async {
+  Future<void> _onNotificationTap(app_notification.AppNotification notification) async {
     // Bildirimi okundu olarak işaretle
     await _markAsRead(int.parse(notification.id));
 
@@ -240,7 +240,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 
-  Widget _buildNotificationItem(app_notification.Notification notification) {
+  Widget _buildNotificationItem(app_notification.AppNotification notification) {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: notification.isRead
