@@ -158,6 +158,12 @@ class _FilteredPostsScreenState extends ConsumerState<FilteredPostsScreen> {
                         await _apiService.highlightPost(post.id);
                         _loadFilteredPosts(); // Yeniden yükle
                       },
+                      onShare: () {
+                        // Paylaşım işlevselliği
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Paylaşım özelliği yakında aktif olacak')),
+                        );
+                      },
                     );
                   },
                 ),
