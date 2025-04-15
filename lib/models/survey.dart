@@ -2,11 +2,10 @@ class SurveyOption {
   final String id;
   final String? surveyId; // Hangi anket için olduğu
   final String text;      // Seçenek metni
-  int _voteCount;         // Oy sayısı (private)
+  final int _voteCount;   // Oy sayısı (private)
 
-  // Getter ve setter ekle
+  // Getter ekle
   int get voteCount => _voteCount;
-  set voteCount(int value) => _voteCount = value;  
 
   SurveyOption({
     required this.id,
@@ -54,13 +53,17 @@ class Survey {
   final bool isActive;      // Anket aktif mi
   final DateTime startDate; // Başlangıç tarihi
   final DateTime endDate;   // Bitiş tarihi
-  int _totalVotes;          // Toplam oy sayısı (private)
+  final int _totalVotes;     // Toplam oy sayısı (private)
   final int totalUsers;     // Görüntülenen toplam kullanıcı sayısı
   final List<SurveyOption> options; // Anket seçenekleri
 
-  // Getter ve setter ekle
+  // Getter ekle
   int get totalVotes => _totalVotes;
-  set totalVotes(int value) => _totalVotes = value;
+  
+  // Hesaplanmış toplam oyları döndüren getter
+  int get calculatedTotalVotes {
+    return options.fold(0, (sum, option) => sum + option.voteCount);
+  }
 
   Survey({
     required this.id,
@@ -76,10 +79,10 @@ class Survey {
     required this.isActive,
     required this.startDate,
     required this.endDate,
-    required this.totalVotes,
+    required int totalVotes,
     required this.totalUsers,
     required this.options,
-  });
+  }) : _totalVotes = totalVotes;
 
   factory Survey.fromJson(Map<String, dynamic> json) {
     return Survey(

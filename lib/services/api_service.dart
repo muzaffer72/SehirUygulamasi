@@ -988,20 +988,25 @@ class ApiService {
   }
   
   Future<Survey> voteInSurvey(String surveyId, String optionId) async {
-    // In a real app, this would make an API call
-    // For now, just get the survey and simulate voting
-    final survey = await getSurveyById(surveyId);
+    // API call to vote on the survey
+    final success = await voteOnSurvey(surveyId, optionId);
+    if (!success) {
+      throw Exception('Failed to vote in survey');
+    }
     
+    // Get updated survey from API
+    return await getSurveyById(surveyId);
+
+    /* Önceki immutable model uyumsuzluğu nedeniyle kullanılamaz:
     // Find the option and increment its vote count
     for (var i = 0; i < survey.options.length; i++) {
       if (survey.options[i].id == optionId) {
-        survey.options[i].voteCount++;
-        survey.totalVotes++;
+        survey.options[i].voteCount++; // Artık SurveyOption immutable
+        survey.totalVotes++;           // Artık Survey immutable
         break;
       }
     }
-    
-    return survey;
+    */
   }
   
   // Get current user using stored token
