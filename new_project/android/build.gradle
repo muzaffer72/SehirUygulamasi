@@ -1,6 +1,5 @@
 buildscript {
     ext.kotlin_version = '1.9.22'
-
     repositories {
         google()
         mavenCentral()
@@ -23,24 +22,6 @@ allprojects {
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-
-subprojects {
-    project.evaluationDependsOn(':app')
-    
-    project.configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'com.android.support'
-                    && !details.requested.name.contains('multidex') ) {
-                details.useVersion "27.1.1"
-            }
-            
-            if (details.requested.group == 'androidx.core'
-                    && !details.requested.name.contains('androidx') ) {
-                details.useVersion "1.12.0"
-            }
-        }
-    }
 }
 
 tasks.register("clean", Delete) {
