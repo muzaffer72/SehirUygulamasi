@@ -7,6 +7,7 @@ import 'package:sikayet_var/providers/post_provider.dart';
 import 'package:sikayet_var/providers/user_provider.dart';
 import 'package:sikayet_var/screens/home/dashboard_screen.dart';
 import 'package:sikayet_var/screens/home/swipeable_feed_screen.dart'; // Değişiklik: FeedScreen yerine SwipeableFeedScreen kullanılıyor
+import 'package:sikayet_var/screens/notifications/notifications_screen.dart';
 import 'package:sikayet_var/screens/profile/profile_screen.dart';
 import 'package:sikayet_var/screens/search/search_screen.dart';
 import 'package:sikayet_var/screens/surveys/surveys_screen.dart';
@@ -31,6 +32,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       const SwipeableFeedScreen(), // Değişiklik: FeedScreen yerine SwipeableFeedScreen kullanılıyor
       const SearchScreen(),
       const SurveysScreen(),
+      const NotificationsScreen(),
       const DashboardScreen(),
       const ProfileScreen(),
     ];
@@ -72,6 +74,11 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             icon: Icon(Icons.how_to_vote_outlined),
             activeIcon: Icon(Icons.how_to_vote),
             label: 'Anketler',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_outlined),
+            activeIcon: Icon(Icons.notifications),
+            label: 'Bildirimler',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
