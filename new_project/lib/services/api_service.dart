@@ -1092,8 +1092,8 @@ class ApiService {
     }
   }
   
-  // Bildirim sistemi için metotlar - AppNotification modeli kullanılıyor
-  Future<List<app_notification.AppNotification>> getOldNotifications({
+  // Bildirim sistemi için metotlar - DatabaseNotification modeli kullanılıyor
+  Future<List<app_notification.DatabaseNotification>> getOldNotifications({
     String? userId,
     bool? isRead,
     bool? isArchived,
