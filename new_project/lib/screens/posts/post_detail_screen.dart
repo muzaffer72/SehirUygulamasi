@@ -419,11 +419,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   if (widget.post.isSolved) ...[
                     const SizedBox(height: 16),
                     SatisfactionRatingWidget(
-                      post: widget.post,
-                      onRated: (rating) {
+                      initialRating: widget.post.userSatisfactionRating,
+                      isReadOnly: widget.post.hasSatisfactionRating,
+                      onRatingChanged: (rating) {
                         // Post nesnesini değiştiremeyiz, sadece UI'yi güncelliyoruz
-                        // API'ye gönderme işlemi SatisfactionRatingWidget içinde
-                        // yapılıyor, bu sayede veritabanı güncel kalacak
+                        // API'ye gönderme işlemi burada yapılır
                         setState(() {});
                       },
                     ),

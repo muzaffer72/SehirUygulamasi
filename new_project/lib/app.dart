@@ -14,14 +14,14 @@ final currentUserProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
 // Provider for current theme mode
 final themeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
 
-class SikayetVarApp extends ConsumerStatefulWidget {
-  const SikayetVarApp({Key? key}) : super(key: key);
+class BelediyeIletisimApp extends ConsumerStatefulWidget {
+  const BelediyeIletisimApp({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<SikayetVarApp> createState() => _SikayetVarAppState();
+  ConsumerState<BelediyeIletisimApp> createState() => _BelediyeIletisimAppState();
 }
 
-class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
+class _BelediyeIletisimAppState extends ConsumerState<BelediyeIletisimApp> {
   @override
   void initState() {
     super.initState();
@@ -64,7 +64,7 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
     final currentUser = ref.watch(currentUserProvider);
     
     return MaterialApp(
-      title: 'ŞikayetVar',
+      title: 'Belediye İletişim',
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
       theme: AppTheme.light(),
