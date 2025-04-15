@@ -10,6 +10,7 @@ class NotificationModel {
   final String? cityId;
   final DateTime createdAt;
   final bool isRead;
+  final Map<String, dynamic>? data;
 
   NotificationModel({
     required this.id,
@@ -21,21 +22,23 @@ class NotificationModel {
     this.cityId,
     required this.createdAt,
     this.isRead = false,
+    this.data,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
       id: json['id'].toString(),
       userId: json['user_id'].toString(),
-      title: json['title'],
-      message: json['message'],
-      type: json['type'],
+      title: json['title'] ?? '',
+      message: json['message'] ?? '',
+      type: json['type'] ?? 'system',
       postId: json['post_id']?.toString(),
       cityId: json['city_id']?.toString(),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
       isRead: json['is_read'] ?? false,
+      data: json['data'] as Map<String, dynamic>?,
     );
   }
 
@@ -50,6 +53,7 @@ class NotificationModel {
       'city_id': cityId,
       'created_at': createdAt.toIso8601String(),
       'is_read': isRead,
+      'data': data,
     };
   }
 
@@ -63,6 +67,7 @@ class NotificationModel {
     String? cityId,
     DateTime? createdAt,
     bool? isRead,
+    Map<String, dynamic>? data,
   }) {
     return NotificationModel(
       id: id ?? this.id,
@@ -74,6 +79,7 @@ class NotificationModel {
       cityId: cityId ?? this.cityId,
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,
+      data: data ?? this.data,
     );
   }
 }

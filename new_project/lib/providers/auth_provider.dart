@@ -2,13 +2,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:belediye_iletisim_merkezi/models/user.dart';
 import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-final apiServiceProvider = Provider<ApiService>((ref) => ApiService());
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
 
 // Kullanıcı kimlik bilgilerini tutan provider
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(ref.read(apiServiceProvider));
 });
+
+// Auth durumu enum
+enum AuthStatus {
+  initial,
+  authenticating,
+  authenticated,
+  unauthenticated,
+  error,
+}
 
 // Auth durumu sınıfı
 class AuthState {
@@ -16,12 +24,16 @@ class AuthState {
   final bool isLoading;
   final String? error;
   final bool isLoggedIn;
+  final AuthStatus status;
+  final String? errorMessage;
 
   AuthState({
     this.user,
     this.isLoading = false,
     this.error,
     this.isLoggedIn = false,
+    this.status = AuthStatus.initial,
+    this.errorMessage,
   });
 
   AuthState copyWith({
@@ -29,12 +41,16 @@ class AuthState {
     bool? isLoading,
     String? error,
     bool? isLoggedIn,
+    AuthStatus? status,
+    String? errorMessage,
   }) {
     return AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
       error: error,
       isLoggedIn: isLoggedIn ?? this.isLoggedIn,
+      status: status ?? this.status,
+      errorMessage: errorMessage ?? this.error,
     );
   }
 }
@@ -52,7 +68,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   // Oturum kontrolü
   Future<void> checkAuth() async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, status: AuthStatus.authenticating);
     
     try {
       // SharedPreferences'tan token ve kullanıcı bilgilerini al
@@ -67,6 +83,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             user: user,
             isLoading: false,
             isLoggedIn: true,
+            status: AuthStatus.authenticated,
           );
           return;
         }
@@ -77,19 +94,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
         user: null,
         isLoading: false,
         isLoggedIn: false,
+        status: AuthStatus.unauthenticated,
       );
     } catch (e) {
       state = state.copyWith(
         error: 'Oturum kontrolü sırasında bir hata oluştu: $e',
+        errorMessage: 'Oturum kontrolü sırasında bir hata oluştu: $e',
         isLoading: false,
         isLoggedIn: false,
+        status: AuthStatus.error,
       );
     }
   }
 
   // Giriş işlemi
   Future<void> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: null, status: AuthStatus.authenticating);
     
     try {
       final result = await _apiService.login(email, password);
@@ -105,19 +125,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
           user: user,
           isLoading: false,
           isLoggedIn: true,
+          status: AuthStatus.authenticated,
         );
       } else {
         state = state.copyWith(
           error: 'Geçersiz kullanıcı bilgileri',
+          errorMessage: 'Geçersiz kullanıcı bilgileri',
           isLoading: false,
           isLoggedIn: false,
+          status: AuthStatus.error,
         );
       }
     } catch (e) {
       state = state.copyWith(
         error: 'Giriş yapılırken bir hata oluştu: $e',
+        errorMessage: 'Giriş yapılırken bir hata oluştu: $e',
         isLoading: false,
         isLoggedIn: false,
+        status: AuthStatus.error,
       );
     }
   }
@@ -131,7 +156,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required int cityId,
     String? districtId,
   }) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: null, status: AuthStatus.authenticating);
     
     try {
       final result = await _apiService.register(
@@ -154,19 +179,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
           user: user,
           isLoading: false,
           isLoggedIn: true,
+          status: AuthStatus.authenticated,
         );
       } else {
         state = state.copyWith(
           error: 'Kayıt olurken bir hata oluştu.',
+          errorMessage: 'Kayıt olurken bir hata oluştu.',
           isLoading: false,
           isLoggedIn: false,
+          status: AuthStatus.error,
         );
       }
     } catch (e) {
       state = state.copyWith(
         error: 'Kayıt olurken bir hata oluştu: $e',
+        errorMessage: 'Kayıt olurken bir hata oluştu: $e',
         isLoading: false,
         isLoggedIn: false,
+        status: AuthStatus.error,
       );
     }
   }

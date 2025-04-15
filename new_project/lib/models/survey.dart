@@ -106,6 +106,21 @@ class Survey {
     if (options.isEmpty) return null;
     return options.reduce((a, b) => a.votes < b.votes ? a : b);
   }
+  
+  // Anketin belirli bir kullanıcıya görünür olup olmadığını kontrol eder
+  bool isVisibleToUser(String? userCityId, String? userDistrictId) {
+    // Şehir kontrolü
+    if (cityId != '0' && cityId != userCityId) {
+      return false;
+    }
+    
+    // İlçe kontrolü
+    if (districtId != null && userDistrictId != null && districtId != userDistrictId) {
+      return false;
+    }
+    
+    return true;
+  }
 
   Survey copyWith({
     String? id,

@@ -295,7 +295,7 @@ class ApiService {
   
   // Şehir anketlerini getir
   Future<List<Survey>> getCitySurveys(String cityId) async {
-    final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/surveys');
+    final url = Uri.parse('$baseUrl$apiPath/surveys?city_id=$cityId');
     final response = await http.get(
       url,
       headers: await _getHeaders(),
@@ -312,7 +312,7 @@ class ApiService {
   
   // İlçe anketlerini getir
   Future<List<Survey>> getDistrictSurveys(String districtId) async {
-    final url = Uri.parse('$baseUrl$apiPath/districts/$districtId/surveys');
+    final url = Uri.parse('$baseUrl$apiPath/surveys?district_id=$districtId');
     final response = await http.get(
       url,
       headers: await _getHeaders(),
@@ -323,6 +323,221 @@ class ApiService {
       final List<dynamic> surveysJson = data['data'] ?? [];
       return surveysJson.map((json) => Survey.fromJson(json)).toList();
     } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Kategoriler listesini getir
+  Future<List<dynamic>> getCategories() async {
+    final url = Uri.parse('$baseUrl$apiPath/categories');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data'] ?? [];
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Kategori detayını getir
+  Future<dynamic> getCategoryById(String categoryId) async {
+    final url = Uri.parse('$baseUrl$apiPath/categories/$categoryId');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data'];
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Şehir ismi getir
+  Future<String> getCityNameById(String cityId) async {
+    try {
+      final url = Uri.parse('$baseUrl$apiPath/cities/$cityId');
+      final response = await http.get(
+        url,
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['data']['name'] ?? 'Bilinmeyen Şehir';
+      } else {
+        return 'Bilinmeyen Şehir';
+      }
+    } catch (e) {
+      return 'Bilinmeyen Şehir';
+    }
+  }
+  
+  // Şehir detayını getir
+  Future<dynamic> getCityById(String cityId) async {
+    final url = Uri.parse('$baseUrl$apiPath/cities/$cityId');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data'];
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // İlçe detayını getir
+  Future<dynamic> getDistrictById(String districtId) async {
+    final url = Uri.parse('$baseUrl$apiPath/districts/$districtId');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data'];
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Filtrelenmiş gönderileri getir
+  Future<List<Post>> getFilteredPosts(Map<String, dynamic> filterParams) async {
+    // Query parametrelerini oluştur
+    final queryParams = <String, String>{};
+    
+    filterParams.forEach((key, value) {
+      if (value != null) {
+        queryParams[key] = value.toString();
+      }
+    });
+    
+    final uri = Uri.parse('$baseUrl$apiPath/posts').replace(
+      queryParameters: queryParams,
+    );
+    
+    final response = await http.get(
+      uri,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final List<dynamic> postsJson = data['data'] ?? [];
+      return postsJson.map((json) => Post.fromJson(json)).toList();
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Yorumları getir
+  Future<List<dynamic>> getCommentsByPostId(String postId) async {
+    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/comments');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data'] ?? [];
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Yorum ekle
+  Future<dynamic> addComment({
+    required String postId, 
+    required String content,
+    String? parentId
+  }) async {
+    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/comments');
+    final response = await http.post(
+      url,
+      headers: await _getHeaders(),
+      body: json.encode({
+        'content': content,
+        'parent_id': parentId,
+      }),
+    );
+    
+    if (response.statusCode == 201) {
+      final data = json.decode(response.body);
+      return data['data'];
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Gönderiyi öne çıkar
+  Future<void> highlightPost(String postId) async {
+    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/highlight');
+    final response = await http.post(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode != 200) {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Şehir profil bilgilerini getir
+  Future<dynamic> getCityProfileById(String cityId) async {
+    final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/profile');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data'];
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Kullanıcı bilgisini getir
+  Future<dynamic> getUserById(String userId) async {
+    final url = Uri.parse('$baseUrl$apiPath/users/$userId');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data'];
+    } else {
+      throw Exception(_handleErrorResponse(response));
+    }
+  }
+  
+  // Memnuniyet puanı ekle
+  Future<void> submitSatisfactionRating(String postId, int rating, {String? comment}) async {
+    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/satisfaction');
+    final response = await http.post(
+      url,
+      headers: await _getHeaders(),
+      body: json.encode({
+        'rating': rating,
+        'comment': comment,
+      }),
+    );
+    
+    if (response.statusCode != 200) {
       throw Exception(_handleErrorResponse(response));
     }
   }
