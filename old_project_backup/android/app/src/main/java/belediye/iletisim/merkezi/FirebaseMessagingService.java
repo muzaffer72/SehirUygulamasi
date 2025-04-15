@@ -69,13 +69,13 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, CHANNEL_ID)
-                        .setSmallIcon(androidx.core.R.drawable.notification_icon_background) // Geçici simge
+                        .setSmallIcon(R.drawable.ic_notification)
                         .setContentTitle(title)
                         .setContentText(messageBody)
                         .setAutoCancel(true)
                         .setSound(defaultSoundUri)
                         .setContentIntent(pendingIntent)
-                        .setColor(Color.GREEN); // Yeşil renk
+                        .setColor(getResources().getColor(R.color.primary));
 
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -88,7 +88,7 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
                     NotificationManager.IMPORTANCE_HIGH);
             channel.setDescription(CHANNEL_DESC);
             channel.enableLights(true);
-            channel.setLightColor(Color.GREEN); // Yeşil renk
+            channel.setLightColor(Color.BLUE);
             channel.enableVibration(true);
             notificationManager.createNotificationChannel(channel);
         }

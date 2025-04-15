@@ -1,0 +1,65 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:7.3.0"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20"
+        classpath "com.google.gms:google-services:4.4.1"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(':app')
+    project.configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'com.android.support'
+                    && !details.requested.name.contains('multidex')) {
+                details.useVersion "28.0.0"
+            }
+            if (details.requested.group == 'androidx.core'
+                    && !details.requested.name.contains('androidx')) {
+                details.useVersion "1.10.1"
+            }
+        }
+    }
+}
+
+gradle.projectsEvaluated {
+    subprojects {
+        afterEvaluate { project ->
+            if (project.hasProperty("android")) {
+                android {
+                    compileSdkVersion 35
+                    
+                    compileOptions {
+                        sourceCompatibility JavaVersion.VERSION_11
+                        targetCompatibility JavaVersion.VERSION_11
+                    }
+
+                    // Fix for deprecated source and target
+                    tasks.withType(JavaCompile) {
+                        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
