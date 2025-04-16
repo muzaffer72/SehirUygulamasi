@@ -207,7 +207,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: widget.post.type == PostType.problem
+                          color: _post!.type == PostType.problem
                               ? Colors.red.withOpacity(0.1)
                               : Colors.green.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
@@ -216,23 +216,23 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              widget.post.type == PostType.problem
+                              _post!.type == PostType.problem
                                   ? Icons.warning_rounded
                                   : Icons.lightbulb_outline,
-                              color: widget.post.type == PostType.problem
+                              color: _post!.type == PostType.problem
                                   ? Colors.red
                                   : Colors.green,
                               size: 14,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              widget.post.type == PostType.problem
+                              _post!.type == PostType.problem
                                   ? 'Şikayet'
                                   : 'Öneri',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
-                                color: widget.post.type == PostType.problem
+                                color: _post!.type == PostType.problem
                                     ? Colors.red
                                     : Colors.green,
                               ),
@@ -242,28 +242,28 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       ),
                       const SizedBox(width: 8),
                       
-                      if (widget.post.status != null)
+                      if (_post!.status != null)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _getStatusColor(widget.post.status!).withOpacity(0.1),
+                            color: _getStatusColor(_post!.status!).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                _getStatusIcon(widget.post.status!),
-                                color: _getStatusColor(widget.post.status!),
+                                _getStatusIcon(_post!.status!),
+                                color: _getStatusColor(_post!.status!),
                                 size: 14,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                _getStatusText(widget.post.status!),
+                                _getStatusText(_post!.status!),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
-                                  color: _getStatusColor(widget.post.status!),
+                                  color: _getStatusColor(_post!.status!),
                                 ),
                               ),
                             ],
@@ -275,7 +275,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   
                   // Post title
                   Text(
-                    widget.post.title,
+                    _post!.title,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -288,9 +288,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     children: [
                       // Author
                       FutureBuilder<User?>(
-                        future: _apiService.getUserById(widget.post.userId),
+                        future: _apiService.getUserById(_post!.userId),
                         builder: (context, snapshot) {
-                          final String authorName = widget.post.isAnonymous
+                          final String authorName = _post!.isAnonymous
                               ? 'Anonim'
                               : snapshot.hasData && snapshot.data != null
                                   ? snapshot.data!.name
@@ -308,14 +308,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       
                       // Created time
                       Text(
-                        timeago.format(widget.post.createdAt, locale: 'tr'),
+                        timeago.format(_post!.createdAt, locale: 'tr'),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 13,
                         ),
                       ),
                       
-                      if (widget.post.cityId != null) ...[
+                      if (_post!.cityId != null) ...[
                         const SizedBox(width: 8),
                         const Icon(
                           Icons.location_on,
@@ -327,9 +327,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                         // Location
                         FutureBuilder(
                           future: Future.wait([
-                            _apiService.getCityById(widget.post.cityId!),
-                            if (widget.post.districtId != null)
-                              _apiService.getDistrictById(widget.post.districtId!)
+                            _apiService.getCityById(_post!.cityId!),
+                            if (_post!.districtId != null)
+                              _apiService.getDistrictById(_post!.districtId!)
                             else
                               Future.value(null),
                           ]),
@@ -369,7 +369,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   
                   // Post content
                   Text(
-                    widget.post.content,
+                    _post!.content,
                     style: const TextStyle(
                       fontSize: 16,
                     ),
@@ -377,11 +377,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   const SizedBox(height: 16),
                   
                   // Post images
-                  if (widget.post.imageUrls != null && widget.post.imageUrls!.isNotEmpty) ...[
+                  if (_post!.imageUrls != null && _post!.imageUrls!.isNotEmpty) ...[
                     SizedBox(
                       height: 200,
                       child: PageView.builder(
-                        itemCount: widget.post.imageUrls!.length,
+                        itemCount: _post!.imageUrls!.length,
                         itemBuilder: (context, index) {
                           return InkWell(
                             onTap: () {
@@ -392,7 +392,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
                                 image: DecorationImage(
-                                  image: NetworkImage(widget.post.imageUrls![index]),
+                                  image: NetworkImage(_post!.imageUrls![index]),
                                   fit: BoxFit.cover,
                                 ),
                               ),
@@ -412,10 +412,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       _buildActionButton(
                         icon: Icons.thumb_up_outlined,
                         activeIcon: Icons.thumb_up,
-                        label: '${widget.post.likeCount}',
-                        isActive: widget.post.likeCount > 0,
+                        label: '${_post!.likeCount}',
+                        isActive: _post!.likeCount > 0,
                         onPressed: () async {
-                          await _apiService.likePost(widget.post.id);
+                          await _apiService.likePost(_post!.id);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Gönderi beğenildi')),
                           );
@@ -426,8 +426,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       _buildActionButton(
                         icon: Icons.comment_outlined,
                         activeIcon: Icons.comment,
-                        label: '${widget.post.commentCount}',
-                        isActive: widget.post.commentCount > 0,
+                        label: '${_post!.commentCount}',
+                        isActive: _post!.commentCount > 0,
                         onPressed: () {
                           // Scroll to comments
                         },
@@ -437,10 +437,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       _buildActionButton(
                         icon: Icons.star_outline,
                         activeIcon: Icons.star,
-                        label: '${widget.post.highlightCount}',
-                        isActive: widget.post.highlightCount > 0,
+                        label: '${_post!.highlightCount}',
+                        isActive: _post!.highlightCount > 0,
                         onPressed: () async {
-                          await _apiService.highlightPost(widget.post.id);
+                          await _apiService.highlightPost(_post!.id);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Gönderi öne çıkarıldı')),
                           );
@@ -463,16 +463,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   ),
                   
                   // Öncesi/Sonrası kayıtları
-                  if (widget.post.isSolved) ...[
+                  if (_post!.isSolved) ...[
                     const SizedBox(height: 24),
-                    BeforeAfterWidget(post: widget.post),
+                    BeforeAfterWidget(post: _post!),
                   ],
                   
                   // Memnuniyet değerlendirmesi
-                  if (widget.post.isSolved) ...[
+                  if (_post!.isSolved) ...[
                     const SizedBox(height: 16),
                     SatisfactionRatingWidget(
-                      post: widget.post,
+                      post: _post!,
                       onRated: (rating) {
                         // Post nesnesini değiştiremeyiz, sadece UI'yi güncelliyoruz
                         // API'ye gönderme işlemi SatisfactionRatingWidget içinde
