@@ -1,5 +1,2 @@
-package belediye.iletisim.merkezi.belediye_iletisim_merkezi
-
-import io.flutter.embedding.android.FlutterActivity
-
-class MainActivity: FlutterActivity()
+# Bu dosya kullanılmıyor 
+# MainActivity.kt dosyası belediye.iletisim.merkezi paketinde bulunmaktadır
