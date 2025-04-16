@@ -284,8 +284,8 @@ class _PostCardState extends State<PostCard> {
                           fontWeight: FontWeight.bold,
                         ),
                       )
-                    : FutureBuilder<User?>(
-                        future: _apiService.getUserById(widget.post.userId),
+                    : FutureBuilder<User>(
+                        future: _apiService.getUserById(widget.post.userId) as Future<User>,
                         builder: (context, snapshot) {
                           final userName = snapshot.hasData && snapshot.data != null
                               ? snapshot.data!.name
