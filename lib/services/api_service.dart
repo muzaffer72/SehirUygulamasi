@@ -728,7 +728,13 @@ class ApiService {
     }
   }
   
-  Future<Comment> addComment(String postId, String content, {bool isAnonymous = false, String? parentId}) async {
+  Future<Comment> addComment(
+    dynamic postId, 
+    String content, 
+    {bool isAnonymous = false, 
+    String? parentId, 
+    String? userId}
+  ) async {
     // Get user ID from token
     final token = await _getToken();
     if (token == null) {
@@ -736,14 +742,21 @@ class ApiService {
     }
     
     // Kullanıcı bilgisini al - Laravel admin paneli tarafında kullanılacak
-    final user = await getCurrentUser();
-    final userId = user?.id ?? "1"; 
+    String effectiveUserId;
+    if (userId != null && userId.isNotEmpty) {
+      // Eğer userId parametresi verilmişse, onu kullan
+      effectiveUserId = userId;
+    } else {
+      // Aksi takdirde mevcut kullanıcının ID'sini al
+      final user = await getCurrentUser();
+      effectiveUserId = user?.id ?? "1";
+    }
     
-    print('Adding comment to post ID: $postId, isAnonymous: $isAnonymous');
+    print('Adding comment to post ID: $postId, isAnonymous: $isAnonymous, userId: $effectiveUserId');
     
     final Map<String, dynamic> requestBody = {
-      'post_id': postId,
-      'user_id': userId,
+      'post_id': postId.toString(),
+      'user_id': effectiveUserId,
       'content': content,
       'is_anonymous': isAnonymous ? 1 : 0, // Laravel'de boolean 1/0 olarak bekleniyor
     };
@@ -2440,7 +2453,8 @@ class ApiService {
     }
   }
   
-  // Gönderi yorumu ekle
+  // Eski sürüm addComment fonksiyonu - kaldırıldı - (yeni sürüm yukarıdadır)
+  /* Bu metot kaldırıldı - yukarıdaki addComment metodu kullanılacak
   Future<Comment?> addComment(
     dynamic postId,
     String content, {
@@ -2453,6 +2467,7 @@ class ApiService {
         print('No auth token available for adding comment');
         return null;
       }
+  */
       
       final Map<String, dynamic> data = {
         'post_id': postId.toString(),
