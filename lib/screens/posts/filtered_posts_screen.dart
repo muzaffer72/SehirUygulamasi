@@ -4,6 +4,7 @@ import 'package:sikayet_var/models/post.dart';
 import 'package:sikayet_var/services/api_service.dart';
 import 'package:sikayet_var/widgets/post_card.dart';
 import 'package:sikayet_var/models/category.dart';
+import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
 
 class FilteredPostsScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> filterData;
@@ -144,10 +145,11 @@ class _FilteredPostsScreenState extends ConsumerState<FilteredPostsScreen> {
                     return PostCard(
                       post: post,
                       onTap: () {
-                        Navigator.pushNamed(
+                        Navigator.push(
                           context,
-                          '/post_detail',
-                          arguments: post,
+                          MaterialPageRoute(
+                            builder: (context) => PostDetailScreen(postId: post.id),
+                          ),
                         );
                       },
                       onLike: () async {

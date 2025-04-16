@@ -112,8 +112,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
       // Güncellenmiş addComment API'sini kullan
       final comment = await _apiService.addComment(
-        _post!.id,
-        content,
+        postId: _post!.id,
+        content: content,
         userId: authProvider.currentUser!.id.toString(),
       );
       

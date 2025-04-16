@@ -291,6 +291,11 @@ class CityProfileScreen extends ConsumerWidget {
                       onHighlight: () {
                         ref.read(postsProvider.notifier).highlightPost(post.id);
                       },
+                      onShare: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Paylaşım özelliği yakında eklenecek')),
+                        );
+                      },
                     );
                   },
                   childCount: cityPosts.length,
