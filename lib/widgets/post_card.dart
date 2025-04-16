@@ -287,7 +287,7 @@ class _PostCardState extends State<PostCard> {
                     : FutureBuilder<User?>(
                         future: _apiService.getUserById(widget.post.userId),
                         builder: (context, snapshot) {
-                          final userName = snapshot.hasData
+                          final userName = snapshot.hasData && snapshot.data != null
                               ? snapshot.data!.name
                               : 'Yükleniyor...';
                           
