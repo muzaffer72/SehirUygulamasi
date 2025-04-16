@@ -281,7 +281,7 @@ class CityProfileScreen extends ConsumerWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PostDetailScreen(post: post),
+                            builder: (context) => PostDetailScreen(postId: post.id),
                           ),
                         );
                       },
@@ -290,12 +290,6 @@ class CityProfileScreen extends ConsumerWidget {
                       },
                       onHighlight: () {
                         ref.read(postsProvider.notifier).highlightPost(post.id);
-                      },
-                      onShare: () {
-                        // Paylaşım işlevselliği
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Paylaşım özelliği yakında aktif olacak')),
-                        );
                       },
                     );
                   },

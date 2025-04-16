@@ -13,11 +13,11 @@ import 'package:sikayet_var/widgets/satisfaction_rating_widget.dart';
 import 'package:sikayet_var/widgets/before_after_widget.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
-  final Post post;
+  final int postId;
   
   const PostDetailScreen({
     Key? key,
-    required this.post,
+    required this.postId,
   }) : super(key: key);
 
   @override
@@ -31,13 +31,35 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   bool _isLoadingComments = false;
   bool _isSubmittingComment = false;
   bool _isAnonymousComment = false;
+  bool _isLoadingPost = true;
   
+  Post? _post;
   List<Comment> _comments = [];
   
   @override
   void initState() {
     super.initState();
-    _loadComments();
+    _loadPost();
+  }
+  
+  Future<void> _loadPost() async {
+    setState(() {
+      _isLoadingPost = true;
+    });
+    
+    try {
+      final post = await _apiService.getPostById(widget.postId);
+      setState(() {
+        _post = post;
+        _isLoadingPost = false;
+      });
+      _loadComments();
+    } catch (e) {
+      _showErrorSnackBar('Gönderi yüklenirken bir hata oluştu: $e');
+      setState(() {
+        _isLoadingPost = false;
+      });
+    }
   }
   
   @override
@@ -47,12 +69,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
   
   Future<void> _loadComments() async {
+    if (_post == null) return;
+    
     setState(() {
       _isLoadingComments = true;
     });
     
     try {
-      final comments = await _apiService.getCommentsByPostId(widget.post.id);
+      final comments = await _apiService.getCommentsByPostId(_post!.id);
       
       setState(() {
         _comments = comments;
@@ -67,6 +91,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
   
   Future<void> _submitComment() async {
+    if (_post == null) return;
+    
     final content = _commentController.text.trim();
     
     if (content.isEmpty) {
@@ -86,7 +112,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
       // Güncellenmiş addComment API'sini kullan
       final comment = await _apiService.addComment(
-        widget.post.id,
+        _post!.id,
         content,
         userId: authProvider.currentUser!.id.toString(),
       );
@@ -119,6 +145,38 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider).value;
+    
+    if (_isLoadingPost) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Gönderi Detayı'),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    
+    if (_post == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Gönderi Detayı'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Gönderi bulunamadı'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadPost,
+                child: const Text('Tekrar Dene'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     
     return Scaffold(
       appBar: AppBar(
