@@ -47,8 +47,18 @@ class CityProfileScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     CityProfile city,
-    AsyncValue<List<Post>> postsAsync,
+    dynamic postsValue,
   ) {
+    // Gelen postsValue değeri AsyncValue<List<Post>> veya List<Post> olabilir
+    AsyncValue<List<Post>> postsAsync;
+    if (postsValue is AsyncValue<List<Post>>) {
+      postsAsync = postsValue;
+    } else if (postsValue is List<Post>) {
+      postsAsync = AsyncValue.data(postsValue);
+    } else {
+      // Fallback - boş liste kullan
+      postsAsync = const AsyncValue.data([]);
+    }
     return RefreshIndicator(
       onRefresh: () async {
         ref.refresh(cityProfileProvider(cityId));

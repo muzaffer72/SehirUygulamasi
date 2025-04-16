@@ -84,6 +84,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         return;
       }
 
+      // Güncellenmiş addComment API'sini kullan
       final comment = await _apiService.addComment(
         widget.post.id,
         content,
