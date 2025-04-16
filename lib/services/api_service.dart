@@ -2350,26 +2350,62 @@ class ApiService {
     }
   }
   
+  // Yeni metod - updateUserProfileData - UserProvider için eklendi
+  Future<User?> updateUserProfileData(
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
+    print('Updating user profile data for ID: $userId');
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        print('No auth token available for user profile data update');
+        return null;
+      }
+      
+      final response = await _client.put(
+        Uri.parse('$baseUrl/api/users/$userId'),
+        body: jsonEncode(data),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': token.startsWith('Bearer ') ? token : 'Bearer $token',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData is Map<String, dynamic>) {
+          if (responseData.containsKey('data')) {
+            return User.fromJson(responseData['data']);
+          } else if (responseData.containsKey('user')) {
+            return User.fromJson(responseData['user']);
+          } else {
+            return User.fromJson(responseData);
+          }
+        }
+      } else {
+        print('Failed to update user profile data: ${response.body}');
+      }
+      
+      return null;
+    } catch (e) {
+      print('Error updating user profile data: $e');
+      return null;
+    }
+  }
+  
   // Kullanıcı konum bilgilerini güncelleme - detaylı versiyon
   Future<User?> updateUserLocationWithDetails(
-    String userId, {
-    required String cityId,
-    String? districtId,
-  }) async {
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
     print('Updating user location for ID: $userId');
     try {
       final token = await _getToken();
       if (token == null) {
         print('No auth token available for user location update');
         return null;
-      }
-      
-      final Map<String, dynamic> data = {
-        'city_id': cityId,
-      };
-      
-      if (districtId != null) {
-        data['district_id'] = districtId;
       }
       
       final response = await _client.put(

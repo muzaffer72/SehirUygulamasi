@@ -32,6 +32,7 @@ class CityProfileScreen extends ConsumerWidget {
       ),
       body: cityProfileAsync.when(
         data: (city) {
+          // Async postsAsync değerini direk geçir, tip dönüşümü metot içinde yapılacak
           return _buildCityProfile(context, ref, city, postsAsync);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
