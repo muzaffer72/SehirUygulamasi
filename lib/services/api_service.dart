@@ -1137,25 +1137,13 @@ class ApiService {
     }
   }
   
+  // Eski metod - geriye uyumluluk için kalıyor
+  // Yeni uygulamalarda submitSatisfactionResponse kullanın
   Future<bool> submitSatisfactionRating(dynamic postId, int rating) async {
-    try {
-      // postId'yi String'e dönüştür (int veya String olabilir)
-      final String postIdStr = postId.toString();
-      
-      final response = await post('api/satisfaction_rating.php', {
-        'post_id': postIdStr,
-        'rating': rating
-      });
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['success'] == true;
-      }
-      return false;
-    } catch (e) {
-      print('Error submitting satisfaction rating: $e');
-      return false;
-    }
+    print('submitSatisfactionRating (eski) - ideal olan submitSatisfactionResponse kullanımıdır');
+    // UserProvider'dan kullanıcı ID'sini almadan devam eder
+    // Sistemin giriş yapan kullanıcıyı otomatik tanıması için
+    return submitSatisfactionRatingV2(postId, rating);
   }
   
   // Öncesi/Sonrası kayıtları için metotlar
@@ -2189,7 +2177,10 @@ class ApiService {
     }
   }
   
+  // Gelişmiş memnuniyet derecesi gönderme metodu - V2
+  // İçeride kullanım için, istemcilerden submitSatisfactionResponse kullanmaları beklenir
   Future<bool> submitSatisfactionRatingV2(dynamic postId, int rating) async {
+    print('submitSatisfactionRatingV2 - ideal olan submitSatisfactionResponse kullanımıdır');
     final token = await _getToken();
     
     try {
@@ -2459,6 +2450,8 @@ class ApiService {
     }
   }
 
+  // Tavsiye edilen memnuniyet derecesi gönderme metodu
+  // Bu metodu kulllanarak memnuniyet derecelendirmesi gönderin
   Future<bool> submitSatisfactionResponse({
     required dynamic postId, 
     required dynamic userId,
