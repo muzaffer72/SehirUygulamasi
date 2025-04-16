@@ -31,7 +31,7 @@ class UserNotifier extends StateNotifier<AsyncValue<User?>> {
         
         state = const AsyncValue.loading();
         
-        final updatedUser = await _apiService.updateUserProfile(
+        final updatedUser = await _apiService.updateUserProfileData(
           user.id.toString(),
           {
             'name': name,

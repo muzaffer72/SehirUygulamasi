@@ -2284,6 +2284,7 @@ class ApiService {
 
   // Çözülmüş şikayetler için memnuniyet bildirimi gönderme
   // Kullanıcı profil bilgilerini güncelleme
+  // Eski metot adı updateUserProfile - uyumluluk için korundu
   Future<User?> updateUserProfile(
     String userId, {
     required String name,
