@@ -32,8 +32,8 @@ class ApiHelper {
       // Emülatör için 10.0.2.2 (localhost yerine)
       return 'http://10.0.2.2:9000';
     }
-    // Gerçek cihazlar için
-    return 'https://workspace.guzelimbatmanli.repl.co/api';
+    // Gerçek cihazlar için - güncel URL
+    return 'http://0.0.0.0:9000';
   }
   
   // iOS platformu için API URL'i
@@ -42,8 +42,8 @@ class ApiHelper {
     if (kDebugMode) {
       return 'http://localhost:9000';
     }
-    // Gerçek cihazlar için
-    return 'https://workspace.guzelimbatmanli.repl.co/api';
+    // Gerçek cihazlar için - güncel URL
+    return 'http://0.0.0.0:9000';
   }
   
   // API yolunu standart hale getir

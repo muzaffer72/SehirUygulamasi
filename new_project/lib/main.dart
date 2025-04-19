@@ -6,6 +6,8 @@ import 'app.dart';
 import 'services/firebase_service.dart';
 import 'services/notification_service.dart';
 import 'models/notification_model.dart';
+import 'providers/post_provider.dart';
+import 'models/post.dart';
 
 void main() async {
   // Flutter bağlamını başlat
@@ -181,126 +183,220 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
   }
   
   Widget _buildFeedTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(8),
-      itemCount: 8,
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return Card(
-            clipBehavior: Clip.antiAlias,
-            elevation: 2,
+    return Consumer(
+      builder: (context, ref, child) {
+        // API'den gönderileri al
+        final postsNotifier = ref.watch(postsProvider.notifier);
+        final posts = ref.watch(postsProvider);
+        
+        // Veri yükleme durumunu izle
+        final isLoading = ref.watch(StateProvider((ref) => false));
+        
+        // İlk yüklemede verileri çek
+        if (posts.isEmpty && !isLoading.state) {
+          isLoading.state = true;
+          Future.microtask(() async {
+            try {
+              await postsNotifier.loadPosts();
+            } finally {
+              isLoading.state = false;
+            }
+          });
+        }
+        
+        // Eğer veri yükleniyorsa veya henüz yüklenmediyse loading göster
+        if (isLoading.state) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        // Eğer hata varsa veya veri yoksa
+        if (posts.isEmpty) {
+          return Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  height: 150,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.poll_outlined,
-                          size: 40,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Şehrinizin Sorunlarını Belirleyin',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        ElevatedButton(
-                          onPressed: () {},
-                          child: const Text('Ankete Katıl'),
-                        ),
-                      ],
-                    ),
-                  ),
+                Icon(
+                  Icons.error_outline,
+                  size: 50,
+                  color: Colors.grey[500],
+                ),
+                const SizedBox(height: 16),
+                const Text('Gönderi bulunamadı'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => postsNotifier.loadPosts(),
+                  child: const Text('Tekrar Dene'),
                 ),
               ],
             ),
           );
         }
         
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: NetworkImage(
-                    'https://randomuser.me/api/portraits/men/${10 + index}.jpg'
+        // API'den gelen postları göster
+        return RefreshIndicator(
+          onRefresh: () => postsNotifier.loadPosts(),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: posts.length + 1, // +1 anket kartı için
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Card(
+                  clipBehavior: Clip.antiAlias,
+                  elevation: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 150,
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.poll_outlined,
+                                size: 40,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Şehrinizin Sorunlarını Belirleyin',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              ElevatedButton(
+                                onPressed: () {},
+                                child: const Text('Ankete Katıl'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                title: Text("Vatandaş ${index + 1}"),
-                subtitle: Text("${DateTime.now().subtract(Duration(days: index, hours: index * 3)).day} Nisan 2025"),
-                trailing: IconButton(
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: () {},
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  index % 2 == 0
-                      ? 'Mahallemizde park sorunu yaşıyoruz. Çocukların güvenle oynayabileceği bir alan yok.'
-                      : 'Çöp konteynerleri düzenli olarak boşaltılmıyor ve kötü koku yayılıyor.',
-                  style: const TextStyle(fontSize: 15),
-                ),
-              ),
-              if (index % 3 == 0)
-                Container(
-                  height: 200,
-                  margin: const EdgeInsets.all(8),
-                  color: Colors.grey[300],
-                  child: Center(
-                    child: Icon(
-                      Icons.image,
-                      size: 50,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                );
+              }
+              
+              // Asıl içerik (API'den gelen gönderi)
+              final post = posts[index - 1]; // Anket kartını hesaba katmak için -1
+              
+              // Gönderi sahibi kullanıcının baş harfi (avatar için)
+              final userInitial = post.userId.isNotEmpty ? 
+                post.userId.substring(0, 1).toUpperCase() : '?';
+              
+              // Durum ikonu belirle
+              IconData statusIcon;
+              Color statusColor;
+              
+              switch (post.status) {
+                case PostStatus.awaitingSolution:
+                  statusIcon = Icons.schedule;
+                  statusColor = Colors.orange;
+                  break;
+                case PostStatus.inProgress:
+                  statusIcon = Icons.engineering;
+                  statusColor = Colors.blue;
+                  break;
+                case PostStatus.solved:
+                  statusIcon = Icons.check_circle;
+                  statusColor = Colors.green;
+                  break;
+                case PostStatus.rejected:
+                  statusIcon = Icons.cancel;
+                  statusColor = Colors.red;
+                  break;
+              }
+              
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.thumb_up_outlined),
-                          onPressed: () {},
-                        ),
-                        Text('${index * 5 + 3}'),
-                      ],
+                    ListTile(
+                      leading: CircleAvatar(
+                        child: Text(userInitial),
+                      ),
+                      title: Text(post.title),
+                      subtitle: Text(
+                        '${post.createdAt.day} ${_getMonthName(post.createdAt.month)} ${post.createdAt.year}',
+                      ),
+                      trailing: Icon(
+                        statusIcon,
+                        color: statusColor,
+                      ),
                     ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.comment_outlined),
-                          onPressed: () {},
-                        ),
-                        Text('${index * 2 + 1}'),
-                      ],
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        post.content,
+                        style: const TextStyle(fontSize: 15),
+                      ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.share_outlined),
-                      onPressed: () {},
+                    if (post.imageUrls != null && post.imageUrls!.isNotEmpty)
+                      Container(
+                        height: 200,
+                        margin: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          image: DecorationImage(
+                            image: NetworkImage(post.imageUrls!.first),
+                            fit: BoxFit.cover,
+                            onError: (exception, stackTrace) {
+                              // Hata durumunda placeholder göster
+                            },
+                          ),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.thumb_up_outlined),
+                                onPressed: () {},
+                              ),
+                              Text('${post.likeCount}'),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.comment_outlined),
+                                onPressed: () {},
+                              ),
+                              Text('${post.commentCount}'),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.share_outlined),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              );
+            },
           ),
         );
       },
     );
+  }
+  
+  // Ay isimlerini Türkçe olarak döndüren yardımcı fonksiyon
+  String _getMonthName(int month) {
+    const months = [
+      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+    ];
+    return months[month - 1];
   }
   
   Widget _buildSurveyTab() {
