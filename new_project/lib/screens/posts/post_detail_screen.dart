@@ -136,10 +136,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   
   Future<void> _submitSatisfactionRating(int rating) async {
     try {
-      await _apiService.submitSatisfaction(
+      bool success = await _apiService.submitSatisfaction(
         postId: widget.id, 
         rating: rating
       );
+      
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Memnuniyet dereceniz gönderilemedi. Lütfen daha sonra tekrar deneyin.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
       
       if (_post != null) {
         setState(() {
