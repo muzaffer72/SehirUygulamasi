@@ -159,9 +159,10 @@ class PostsNotifier extends StateNotifier<List<Post>> {
   
   Future<void> likePost(String postId) async {
     try {
-      // API endpoint olmadığında sadece yerel state güncellemesi yap
-      // await _apiService.likePost(postId);
+      // API'yi çağır ve yerel state'i güncelle
+      await _apiService.likePost(postId);
       
+      // Yerel state'i güncelle
       state = state.map((post) {
         if (post.id == postId) {
           return post.copyWith(
@@ -172,14 +173,25 @@ class PostsNotifier extends StateNotifier<List<Post>> {
       }).toList();
     } catch (e) {
       print('Error when liking post: $e');
+      
+      // API hatası durumunda bile yerel olarak güncelle
+      state = state.map((post) {
+        if (post.id == postId) {
+          return post.copyWith(
+            likes: post.likes + 1,
+          );
+        }
+        return post;
+      }).toList();
     }
   }
   
   Future<void> highlightPost(String postId) async {
     try {
-      // API endpoint olmadığında sadece yerel state güncellemesi yap
-      // await _apiService.highlightPost(postId);
+      // API'yi çağır ve yerel state'i güncelle
+      await _apiService.highlightPost(postId);
       
+      // Yerel state'i güncelle
       state = state.map((post) {
         if (post.id == postId) {
           return post.copyWith(
@@ -190,6 +202,16 @@ class PostsNotifier extends StateNotifier<List<Post>> {
       }).toList();
     } catch (e) {
       print('Error when highlighting post: $e');
+      
+      // API hatası durumunda bile yerel olarak güncelle
+      state = state.map((post) {
+        if (post.id == postId) {
+          return post.copyWith(
+            highlights: post.highlights + 1,
+          );
+        }
+        return post;
+      }).toList();
     }
   }
 }

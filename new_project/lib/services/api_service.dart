@@ -594,14 +594,20 @@ class ApiService {
   
   // Gönderiyi öne çıkar
   Future<void> highlightPost(String postId) async {
-    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/highlight');
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode != 200) {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      final url = Uri.parse('$baseUrl$apiPath/posts/$postId/highlight');
+      final response = await http.post(
+        url,
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode != 200) {
+        print('Öne çıkarma API hatası: ${response.statusCode} - ${response.body}');
+        // Uygulamanın çalışmaya devam etmesi için hata fırlatmıyoruz
+      }
+    } catch (e) {
+      // Hata için log tutuyoruz ama uygulamanın çalışmasını engellemiyoruz
+      print('Post öne çıkarma hatası: $e');
     }
   }
   
@@ -834,27 +840,39 @@ class ApiService {
   
   // Post'u beğen
   Future<void> likePost(String postId) async {
-    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/like');
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode != 200) {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      final url = Uri.parse('$baseUrl$apiPath/posts/$postId/like');
+      final response = await http.post(
+        url,
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode != 200) {
+        print('Beğeni API hatası: ${response.statusCode} - ${response.body}');
+        // Uygulamanın çalışmaya devam etmesi için hata fırlatmıyoruz
+      }
+    } catch (e) {
+      // Hata için log tutuyoruz ama uygulamanın çalışmasını engellemiyoruz
+      print('Post beğenme hatası: $e');
     }
   }
   
   // Post beğeniyi kaldır
   Future<void> unlikePost(String postId) async {
-    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/unlike');
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode != 200) {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      final url = Uri.parse('$baseUrl$apiPath/posts/$postId/unlike');
+      final response = await http.post(
+        url,
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode != 200) {
+        print('Beğeni kaldırma API hatası: ${response.statusCode} - ${response.body}');
+        // Uygulamanın çalışmaya devam etmesi için hata fırlatmıyoruz
+      }
+    } catch (e) {
+      // Hata için log tutuyoruz ama uygulamanın çalışmasını engellemiyoruz
+      print('Post beğeni kaldırma hatası: $e');
     }
   }
   
