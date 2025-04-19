@@ -106,33 +106,27 @@ function getPosts($db) {
     
     $posts = [];
     while ($row = pg_fetch_assoc($result)) {
-        // Her gönderi için yorum sayısını al
-        $comment_query = "SELECT COUNT(*) as count FROM comments WHERE post_id = ?";
-        $comment_stmt = $db->prepare($comment_query);
-        $comment_stmt->bind_param("i", $row['id']);
-        $comment_stmt->execute();
-        $comment_result = $comment_stmt->get_result();
-        $comment_count = $comment_result->fetch_assoc()['count'];
+        // Her gönderi için yorum sayısını al - PostgreSQL için düzenlendi
+        $comment_query = "SELECT COUNT(*) as count FROM comments WHERE post_id = $1";
+        $comment_result = pg_query_params($db, $comment_query, array($row['id']));
+        $comment_count = pg_fetch_assoc($comment_result)['count'];
+        pg_free_result($comment_result);
         
-        // Her gönderi için beğeni sayısını al
-        $like_query = "SELECT COUNT(*) as count FROM user_likes WHERE post_id = ?";
-        $like_stmt = $db->prepare($like_query);
-        $like_stmt->bind_param("i", $row['id']);
-        $like_stmt->execute();
-        $like_result = $like_stmt->get_result();
-        $like_count = $like_result->fetch_assoc()['count'];
+        // Her gönderi için beğeni sayısını al - PostgreSQL için düzenlendi
+        $like_query = "SELECT COUNT(*) as count FROM user_likes WHERE post_id = $1";
+        $like_result = pg_query_params($db, $like_query, array($row['id']));
+        $like_count = pg_fetch_assoc($like_result)['count'];
+        pg_free_result($like_result);
         
-        // Medya dosyalarını al
-        $media_query = "SELECT * FROM media WHERE post_id = ?";
-        $media_stmt = $db->prepare($media_query);
-        $media_stmt->bind_param("i", $row['id']);
-        $media_stmt->execute();
-        $media_result = $media_stmt->get_result();
+        // Medya dosyalarını al - PostgreSQL için düzenlendi
+        $media_query = "SELECT * FROM media WHERE post_id = $1";
+        $media_result = pg_query_params($db, $media_query, array($row['id']));
         
         $media = [];
-        while ($media_row = $media_result->fetch_assoc()) {
+        while ($media_row = pg_fetch_assoc($media_result)) {
             $media[] = $media_row;
         }
+        pg_free_result($media_result);
         
         $row['comment_count'] = $comment_count;
         $row['like_count'] = $like_count;

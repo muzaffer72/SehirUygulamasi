@@ -248,7 +248,7 @@ class ApiService {
     // Query parametrelerini oluştur
     final queryParams = {
       'page': page.toString(),
-      'limit': limit.toString(),
+      'per_page': limit.toString(), // limit yerine per_page parametresi kullanılıyor
     };
     
     if (cityId != null) queryParams['city_id'] = cityId;
@@ -270,7 +270,8 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      final List<dynamic> postsJson = data['data'] ?? [];
+      // API yanıt formatı: { posts: [...], pagination: {...} }
+      final List<dynamic> postsJson = data['posts'] ?? [];
       return postsJson.map((json) => Post.fromJson(json)).toList();
     } else {
       throw Exception(_handleErrorResponse(response));
