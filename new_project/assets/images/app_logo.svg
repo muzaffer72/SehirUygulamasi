@@ -1,11 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <g fill="none" fill-rule="evenodd">
-    <circle fill="#3F51B5" cx="100" cy="100" r="100"/>
-    <path d="M100,40 C133.137,40 160,66.8629 160,100 C160,133.137 133.137,160 100,160 C66.8629,160 40,133.137 40,100 C40,66.8629 66.8629,40 100,40 Z M100,60 C77.9086,60 60,77.9086 60,100 C60,122.091 77.9086,140 100,140 C122.091,140 140,122.091 140,100 C140,77.9086 122.091,60 100,60 Z" fill="#FFFFFF" fill-rule="nonzero"/>
-    <text font-family="Arial-BoldMT, Arial" font-size="36" font-weight="bold" fill="#FFFFFF">
-      <tspan x="70" y="90">BEL</tspan>
-    </text>
-    <path d="M80,100 L120,100 L120,125 C120,133.284 113.284,140 105,140 L95,140 C86.7157,140 80,133.284 80,125 L80,100 Z" fill="#FFFFFF" fill-rule="nonzero"/>
-  </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="none">
+  <rect width="200" height="200" rx="30" fill="#1976D2"/>
+  <circle cx="100" cy="80" r="30" fill="white"/>
+  <path d="M150 140C150 126.739 144.732 114.021 135.355 104.645C125.979 95.2678 113.261 90 100 90C86.7392 90 74.0215 95.2678 64.6447 104.645C55.2678 114.021 50 126.739 50 140" stroke="white" stroke-width="15" stroke-linecap="round"/>
+  <path d="M160 60L140 60" stroke="white" stroke-width="10" stroke-linecap="round"/>
+  <path d="M60 60L40 60" stroke="white" stroke-width="10" stroke-linecap="round"/>
+  <path d="M100 40L100 20" stroke="white" stroke-width="10" stroke-linecap="round"/>
 </svg>

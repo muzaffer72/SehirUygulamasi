@@ -61,6 +61,9 @@ flutter:
   
   assets:
     - assets/images/
+    - assets/images/app_logo.png
+    - assets/images/default_avatar.png
+    - assets/images/app_logo.svg
     - assets/icons/
     - assets/fonts/
     - assets/party_logos/
