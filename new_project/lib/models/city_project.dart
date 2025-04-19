@@ -1,34 +1,55 @@
 class CityProject {
   final int id;
   final String name;
-  final String? description;
-  final String? imageUrl;
-  final String? status; // 'tamamlandı', 'devam ediyor', 'planlama', 'ertelendi'
+  final String description;
+  final String type;
+  final String? status;
+  final String? statusDisplay;
   final String? startDate;
   final String? endDate;
-  final String? budget;
+  final double? budget;
+  final String? imageUrl;
 
   CityProject({
     required this.id,
     required this.name,
-    this.description,
-    this.imageUrl,
+    required this.description,
+    required this.type,
     this.status,
+    this.statusDisplay,
     this.startDate,
     this.endDate,
     this.budget,
+    this.imageUrl,
   });
 
   factory CityProject.fromJson(Map<String, dynamic> json) {
     return CityProject(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      imageUrl: json['imageUrl'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      type: json['type'] ?? 'other',
       status: json['status'],
-      startDate: json['startDate'],
-      endDate: json['endDate'],
-      budget: json['budget'],
+      statusDisplay: json['status_display'],
+      startDate: json['start_date'],
+      endDate: json['end_date'],
+      budget: json['budget']?.toDouble(),
+      imageUrl: json['image_url'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'type': type,
+      'status': status,
+      'status_display': statusDisplay,
+      'start_date': startDate,
+      'end_date': endDate,
+      'budget': budget,
+      'image_url': imageUrl,
+    };
   }
 }

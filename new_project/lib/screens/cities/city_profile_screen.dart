@@ -5,6 +5,10 @@ import '../../widgets/city_priority_chart.dart';
 import '../../widgets/monthly_performance_card.dart';
 import '../../widgets/city_stats_chart.dart';
 import '../../utils/ticker_fix.dart';
+import '../../models/city_service.dart';
+import '../../models/city_project.dart';
+import '../../models/city_event.dart';
+import '../../models/city_stat.dart';
 
 class CityProfileScreen extends StatefulWidget {
   final CityProfile cityProfile;
