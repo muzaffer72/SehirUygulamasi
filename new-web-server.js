@@ -457,19 +457,43 @@ app.get('/mobile', async (req, res) => {
     console.log('Gönderiler API\'den başarıyla çekildi');
     
     // API yanıtından gönderileri al
-    const posts = postsData.posts || [];
+    const posts = Array.isArray(postsData) ? postsData : (postsData.posts || []);
     
     if (posts.length > 0) {
       // Her bir gönderi için HTML oluştur
-      postsHtml = posts.map(post => `
+      postsHtml = posts.map(post => {
+        // Gönderinin kullanıcı bilgilerini al
+        const user = post.user || {};
+        const username = user.username || post.username || 'İsimsiz';
+        const displayName = user.name || post.user_name || username;
+        const profileImageUrl = user.profile_image_url || post.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
+        
+        // Şehir ve ilçe bilgilerini al
+        const cityName = post.city_name || 'Bilinmeyen Şehir';
+        const districtName = post.district_name || '';
+        const locationText = districtName ? `${cityName}, ${districtName}` : cityName;
+        
+        // Gönderi içeriği ve etkileşim bilgileri
+        const likes = post.likes || post.like_count || 0;
+        const commentCount = post.comment_count || 0;
+        const postDate = formatDate(post.created_at);
+        
+        return `
         <div class="post-card">
           <div class="post-header">
             <div class="post-avatar">
-              <span>${post.user_name ? post.user_name.charAt(0) : '?'}</span>
+              <img src="${profileImageUrl}" alt="${displayName}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random'">
             </div>
             <div class="post-info">
-              <div class="post-author">${post.user_name || 'İsimsiz Kullanıcı'}</div>
-              <div class="post-meta">${post.city_name || ''} ${post.district_name ? '- ' + post.district_name : ''} • ${formatDate(post.created_at)}</div>
+              <div class="post-author-container">
+                <div class="post-author">${displayName}</div>
+                <div class="post-username">@${username}</div>
+              </div>
+              <div class="post-location-container" onclick="window.location.href='/city/${post.city_id}'">
+                <i class="location-icon">📍</i>
+                <div class="post-location-text">${locationText}</div>
+              </div>
+              <div class="post-date">${postDate}</div>
             </div>
           </div>
           <div class="post-content">
@@ -480,22 +504,27 @@ app.get('/mobile', async (req, res) => {
                 <img src="${post.media[0].url}" class="post-image" alt="Gönderi resmi">
               </div>` : ''}
           </div>
+          <div class="post-category">
+            <i class="category-icon">${post.category_icon || '📋'}</i>
+            <span>${post.category_name || 'Genel'}</span>
+          </div>
           <div class="post-actions">
             <div class="post-action">
               <i class="action-icon">👍</i>
-              <span>${post.like_count || 0}</span>
+              <span>${likes}</span>
             </div>
             <div class="post-action">
               <i class="action-icon">💬</i>
-              <span>${post.comment_count || 0}</span>
+              <span>${commentCount}</span>
             </div>
-            <div class="post-action">
+            <div class="post-action status-indicator status-${post.status}">
               <i class="action-icon">${getStatusIcon(post.status)}</i>
               <span>${getStatusText(post.status)}</span>
             </div>
           </div>
         </div>
-      `).join('');
+        `;
+      }).join('');
     } else {
       postsHtml = `
         <div class="empty-state">
@@ -568,39 +597,80 @@ app.get('/mobile', async (req, res) => {
       /* Gönderi kartları için stiller */
       .post-card {
         background-color: white;
-        border-radius: 8px;
+        border-radius: 12px;
         margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        box-shadow: 0 1px 5px rgba(0,0,0,0.08);
         overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .post-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.12);
       }
       .post-header {
         display: flex;
         padding: 12px 16px;
-        align-items: center;
+        align-items: flex-start;
         border-bottom: 1px solid #f0f0f0;
       }
       .post-avatar {
-        width: 40px;
-        height: 40px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
-        background-color: #1976d2;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
+        background-color: #f5f5f5;
+        overflow: hidden;
         margin-right: 12px;
+        flex-shrink: 0;
+      }
+      .post-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
       .post-info {
         flex-grow: 1;
       }
-      .post-author {
-        font-weight: 500;
-        margin-bottom: 2px;
+      .post-author-container {
+        display: flex;
+        align-items: baseline;
+        margin-bottom: 4px;
+        flex-wrap: wrap;
       }
-      .post-meta {
-        font-size: 12px;
+      .post-author {
+        font-weight: 600;
+        margin-right: 6px;
+        font-size: 15px;
+        color: #212121;
+      }
+      .post-username {
+        font-size: 14px;
         color: #757575;
+        margin-right: 6px;
+      }
+      .post-date {
+        font-size: 12px;
+        color: #9e9e9e;
+        margin-top: 4px;
+      }
+      .post-location-container {
+        display: flex;
+        align-items: center;
+        margin-top: 4px;
+        font-size: 13px;
+        color: #1976d2;
+        cursor: pointer;
+      }
+      .location-icon {
+        margin-right: 4px;
+        font-style: normal;
+        font-size: 14px;
+      }
+      .post-location-text {
+        text-decoration: none;
+        color: #1976d2;
+      }
+      .post-location-container:hover .post-location-text {
+        text-decoration: underline;
       }
       .post-content {
         padding: 16px;
@@ -639,6 +709,39 @@ app.get('/mobile', async (req, res) => {
       .action-icon {
         margin-right: 6px;
         font-style: normal;
+      }
+      
+      /* Kategori stili */
+      .post-category {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        font-size: 13px;
+        background-color: #f9f9f9;
+        color: #555;
+        border-top: 1px solid #f0f0f0;
+      }
+      .category-icon {
+        margin-right: 8px;
+        font-style: normal;
+        color: #1976d2;
+      }
+      
+      /* Durum göstergeleri */
+      .status-indicator {
+        font-weight: 500;
+      }
+      .status-awaitingSolution {
+        color: #ff9800;
+      }
+      .status-inProgress {
+        color: #2196f3;
+      }
+      .status-solved {
+        color: #4caf50;
+      }
+      .status-rejected {
+        color: #f44336;
       }
       
       /* Boş durum ve hata durumu için stiller */
@@ -950,8 +1053,9 @@ app.get('/mobile', async (req, res) => {
       </div>
       
       <div class="screen-selector">
+        <button class="screen-button" data-screen="home-screen" onclick="showScreen('home-screen')">Ana Sayfa</button>
         <button class="screen-button active" data-screen="notifications-screen" onclick="showScreen('notifications-screen')">Bildirimler</button>
-        <button class="screen-button" data-screen="settings-screen" onclick="showScreen('settings-screen')">Bildirim Ayarları</button>
+        <button class="screen-button" data-screen="settings-screen" onclick="showScreen('settings-screen')">Ayarlar</button>
       </div>
       
       <div class="device-wrapper">
@@ -964,6 +1068,11 @@ app.get('/mobile', async (req, res) => {
             </div>
             
             <div class="mobile-content">
+              <!-- Ana Sayfa Ekranı - Gönderiler -->
+              <div id="home-screen" class="screen">
+                ${postsHtml}
+              </div>
+            
               <!-- Bildirimler Ekranı -->
               <div id="notifications-screen" class="screen active">
                 <div class="notification-item unread">
