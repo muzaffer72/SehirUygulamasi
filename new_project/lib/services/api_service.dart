@@ -11,13 +11,7 @@ import 'package:belediye_iletisim_merkezi/models/category.dart';
 import 'package:belediye_iletisim_merkezi/models/comment.dart';
 import 'package:belediye_iletisim_merkezi/utils/api_helper.dart';
 import 'package:belediye_iletisim_merkezi/utils/api_key_manager.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-// ApiService Provider - ApiService nesnesi sağlar
-final apiServiceProvider = Provider<ApiService>((ref) {
-  return ApiService();
-});
 
 class ApiService {
   final String baseUrl = ApiHelper.getBaseUrl();

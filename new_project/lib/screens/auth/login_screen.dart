@@ -193,7 +193,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       
                       // Giriş yap butonu
                       ElevatedButton(
-                        onPressed: authState.isLoading ? null : _login,
+                        onPressed: authState.status == AuthStatus.authenticating ? null : _login,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           minimumSize: const Size(double.infinity, 50),
@@ -201,7 +201,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: authState.isLoading
+                        child: authState.status == AuthStatus.authenticating
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,
