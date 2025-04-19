@@ -209,7 +209,7 @@ class ApiService {
   Future<List<City>> getCitiesAsObjects() async {
     final uri = Uri.parse('$baseUrl$apiPath').replace(
       queryParameters: {
-        'endpoint': 'get_cities',
+        'endpoint': 'cities',
       },
     );
     
