@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/city_profile.dart';
 import '../../providers/city_profile_provider.dart';
-import '../../providers/post_provider.dart';
+import '../../providers/post_provider.dart' as post_provider;
 import '../../widgets/post_card.dart';
 import '../posts/post_detail_screen.dart';
 import '../../models/post.dart';
@@ -54,7 +54,7 @@ class CityProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cityProfileAsync = ref.watch(cityProfileProvider(cityId));
-    final posts = ref.watch(postsProvider);
+    final posts = ref.watch(post_provider.postsProvider);
     // Convert to AsyncValue for compatibility
     final postsAsync = AsyncValue.data(posts);
     
@@ -81,7 +81,7 @@ class CityProfileScreen extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: () async {
         ref.refresh(cityProfileProvider(cityId));
-        ref.read(postsProvider.notifier).filterPosts(cityId: cityId);
+        ref.read(post_provider.postsProvider.notifier).filterPosts(cityId: cityId);
       },
       child: CustomScrollView(
         slivers: [
@@ -262,7 +262,7 @@ class CityProfileScreen extends ConsumerWidget {
                       TextButton(
                         onPressed: () {
                           // Filter posts by city
-                          ref.read(postsProvider.notifier).filterPosts(cityId: cityId);
+                          ref.read(post_provider.postsProvider.notifier).filterPosts(cityId: cityId);
                         },
                         child: const Text('Hepsini Göster'),
                       ),
@@ -295,7 +295,7 @@ class CityProfileScreen extends ConsumerWidget {
                     return PostCard(
                       post: post,
                       onTap: () {
-                        ref.read(selectedPostProvider.notifier).state = post;
+                        ref.read(post_provider.selectedPostProvider.notifier).state = post;
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -304,7 +304,7 @@ class CityProfileScreen extends ConsumerWidget {
                         );
                       },
                       onLike: () {
-                        ref.read(postsProvider.notifier).likePost(post.id);
+                        ref.read(post_provider.postsProvider.notifier).likePost(post.id);
                       },
                       onHighlight: () {
                         // Öne çıkarma işlevi
