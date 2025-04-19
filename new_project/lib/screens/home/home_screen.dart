@@ -168,66 +168,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       
-      // Twitter tarzı bottom navigation bar
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: selectedIndex,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        elevation: 8.0,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Ana Sayfa',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
-            label: 'Keşfet',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.location_city_outlined),
-            activeIcon: Icon(Icons.location_city),
-            label: 'Şehirler',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.poll_outlined),
-            activeIcon: Icon(Icons.poll),
-            label: 'Anketler',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
-        onTap: (index) {
-          // Gerçek bir uygulamada farklı sayfalara yönlendirme yapılır
-          if (index == 0) {
-            // Zaten ana sayfadayız
-          } else if (index == 1) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Keşfet sayfası yakında!'))
-            );
-          } else if (index == 2) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Şehirler sayfası yakında!'))
-            );
-          } else if (index == 3) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Anketler sayfası yakında!'))
-            );
-          } else if (index == 4) {
-            Navigator.push(
-              context, 
-              MaterialPageRoute(builder: (context) => const ProfileScreen())
-            );
-          }
-        },
-      ),
+      // Bu çift bottom navigation bar'ı kaldırdık
+      // Ana uygulama içindeki genel bottom navigation bar kullanılacak
       
       // Gönderi oluşturma FAB - Twitter benzeri
       floatingActionButton: CreatePostFAB(
