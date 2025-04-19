@@ -1,242 +1,162 @@
 <?php
-// Hata raporlama ayarlarını yükle - bu API yanıtlarında hata mesajlarının görünmesini engeller
-require_once '../php_error_config.php';
+// ŞikayetVar API Endpoint Yönlendirici
+// Bu dosya, işe admin-panel/api/ olarak gelen istekleri doğru komut dosyalarına yönlendirir
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Content-Type: application/json");
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-API-KEY');
 
-// Preflight OPTIONS istekleri için hemen yanıt
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
+// İhtiyaç duyulan veri paylaşımı için oturum başlat
+session_start();
 
-// Veritabanı bağlantısı
+// Veritabanı bağlantısını ekle
 require_once '../db_connection.php';
-$db = $conn;
 
-// Yardımcı fonksiyonlar
-function sendResponse($data, $statusCode = 200) {
-    http_response_code($statusCode);
-    echo json_encode($data);
-    exit();
+// API anahtarını doğrulama
+function verifyApiKey() {
+    global $db;
+    
+    // API anahtarını al
+    $api_key = isset($_SERVER['HTTP_X_API_KEY']) ? $_SERVER['HTTP_X_API_KEY'] : null;
+    
+    if (!$api_key) {
+        sendError('API anahtarı gerekli', 401);
+        return false;
+    }
+    
+    // Veritabanında API anahtarını kontrol et
+    $query = "SELECT api_key FROM settings WHERE api_key = ?";
+    $stmt = $db->prepare($query);
+    $stmt->bind_param("s", $api_key);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if (!$result || $result->num_rows() == 0) {
+        sendError('Geçersiz API anahtarı', 401);
+        return false;
+    }
+    
+    return true;
 }
 
 function sendError($message, $statusCode = 400) {
     http_response_code($statusCode);
     echo json_encode(['error' => $message]);
-    exit();
+    exit;
 }
 
-// API endpoint'lerini işle
-$request_uri = $_SERVER['REQUEST_URI'];
-$path = parse_url($request_uri, PHP_URL_PATH);
-$segments = explode('/', trim($path, '/'));
+function sendResponse($data, $statusCode = 200) {
+    http_response_code($statusCode);
+    
+    // Eğer $data bağımsız bir dizi değilse, onu bir API yanıtı formatına çevir
+    if (!isset($data['endpoint']) && !isset($data['error'])) {
+        $data = [
+            'status' => 'success',
+            'data' => $data
+        ];
+    }
+    
+    echo json_encode($data);
+    exit;
+}
 
-// API alt dizinini bul (admin-panel/api sonrası kısmı)
-$api_index = array_search('api', $segments);
-if ($api_index !== false) {
-    $segments = array_slice($segments, $api_index + 1);
+// Gelen istek URL'ini ayrıştır
+$url_parts = parse_url($_SERVER['REQUEST_URI']);
+$path = $url_parts['path'];
+$path_parts = explode('/', trim($path, '/'));
+
+// İlk olarak query string endpoint parametresini kontrol et (yeni format)
+if (isset($_GET['endpoint'])) {
+    $endpoint = $_GET['endpoint'];
+    $id = $_GET['id'] ?? null;
 } else {
-    sendError("Invalid API path", 404);
+    // Klasik path bazlı format (eski stil)
+    // URL'den gereksiz parçaları kaldır 
+    foreach ($path_parts as $index => $part) {
+        if ($part === 'api') {
+            $endpoint = isset($path_parts[$index + 1]) ? $path_parts[$index + 1] : '';
+            $id = isset($path_parts[$index + 2]) ? $path_parts[$index + 2] : null;
+            break;
+        }
+    }
+    
+    if (!isset($endpoint)) {
+        $endpoint = '';
+    }
 }
 
-// Endpoint'i belirle
-$endpoint = $segments[0] ?? '';
-$id = $segments[1] ?? null;
-$action = $segments[2] ?? null;
+// Yetkilendirme kontrolü
+if (!verifyApiKey()) {
+    exit; // verifyApiKey zaten bir hata mesajı gönderdi
+}
 
-// HTTP metodu al
-$method = $_SERVER['REQUEST_METHOD'];
-
-// İstek gövdesini al (JSON)
-$json_data = file_get_contents('php://input');
-$request_data = json_decode($json_data, true) ?? [];
-
-// Rotaları işle
+// Endpoint'e göre doğru dosyayı dahil et
 switch ($endpoint) {
-    case 'login':
-        require_once 'routes/auth.php';
-        handleLogin($db, $request_data);
-        break;
-        
-    case 'register':
-        require_once 'routes/auth.php';
-        handleRegister($db, $request_data);
-        break;
-        
-    case 'logout':
-        require_once 'routes/auth.php';
-        handleLogout($db);
-        break;
-        
-    case 'user':
-        require_once 'routes/auth.php';
-        handleGetCurrentUser($db);
-        break;
-        
-    case 'users':
-        require_once 'routes/users.php';
-        
-        if ($method === 'GET') {
-            if ($id) {
-                getUserById($db, $id);
-            } else {
-                getUsers($db);
-            }
-        } elseif ($method === 'PUT' && $id) {
-            if ($action === 'location') {
-                updateUserLocation($db, $id, $request_data);
-            } else {
-                updateUser($db, $id, $request_data);
-            }
-        } else {
-            sendError("Invalid method for users endpoint", 405);
-        }
-        break;
-        
     case 'cities':
         require_once 'routes/cities.php';
-        
-        if ($method === 'GET') {
-            if ($id) {
-                if ($action === 'profile') {
-                    getCityProfile($db, $id);
-                } else {
-                    getCityById($db, $id);
-                }
-            } else {
-                getCities($db);
-            }
-        } else {
-            sendError("Invalid method for cities endpoint", 405);
-        }
         break;
         
     case 'districts':
         require_once 'routes/districts.php';
-        
-        if ($method === 'GET') {
-            if ($id) {
-                getDistrictById($db, $id);
-            } else {
-                // Query parametresi olarak şehir ID kontrolü
-                $city_id = $_GET['city_id'] ?? null;
-                if ($city_id) {
-                    getDistrictsByCityId($db, $city_id);
-                } else {
-                    getDistricts($db);
-                }
-            }
-        } else {
-            sendError("Invalid method for districts endpoint", 405);
-        }
         break;
         
     case 'categories':
         require_once 'routes/categories.php';
-        
-        if ($method === 'GET') {
-            if ($id) {
-                getCategoryById($db, $id);
-            } else {
-                getCategories($db);
-            }
-        } else {
-            sendError("Invalid method for categories endpoint", 405);
-        }
         break;
         
     case 'posts':
         require_once 'routes/posts.php';
-        
-        if ($method === 'GET') {
-            if ($id) {
-                getPostById($db, $id);
-            } else {
-                getPosts($db);
-            }
-        } elseif ($method === 'POST') {
-            createPost($db, $request_data);
-        } elseif ($method === 'PUT' && $id) {
-            updatePost($db, $id, $request_data);
-        } elseif ($method === 'DELETE' && $id) {
-            deletePost($db, $id);
-        } else {
-            sendError("Invalid method for posts endpoint", 405);
-        }
         break;
         
-    case 'comments':
-        require_once 'routes/comments.php';
+    case 'users':
+        require_once 'routes/users.php';
+        break;
         
-        if ($method === 'GET') {
-            // Query parametresi olarak post ID kontrolü
-            $post_id = $_GET['post_id'] ?? null;
-            if ($post_id) {
-                getCommentsByPostId($db, $post_id);
-            } else {
-                sendError("Post ID required for comments", 400);
-            }
-        } elseif ($method === 'POST') {
-            addComment($db, $request_data);
-        } else {
-            sendError("Invalid method for comments endpoint", 405);
-        }
+    case 'auth':
+        require_once 'routes/auth.php';
+        break;
+        
+    case 'search_suggestions':
+        require_once 'routes/search_suggestions.php';
+        break;
+        
+    case 'banned_words':
+        require_once 'routes/banned_words.php';
         break;
         
     case 'surveys':
         require_once 'routes/surveys.php';
-        
-        if ($method === 'GET') {
-            if ($id) {
-                getSurveyById($db, $id);
-            } else {
-                // Filtre parametreleri kontrolü
-                $city_id = $_GET['city_id'] ?? null;
-                $district_id = $_GET['district_id'] ?? null;
-                $scope_type = $_GET['scope_type'] ?? null;
-                
-                getSurveys($db, $city_id, $district_id, $scope_type);
-            }
-        } else {
-            sendError("Invalid method for surveys endpoint", 405);
-        }
         break;
         
-    case 'banned-words':
-        require_once 'routes/banned_words.php';
+    case 'satisfaction_rating':
+        require_once 'routes/satisfaction_rating.php';
+        break;
         
-        if ($method === 'GET') {
-            getBannedWords($db);
-        } elseif ($method === 'POST') {
-            addBannedWord($db, $request_data);
-        } elseif ($method === 'DELETE') {
-            removeBannedWord($db, $request_data);
-        } else {
-            sendError("Invalid method for banned-words endpoint", 405);
-        }
+    case 'statistics':
+        require_once 'routes/statistics.php';
         break;
         
     case 'parties':
-        // Parti verilerini yönet
+        // Siyasi parti API yönlendirmesi
         require_once 'routes/parties.php';
         break;
         
-    case 'search':
-        // Doğrudan search.php dosyasını çağır
-        include 'search.php';
-        exit();
-        break;
-        
-    case 'search_suggestions':
-        // Doğrudan search_suggestions.php dosyasını çağır
-        include 'search_suggestions.php';
-        exit();
-        break;
-        
     default:
-        sendError("Endpoint not found: $endpoint", 404);
+        // API bilgi sayfası
+        $available_endpoints = [
+            'cities', 'districts', 'categories', 'posts', 'users', 'auth',
+            'search_suggestions', 'banned_words', 'surveys', 'satisfaction_rating',
+            'statistics', 'parties'
+        ];
+        
+        sendResponse([
+            'name' => 'ŞikayetVar API',
+            'version' => '1.0',
+            'description' => 'ŞikayetVar mobil uygulaması için RESTful API',
+            'available_endpoints' => $available_endpoints,
+            'documentation' => '/api-docs',
+            'status' => 'online',
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
 }
