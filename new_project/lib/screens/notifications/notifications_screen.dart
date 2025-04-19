@@ -76,8 +76,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     
     try {
       final authState = ref.read(authProvider);
+      final apiService = ref.read(apiServiceProvider);
+      
       if (authState.user != null) {
-        await _apiService.markNotificationAsRead(
+        await apiService.markNotificationAsRead(
           notification.id,
           authState.user!.id,
         );
@@ -110,8 +112,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     
     try {
       final authState = ref.read(authProvider);
+      final apiService = ref.read(apiServiceProvider);
+      
       if (authState.user != null) {
-        await _apiService.markAllNotificationsAsRead(
+        await apiService.markAllNotificationsAsRead(
           authState.user!.id,
         );
         

@@ -1,8 +1,19 @@
 import 'package:belediye_iletisim_merkezi/models/post.dart';
 import 'package:belediye_iletisim_merkezi/services/api_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
 
 class PostService {
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
+  
+  // Constructor that takes an ApiService instance
+  PostService(this._apiService);
+  
+  // Factory constructor to create PostService from a ProviderRef
+  factory PostService.fromRef(ProviderRef ref) {
+    final apiService = ref.read(apiServiceProvider);
+    return PostService(apiService);
+  }
   
   // Get all posts
   Future<List<Post>> getPosts() async {
