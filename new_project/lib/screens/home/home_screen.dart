@@ -45,7 +45,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
     
     try {
-      await ref.read(postsProvider.notifier).loadPosts();
+      await ref.read(post_provider.postsProvider.notifier).loadPosts();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -80,7 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(post_provider.categoryFilterProvider.notifier).state = categoryId;
       
       // Apply filters
-      await ref.read(postsProvider.notifier).filterPosts(
+      await ref.read(post_provider.postsProvider.notifier).filterPosts(
         cityId: cityId,
         districtId: districtId,
         categoryId: categoryId,
@@ -113,8 +113,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   
   @override
   Widget build(BuildContext context) {
-    final posts = ref.watch(postsProvider);
-    final filters = ref.watch(postFiltersProvider);
+    final posts = ref.watch(post_provider.postsProvider);
+    final filters = ref.watch(post_provider.postFiltersProvider);
     final selectedIndex = 0; // Default ana ekran sekmesi
     
     return Scaffold(
@@ -255,7 +255,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
-              child: FilterBar(
+              child: filter_widgets.FilterBar(
                 onFilterApplied: (cityId, districtId, categoryId) {
                   _applyFilters(
                     cityId: cityId,
@@ -307,12 +307,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 );
                               },
                               onLike: () {
-                                ref.read(postsProvider.notifier).likePost(post.id);
+                                ref.read(post_provider.postsProvider.notifier).likePost(post.id);
                                 // Küçük bir dokunsal geri bildirim de ekleyelim
                                 HapticFeedback.lightImpact();
                               },
                               onHighlight: () {
-                                ref.read(postsProvider.notifier).highlightPost(post.id);
+                                ref.read(post_provider.postsProvider.notifier).highlightPost(post.id);
                                 HapticFeedback.mediumImpact();
                               },
                             );
