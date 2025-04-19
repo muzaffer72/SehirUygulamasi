@@ -138,9 +138,19 @@ $categories = [
 
 // Parse request
 $method = $_SERVER['REQUEST_METHOD'];
-$request = explode('/', trim($_SERVER['PATH_INFO'] ?? '', '/'));
-$endpoint = $request[0] ?? null;
-$id = $request[1] ?? null;
+$endpoint = $_GET['endpoint'] ?? null;
+
+// Eski stil endpoint çözümlemesini de destekle
+if (empty($endpoint) && isset($_SERVER['PATH_INFO'])) {
+    $request = explode('/', trim($_SERVER['PATH_INFO'] ?? '', '/'));
+    $endpoint = $request[0] ?? null;
+    $id = $request[1] ?? null;
+} else {
+    $id = $_GET['id'] ?? ($_GET['post_id'] ?? ($_GET['user_id'] ?? ($_GET['city_id'] ?? ($_GET['survey_id'] ?? null))));
+}
+
+// Debug bilgisi ekle
+error_log("API isteği: Method=$method, Endpoint=$endpoint, ID=$id, Query=" . json_encode($_GET));
 
 // Handle requests
 switch ($method) {

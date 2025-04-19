@@ -192,15 +192,39 @@ app.use('/api', async (req, res) => {
   
   try {
     // Admin panel API'sine yönlendirme (parties hariç diğer endpointler için)
-    // API endpoint'in doğru olduğundan emin ol - eğer url /api ile başlıyorsa kaldır
-    // çünkü zaten route içindeyiz ve admin panel tarafında /api prefix'i var
     let apiPath = req.url;
     if (apiPath.startsWith('/api/')) {
       apiPath = apiPath.substring(4); // '/api/' kısmını kaldır
       console.log(`API yolu düzeltildi: ${apiPath}`);
     }
     
-    const targetUrl = `http://0.0.0.0:3001/api${apiPath}`;
+    // URL'yi parse et ve query parametrelerini analiz et
+    let endpoint = null;
+    const url = new URL(`http://localhost${apiPath}`);
+    const queryParams = url.searchParams;
+    
+    // URL'den endpoint parametresini çıkar
+    if (queryParams.has('endpoint')) {
+      endpoint = queryParams.get('endpoint');
+      console.log(`Endpoints parametresi tespit edildi: ${endpoint}`);
+    } else {
+      // Path bazlı eski stil API istekleri için path'ten endpoint'i çıkar
+      const pathParts = url.pathname.split('/').filter(part => part.length > 0);
+      endpoint = pathParts[0];
+      console.log(`URL path'ten endpoint tespit edildi: ${endpoint}`);
+    }
+    
+    // Admin panel URL'sini oluştur
+    let targetUrl = '';
+    
+    if (endpoint) {
+      // Yeni API formatı için query string yapısını koru
+      targetUrl = `http://0.0.0.0:3001/api${apiPath}`;
+    } else {
+      // Klasik path bazlı yapıyı hedefle
+      targetUrl = `http://0.0.0.0:3001/api${url.pathname}`;
+    }
+    
     console.log(`İstek yönlendiriliyor: ${targetUrl}`);
     
     // İstek başlıklarını hazırla
