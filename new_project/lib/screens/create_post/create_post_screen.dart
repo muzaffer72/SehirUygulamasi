@@ -27,6 +27,57 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   bool _isAnonymous = false;
   bool _isLoading = false;
   
+  // API verileri
+  List<dynamic> _cities = [];
+  List<dynamic> _districts = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadCities();
+  }
+  
+  // Şehirleri API'den yükle
+  void _loadCities() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final apiService = ref.read(apiServiceProvider);
+      final cities = await apiService.getCities();
+      
+      setState(() {
+        _cities = cities;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Şehirler yüklenirken hata: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+  
+  // İlçeleri API'den yükle
+  void _loadDistricts(String cityId) async {
+    setState(() {
+      _districts = [];
+      _selectedDistrictId = null;
+    });
+    
+    try {
+      final apiService = ref.read(apiServiceProvider);
+      final districts = await apiService.getDistrictsByCityId(cityId);
+      
+      setState(() {
+        _districts = districts;
+      });
+    } catch (e) {
+      print('İlçeler yüklenirken hata: $e');
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     final apiService = ref.watch(apiServiceProvider);
@@ -85,19 +136,22 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       ),
                       isExpanded: true,
                       value: _selectedCityId,
-                      items: const [
-                        // Şimdilik demo şehirler
-                        DropdownMenuItem(value: '1', child: Text('İstanbul')),
-                        DropdownMenuItem(value: '2', child: Text('Ankara')),
-                        DropdownMenuItem(value: '3', child: Text('İzmir')),
-                        DropdownMenuItem(value: '4', child: Text('Bursa')),
-                        DropdownMenuItem(value: '5', child: Text('Antalya')),
-                      ],
+                      items: _cities.map<DropdownMenuItem<String>>((city) {
+                        return DropdownMenuItem<String>(
+                          value: city.id.toString(),
+                          child: Text(city.name),
+                        );
+                      }).toList(),
                       onChanged: (value) {
                         setState(() {
                           _selectedCityId = value;
                           // Şehir değişince ilçe sıfırlanmalı
                           _selectedDistrictId = null;
+                          
+                          // İlçeleri yükle
+                          if (value != null) {
+                            _loadDistricts(value);
+                          }
                         });
                       },
                       validator: (value) {
@@ -118,12 +172,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                         ),
                         isExpanded: true,
                         value: _selectedDistrictId,
-                        items: const [
-                          // Demo ilçeler
-                          DropdownMenuItem(value: '101', child: Text('Kadıköy')),
-                          DropdownMenuItem(value: '102', child: Text('Beşiktaş')),
-                          DropdownMenuItem(value: '103', child: Text('Üsküdar')),
-                        ],
+                        items: _districts.map<DropdownMenuItem<String>>((district) {
+                          return DropdownMenuItem<String>(
+                            value: district.id.toString(),
+                            child: Text(district.name),
+                          );
+                        }).toList(),
                         onChanged: (value) {
                           setState(() {
                             _selectedDistrictId = value;
