@@ -392,9 +392,11 @@ class ApiService {
   
   // Bildirimi okundu olarak işaretle
   Future<void> markNotificationAsRead(String notificationId, String userId) async {
-    final url = Uri.parse('$baseUrl$apiPath/users/$userId/notifications/$notificationId/read');
+    // API anahtarını URL'ye ekle
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=mark_notification_read&notification_id=$notificationId&user_id=$userId');
+    final uri = Uri.parse(uriString);
     final response = await http.put(
-      url,
+      uri,
       headers: await _getHeaders(),
     );
     
@@ -551,9 +553,12 @@ class ApiService {
   
   // Şehir detayını getir
   Future<City?> getCityById(String cityId) async {
-    final url = Uri.parse('$baseUrl$apiPath/cities/$cityId');
+    // API anahtarını URL'ye ekle
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=get_city&city_id=$cityId');
+    final uri = Uri.parse(uriString);
+    
     final response = await http.get(
-      url,
+      uri,
       headers: await _getHeaders(),
     );
     
@@ -684,9 +689,12 @@ class ApiService {
   // Şehir profil bilgilerini getir
   Future<CityProfile?> getCityProfileById(String cityId) async {
     try {
-      final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/profile');
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=get_city_profile&city_id=$cityId');
+      final uri = Uri.parse(uriString);
+      
       final response = await http.get(
-        url,
+        uri,
         headers: await _getHeaders(),
       );
       
