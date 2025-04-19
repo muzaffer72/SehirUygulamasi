@@ -87,6 +87,13 @@ class Post {
       'post_images': 'image_urls',
       'post_video': 'video_url',
       'satisfaction_score': 'satisfaction_rating',
+      
+      // PostgreSQL API yanıt formatı için ek mapping
+      'city_name': 'city_name',
+      'district_name': 'district_name',
+      'category_name': 'category_name',
+      'user_email': 'user_email',
+      'user_username': 'user_username',
     };
     
     // Admin panel anahtar isimlerini standart isimlere dönüştürme
@@ -112,6 +119,14 @@ class Post {
       if (imageUrlsList.isNotEmpty) {
         data['image_urls'] = imageUrlsList;
       }
+    }
+    
+    // Uyumlu olmayan field tipleri için düzenleme
+    // PostgreSQL'den gelen boolean değerleri düzelt
+    if (data.containsKey('is_anonymous') && data['is_anonymous'] is String) {
+      data['is_anonymous'] = data['is_anonymous'].toString().toLowerCase() == 't' ||
+                            data['is_anonymous'].toString().toLowerCase() == 'true' ||
+                            data['is_anonymous'].toString() == '1';
     }
     
     // PostStatus parsing with better error handling
