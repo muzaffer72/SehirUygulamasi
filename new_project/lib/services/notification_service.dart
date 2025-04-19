@@ -123,21 +123,27 @@ class NotificationService {
   }
   
   /// Bildirimi okundu olarak işaretler.
-  static Future<void> markAsRead(int notificationId) async {
-    final index = _notifications.indexWhere((n) => n.id == notificationId);
-    
-    if (index >= 0) {
-      final notification = _notifications[index];
-      if (!notification.isRead) {
-        // isRead özelliği doğrudan değiştirilemez, bu nedenle copyWith kullanıyoruz
-        _notifications[index] = notification.copyWith(isRead: true);
+  static Future<void> markAsRead(String notificationId) async {
+    try {
+      final index = _notifications.indexWhere((n) => n.id == notificationId);
       
-        // Değişiklikleri kaydet ve stream'leri güncelle
-        await _saveNotifications();
-        _notificationsListController.add(_notifications);
-      
-        debugPrint('Bildirim okundu olarak işaretlendi: $notificationId');
+      if (index >= 0) {
+        final notification = _notifications[index];
+        if (!notification.isRead) {
+          // isRead özelliği doğrudan değiştirilemez, bu nedenle copyWith kullanıyoruz
+          _notifications[index] = notification.copyWith(isRead: true);
+        
+          // Değişiklikleri kaydet ve stream'leri güncelle
+          await _saveNotifications();
+          _notificationsListController.add(_notifications);
+        
+          debugPrint('Bildirim okundu olarak işaretlendi: $notificationId');
+        }
+      } else {
+        debugPrint('Bildirim bulunamadı: $notificationId');
       }
+    } catch (e) {
+      debugPrint('Bildirim okundu işaretlenirken hata: $e');
     }
   }
   
@@ -168,16 +174,22 @@ class NotificationService {
   }
   
   /// Bildirimi siler.
-  static Future<void> deleteNotification(int notificationId) async {
-    final initialLength = _notifications.length;
-    _notifications.removeWhere((n) => n.id == notificationId);
-    
-    if (_notifications.length < initialLength) {
-      // Değişiklikleri kaydet ve stream'leri güncelle
-      await _saveNotifications();
-      _notificationsListController.add(_notifications);
+  static Future<void> deleteNotification(String notificationId) async {
+    try {
+      final initialLength = _notifications.length;
+      _notifications.removeWhere((n) => n.id == notificationId);
       
-      debugPrint('Bildirim silindi: $notificationId');
+      if (_notifications.length < initialLength) {
+        // Değişiklikleri kaydet ve stream'leri güncelle
+        await _saveNotifications();
+        _notificationsListController.add(_notifications);
+        
+        debugPrint('Bildirim silindi: $notificationId');
+      } else {
+        debugPrint('Bildirim bulunamadı: $notificationId');
+      }
+    } catch (e) {
+      debugPrint('Bildirim silinirken hata: $e');
     }
   }
   

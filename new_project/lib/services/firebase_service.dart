@@ -6,15 +6,27 @@ import 'package:flutter/material.dart';
 /// 
 /// Bu sınıf, Firebase'in temel özelliklerini başlatır ve yapılandırır.
 class FirebaseService {
+  static bool _isInitialized = false;
+  
+  /// Firebase başlatıldı mı kontrol eder
+  static bool get isInitialized => _isInitialized;
+  
   /// Firebase'i başlatır ve yapılandırır.
   /// 
   /// Uygulama başladığında çağrılmalıdır.
   static Future<void> initialize() async {
+    // Zaten başlatılmışsa tekrar başlatma
+    if (_isInitialized) return;
+    
     try {
+      // Firebase seçenekleri olmadan options: DefaultFirebaseOptions.currentPlatform
+      // kullanılamaz, bu yüzden basit başlatma yapılıyor
       await Firebase.initializeApp();
+      _isInitialized = true;
       debugPrint('Firebase başarıyla başlatıldı');
     } catch (e) {
       debugPrint('Firebase başlatılırken hata oluştu: $e');
+      // Uygulama Firebase olmadan da çalışabilir
     }
   }
   
