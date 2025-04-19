@@ -17,7 +17,6 @@ class LocationSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen> {
-  final ApiService _apiService = ApiService();
   
   String? _selectedCityId;
   String? _selectedDistrictId;
