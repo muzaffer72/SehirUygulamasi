@@ -203,18 +203,24 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
         
         // İlk yüklemede verileri çek
         if (posts.isEmpty && !isLoading) {
-          // Yükleme durumunu güncelle
-          ref.read(isLoadingProvider.notifier).state = true;
-          
-          Future.microtask(() async {
-            try {
-              await postsNotifier.loadPosts();
-            } finally {
+          // Yükleme işlemini post-frame callback ile yap (build sırasında state değiştirmemek için)
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            // Yükleme durumunu güncelle
+            ref.read(isLoadingProvider.notifier).state = true;
+            
+            // Verileri al
+            postsNotifier.loadPosts().then((_) {
               // Yükleme tamamlandı
               if (ref.read(isLoadingProvider.notifier).mounted) {
                 ref.read(isLoadingProvider.notifier).state = false;
               }
-            }
+            }).catchError((error) {
+              // Hata durumunda da yükleme durumunu güncelle
+              if (ref.read(isLoadingProvider.notifier).mounted) {
+                ref.read(isLoadingProvider.notifier).state = false;
+              }
+              print("Veri yükleme hatası: $error");
+            });
           });
         }
         

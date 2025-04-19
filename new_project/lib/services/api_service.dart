@@ -366,9 +366,14 @@ class ApiService {
   
   // Kullanıcıya göre bildirimleri getir
   Future<List<NotificationModel>> getNotificationsByUserId(String userId) async {
-    final url = Uri.parse('$baseUrl$apiPath/users/$userId/notifications');
+    final uri = Uri.parse('$baseUrl$apiPath').replace(
+      queryParameters: {
+        'endpoint': 'get_user_notifications',
+        'user_id': userId,
+      },
+    );
     final response = await http.get(
-      url,
+      uri,
       headers: await _getHeaders(),
     );
     
