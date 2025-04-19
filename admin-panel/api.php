@@ -4,7 +4,40 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-API-KEY');
+
+// API anahtarı kontrolü
+function checkApiKey() {
+    $headers = getallheaders();
+    $apiKey = $headers['X-API-KEY'] ?? null;
+    
+    if (!$apiKey) {
+        sendResponse(['error' => 'API anahtarı gerekli'], 401);
+        exit;
+    }
+    
+    // Çok basit bir API anahtarı doğrulama örneği
+    $validApiKeys = [
+        '440bf0009c749943b440f7f5c6c2fd26' // Kullanıcının sağladığı API anahtarı
+    ];
+    
+    // Ortam değişkenindeki API anahtarını da kontrol et
+    $envApiKey = getenv('API_KEY');
+    if ($envApiKey) {
+        $validApiKeys[] = $envApiKey;
+    }
+    
+    if (!in_array($apiKey, $validApiKeys)) {
+        sendResponse(['error' => 'Geçersiz API anahtarı'], 401);
+        exit;
+    }
+}
+
+// Test modu değilse API anahtarı kontrolü yap
+$testMode = isset($_GET['test_mode']) && $_GET['test_mode'] === 'true';
+if (!$testMode) {
+    checkApiKey();
+}
 
 // Mock data (would come from database in a real application)
 $posts = [
@@ -666,13 +699,13 @@ function sendResponse($data, $statusCode = 200) {
     http_response_code($statusCode);
     
     // Eğer $data bağımsız bir dizi değilse, onu bir API yanıtı formatına çevir
-    if (!isset($data['endpoint']) && !isset($data['error'])) {
+    if (!isset($data['endpoint']) && !isset($data['error']) && !isset($data['status'])) {
         $data = [
             'status' => 'success',
             'data' => $data
         ];
     }
     
-    echo json_encode($data);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
 }
