@@ -30,7 +30,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with SafeSing
     super.activate();
   }
   late TabController _tabController;
-  final ApiService _apiService = ApiService();
   
   // Lists for different tabs
   List<Post> _myPosts = [];
@@ -61,8 +60,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with SafeSing
     });
     
     try {
-      // Get user's posts
-      final posts = await _apiService.getPosts(
+      // Get user's posts using apiServiceProvider
+      final apiService = ref.read(apiServiceProvider);
+      final posts = await apiService.getPosts(
         userId: currentUser.id.toString(),
         type: PostType.problem,
       );
@@ -183,11 +183,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with SafeSing
               );
             },
             onLike: () async {
-              await _apiService.likePost(post.id);
+              final apiService = ref.read(apiServiceProvider);
+              await apiService.likePost(post.id);
               _loadData(); // Refresh data
             },
             onHighlight: () async {
-              await _apiService.highlightPost(post.id);
+              final apiService = ref.read(apiServiceProvider);
+              await apiService.highlightPost(post.id);
               _loadData(); // Refresh data
             },
           );
