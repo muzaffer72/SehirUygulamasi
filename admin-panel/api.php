@@ -664,6 +664,15 @@ function findIndexById($array, $id) {
 
 function sendResponse($data, $statusCode = 200) {
     http_response_code($statusCode);
+    
+    // Eğer $data bağımsız bir dizi değilse, onu bir API yanıtı formatına çevir
+    if (!isset($data['endpoint']) && !isset($data['error'])) {
+        $data = [
+            'status' => 'success',
+            'data' => $data
+        ];
+    }
+    
     echo json_encode($data);
     exit;
 }
