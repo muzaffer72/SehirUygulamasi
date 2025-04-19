@@ -2,7 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
-    id "com.google.gms.google-services"
+    id "com.google.gms.google-services"  // Firebase için gerekli
 }
 
 def localProperties = new Properties()
@@ -80,5 +80,6 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 }
 
-// Plugins zaten yukarıda tanımlandığı için buna gerek yok
+// Not: Google Services eklentisi, dosyanın üst kısmında plugins bloğunda zaten tanımlanmıştır.
+// Bu nedenle, aşağıdaki eski tarz apply plugin kullanımı kaldırıldı:
 // apply plugin: 'com.google.gms.google-services'
