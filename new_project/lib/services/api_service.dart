@@ -569,9 +569,12 @@ class ApiService {
   // İlçe detayını getir
   Future<District?> getDistrictById(String districtId) async {
     try {
-      final url = Uri.parse('$baseUrl$apiPath/districts/$districtId');
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=get_district&district_id=$districtId');
+      final uri = Uri.parse(uriString);
+      
       final response = await http.get(
-        url,
+        uri,
         headers: await _getHeaders(),
       );
       
@@ -800,9 +803,12 @@ class ApiService {
     String userId,
   ) async {
     try {
-      final url = Uri.parse('$baseUrl$apiPath/surveys/$surveyId/votes/$userId');
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=get_survey_vote&survey_id=$surveyId&user_id=$userId');
+      final uri = Uri.parse(uriString);
+      
       final response = await http.get(
-        url,
+        uri,
         headers: await _getHeaders(),
       );
       

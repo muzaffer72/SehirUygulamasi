@@ -23,6 +23,7 @@ class CreatePostFAB extends StatelessWidget {
       foregroundColor: iconColor,
       tooltip: tooltip ?? 'Gönderi Oluştur',
       elevation: 4,
+      heroTag: 'createPostFab-${UniqueKey()}', // Benzersiz hero tag ekliyoruz
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(28),
       ),
