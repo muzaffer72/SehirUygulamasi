@@ -103,7 +103,7 @@ class _FilteredPostsScreenState extends State<FilteredPostsScreen> {
     });
     
     try {
-      final posts = await _apiService.getFilteredPosts(widget.filterParams);
+      final posts = await _apiService.getFilteredPosts(widget.filterParams ?? {});
       setState(() {
         _posts = posts;
         _isLoading = false;

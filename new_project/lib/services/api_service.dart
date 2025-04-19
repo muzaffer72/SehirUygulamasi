@@ -5,6 +5,7 @@ import 'package:belediye_iletisim_merkezi/models/user.dart';
 import 'package:belediye_iletisim_merkezi/models/survey.dart';
 import 'package:belediye_iletisim_merkezi/models/notification_model.dart';
 import 'package:belediye_iletisim_merkezi/models/city.dart';
+import 'package:belediye_iletisim_merkezi/models/city_profile.dart';
 import 'package:belediye_iletisim_merkezi/models/district.dart';
 import 'package:belediye_iletisim_merkezi/models/category.dart';
 import 'package:belediye_iletisim_merkezi/models/comment.dart';
