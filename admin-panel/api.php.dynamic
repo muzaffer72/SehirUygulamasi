@@ -1,0 +1,842 @@
+<?php
+// API for mobile app - Dinamik veritabanı versiyonu
+
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-API-KEY');
+
+// Veritabanı bağlantısını dahil et
+require_once('db_connection.php');
+
+// API anahtarı kontrolü
+function checkApiKey() {
+    $headers = getallheaders();
+    $apiKey = $headers['X-API-KEY'] ?? null;
+    
+    if (!$apiKey) {
+        sendResponse(['error' => 'API anahtarı gerekli'], 401);
+        exit;
+    }
+    
+    global $db;
+    $stmt = $db->prepare("SELECT * FROM api_keys WHERE api_key = ? AND active = 1 LIMIT 1");
+    $stmt->bind_param('s', $apiKey);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows() === 0) {
+        sendResponse(['error' => 'Geçersiz API anahtarı'], 401);
+        exit;
+    }
+    
+    // API anahtarı geçerli, kullanım sayısını artır
+    $apiKeyData = $result->fetch_assoc();
+    $stmt = $db->prepare("UPDATE api_keys SET usage_count = usage_count + 1, last_used = NOW() WHERE id = ?");
+    $stmt->bind_param('i', $apiKeyData['id']);
+    $stmt->execute();
+}
+
+// API anahtarı kontrol et (test modunda ise atla)
+$testMode = isset($_GET['test_mode']) && $_GET['test_mode'] === 'true';
+if (!$testMode) {
+    checkApiKey();
+}
+
+// Parse request
+$method = $_SERVER['REQUEST_METHOD'];
+$endpoint = $_GET['endpoint'] ?? null;
+
+// Eski stil endpoint çözümlemesini de destekle
+if (empty($endpoint) && isset($_SERVER['PATH_INFO'])) {
+    $request = explode('/', trim($_SERVER['PATH_INFO'] ?? '', '/'));
+    $endpoint = $request[0] ?? null;
+    $id = $request[1] ?? null;
+} else {
+    $id = $_GET['id'] ?? ($_GET['post_id'] ?? ($_GET['user_id'] ?? ($_GET['city_id'] ?? ($_GET['survey_id'] ?? null))));
+}
+
+// Debug bilgisi ekle
+error_log("API isteği: Method=$method, Endpoint=$endpoint, ID=$id, Query=" . json_encode($_GET));
+
+// Handle requests
+switch ($method) {
+    case 'GET':
+        handleGet($endpoint, $id);
+        break;
+    case 'POST':
+        handlePost($endpoint);
+        break;
+    case 'PUT':
+        handlePut($endpoint, $id);
+        break;
+    case 'DELETE':
+        handleDelete($endpoint, $id);
+        break;
+    default:
+        sendResponse(['error' => 'Method not allowed'], 405);
+}
+
+// GET request handler
+function handleGet($endpoint, $id) {
+    global $db;
+    
+    switch ($endpoint) {
+        case 'posts':
+            if ($id) {
+                // Get single post
+                $stmt = $db->prepare("SELECT * FROM posts WHERE id = ? LIMIT 1");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows() > 0) {
+                    $post = $result->fetch_assoc();
+                    sendResponse(['status' => 'success', 'data' => $post]);
+                } else {
+                    sendResponse(['error' => 'Post not found'], 404);
+                }
+            } else {
+                // Get all posts with pagination
+                $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+                $offset = ($page - 1) * $perPage;
+                
+                // Base query
+                $query = "SELECT * FROM posts";
+                $countQuery = "SELECT COUNT(*) as total FROM posts";
+                $params = [];
+                $types = "";
+                
+                // Check for filters
+                $whereConditions = [];
+                
+                if (isset($_GET['category_id'])) {
+                    $whereConditions[] = "category_id = ?";
+                    $params[] = $_GET['category_id'];
+                    $types .= "i";
+                }
+                
+                if (isset($_GET['city_id'])) {
+                    $whereConditions[] = "city_id = ?";
+                    $params[] = $_GET['city_id'];
+                    $types .= "i";
+                }
+                
+                if (isset($_GET['district_id'])) {
+                    $whereConditions[] = "district_id = ?";
+                    $params[] = $_GET['district_id'];
+                    $types .= "i";
+                }
+                
+                if (isset($_GET['status'])) {
+                    $whereConditions[] = "status = ?";
+                    $params[] = $_GET['status'];
+                    $types .= "s";
+                }
+                
+                if (isset($_GET['user_id'])) {
+                    $whereConditions[] = "user_id = ?";
+                    $params[] = $_GET['user_id'];
+                    $types .= "i";
+                }
+                
+                // Add WHERE clause if filters exist
+                if (!empty($whereConditions)) {
+                    $query .= " WHERE " . implode(" AND ", $whereConditions);
+                    $countQuery .= " WHERE " . implode(" AND ", $whereConditions);
+                }
+                
+                // Add sorting
+                $sortBy = isset($_GET['sort_by']) ? $_GET['sort_by'] : 'created_at';
+                $sortDirection = isset($_GET['sort_direction']) ? $_GET['sort_direction'] : 'DESC';
+                $allowedSortFields = ['id', 'created_at', 'likes', 'highlights', 'title'];
+                
+                if (!in_array($sortBy, $allowedSortFields)) {
+                    $sortBy = 'created_at';
+                }
+                
+                if ($sortDirection !== 'ASC' && $sortDirection !== 'DESC') {
+                    $sortDirection = 'DESC';
+                }
+                
+                $query .= " ORDER BY " . $sortBy . " " . $sortDirection;
+                
+                // Add pagination
+                $query .= " LIMIT ? OFFSET ?";
+                $params[] = $perPage;
+                $params[] = $offset;
+                $types .= "ii";
+                
+                // Get total count
+                $countStmt = $db->prepare($countQuery);
+                if (!empty($params) && $types != "ii") {
+                    $countParamTypes = substr($types, 0, -2); // Remove the 'ii' for LIMIT and OFFSET
+                    $countParams = array_slice($params, 0, -2); // Remove last two params
+                    
+                    $countStmt->bind_param($countParamTypes, ...$countParams);
+                }
+                $countStmt->execute();
+                $totalResult = $countStmt->get_result();
+                $totalRow = $totalResult->fetch_assoc();
+                $total = $totalRow['total'];
+                
+                // Get paginated results
+                $stmt = $db->prepare($query);
+                if (!empty($params)) {
+                    $stmt->bind_param($types, ...$params);
+                }
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                $posts = [];
+                while ($row = $result->fetch_assoc()) {
+                    $posts[] = $row;
+                }
+                
+                // Calculate pagination info
+                $totalPages = ceil($total / $perPage);
+                $hasNextPage = $page < $totalPages;
+                $hasPrevPage = $page > 1;
+                
+                sendResponse([
+                    'status' => 'success',
+                    'data' => $posts,
+                    'pagination' => [
+                        'total' => $total,
+                        'per_page' => $perPage,
+                        'current_page' => $page,
+                        'total_pages' => $totalPages,
+                        'has_next_page' => $hasNextPage,
+                        'has_prev_page' => $hasPrevPage
+                    ]
+                ]);
+            }
+            break;
+            
+        case 'post_detail':
+            $postId = $id ?? $_GET['post_id'] ?? null;
+            if (!$postId) {
+                sendResponse(['error' => 'Post ID required'], 400);
+                return;
+            }
+            
+            $stmt = $db->prepare("SELECT * FROM posts WHERE id = ? LIMIT 1");
+            $stmt->bind_param('i', $postId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows() > 0) {
+                $post = $result->fetch_assoc();
+                
+                // Get comments for this post
+                $commentsStmt = $db->prepare("SELECT * FROM comments WHERE post_id = ? ORDER BY created_at DESC");
+                $commentsStmt->bind_param('i', $postId);
+                $commentsStmt->execute();
+                $commentsResult = $commentsStmt->get_result();
+                
+                $comments = [];
+                while ($comment = $commentsResult->fetch_assoc()) {
+                    $comments[] = $comment;
+                }
+                
+                $post['comments'] = $comments;
+                
+                sendResponse(['status' => 'success', 'data' => $post]);
+            } else {
+                sendResponse(['error' => 'Post not found'], 404);
+            }
+            break;
+            
+        case 'users':
+            if ($id) {
+                // Get single user
+                $stmt = $db->prepare("SELECT id, name, email, username, profile_image_url, cover_image_url, bio, city_id, district_id, is_verified, created_at FROM users WHERE id = ? LIMIT 1");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows() > 0) {
+                    $user = $result->fetch_assoc();
+                    sendResponse(['status' => 'success', 'data' => $user]);
+                } else {
+                    sendResponse(['error' => 'User not found'], 404);
+                }
+            } else {
+                // Get all users (without passwords)
+                $stmt = $db->prepare("SELECT id, name, email, username, profile_image_url, bio, city_id, district_id, is_verified, created_at FROM users");
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                $users = [];
+                while ($user = $result->fetch_assoc()) {
+                    $users[] = $user;
+                }
+                
+                sendResponse(['status' => 'success', 'data' => $users]);
+            }
+            break;
+            
+        case 'cities':
+            if ($id) {
+                // Get single city
+                $stmt = $db->prepare("SELECT * FROM cities WHERE id = ? LIMIT 1");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows() > 0) {
+                    $city = $result->fetch_assoc();
+                    sendResponse(['status' => 'success', 'data' => $city]);
+                } else {
+                    sendResponse(['error' => 'City not found'], 404);
+                }
+            } else {
+                // Get all cities
+                $stmt = $db->prepare("SELECT * FROM cities ORDER BY name");
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                $cities = [];
+                while ($city = $result->fetch_assoc()) {
+                    $cities[] = $city;
+                }
+                
+                sendResponse(['status' => 'success', 'data' => $cities]);
+            }
+            break;
+            
+        case 'districts':
+            if ($id) {
+                // Get single district
+                $stmt = $db->prepare("SELECT * FROM districts WHERE id = ? LIMIT 1");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows() > 0) {
+                    $district = $result->fetch_assoc();
+                    sendResponse(['status' => 'success', 'data' => $district]);
+                } else {
+                    sendResponse(['error' => 'District not found'], 404);
+                }
+            } else {
+                // Get all districts or filter by city
+                $query = "SELECT * FROM districts";
+                $params = [];
+                $types = "";
+                
+                if (isset($_GET['city_id'])) {
+                    $query .= " WHERE city_id = ?";
+                    $params[] = $_GET['city_id'];
+                    $types .= "i";
+                }
+                
+                $query .= " ORDER BY name";
+                
+                $stmt = $db->prepare($query);
+                if (!empty($params)) {
+                    $stmt->bind_param($types, ...$params);
+                }
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                $districts = [];
+                while ($district = $result->fetch_assoc()) {
+                    $districts[] = $district;
+                }
+                
+                sendResponse(['status' => 'success', 'data' => $districts]);
+            }
+            break;
+            
+        case 'categories':
+            if ($id) {
+                // Get single category
+                $stmt = $db->prepare("SELECT * FROM categories WHERE id = ? LIMIT 1");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows() > 0) {
+                    $category = $result->fetch_assoc();
+                    sendResponse(['status' => 'success', 'data' => $category]);
+                } else {
+                    sendResponse(['error' => 'Category not found'], 404);
+                }
+            } else {
+                // Get all categories
+                $stmt = $db->prepare("SELECT * FROM categories ORDER BY name");
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                $categories = [];
+                while ($category = $result->fetch_assoc()) {
+                    $categories[] = $category;
+                }
+                
+                sendResponse(['status' => 'success', 'data' => $categories]);
+            }
+            break;
+            
+        case 'surveys':
+            if ($id) {
+                // Get single survey
+                $stmt = $db->prepare("SELECT * FROM surveys WHERE id = ? LIMIT 1");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows() > 0) {
+                    $survey = $result->fetch_assoc();
+                    
+                    // Get survey options
+                    $optionsStmt = $db->prepare("SELECT * FROM survey_options WHERE survey_id = ?");
+                    $optionsStmt->bind_param('i', $id);
+                    $optionsStmt->execute();
+                    $optionsResult = $optionsStmt->get_result();
+                    
+                    $options = [];
+                    while ($option = $optionsResult->fetch_assoc()) {
+                        $options[] = $option;
+                    }
+                    
+                    $survey['options'] = $options;
+                    
+                    sendResponse(['status' => 'success', 'data' => $survey]);
+                } else {
+                    sendResponse(['error' => 'Survey not found'], 404);
+                }
+            } else {
+                // Get all surveys or filter
+                $query = "SELECT * FROM surveys";
+                $params = [];
+                $types = "";
+                $whereConditions = [];
+                
+                if (isset($_GET['city_id'])) {
+                    $whereConditions[] = "city_id = ?";
+                    $params[] = $_GET['city_id'];
+                    $types .= "i";
+                }
+                
+                if (isset($_GET['district_id'])) {
+                    $whereConditions[] = "district_id = ?";
+                    $params[] = $_GET['district_id'];
+                    $types .= "i";
+                }
+                
+                if (isset($_GET['active']) && $_GET['active'] == 'true') {
+                    $whereConditions[] = "is_active = 1";
+                }
+                
+                if (!empty($whereConditions)) {
+                    $query .= " WHERE " . implode(" AND ", $whereConditions);
+                }
+                
+                $query .= " ORDER BY created_at DESC";
+                
+                $stmt = $db->prepare($query);
+                if (!empty($params)) {
+                    $stmt->bind_param($types, ...$params);
+                }
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                $surveys = [];
+                while ($survey = $result->fetch_assoc()) {
+                    // Get survey options for each survey
+                    $optionsStmt = $db->prepare("SELECT * FROM survey_options WHERE survey_id = ?");
+                    $optionsStmt->bind_param('i', $survey['id']);
+                    $optionsStmt->execute();
+                    $optionsResult = $optionsStmt->get_result();
+                    
+                    $options = [];
+                    while ($option = $optionsResult->fetch_assoc()) {
+                        $options[] = $option;
+                    }
+                    
+                    $survey['options'] = $options;
+                    $surveys[] = $survey;
+                }
+                
+                sendResponse(['status' => 'success', 'data' => $surveys]);
+            }
+            break;
+            
+        case 'user_notifications':
+            $userId = $id ?? $_GET['user_id'] ?? null;
+            if (!$userId) {
+                sendResponse(['error' => 'User ID required'], 400);
+                return;
+            }
+            
+            $stmt = $db->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC");
+            $stmt->bind_param('i', $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $notifications = [];
+            while ($notification = $result->fetch_assoc()) {
+                $notifications[] = $notification;
+            }
+            
+            sendResponse(['status' => 'success', 'data' => $notifications]);
+            break;
+            
+        default:
+            sendResponse(['error' => 'Invalid endpoint'], 404);
+    }
+}
+
+// POST request handler
+function handlePost($endpoint) {
+    global $db;
+    
+    // Get request body
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    if (!$data && $endpoint !== 'login') {
+        sendResponse(['error' => 'Invalid request data'], 400);
+        return;
+    }
+    
+    switch ($endpoint) {
+        case 'login':
+            // Handle login
+            $email = $_POST['email'] ?? ($data['email'] ?? null);
+            $password = $_POST['password'] ?? ($data['password'] ?? null);
+            
+            if (!$email || !$password) {
+                sendResponse(['error' => 'Email and password are required'], 400);
+                return;
+            }
+            
+            $stmt = $db->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows() === 0) {
+                sendResponse(['error' => 'Invalid credentials'], 401);
+                return;
+            }
+            
+            $user = $result->fetch_assoc();
+            
+            if (!password_verify($password, $user['password'])) {
+                sendResponse(['error' => 'Invalid credentials'], 401);
+                return;
+            }
+            
+            // Remove password before sending
+            unset($user['password']);
+            
+            // Create a token
+            $token = bin2hex(random_bytes(32));
+            
+            // Store token in database
+            $expiry = date('Y-m-d H:i:s', strtotime('+30 days'));
+            $tokenStmt = $db->prepare("INSERT INTO auth_tokens (user_id, token, expires_at) VALUES (?, ?, ?)");
+            $tokenStmt->bind_param('iss', $user['id'], $token, $expiry);
+            $tokenStmt->execute();
+            
+            sendResponse([
+                'status' => 'success',
+                'user' => $user,
+                'token' => $token,
+                'expires_at' => $expiry
+            ]);
+            break;
+            
+        case 'register':
+            // Handle registration
+            $name = $data['name'] ?? null;
+            $email = $data['email'] ?? null;
+            $password = $data['password'] ?? null;
+            $cityId = $data['city_id'] ?? null;
+            $districtId = $data['district_id'] ?? null;
+            
+            if (!$name || !$email || !$password) {
+                sendResponse(['error' => 'Name, email and password are required'], 400);
+                return;
+            }
+            
+            // Check if email already exists
+            $checkStmt = $db->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+            $checkStmt->bind_param('s', $email);
+            $checkStmt->execute();
+            $checkResult = $checkStmt->get_result();
+            
+            if ($checkResult->num_rows() > 0) {
+                sendResponse(['error' => 'Email already exists'], 409);
+                return;
+            }
+            
+            // Create new user
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $username = generateUsername($name);
+            
+            $stmt = $db->prepare("INSERT INTO users (name, email, username, password, city_id, district_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+            $stmt->bind_param('ssssii', $name, $email, $username, $hashedPassword, $cityId, $districtId);
+            $stmt->execute();
+            
+            if ($stmt->affected_rows > 0) {
+                $userId = $db->insert_id();
+                
+                // Get the new user
+                $userStmt = $db->prepare("SELECT id, name, email, username, city_id, district_id, created_at FROM users WHERE id = ? LIMIT 1");
+                $userStmt->bind_param('i', $userId);
+                $userStmt->execute();
+                $userResult = $userStmt->get_result();
+                $user = $userResult->fetch_assoc();
+                
+                sendResponse(['status' => 'success', 'data' => $user], 201);
+            } else {
+                sendResponse(['error' => 'Failed to create user'], 500);
+            }
+            break;
+            
+        case 'create_post':
+            $title = $data['title'] ?? null;
+            $content = $data['content'] ?? null;
+            $userId = $data['user_id'] ?? null;
+            $cityId = $data['city_id'] ?? null;
+            $districtId = $data['district_id'] ?? null;
+            $categoryId = $data['category_id'] ?? null;
+            
+            if (!$title || !$content || !$userId || !$cityId) {
+                sendResponse(['error' => 'Title, content, user_id and city_id are required'], 400);
+                return;
+            }
+            
+            $stmt = $db->prepare("INSERT INTO posts (title, content, user_id, city_id, district_id, category_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())");
+            $stmt->bind_param('ssiiii', $title, $content, $userId, $cityId, $districtId, $categoryId);
+            $stmt->execute();
+            
+            if ($stmt->affected_rows > 0) {
+                $postId = $db->insert_id();
+                
+                // Get the new post
+                $postStmt = $db->prepare("SELECT * FROM posts WHERE id = ? LIMIT 1");
+                $postStmt->bind_param('i', $postId);
+                $postStmt->execute();
+                $postResult = $postStmt->get_result();
+                $post = $postResult->fetch_assoc();
+                
+                sendResponse(['status' => 'success', 'data' => $post], 201);
+            } else {
+                sendResponse(['error' => 'Failed to create post'], 500);
+            }
+            break;
+            
+        case 'vote_survey':
+            $surveyId = $data['survey_id'] ?? null;
+            $optionId = $data['option_id'] ?? null;
+            $userId = $data['user_id'] ?? null;
+            
+            if (!$surveyId || !$optionId || !$userId) {
+                sendResponse(['error' => 'Survey ID, option ID and user ID are required'], 400);
+                return;
+            }
+            
+            // Check if user already voted
+            $checkStmt = $db->prepare("SELECT id FROM survey_votes WHERE survey_id = ? AND user_id = ? LIMIT 1");
+            $checkStmt->bind_param('ii', $surveyId, $userId);
+            $checkStmt->execute();
+            $checkResult = $checkStmt->get_result();
+            
+            if ($checkResult->num_rows() > 0) {
+                sendResponse(['error' => 'User already voted for this survey'], 409);
+                return;
+            }
+            
+            // Create vote
+            $stmt = $db->prepare("INSERT INTO survey_votes (survey_id, option_id, user_id, created_at) VALUES (?, ?, ?, NOW())");
+            $stmt->bind_param('iii', $surveyId, $optionId, $userId);
+            $stmt->execute();
+            
+            if ($stmt->affected_rows > 0) {
+                // Update vote count for this option
+                $updateStmt = $db->prepare("UPDATE survey_options SET vote_count = vote_count + 1 WHERE id = ?");
+                $updateStmt->bind_param('i', $optionId);
+                $updateStmt->execute();
+                
+                sendResponse(['status' => 'success', 'message' => 'Vote recorded']);
+            } else {
+                sendResponse(['error' => 'Failed to record vote'], 500);
+            }
+            break;
+            
+        default:
+            sendResponse(['error' => 'Invalid endpoint'], 404);
+    }
+}
+
+// PUT request handler
+function handlePut($endpoint, $id) {
+    global $db;
+    
+    // Get request body
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    switch ($endpoint) {
+        case 'post_status':
+            $postId = $id ?? $data['post_id'] ?? null;
+            $status = $data['status'] ?? null;
+            
+            if (!$postId || !$status) {
+                sendResponse(['error' => 'Post ID and status are required'], 400);
+                return;
+            }
+            
+            $validStatuses = ['pending', 'inProgress', 'awaitingSolution', 'solved', 'rejected'];
+            if (!in_array($status, $validStatuses)) {
+                sendResponse(['error' => 'Invalid status value'], 400);
+                return;
+            }
+            
+            $stmt = $db->prepare("UPDATE posts SET status = ? WHERE id = ?");
+            $stmt->bind_param('si', $status, $postId);
+            $stmt->execute();
+            
+            if ($stmt->affected_rows > 0) {
+                sendResponse(['status' => 'success', 'message' => 'Post status updated']);
+            } else {
+                sendResponse(['error' => 'Post not found or status unchanged'], 404);
+            }
+            break;
+            
+        case 'users':
+            if (!$id) {
+                sendResponse(['error' => 'User ID is required'], 400);
+                return;
+            }
+            
+            // Fields that can be updated
+            $allowedFields = ['name', 'username', 'email', 'bio', 'profile_image_url', 'cover_image_url', 'city_id', 'district_id'];
+            $updateFields = [];
+            $params = [];
+            $types = "";
+            
+            foreach ($allowedFields as $field) {
+                if (isset($data[$field])) {
+                    $updateFields[] = "$field = ?";
+                    $params[] = $data[$field];
+                    
+                    // Determine parameter type
+                    if (in_array($field, ['city_id', 'district_id'])) {
+                        $types .= "i"; // Integer
+                    } else {
+                        $types .= "s"; // String
+                    }
+                }
+            }
+            
+            if (empty($updateFields)) {
+                sendResponse(['error' => 'No fields to update'], 400);
+                return;
+            }
+            
+            // Add user ID to params
+            $params[] = $id;
+            $types .= "i";
+            
+            $query = "UPDATE users SET " . implode(", ", $updateFields) . " WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            
+            if ($stmt->affected_rows > 0) {
+                // Get updated user
+                $userStmt = $db->prepare("SELECT id, name, email, username, profile_image_url, cover_image_url, bio, city_id, district_id, created_at FROM users WHERE id = ? LIMIT 1");
+                $userStmt->bind_param('i', $id);
+                $userStmt->execute();
+                $userResult = $userStmt->get_result();
+                
+                if ($userResult->num_rows() > 0) {
+                    $user = $userResult->fetch_assoc();
+                    sendResponse(['status' => 'success', 'data' => $user]);
+                } else {
+                    sendResponse(['error' => 'User not found after update'], 404);
+                }
+            } else {
+                sendResponse(['error' => 'User not found or data unchanged'], 404);
+            }
+            break;
+            
+        default:
+            sendResponse(['error' => 'Invalid endpoint'], 404);
+    }
+}
+
+// DELETE request handler
+function handleDelete($endpoint, $id) {
+    global $db;
+    
+    if (!$id) {
+        sendResponse(['error' => 'ID is required'], 400);
+        return;
+    }
+    
+    switch ($endpoint) {
+        case 'posts':
+            $stmt = $db->prepare("DELETE FROM posts WHERE id = ?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            
+            if ($stmt->affected_rows > 0) {
+                sendResponse(['status' => 'success', 'message' => 'Post deleted']);
+            } else {
+                sendResponse(['error' => 'Post not found'], 404);
+            }
+            break;
+            
+        case 'comments':
+            $stmt = $db->prepare("DELETE FROM comments WHERE id = ?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            
+            if ($stmt->affected_rows > 0) {
+                sendResponse(['status' => 'success', 'message' => 'Comment deleted']);
+            } else {
+                sendResponse(['error' => 'Comment not found'], 404);
+            }
+            break;
+            
+        default:
+            sendResponse(['error' => 'Invalid endpoint'], 404);
+    }
+}
+
+// Helper function to send JSON response
+function sendResponse($data, $statusCode = 200) {
+    http_response_code($statusCode);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// Helper function to generate username from name
+function generateUsername($name) {
+    // Convert name to lowercase and remove non-alphanumeric characters
+    $username = preg_replace('/[^a-z0-9]/', '', strtolower($name));
+    
+    // Add random digits if username is too short
+    if (strlen($username) < 5) {
+        $username .= rand(1000, 9999);
+    }
+    
+    // Check if username already exists and add random digits if necessary
+    global $db;
+    $stmt = $db->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
+    $stmt->bind_param('s', $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows() > 0) {
+        $username .= rand(100, 999);
+    }
+    
+    return $username;
+}
+?>

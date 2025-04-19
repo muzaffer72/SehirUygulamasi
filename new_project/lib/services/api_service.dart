@@ -238,7 +238,7 @@ class ApiService {
   Future<List<District>> getDistrictsByCityIdAsObjects(String cityId) async {
     final uri = Uri.parse('$baseUrl$apiPath').replace(
       queryParameters: {
-        'endpoint': 'get_districts',
+        'endpoint': 'districts',
         'city_id': cityId,
       },
     );
@@ -253,6 +253,8 @@ class ApiService {
       List<dynamic> districtsJson = [];
       
       if (data is Map && data.containsKey('data')) {
+        districtsJson = data['data'] as List<dynamic>;
+      } else if (data is Map && data.containsKey('status') && data.containsKey('data')) {
         districtsJson = data['data'] as List<dynamic>;
       } else if (data is List) {
         districtsJson = data;
@@ -293,7 +295,7 @@ class ApiService {
       
       final uri = Uri.parse('$baseUrl$apiPath').replace(
         queryParameters: {
-          'endpoint': 'get_posts',
+          'endpoint': 'posts',
           ...queryParams
         },
       );
@@ -326,6 +328,10 @@ class ApiService {
         else if (data is Map<String, dynamic> && data.containsKey('data')) {
           postsJson = data['data'] as List<dynamic>;
         }
+        // API return format: { status: "success", data: [...] }
+        else if (data is Map<String, dynamic> && data.containsKey('status') && data.containsKey('data')) {
+          postsJson = data['data'] as List<dynamic>;
+        }
         // API return format: [...]
         else if (data is List) {
           postsJson = data;
@@ -348,7 +354,7 @@ class ApiService {
   Future<Post> getPostById(String postId) async {
     final uri = Uri.parse('$baseUrl$apiPath').replace(
       queryParameters: {
-        'endpoint': 'get_post_detail',
+        'endpoint': 'post_detail',
         'post_id': postId,
       },
     );
@@ -362,6 +368,8 @@ class ApiService {
       final data = json.decode(response.body);
       if (data is Map && data.containsKey('data')) {
         return Post.fromJson(data['data']);
+      } else if (data is Map && data.containsKey('status') && data.containsKey('data')) {
+        return Post.fromJson(data['data']);
       } else {
         return Post.fromJson(data);
       }
@@ -374,7 +382,7 @@ class ApiService {
   Future<List<NotificationModel>> getNotificationsByUserId(String userId) async {
     final uri = Uri.parse('$baseUrl$apiPath').replace(
       queryParameters: {
-        'endpoint': 'get_user_notifications',
+        'endpoint': 'user_notifications',
         'user_id': userId,
       },
     );
@@ -500,7 +508,7 @@ class ApiService {
   Future<List<Category>> getCategories() async {
     final uri = Uri.parse('$baseUrl$apiPath').replace(
       queryParameters: {
-        'endpoint': 'get_categories',
+        'endpoint': 'categories',
       },
     );
     
@@ -514,6 +522,8 @@ class ApiService {
       List<dynamic> categoriesJson = [];
       
       if (data is Map && data.containsKey('data')) {
+        categoriesJson = data['data'] as List<dynamic>;
+      } else if (data is Map && data.containsKey('status') && data.containsKey('data')) {
         categoriesJson = data['data'] as List<dynamic>;
       } else if (data is List) {
         categoriesJson = data;
