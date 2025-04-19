@@ -311,7 +311,7 @@ class CityProfileScreen extends ConsumerWidget {
                       },
                       onComment: () {
                         // Yorum yapma işlevi
-                        ref.read(selectedPostProvider.notifier).state = post;
+                        ref.read(post_provider.selectedPostProvider.notifier).state = post;
                         Navigator.push(
                           context,
                           MaterialPageRoute(
