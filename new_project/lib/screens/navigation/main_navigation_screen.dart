@@ -97,6 +97,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               onPressed: () {
                 _showCreatePostOptions(context);
               },
+              heroTag: 'mainNavigationFab',
               child: const Icon(Icons.add),
             )
           : null,

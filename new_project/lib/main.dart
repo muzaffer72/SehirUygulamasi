@@ -184,6 +184,7 @@ class _IletisimHomePageState extends State<IletisimHomePage> {
           );
         },
         backgroundColor: Theme.of(context).colorScheme.primary,
+        heroTag: 'mainScreenFab',
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
