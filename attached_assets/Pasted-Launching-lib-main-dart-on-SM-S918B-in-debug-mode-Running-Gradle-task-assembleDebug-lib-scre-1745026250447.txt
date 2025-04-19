@@ -1,0 +1,82 @@
+Launching lib\main.dart on SM S918B in debug mode...
+Running Gradle task 'assembleDebug'...
+lib/screens/posts/post_detail_screen.dart:262:19: Error: Required named parameter 'onTap' must be provided.
+          PostCard(
+                  ^
+lib/widgets/post_card.dart:18:9: Context: Found this candidate, but the arguments don't match.
+  const PostCard({
+        ^^^^^^^^
+lib/screens/profile/profile_screen.dart:420:55: Error: Too many positional arguments: 0 allowed, but 5 found.
+Try removing the extra positional arguments.
+        await ref.read(authProvider.notifier).register(
+                                                      ^
+lib/providers/post_provider.dart:125:9: Error: No named parameter with the name 'type'.
+        type: type != null ? type == 'problem' ? PostType.problem : PostType.general : null,
+        ^^^^
+lib/widgets/post_card.dart:292:45: Error: The argument type 'Future<User?>' can't be assigned to the parameter type 'Future<User>?' because 'User?' is nullable and 'User' isn't.
+ - 'Future' is from 'dart:async'.
+ - 'User' is from 'package:belediye_iletisim_merkezi/models/user.dart' ('lib/models/user.dart').
+                        future: _apiService.getUserById(widget.post.userId),
+                                            ^
+lib/widgets/post_card.dart:539:49: Error: The argument type 'Future<User?>' can't be assigned to the parameter type 'Future<User>?' because 'User?' is nullable and 'User' isn't.
+ - 'Future' is from 'dart:async'.
+ - 'User' is from 'package:belediye_iletisim_merkezi/models/user.dart' ('lib/models/user.dart').
+                            future: _apiService.getUserById(widget.post.userId),
+                                                ^
+lib/screens/location/city_profile_screen.dart:62:57: Error: The argument type 'CityProfile?' can't be assigned to the parameter type 'CityProfile' because 'CityProfile?' is nullable and 'CityProfile' isn't.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+        data: (city) => _buildCityProfile(context, ref, city, postsAsync),
+                                                        ^
+lib/screens/location/city_profile_screen.dart:62:63: Error: The argument type 'List<Post>' can't be assigned to the parameter type 'AsyncValue<List<Post>>'.
+ - 'List' is from 'dart:core'.
+ - 'Post' is from 'package:belediye_iletisim_merkezi/models/post.dart' ('lib/models/post.dart').
+ - 'AsyncValue' is from 'package:riverpod/src/common.dart' ('/C:/Users/guzel/AppData/Local/Pub/Cache/hosted/pub.dev/riverpod-2.6.1/lib/src/common.dart').
+        data: (city) => _buildCityProfile(context, ref, city, postsAsync),
+                                                              ^
+lib/screens/location/city_profile_screen.dart:294:34: Error: The getter 'selectedPostProvider' isn't defined for the class 'CityProfileScreen'.
+ - 'CityProfileScreen' is from 'package:belediye_iletisim_merkezi/screens/location/city_profile_screen.dart' ('lib/screens/location/city_profile_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'selectedPostProvider'.
+                        ref.read(selectedPostProvider.notifier).state = post;
+                                 ^^^^^^^^^^^^^^^^^^^^
+lib/screens/location/city_profile_screen.dart:310:34: Error: The getter 'selectedPostProvider' isn't defined for the class 'CityProfileScreen'.
+ - 'CityProfileScreen' is from 'package:belediye_iletisim_merkezi/screens/location/city_profile_screen.dart' ('lib/screens/location/city_profile_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'selectedPostProvider'.
+                        ref.read(selectedPostProvider.notifier).state = post;
+                                 ^^^^^^^^^^^^^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:420:18: Error: The setter 'voteCount' isn't defined for the class 'SurveyOption'.
+ - 'SurveyOption' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'voteCount'.
+          option.voteCount++;
+                 ^^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:426:21: Error: The setter 'totalVotes' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'totalVotes'.
+      widget.survey.totalVotes++;
+                    ^^^^^^^^^^
+lib/providers/user_provider.dart:34:47: Error: The method 'updateUserProfile' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateUserProfile'.
+        final updatedUser = await _apiService.updateUserProfile(
+                                              ^^^^^^^^^^^^^^^^^
+lib/providers/user_provider.dart:58:47: Error: The method 'updateUserLocation' isn't defined for the class 'ApiService'.
+ - 'ApiService' is from 'package:belediye_iletisim_merkezi/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateUserLocation'.
+        final updatedUser = await _apiService.updateUserLocation(
+                                              ^^^^^^^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter29\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BU�LD FAILED in 1m 20s
+Error: Gradle task assembleDebug failed with exit code 1

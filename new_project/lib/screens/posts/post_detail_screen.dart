@@ -262,6 +262,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           PostCard(
             post: _post!,
             isDetailView: true,
+            onTap: () {}, // Zaten detay görünümündeyiz, tıklama gereksiz
             onLike: () async {
               try {
                 await _apiService.likePost(_post!.id);
