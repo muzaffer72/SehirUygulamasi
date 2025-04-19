@@ -196,3 +196,6 @@ final postDetailProvider = FutureProvider.family<Post, String>((ref, postId) asy
   final post = await apiService.getPostById(postId);
   return post;
 });
+
+// Selected post provider (for screens that need to share post state)
+final selectedPostProvider = StateProvider<Post?>((ref) => null);
