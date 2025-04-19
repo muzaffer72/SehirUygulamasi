@@ -6,6 +6,7 @@ import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
 import 'package:belediye_iletisim_merkezi/providers/current_user_provider.dart';
 import 'package:belediye_iletisim_merkezi/providers/user_provider.dart';
 import 'package:belediye_iletisim_merkezi/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
 import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
 import 'package:belediye_iletisim_merkezi/utils/matrix_fix.dart';
 import 'package:belediye_iletisim_merkezi/utils/ticker_fix.dart';

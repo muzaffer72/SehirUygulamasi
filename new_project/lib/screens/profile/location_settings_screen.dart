@@ -195,7 +195,7 @@ class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen>
                   
                   // City selection
                   FutureBuilder<List<City>>(
-                    future: _apiService.getCities(),
+                    future: ref.read(apiServiceProvider).getCities(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
@@ -254,7 +254,7 @@ class _LocationSettingsScreenState extends ConsumerState<LocationSettingsScreen>
                   // District selection (only if city is selected)
                   if (_selectedCityId != null)
                     FutureBuilder<List<District>>(
-                      future: _apiService.getDistrictsByCityId(_selectedCityId!),
+                      future: ref.read(apiServiceProvider).getDistrictsByCityId(int.parse(_selectedCityId!)),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(child: CircularProgressIndicator());
