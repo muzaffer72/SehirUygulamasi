@@ -779,7 +779,7 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const CityProfileScreen(),
+                  builder: (context) => const CityProfileScreen(cityId: "1"),
                 ),
               );
               break;
