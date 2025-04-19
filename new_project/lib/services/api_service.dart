@@ -201,15 +201,27 @@ class ApiService {
   
   // Şehir listesini getir
   Future<List<City>> getCitiesAsObjects() async {
-    final url = Uri.parse('$baseUrl$apiPath/cities');
+    final uri = Uri.parse('$baseUrl$apiPath').replace(
+      queryParameters: {
+        'endpoint': 'get_cities',
+      },
+    );
+    
     final response = await http.get(
-      url,
+      uri,
       headers: await _getHeaders(),
     );
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      final List<dynamic> citiesJson = data['data'] ?? [];
+      List<dynamic> citiesJson = [];
+      
+      if (data is Map && data.containsKey('data')) {
+        citiesJson = data['data'] as List<dynamic>;
+      } else if (data is List) {
+        citiesJson = data;
+      }
+      
       return citiesJson.map((json) => City.fromJson(json)).toList();
     } else {
       throw Exception(_handleErrorResponse(response));
@@ -218,15 +230,28 @@ class ApiService {
   
   // Belirli bir şehre ait ilçeleri getir
   Future<List<District>> getDistrictsByCityIdAsObjects(String cityId) async {
-    final url = Uri.parse('$baseUrl$apiPath/cities/$cityId/districts');
+    final uri = Uri.parse('$baseUrl$apiPath').replace(
+      queryParameters: {
+        'endpoint': 'get_districts',
+        'city_id': cityId,
+      },
+    );
+    
     final response = await http.get(
-      url,
+      uri,
       headers: await _getHeaders(),
     );
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      final List<dynamic> districtsJson = data['data'] ?? [];
+      List<dynamic> districtsJson = [];
+      
+      if (data is Map && data.containsKey('data')) {
+        districtsJson = data['data'] as List<dynamic>;
+      } else if (data is List) {
+        districtsJson = data;
+      }
+      
       return districtsJson.map((json) => District.fromJson(json)).toList();
     } else {
       throw Exception(_handleErrorResponse(response));
@@ -315,15 +340,25 @@ class ApiService {
   
   // Post detayını getir
   Future<Post> getPostById(String postId) async {
-    final url = Uri.parse('$baseUrl$apiPath/posts/$postId');
+    final uri = Uri.parse('$baseUrl$apiPath').replace(
+      queryParameters: {
+        'endpoint': 'get_post_detail',
+        'post_id': postId,
+      },
+    );
+    
     final response = await http.get(
-      url,
+      uri,
       headers: await _getHeaders(),
     );
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return Post.fromJson(data['data']);
+      if (data is Map && data.containsKey('data')) {
+        return Post.fromJson(data['data']);
+      } else {
+        return Post.fromJson(data);
+      }
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -452,15 +487,27 @@ class ApiService {
   
   // Kategoriler listesini getir
   Future<List<Category>> getCategories() async {
-    final url = Uri.parse('$baseUrl$apiPath/categories');
+    final uri = Uri.parse('$baseUrl$apiPath').replace(
+      queryParameters: {
+        'endpoint': 'get_categories',
+      },
+    );
+    
     final response = await http.get(
-      url,
+      uri,
       headers: await _getHeaders(),
     );
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      final List<dynamic> categoriesJson = data['data'] ?? [];
+      List<dynamic> categoriesJson = [];
+      
+      if (data is Map && data.containsKey('data')) {
+        categoriesJson = data['data'] as List<dynamic>;
+      } else if (data is List) {
+        categoriesJson = data;
+      }
+      
       return categoriesJson.map((json) => Category.fromJson(json)).toList();
     } else {
       throw Exception(_handleErrorResponse(response));
