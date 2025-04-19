@@ -30,6 +30,8 @@ class Post {
   final List<String>? imageUrls;
   final String? videoUrl;
   final int? satisfactionRating;
+  final String? username;
+  final String? profileImageUrl;
   
   // Widget'lar için getter'lar
   int get likeCount => likes;
@@ -65,6 +67,8 @@ class Post {
     this.imageUrls,
     this.videoUrl,
     this.satisfactionRating,
+    this.username,
+    this.profileImageUrl,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -221,9 +225,12 @@ class Post {
         districtId: data['district_id']?.toString(),
         status: parseStatus(data['status']),
         type: parseType(data['type']),
-        likes: data['likes'] ?? data['like_count'] ?? 0,
-        highlights: data['highlights'] ?? data['highlight_count'] ?? 0,
-        commentCount: data['comment_count'] ?? data['comments_count'] ?? 0,
+        likes: data['likes'] != null ? (data['likes'] is int ? data['likes'] : int.tryParse(data['likes'].toString()) ?? 0) : 
+              data['like_count'] != null ? (data['like_count'] is int ? data['like_count'] : int.tryParse(data['like_count'].toString()) ?? 0) : 0,
+        highlights: data['highlights'] != null ? (data['highlights'] is int ? data['highlights'] : int.tryParse(data['highlights'].toString()) ?? 0) : 
+                  data['highlight_count'] != null ? (data['highlight_count'] is int ? data['highlight_count'] : int.tryParse(data['highlight_count'].toString()) ?? 0) : 0,
+        commentCount: data['comment_count'] != null ? (data['comment_count'] is int ? data['comment_count'] : int.tryParse(data['comment_count'].toString()) ?? 0) : 
+                    data['comments_count'] != null ? (data['comments_count'] is int ? data['comments_count'] : int.tryParse(data['comments_count'].toString()) ?? 0) : 0,
         isAnonymous: data['is_anonymous'] ?? data['anonymous'] ?? false,
         createdAt: parseDateTime(data['created_at'] ?? data['post_date']),
         imageUrls: data['image_urls'] is List 
@@ -235,6 +242,8 @@ class Post {
             : data['satisfaction_score'] != null
                 ? int.tryParse(data['satisfaction_score'].toString())
                 : null,
+        username: data['username'],
+        profileImageUrl: data['profile_image_url'],
       );
     } catch (e) {
       print('Error parsing Post from JSON: $e');
@@ -341,6 +350,8 @@ class Post {
     List<String>? imageUrls,
     String? videoUrl,
     int? satisfactionRating,
+    String? username,
+    String? profileImageUrl,
   }) {
     return Post(
       id: id ?? this.id,
@@ -360,6 +371,8 @@ class Post {
       imageUrls: imageUrls ?? this.imageUrls,
       videoUrl: videoUrl ?? this.videoUrl,
       satisfactionRating: satisfactionRating ?? this.satisfactionRating,
+      username: username ?? this.username,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
     );
   }
 }

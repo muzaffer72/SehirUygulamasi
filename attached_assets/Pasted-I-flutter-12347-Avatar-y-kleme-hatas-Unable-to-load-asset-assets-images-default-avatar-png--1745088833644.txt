@@ -1,0 +1,74 @@
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Loading posts page 1
+I/flutter (12347): Fetching posts from: https://sehir.muzaffersanli.com/api.php?endpoint=posts&page=1&per_page=10&api_key=440bf0009c749943b440f7f5c6c2fd26
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): API response status: 200
+I/flutter (12347): API response body: [{"id":"85","title":"OtobÃ¼s hatlarÄ±nÄ±n yetersizliÄi","content":"BazÄ± sokaklar yeterince aydÄ±nl...
+I/flutter (12347): Error parsing Post from JSON: type 'String' is not a subtype of type 'int'
+I/flutter (12347): Problematic JSON: {id: 85, title: OtobÃ¼s hatlarÄ±nÄ±n yetersizliÄi, content: BazÄ± sokaklar yeterince aydÄ±nlatÄ±lmÄ±yor ve bu gÃ¼venlik sorunlarÄ± yaratÄ±yor. AydÄ±nlatma sisteminin gÃ¼Ã§lendirilmesini istiyoruz., user_id: 142, category_id: 8, city_id: 6, district_id: 352, status: inProgress, type: general, likes: 1, highlights: 0, comment_count: 3, is_anonymous: f, created_at: 2025-04-11 23:28:28.663529+03, username: elif.yildirim80, profile_image_url: https://randomuser.me/api/portraits/women/1.jpg, city_name: GAZÄ°ANTEP, district_name: ÅEHÄ°TKAMÄ°L, category_name: Sosyal Hizmetler, category_icon: people, user: {id: 142, name: Elif YÄ±ldÄ±rÄ±m, username: elif.yildirim80, profile_image_url: https://randomuser.me/api/portraits/women/1.jpg}}
+I/flutter (12347): Error parsing Post from JSON: type 'String' is not a subtype of type 'int'
+I/flutter (12347): Problematic JSON: {id: 88, title: Åehir aydÄ±nlatmasÄ± sorunu, content: BazÄ± sokaklar yeterince aydÄ±nlatÄ±lmÄ±yor ve bu gÃ¼venlik sorunlarÄ± yaratÄ±yor. AydÄ±nlatma sisteminin gÃ¼Ã§lendirilmesini istiyoruz., user_id: 136, category_id: 7, city_id: 2, district_id: 344, status: rejected, type: announcement, likes: 4, highlights: 0, comment_count: 3, is_anonymous: f, created_at: 2025-04-11 23:28:28.663529+03, username: erkan.alp755, profile_image_url: https://randomuser.me/api/portraits/men/5.jpg, city_name: ESKÄ°ÅEHÄ°R, district_name: TEPEBAÅI, category_name: KÃ¼ltÃ¼r & Sanat, category_icon: theater_comedy, user: {id: 136, name: Erkan Alp, username: erkan.alp755, profile_image_url: https://randomuser.me/api/portraits/men/5.jpg}}
+I/flutter (12347): Error parsing Post from JSON: type 'String' is not a subtype of type 'int'
+I/flutter (12347): Problematic JSON: {id: 79, title: ParklarÄ±n temizliÄi ve gÃ¼venliÄi, content: SokaÄÄ±mÄ±zda gÃ¼nlerdir Ã§Ã¶pler toplanmÄ±yor ve kÃ¶tÃ¼ koku oluÅmaya baÅladÄ±. Belediyenin bu sorunu acilen Ã§Ã¶zmesini talep ediyoruz., user_id: 138, category_id: 6, city_id: 6, district_id: 348, status: solved, type: problem, likes: 2, highlights: 0, comment_count: 3, is_anonymous: f, created_at: 2025-04-11 23:28:28.663529+03, username: esra.ozturk858, profile_image_url: https://randomuser.me/api/portraits/women/2.jpg, city_name: GAZÄ°ANTEP, district_name: NÄ°ZÄ°P, category_name: EÄitim, category_icon: school, user: {id: 138, name: Esra ÃztÃ¼rk, username: esra.ozturk858, profile_image_url: https://randomuser.me/api/portraits/women/2.jpg}}
+I/flutter (12347): Error parsing Post from JSON: type 'String' is not a subtype of type 'int'
+I/flutter (12347): Problematic JSON: {id: 81, title: Ãevre dÃ¼zenlemesi yapÄ±lmasÄ± gereken bÃ¶lgeler, content: Merkeze giden otobÃ¼s hatlarÄ± Ã§ok az ve seyrek. Yeni gÃ¼zergahlar eklenmesini talep ediyoruz., user_id: 138, category_id: 5, city_id: 2, district_id: 343, status: solved, type: problem, likes: 3, highlights: 0, comment_count: 0, is_anonymous: f, created_at: 2025-04-11 23:28:28.663529+03, username: esra.ozturk858, profile_image_url: https://randomuser.me/api/portraits/women/2.jpg, city_name: ESKÄ°ÅEHÄ°R, district_name: SÄ°VRÄ°HÄ°SAR, category_name: SaÄlÄ±k, category_icon: local_hospital, user: {id: 138, name: Esra ÃztÃ¼rk, username: esra.ozturk858, profile_image_url: https://randomuser.me/api/portraits/women/2.jpg}}
+I/flutter (12347): Error parsing Post from JSON: type 'String' is not a subtype of type 'int'
+I/flutter (12347): Problematic JSON: {id: 87, title: Yol Ã§alÄ±ÅmalarÄ± ne zaman bitecek?, content: SÃ¼rekli yaÅanan su kesintileri gÃ¼nlÃ¼k hayatÄ±mÄ±zÄ± olumsuz etkiliyor. Ãnceden bilgilendirme yapÄ±lmasÄ±nÄ± istiyoruz., user_id: 142, category_id: 5, city_id: 34, district_id: 302, status: solved, type: problem, likes: 2, highlights: 0, comment_count: 0, is_anonymous: f, created_at: 2025-04-11 23:28:28.663529+03, username: elif.yildirim80, profile_image_url: https://randomuser.me/api/portraits/women/1.jpg, city_name: ERZÄ°NCAN, district_name: ÃAYIRLI, category_name: SaÄlÄ±k, category_icon: local_hospital, user: {id: 142, name: Elif YÄ±ldÄ±rÄ±m, username: elif.yildirim80, profile_image_url: https://randomuser.me/api/portraits/women/1.jpg}}
+I/flutter (12347): Error parsing Post from JSON: type 'String' is not a subtype of type 'int'
+I/flutter (12347): Problematic JSON: {id: 83, title: Park ve bahÃ§elerin durumu kÃ¶tÃ¼, content: Sabah ve akÅam saatlerinde toplu taÅÄ±ma yetersiz kalÄ±yor. Daha sÄ±k sefer konulmasÄ±nÄ± talep ediyoruz., user_id: 144, category_id: 9, city_id: 34, district_id: 309, status: inProgress, type: problem, likes: 4, highlights: 0, comment_count: 4, is_anonymous: f, created_at: 2025-04-11 23:28:28.663529+03, username: ahmet.tekin215, profile_image_url: https://randomuser.me/api/portraits/women/2.jpg, city_name: ERZÄ°NCAN, district_name: TERCAN, category_name: DiÄer, category_icon: more_horiz, user: {id: 144, name: Ahmet Tekin, username: ahmet.tekin215, profile_image_url: https://randomuser.me/api/portraits/women/2.jpg}}
+I/flutter (12347): Error parsing Post from JSON: type 'String' is not a subtype of type 'int'
+I/flutter (12347): Problematic JSON: {id: 84, title: Ãevre dÃ¼zenlemesi yapÄ±lmasÄ± gereken bÃ¶lgeler, content: Okul Ã§Ä±kÄ±Å saatlerinde trafik Ã§ok yoÄun oluyor ve bu durum tehlikeli durumlar yaratÄ±yor. Trafik dÃ¼zenlemesi yapÄ±lmasÄ± gerekiyor., user_id: 137, category_id: 9, city_id: 34, district_id: 304, status: solved, type: announcement, likes: 3, highlights: 0, comment_count: 1, is_anonymous: f, created_at: 2025-04-11 23:28:28.663529+03, username: hulya.avci433, profile_image_url: https://randomuser.me/api/portraits/women/5.jpg, city_name: ERZÄ°NCAN, district_name: KEMAH, category_name: DiÄer, category_icon: more_horiz, user: {id: 137, name: HÃ¼lya AvcÄ±, username: hulya.avci433, profile_image_url: https://randomuser.me/api/portraits/women/5.jpg}}
+I/flutter (12347): Error parsing Post from JSON: type 'String' is not a subtype of type 'int'
+I/flutter (12347): Problematic JSON: {id: 82, title: OtobÃ¼s hatlarÄ±nÄ±n yetersizliÄi, content: SokaÄÄ±mÄ±zda gÃ¼nlerdir Ã§Ã¶pler toplanmÄ±yor ve kÃ¶tÃ¼ koku oluÅmaya baÅladÄ±. Belediyenin bu sorunu acilen Ã§Ã¶zmesini talep ediyoruz., user_id: 143, category_id: 5, city_id: 2, district_id: 338, status: rejected, type: general, likes: 5, highlights: 0, comment_count: 3, is_anonymous: f, created_at: 2025-04-11 23:28:28.663529+03, username: emine.duran590, profile_image_url: https://randomuser.me/api/portraits/women/1.jpg, city_name: ESKÄ°ÅEHÄ°R, district_name: MÄ°HALGAZÄ°, category_name: SaÄlÄ±k, category_icon: local_hospital, user: {id: 143, name: Emine Duran, username: emine.duran590, profile_image_url: https://randomuser.me/api/portraits/women/1.jpg}}
+I/flutter (12347): Error parsing Post from JSON: type 'String' is not a subtype of type 'int'
+I/flutter (12347): Problematic JSON: {id: 80, title: OtobÃ¼s hatlarÄ±nÄ±n yetersizliÄi, content: 2ParklarÄ±mÄ±zda gÃ¼venlik kameralarÄ± ve daha fazla aydÄ±nlatma olmasÄ± gerekiyor. Ãzellikle akÅam saatlerinde parklar gÃ¼vensiz hale geliyor., user_id: 136, category_id: 4, city_id: 34, district_id: 302, status: solved, type: general, likes: 0, highlights: 0, comment_count: 1, is_anonymous: f, created_at: 2025-04-11 23:28:28.663529+03, username: erkan.alp755, profile_image_url: https://randomuser.me/api/portraits/men/5.jpg, city_name: ERZÄ°NCAN, district_name: ÃAYIRLI, category_name: GÃ¼venlik, category_icon: security, user: {id: 136, name: Erkan Alp, username: erkan.alp755, profile_image_url: https://randomuser.me/api/portraits/men/5.jpg}}
+I/flutter (12347): Error parsing Post from JSON: type 'String' is not a subtype of type 'int'
+I/flutter (12347): Problematic JSON: {id: 86, title: OtobÃ¼s hatlarÄ±nÄ±n yetersizliÄi, content: BazÄ± sokaklar yeterince aydÄ±nlatÄ±lmÄ±yor ve bu gÃ¼venlik sorunlarÄ± yaratÄ±yor. AydÄ±nlatma sisteminin gÃ¼Ã§lendirilmesini istiyoruz., user_id: 137, category_id: 7, city_id: 6, district_id: 353, status: awaitingSolution, type: suggestion, likes: 2, highlights: 0, comment_count: 4, is_anonymous: f, created_at: 2025-04-11 23:28:28.663529+03, username: hulya.avci433, profile_image_url: https://randomuser.me/api/portraits/women/5.jpg, city_name: GAZÄ°ANTEP, district_name: YAVUZELÄ°, category_name: KÃ¼ltÃ¼r & Sanat, category_icon: theater_comedy, user: {id: 137, name: HÃ¼lya AvcÄ±, username: hulya.avci433, profile_image_url: https://randomuser.me/api/portraits/women/5.jpg}}
+I/flutter (12347): Parsed 10 posts successfully
+I/flutter (12347): Loaded 10 posts
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Avatar yükleme hatası: Unable to load asset: "assets/images/default_avatar.png".
+I/flutter (12347): Exception: Asset not found
+I/flutter (12347): Error in getUserById: 401 - {"error":"API anahtarÄ± gerekli. URL parametresi olarak api_key=KEY veya X-API-KEY header'Ä± kullanabilirsiniz."}
+I/flutter (12347): Error in getUserById: 401 - {"error":"API anahtarÄ± gerekli. URL parametresi olarak api_key=KEY veya X-API-KEY header'Ä± kullanabilirsiniz."}
+I/flutter (12347): Error in getUserById: 401 - {"error":"API anahtarÄ± gerekli. URL parametresi olarak api_key=KEY veya X-API-KEY header'Ä± kullanabilirsiniz."}
+I/flutter (12347): Error in getUserById: 401 - {"error":"API anahtarÄ± gerekli. URL parametresi olarak api_key=KEY veya X-API-KEY header'Ä± kullanabilirsiniz."}
+I/flutter (12347): Error in getUserById: 401 - {"error":"API anahtarÄ± gerekli. URL parametresi olarak api_key=KEY veya X-API-KEY header'Ä± kullanabilirsiniz."}
+I/flutter (12347): Error in getUserById: 401 - {"error":"API anahtarÄ± gerekli. URL parametresi olarak api_key=KEY veya X-API-KEY header'Ä± kullanabilirsiniz."}
