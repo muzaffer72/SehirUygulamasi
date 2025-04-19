@@ -68,7 +68,7 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SafeSingleTi
                   fit: StackFit.expand,
                   children: [
                     Image.network(
-                      widget.cityProfile.demoCoverImageUrl,
+                      widget.cityProfile.demoCoverImageUrl ?? 'https://via.placeholder.com/800x400?text=Şehir+Kapak+Fotoğrafı',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
@@ -151,7 +151,7 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SafeSingleTi
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.network(
-                  widget.cityProfile.demoImageUrl,
+                  widget.cityProfile.demoImageUrl ?? 'https://via.placeholder.com/110x110?text=Şehir+Resmi',
                   width: 110,
                   height: 110,
                   fit: BoxFit.cover,
@@ -192,7 +192,7 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SafeSingleTi
                                 children: [
                                   CircleAvatar(
                                     radius: 15,
-                                    backgroundImage: NetworkImage(widget.cityProfile.demoMayorImageUrl),
+                                    backgroundImage: NetworkImage(widget.cityProfile.demoMayorImageUrl ?? 'https://via.placeholder.com/30x30?text=Başkan'),
                                     onBackgroundImageError: (exception, stackTrace) => {},
                                     backgroundColor: Colors.grey.withOpacity(0.3),
                                     child: const Icon(
@@ -204,7 +204,7 @@ class _CityProfileScreenState extends State<CityProfileScreen> with SafeSingleTi
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      widget.cityProfile.demoMayorName,
+                                      widget.cityProfile.demoMayorName ?? 'Belediye Başkanı',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
