@@ -612,12 +612,11 @@ class ApiService {
             totalComplaints: 0,
             solvedComplaints: 0, 
             activeComplaints: 0,
-            totalSuggestions: 0,
             satisfactionRate: 0,
             responseRate: 0,
             problemSolvingRate: 0,
             averageResponseTime: 0,
-            solutionRate: 0.0
+            solutionRate: -0.0
           );
         }
         return null;
