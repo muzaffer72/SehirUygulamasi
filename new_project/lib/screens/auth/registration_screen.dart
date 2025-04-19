@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/providers/city_provider.dart';
-import 'package:sikayet_var/models/city.dart';
-import 'package:sikayet_var/models/district.dart';
-import 'package:sikayet_var/utils/validators.dart';
+import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/city_provider.dart';
+import 'package:belediye_iletisim_merkezi/models/city.dart';
+import 'package:belediye_iletisim_merkezi/models/district.dart';
+import 'package:belediye_iletisim_merkezi/utils/validators.dart';
 
 class RegistrationScreen extends ConsumerStatefulWidget {
   const RegistrationScreen({Key? key}) : super(key: key);

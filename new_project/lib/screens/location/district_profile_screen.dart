@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/district.dart';
-import 'package:sikayet_var/providers/city_provider.dart';
-import 'package:sikayet_var/providers/post_provider.dart';
-import 'package:sikayet_var/widgets/post_card.dart';
-import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
+import 'package:belediye_iletisim_merkezi/models/district.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/providers/city_profile_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/post_provider.dart';
+import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
+import 'package:belediye_iletisim_merkezi/screens/posts/post_detail_screen.dart';
 
 class DistrictProfileScreen extends ConsumerWidget {
   final String districtId;
@@ -36,9 +37,14 @@ class DistrictProfileScreen extends ConsumerWidget {
   Widget _buildDistrictProfile(
     BuildContext context,
     WidgetRef ref,
-    District district,
+    District? district,
     AsyncValue<List<Post>> postsAsync,
   ) {
+    if (district == null) {
+      return const Center(
+        child: Text('İlçe bilgisi bulunamadı'),
+      );
+    }
     return RefreshIndicator(
       onRefresh: () async {
         ref.refresh(districtProfileProvider(districtId));
@@ -76,10 +82,10 @@ class DistrictProfileScreen extends ConsumerWidget {
                   ),
                   
                   // City name
-                  FutureBuilder<City>(
+                  FutureBuilder<CityProfile?>(
                     future: ref.read(apiServiceProvider).getCityProfile(district.cityId),
                     builder: (context, snapshot) {
-                      if (snapshot.hasData) {
+                      if (snapshot.hasData && snapshot.data != null) {
                         return Text(
                           snapshot.data!.name,
                           style: const TextStyle(

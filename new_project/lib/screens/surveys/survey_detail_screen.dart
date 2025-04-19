@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/survey.dart';
-import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/providers/current_user_provider.dart';
-import 'package:sikayet_var/services/api_service.dart';
-import 'package:sikayet_var/providers/user_provider.dart';
-import 'package:sikayet_var/providers/api_service_provider.dart';
-import 'package:sikayet_var/providers/survey_provider.dart';
+import 'package:belediye_iletisim_merkezi/models/survey.dart';
+import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/current_user_provider.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/providers/user_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/survey_provider.dart';
 
 class SurveyDetailScreen extends ConsumerStatefulWidget {
   final Survey survey;

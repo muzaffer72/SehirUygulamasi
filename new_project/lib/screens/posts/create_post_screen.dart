@@ -1,18 +1,18 @@
-import 'dart:io' if (dart.library.html) 'package:sikayet_var/utils/web_stub.dart';
+import 'dart:io' if (dart.library.html) 'package:belediye_iletisim_merkezi/utils/web_stub.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sikayet_var/models/category.dart' as app_category;
-import 'package:sikayet_var/models/city.dart';
-import 'package:sikayet_var/models/district.dart';
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/providers/api_service_provider.dart';
-import 'package:sikayet_var/providers/current_user_provider.dart';
-import 'package:sikayet_var/providers/user_provider.dart';
-import 'package:sikayet_var/services/api_service.dart';
-import 'package:sikayet_var/utils/constants.dart';
+import 'package:belediye_iletisim_merkezi/models/category.dart' as app_category;
+import 'package:belediye_iletisim_merkezi/models/city.dart';
+import 'package:belediye_iletisim_merkezi/models/district.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/current_user_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/user_provider.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/utils/constants.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   final PostType type;

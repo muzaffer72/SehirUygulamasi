@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/providers/post_provider.dart';
-import 'package:sikayet_var/widgets/filter_bar.dart';
-import 'package:sikayet_var/widgets/post_card.dart';
-import 'package:sikayet_var/widgets/survey_slider.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/providers/post_provider.dart';
+import 'package:belediye_iletisim_merkezi/widgets/filter_bar.dart';
+import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
+import 'package:belediye_iletisim_merkezi/widgets/survey_slider.dart';
 
 // Post filtreleme state'leri için provider'lar
 final cityFilterProvider = StateProvider<String?>((ref) => null);

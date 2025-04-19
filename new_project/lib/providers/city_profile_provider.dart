@@ -33,3 +33,11 @@ final districtsByCityProvider = FutureProvider.family<List<District>, dynamic>(
     return apiService.getDistrictsByCityIdAsObjects(cityIdStr);
   },
 );
+
+// Belirli bir ilçenin detaylarını getiren provider
+final districtProfileProvider = FutureProvider.family<District?, String>(
+  (ref, districtId) async {
+    final apiService = ref.watch(apiServiceProvider);
+    return apiService.getDistrictById(districtId);
+  },
+);

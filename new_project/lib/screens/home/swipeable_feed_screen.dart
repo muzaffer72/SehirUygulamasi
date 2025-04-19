@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/utils/matrix_fix.dart';
-import 'package:sikayet_var/utils/ticker_fix.dart';
-import 'package:sikayet_var/screens/home/city_feed_screen.dart';
-import 'package:sikayet_var/screens/home/district_feed_screen.dart';
+import 'package:belediye_iletisim_merkezi/utils/matrix_fix.dart';
+import 'package:belediye_iletisim_merkezi/utils/ticker_fix.dart';
+import 'package:belediye_iletisim_merkezi/screens/home/city_feed_screen.dart';
+import 'package:belediye_iletisim_merkezi/screens/home/district_feed_screen.dart';
 
 class SwipeableFeedScreen extends ConsumerStatefulWidget {
   const SwipeableFeedScreen({Key? key}) : super(key: key);

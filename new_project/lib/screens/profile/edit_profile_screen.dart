@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sikayet_var/models/user.dart';
-import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/providers/city_provider.dart';
+import 'package:belediye_iletisim_merkezi/models/user.dart';
+import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/city_provider.dart';
 import 'dart:io';
 
 class EditProfileScreen extends ConsumerStatefulWidget {

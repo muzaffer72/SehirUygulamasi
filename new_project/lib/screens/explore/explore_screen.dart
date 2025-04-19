@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/utils/matrix_fix.dart';
-import 'package:sikayet_var/utils/ticker_fix.dart';
-import 'package:sikayet_var/models/city.dart';
-import 'package:sikayet_var/models/district.dart';
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/providers/city_provider.dart';
-import 'package:sikayet_var/providers/post_provider.dart';
-import 'package:sikayet_var/screens/location/city_profile_screen.dart';
-import 'package:sikayet_var/screens/location/district_profile_screen.dart';
-import 'package:sikayet_var/screens/posts/post_detail_screen.dart';
-import 'package:sikayet_var/widgets/post_card.dart';
+import 'package:belediye_iletisim_merkezi/utils/matrix_fix.dart';
+import 'package:belediye_iletisim_merkezi/utils/ticker_fix.dart';
+import 'package:belediye_iletisim_merkezi/models/city.dart';
+import 'package:belediye_iletisim_merkezi/models/district.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/providers/city_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/post_provider.dart';
+import 'package:belediye_iletisim_merkezi/screens/location/city_profile_screen.dart';
+import 'package:belediye_iletisim_merkezi/screens/location/district_profile_screen.dart';
+import 'package:belediye_iletisim_merkezi/screens/posts/post_detail_screen.dart';
+import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
 
 class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({Key? key}) : super(key: key);

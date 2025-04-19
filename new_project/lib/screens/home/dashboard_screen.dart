@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/providers/current_user_provider.dart';
-import 'package:sikayet_var/providers/user_provider.dart';
-import 'package:sikayet_var/services/api_service.dart';
-import 'package:sikayet_var/widgets/post_card.dart';
-import 'package:sikayet_var/utils/matrix_fix.dart';
-import 'package:sikayet_var/utils/ticker_fix.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/current_user_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/user_provider.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
+import 'package:belediye_iletisim_merkezi/utils/matrix_fix.dart';
+import 'package:belediye_iletisim_merkezi/utils/ticker_fix.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);

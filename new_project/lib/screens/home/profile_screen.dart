@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/screens/auth/login_screen.dart';
-import 'package:sikayet_var/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
+import 'package:belediye_iletisim_merkezi/screens/auth/login_screen.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);

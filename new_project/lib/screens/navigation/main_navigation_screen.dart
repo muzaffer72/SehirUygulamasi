@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/providers/current_user_provider.dart';
-import 'package:sikayet_var/providers/post_provider.dart';
-import 'package:sikayet_var/providers/user_provider.dart';
-import 'package:sikayet_var/screens/home/dashboard_screen.dart';
-import 'package:sikayet_var/screens/home/swipeable_feed_screen.dart'; // Değişiklik: FeedScreen yerine SwipeableFeedScreen kullanılıyor
-import 'package:sikayet_var/screens/notifications/notifications_screen.dart';
-import 'package:sikayet_var/screens/profile/profile_screen.dart';
-import 'package:sikayet_var/screens/search/search_screen.dart';
-import 'package:sikayet_var/screens/surveys/surveys_screen.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/current_user_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/post_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/user_provider.dart';
+import 'package:belediye_iletisim_merkezi/screens/home/dashboard_screen.dart';
+import 'package:belediye_iletisim_merkezi/screens/home/swipeable_feed_screen.dart'; // Değişiklik: FeedScreen yerine SwipeableFeedScreen kullanılıyor
+import 'package:belediye_iletisim_merkezi/screens/notifications/notifications_screen.dart';
+import 'package:belediye_iletisim_merkezi/screens/profile/profile_screen.dart';
+import 'package:belediye_iletisim_merkezi/screens/search/search_screen.dart';
+import 'package:belediye_iletisim_merkezi/screens/surveys/surveys_screen.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({Key? key}) : super(key: key);

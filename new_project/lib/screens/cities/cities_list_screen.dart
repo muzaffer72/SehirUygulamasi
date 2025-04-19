@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/city.dart';
-import 'package:sikayet_var/providers/city_profile_provider.dart';
-import 'package:sikayet_var/providers/api_service_provider.dart';
-import 'package:sikayet_var/screens/cities/city_profile_screen.dart';
+import 'package:belediye_iletisim_merkezi/models/city.dart';
+import 'package:belediye_iletisim_merkezi/providers/city_profile_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
+import 'package:belediye_iletisim_merkezi/screens/cities/city_profile_screen.dart';
 
 class CitiesListScreen extends ConsumerWidget {
   const CitiesListScreen({Key? key}) : super(key: key);

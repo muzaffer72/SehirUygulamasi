@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/category.dart';
-import 'package:sikayet_var/models/post.dart';
-import 'package:sikayet_var/services/api_service.dart';
-import 'package:sikayet_var/widgets/post_card.dart';
+import 'package:belediye_iletisim_merkezi/models/category.dart';
+import 'package:belediye_iletisim_merkezi/models/post.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);

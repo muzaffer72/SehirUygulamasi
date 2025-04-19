@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/utils/matrix_fix.dart';
-import 'package:sikayet_var/utils/ticker_fix.dart';
-import 'package:sikayet_var/models/city.dart';
-import 'package:sikayet_var/models/district.dart';
-import 'package:sikayet_var/providers/auth_provider.dart';
-import 'package:sikayet_var/screens/profile/location_settings_screen.dart';
-import 'package:sikayet_var/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/utils/matrix_fix.dart';
+import 'package:belediye_iletisim_merkezi/utils/ticker_fix.dart';
+import 'package:belediye_iletisim_merkezi/models/city.dart';
+import 'package:belediye_iletisim_merkezi/models/district.dart';
+import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
+import 'package:belediye_iletisim_merkezi/screens/profile/location_settings_screen.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
