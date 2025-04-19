@@ -292,7 +292,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                         ),
                       )
                     : FutureBuilder<User?>(
-                        future: ref.read(apiServiceProvider).getUserById(widget.post.userId),
+                        future: ref.read(apiServiceProvider).getUserById(int.parse(widget.post.userId)),
                         builder: (context, snapshot) {
                           final userName = snapshot.hasData
                               ? snapshot.data!.name
@@ -532,7 +532,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                     ),
                   )
                 : FutureBuilder<User?>(
-                    future: ref.read(apiServiceProvider).getUserById(widget.post.userId),
+                    future: ref.read(apiServiceProvider).getUserById(int.parse(widget.post.userId)),
                     builder: (context, snapshot) {
                       if (snapshot.hasData && snapshot.data!.profileImageUrl != null) {
                         return ClipOval(
@@ -595,7 +595,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                             ),
                           )
                         : FutureBuilder<User?>(
-                            future: _apiService.getUserById(widget.post.userId),
+                            future: ref.read(apiServiceProvider).getUserById(int.parse(widget.post.userId)),
                             builder: (context, snapshot) {
                               // Yükleme durumu, hata durumu veya veri yoksa
                               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -673,9 +673,9 @@ class _PostCardState extends ConsumerState<PostCard> {
                 if (widget.post.cityId != null)
                   FutureBuilder<List<dynamic>>(
                     future: Future.wait([
-                      _apiService.getCityById(widget.post.cityId!),
+                      ref.read(apiServiceProvider).getCityById(int.parse(widget.post.cityId!)),
                       if (widget.post.districtId != null) 
-                        _apiService.getDistrictById(widget.post.districtId!) 
+                        ref.read(apiServiceProvider).getDistrictById(int.parse(widget.post.districtId!)) 
                       else 
                         Future.value(null),
                     ]),
@@ -743,7 +743,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                 // Kategori
                 if (widget.post.categoryId != null)
                   FutureBuilder<Category?>(
-                    future: _apiService.getCategoryById(widget.post.categoryId!),
+                    future: ref.read(apiServiceProvider).getCategoryById(int.parse(widget.post.categoryId!)),
                     builder: (context, snapshot) {
                       // Yükleme, hata veya veri yoksa
                       if (snapshot.connectionState == ConnectionState.waiting) {

@@ -27,7 +27,16 @@ class PostService {
   
   // Create a new post
   Future<Post> createPost(Post post) async {
-    return _apiService.createPost(post);
+    return _apiService.createPost(
+      title: post.title,
+      content: post.content,
+      type: post.type,
+      categoryId: post.categoryId,
+      cityId: post.cityId,
+      districtId: post.districtId,
+      isAnonymous: post.isAnonymous,
+      imageUrls: post.imageUrls,
+    );
   }
   
   // Filter posts
