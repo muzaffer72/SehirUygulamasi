@@ -2,7 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
-    id "com.google.gms.google-services" apply false
+    id "com.google.gms.google-services"
 }
 
 def localProperties = new Properties()
@@ -80,4 +80,5 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 }
 
-apply plugin: 'com.google.gms.google-services'
+// Plugins zaten yukarıda tanımlandığı için buna gerek yok
+// apply plugin: 'com.google.gms.google-services'
