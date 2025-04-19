@@ -257,9 +257,14 @@ app.use('/api', async (req, res) => {
       'X-API-KEY': '440bf0009c749943b440f7f5c6c2fd26'
     };
     
-    // Diğer başlıkları ekle (Auth vs.)
+    // CORS ve X-API-KEY başlığı debug
+    console.log('API isteği gönderiliyor, Headers:', JSON.stringify(headers));
+    
+    // Diğer başlıkları ekle ama X-API-KEY değerini koruyarak (Auth vs.)
     Object.keys(req.headers).forEach(key => {
-      if (key.toLowerCase() !== 'host' && key.toLowerCase() !== 'content-length') {
+      if (key.toLowerCase() !== 'host' && 
+          key.toLowerCase() !== 'content-length' && 
+          key.toLowerCase() !== 'x-api-key') { // X-API-KEY başlığını korumak için ekledim
         headers[key] = req.headers[key];
       }
     });
@@ -271,9 +276,12 @@ app.use('/api', async (req, res) => {
       headers['Content-Length'] = Buffer.byteLength(body);
     }
     
+    // İsteği yapmadan önce debug bilgisi
+    console.log(`İstek detayları: URL=${targetUrl}, Method=${req.method}, Headers=${JSON.stringify(headers)}`);
+    
     // İsteği yap
     const response = await makeRequest(targetUrl, req.method, headers, body);
-    console.log(`Yanıt alındı: ${response.status}`);
+    console.log(`Yanıt alındı: Status=${response.status}, Body=${JSON.stringify(response.data).substring(0, 100)}...`);
     
     // Yanıtı gönder
     res.status(response.status).json(response.data);
