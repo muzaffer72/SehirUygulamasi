@@ -3,111 +3,146 @@ class CityProfile {
   final String cityId;
   final String name;
   final String? description;
+  final String? logoUrl;
+  final String? websiteUrl;
   final String? mayor;
   final String? mayorPhoto;
-  final String? population;
-  final String? area;
-  final String? established;
-  final String? website;
   final String? contactPhone;
   final String? contactEmail;
   final String? address;
-  final double? latitude;
-  final double? longitude;
-  final String? logoUrl;
-  final String? bannerUrl;
-  final String? videoUrl;
-  final int totalComplaints;
-  final int solvedComplaints;
-  final int activeComplaints;
-  final int totalSuggestions;
-  final double satisfactionRate;
-  final double responseRate;
-  final double problemSolvingRate;
-  final int averageResponseTime;
-  final String? politicalParty;
-  final String? politicalPartyLogoUrl;
-  final String? info;
+  final int? populationCount;
   final int? totalPosts;
   final int? totalSolvedIssues;
+  final double? averageResponseTime;
+  final String? foundedYear;
+  final double? area;
+  final List<String>? photos;
+  final List<String>? socialAccounts;
+  final List<String>? services;
+  final List<String>? achievements;
+  final List<String>? importantPlaces;
+  final int? totalComplaints;
+  final int? solvedComplaints;
+  final double? responseDuration;  // Ortalama yanıt süresi (saat)
+  final int? totalInProgressIssues;
+  final int? totalWaitingIssues;
+  final int? totalRejectedIssues;
+  final double? satisfactionRate;
+  final double? problemSolvingRate;
+  final double? responseRate;
   final double? solutionRate;
-  
-  // CityProfileScreen.dart'ta kullanılan getterlar
-  String? get phone => contactPhone;
-  String? get email => contactEmail;
-  String? get websiteUrl => website;
-  int get solvedIssuesCount => totalSolvedIssues ?? solvedComplaints;
-  int get totalIssuesCount => totalPosts ?? (totalComplaints + totalSuggestions);
+  final String? twitterAccount;
+  final String? instagramAccount;
+  final String? facebookAccount;
+  final String? youtubeAccount;
 
   CityProfile({
     required this.id,
-    required this.cityId,
+    required this.cityId, 
     required this.name,
     this.description,
+    this.logoUrl,
+    this.websiteUrl,
     this.mayor,
     this.mayorPhoto,
-    this.population,
-    this.area,
-    this.established,
-    this.website,
     this.contactPhone,
     this.contactEmail,
     this.address,
-    this.latitude,
-    this.longitude,
-    this.logoUrl,
-    this.bannerUrl,
-    this.videoUrl,
-    this.totalComplaints = 0,
-    this.solvedComplaints = 0,
-    this.activeComplaints = 0,
-    this.totalSuggestions = 0,
-    this.satisfactionRate = 0.0,
-    this.responseRate = 0.0,
-    this.problemSolvingRate = 0.0,
-    this.averageResponseTime = 0,
-    this.politicalParty,
-    this.politicalPartyLogoUrl,
-    this.info,
+    this.populationCount,
     this.totalPosts,
     this.totalSolvedIssues,
+    this.averageResponseTime,
+    this.foundedYear,
+    this.area,
+    this.photos,
+    this.socialAccounts,
+    this.services,
+    this.achievements,
+    this.importantPlaces,
+    this.totalComplaints,
+    this.solvedComplaints,
+    this.responseDuration,
+    this.totalInProgressIssues,
+    this.totalWaitingIssues,
+    this.totalRejectedIssues,
+    this.satisfactionRate,
+    this.problemSolvingRate,
+    this.responseRate,
     this.solutionRate,
+    this.twitterAccount,
+    this.instagramAccount,
+    this.facebookAccount,
+    this.youtubeAccount,
   });
 
   factory CityProfile.fromJson(Map<String, dynamic> json) {
+    // Fotoğrafları dönüştür
+    List<String>? photos;
+    if (json['photos'] != null) {
+      photos = List<String>.from(json['photos']);
+    }
+
+    // Sosyal hesapları dönüştür
+    List<String>? socialAccounts;
+    if (json['social_accounts'] != null) {
+      socialAccounts = List<String>.from(json['social_accounts']);
+    }
+
+    // Hizmetleri dönüştür
+    List<String>? services;
+    if (json['services'] != null) {
+      services = List<String>.from(json['services']);
+    }
+
+    // Başarıları dönüştür
+    List<String>? achievements;
+    if (json['achievements'] != null) {
+      achievements = List<String>.from(json['achievements']);
+    }
+
+    // Önemli yerleri dönüştür
+    List<String>? importantPlaces;
+    if (json['important_places'] != null) {
+      importantPlaces = List<String>.from(json['important_places']);
+    }
+
     return CityProfile(
-      id: json['id']?.toString() ?? '',
-      cityId: json['city_id']?.toString() ?? '',
+      id: json['id'].toString(),
+      cityId: json['city_id'].toString(),
       name: json['name'] ?? '',
       description: json['description'],
+      logoUrl: json['logo_url'],
+      websiteUrl: json['website_url'],
       mayor: json['mayor'],
       mayorPhoto: json['mayor_photo'],
-      population: json['population']?.toString(),
-      area: json['area']?.toString(),
-      established: json['established'],
-      website: json['website'],
-      contactPhone: json['contact_phone'] ?? json['phone'],
-      contactEmail: json['contact_email'] ?? json['email'],
+      contactPhone: json['contact_phone'],
+      contactEmail: json['contact_email'],
       address: json['address'],
-      latitude: json['latitude']?.toDouble(),
-      longitude: json['longitude']?.toDouble(),
-      logoUrl: json['logo_url'],
-      bannerUrl: json['banner_url'],
-      videoUrl: json['video_url'],
-      totalComplaints: json['total_complaints'] ?? 0,
-      solvedComplaints: json['solved_complaints'] ?? 0,
-      activeComplaints: json['active_complaints'] ?? 0,
-      totalSuggestions: json['total_suggestions'] ?? 0,
-      satisfactionRate: json['satisfaction_rate']?.toDouble() ?? 0.0,
-      responseRate: json['response_rate']?.toDouble() ?? 0.0,
-      problemSolvingRate: json['problem_solving_rate']?.toDouble() ?? 0.0,
-      averageResponseTime: json['average_response_time'] ?? 0,
-      politicalParty: json['political_party'],
-      politicalPartyLogoUrl: json['political_party_logo_url'],
-      info: json['info'],
+      populationCount: json['population_count'],
       totalPosts: json['total_posts'],
       totalSolvedIssues: json['total_solved_issues'],
+      averageResponseTime: json['average_response_time']?.toDouble(),
+      foundedYear: json['founded_year'],
+      area: json['area']?.toDouble(),
+      photos: photos,
+      socialAccounts: socialAccounts,
+      services: services,
+      achievements: achievements,
+      importantPlaces: importantPlaces,
+      totalComplaints: json['total_complaints'],
+      solvedComplaints: json['solved_complaints'],
+      responseDuration: json['response_duration']?.toDouble(),
+      totalInProgressIssues: json['total_in_progress_issues'],
+      totalWaitingIssues: json['total_waiting_issues'],
+      totalRejectedIssues: json['total_rejected_issues'],
+      satisfactionRate: json['satisfaction_rate']?.toDouble(),
+      problemSolvingRate: json['problem_solving_rate']?.toDouble(),
+      responseRate: json['response_rate']?.toDouble(),
       solutionRate: json['solution_rate']?.toDouble(),
+      twitterAccount: json['twitter_account'],
+      instagramAccount: json['instagram_account'],
+      facebookAccount: json['facebook_account'],
+      youtubeAccount: json['youtube_account'],
     );
   }
 
@@ -117,140 +152,98 @@ class CityProfile {
       'city_id': cityId,
       'name': name,
       'description': description,
+      'logo_url': logoUrl,
+      'website_url': websiteUrl,
       'mayor': mayor,
       'mayor_photo': mayorPhoto,
-      'population': population,
-      'area': area,
-      'established': established,
-      'website': website,
       'contact_phone': contactPhone,
       'contact_email': contactEmail,
       'address': address,
-      'latitude': latitude,
-      'longitude': longitude,
-      'logo_url': logoUrl,
-      'banner_url': bannerUrl,
-      'video_url': videoUrl,
-      'total_complaints': totalComplaints,
-      'solved_complaints': solvedComplaints,
-      'active_complaints': activeComplaints,
-      'total_suggestions': totalSuggestions,
-      'satisfaction_rate': satisfactionRate,
-      'response_rate': responseRate,
-      'problem_solving_rate': problemSolvingRate,
-      'average_response_time': averageResponseTime,
-      'political_party': politicalParty,
-      'political_party_logo_url': politicalPartyLogoUrl,
-      'info': info,
+      'population_count': populationCount,
       'total_posts': totalPosts,
       'total_solved_issues': totalSolvedIssues,
+      'average_response_time': averageResponseTime,
+      'founded_year': foundedYear,
+      'area': area,
+      'photos': photos,
+      'social_accounts': socialAccounts,
+      'services': services,
+      'achievements': achievements,
+      'important_places': importantPlaces,
+      'total_complaints': totalComplaints,
+      'solved_complaints': solvedComplaints,
+      'response_duration': responseDuration,
+      'total_in_progress_issues': totalInProgressIssues,
+      'total_waiting_issues': totalWaitingIssues,
+      'total_rejected_issues': totalRejectedIssues,
+      'satisfaction_rate': satisfactionRate,
+      'problem_solving_rate': problemSolvingRate,
+      'response_rate': responseRate,
       'solution_rate': solutionRate,
+      'twitter_account': twitterAccount,
+      'instagram_account': instagramAccount,
+      'facebook_account': facebookAccount,
+      'youtube_account': youtubeAccount,
     };
   }
 
-  // Memnuniyet oranını yüzde olarak formatla
-  String get formattedSatisfactionRate => '%${(satisfactionRate * 100).toStringAsFixed(1)}';
-
-  // Yanıt oranını yüzde olarak formatla  
-  String get formattedResponseRate => '%${(responseRate * 100).toStringAsFixed(1)}';
-
-  // Problem çözme oranını yüzde olarak formatla
-  String get formattedProblemSolvingRate => '%${(problemSolvingRate * 100).toStringAsFixed(1)}';
-
-  // Ortalama yanıt süresini gün cinsinden formatla
-  String get formattedResponseTime {
-    if (averageResponseTime < 24) {
-      return '$averageResponseTime saat';
-    } else {
-      final days = (averageResponseTime / 24).floor();
-      return '$days gün';
-    }
-  }
-
-  // Nüfus ve alan bilgisine göre nüfus yoğunluğunu hesapla
-  String? get populationDensity {
-    if (population == null || area == null) return null;
+  String get formattedSolutionRate {
+    if (solutionRate == null) return '0%';
     
-    try {
-      final populationValue = int.parse(population!);
-      final areaValue = double.parse(area!);
-      
-      if (areaValue == 0) return null;
-      
-      final density = (populationValue / areaValue).round();
-      return '$density kişi/km²';
-    } catch (e) {
-      return null;
-    }
+    // Eğer değer 0-1 arasındaysa, yüzde olarak hesapla
+    double rate = (solutionRate! <= 1.0) ? solutionRate! * 100 : solutionRate!;
+    return '${rate.toStringAsFixed(1)}%';
   }
 
-  CityProfile copyWith({
-    String? id,
-    String? cityId,
-    String? name,
-    String? description,
-    String? mayor,
-    String? mayorPhoto,
-    String? population,
-    String? area,
-    String? established,
-    String? website,
-    String? contactPhone,
-    String? contactEmail,
-    String? address,
-    double? latitude,
-    double? longitude,
-    String? logoUrl,
-    String? bannerUrl,
-    String? videoUrl,
-    int? totalComplaints,
-    int? solvedComplaints,
-    int? activeComplaints,
-    int? totalSuggestions,
-    double? satisfactionRate,
-    double? responseRate,
-    double? problemSolvingRate,
-    int? averageResponseTime,
-    String? politicalParty,
-    String? politicalPartyLogoUrl,
-    String? info,
-    int? totalPosts,
-    int? totalSolvedIssues,
-    double? solutionRate,
-  }) {
-    return CityProfile(
-      id: id ?? this.id,
-      cityId: cityId ?? this.cityId,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      mayor: mayor ?? this.mayor,
-      mayorPhoto: mayorPhoto ?? this.mayorPhoto,
-      population: population ?? this.population,
-      area: area ?? this.area,
-      established: established ?? this.established,
-      website: website ?? this.website,
-      contactPhone: contactPhone ?? this.contactPhone,
-      contactEmail: contactEmail ?? this.contactEmail,
-      address: address ?? this.address,
-      latitude: latitude ?? this.latitude,
-      longitude: longitude ?? this.longitude,
-      logoUrl: logoUrl ?? this.logoUrl,
-      bannerUrl: bannerUrl ?? this.bannerUrl,
-      videoUrl: videoUrl ?? this.videoUrl,
-      totalComplaints: totalComplaints ?? this.totalComplaints,
-      solvedComplaints: solvedComplaints ?? this.solvedComplaints,
-      activeComplaints: activeComplaints ?? this.activeComplaints,
-      totalSuggestions: totalSuggestions ?? this.totalSuggestions,
-      satisfactionRate: satisfactionRate ?? this.satisfactionRate,
-      responseRate: responseRate ?? this.responseRate,
-      problemSolvingRate: problemSolvingRate ?? this.problemSolvingRate,
-      averageResponseTime: averageResponseTime ?? this.averageResponseTime,
-      politicalParty: politicalParty ?? this.politicalParty,
-      politicalPartyLogoUrl: politicalPartyLogoUrl ?? this.politicalPartyLogoUrl,
-      info: info ?? this.info,
-      totalPosts: totalPosts ?? this.totalPosts,
-      totalSolvedIssues: totalSolvedIssues ?? this.totalSolvedIssues,
-      solutionRate: solutionRate ?? this.solutionRate,
-    );
+  String get formattedSatisfactionRate {
+    if (satisfactionRate == null) return '0%';
+    
+    // Eğer değer 0-1 arasındaysa, yüzde olarak hesapla
+    double rate = (satisfactionRate! <= 1.0) ? satisfactionRate! * 100 : satisfactionRate!;
+    return '${rate.toStringAsFixed(1)}%';
+  }
+
+  // Çözülen sorun sayısını ve çözülme oranını formatlı olarak döndür
+  String get formattedSolvedIssues {
+    final solved = solvedComplaints ?? totalSolvedIssues ?? 0;
+    final total = totalComplaints ?? totalPosts ?? 0;
+    
+    if (total == 0) return '0/0 (0%)';
+    
+    final rate = (solved / total) * 100;
+    return '$solved/$total (${rate.toStringAsFixed(1)}%)';
+  }
+
+  // Bu method, kullanıcı arayüzünde çözüm oranını renk kodlarıyla göstermek için kullanılır
+  String getSolutionRateColor() {
+    if (solutionRate == null) return 'low';
+    
+    // 0-1 arasında bir değer mi kontrol et
+    double rate = (solutionRate! <= 1.0) ? solutionRate! : solutionRate! / 100;
+    
+    if (rate >= 0.7) return 'high';
+    if (rate >= 0.4) return 'medium';
+    return 'low';
+  }
+  
+  // Bu metod, solution_rate'in null olma durumunu kontrol eder ve güvenli bir şekilde değeri döndürür
+  double getSolutionRateValue() {
+    if (solutionRate == null) return 0.0;
+    
+    // 0-1 arasında bir değer mi kontrol et
+    return (solutionRate! <= 1.0) ? solutionRate! : solutionRate! / 100;
+  }
+
+  // Şehir profil sayfası için kısa formatlı açıklama döndürür
+  String get shortDescription {
+    if (description == null || description!.isEmpty) {
+      return '$name şehir profilinde henüz açıklama bulunmamaktadır.';
+    }
+    
+    if (description!.length <= 150) {
+      return description!;
+    }
+    
+    return '${description!.substring(0, 147)}...';
   }
 }
