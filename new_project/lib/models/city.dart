@@ -22,23 +22,58 @@ class City {
   });
 
   factory City.fromJson(Map<String, dynamic> json) {
-    // API'den gelen tüm olası alan isimlerini kontrol et
-    return City(
-      id: json['id'].toString(),
-      name: json['name'],
-      description: json['description'],
-      contactPhone: json['contact_phone'] ?? json['phone'],
-      contactEmail: json['contact_email'] ?? json['email'],
-      logoUrl: json['logo_url'],
-      // Yeni eklenen alanlar
-      complaintCount: json['complaint_count'] ?? json['total_complaints'],
-      districtCount: json['district_count'],
-      solutionRate: json['solution_rate'] != null ? 
-          (json['solution_rate'] is int ? 
-              json['solution_rate'].toDouble() : 
-              json['solution_rate']) : 
-          json['problem_solving_rate']?.toDouble(),
-    );
+    try {
+      // API'den gelen tüm olası alan isimlerini kontrol et ve güvenli şekilde dönüştür
+      return City(
+        id: json['id']?.toString() ?? '0',
+        name: json['name']?.toString() ?? 'Bilinmeyen Şehir',
+        description: json['description']?.toString(),
+        contactPhone: (json['contact_phone'] ?? json['phone'])?.toString(),
+        contactEmail: (json['contact_email'] ?? json['email'])?.toString(),
+        logoUrl: json['logo_url']?.toString(),
+        // Yeni eklenen alanlar için güvenli dönüşüm
+        complaintCount: _parseIntSafely(json['complaint_count'] ?? json['total_complaints']),
+        districtCount: _parseIntSafely(json['district_count']),
+        solutionRate: _parseDoubleSafely(json['solution_rate'] ?? json['problem_solving_rate']),
+      );
+    } catch (e) {
+      print('Error parsing City from JSON: $e - JSON: $json');
+      // Hata durumunda varsayılan bir şehir döndür
+      return City(
+        id: '0',
+        name: 'Hata - Şehir Yüklenemedi',
+      );
+    }
+  }
+  
+  // Int değerlerini güvenli şekilde ayrıştırma
+  static int? _parseIntSafely(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      try {
+        return int.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+  
+  // Double değerlerini güvenli şekilde ayrıştırma
+  static double? _parseDoubleSafely(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      try {
+        return double.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {

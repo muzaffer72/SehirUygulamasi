@@ -44,32 +44,69 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'].toString(),
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      username: json['username'],
-      phone: json['phone'],
-      bio: json['bio'],
-      profileImageUrl: json['profile_image_url'],
-      coverImageUrl: json['cover_image_url'],
-      cityId: json['city_id']?.toString() ?? '0',
-      districtId: json['district_id']?.toString(),
-      cityName: json['city_name'],
-      districtName: json['district_name'],
-      postCount: json['post_count'] ?? 0,
-      followersCount: json['followers_count'] ?? 0,
-      followingCount: json['following_count'] ?? 0,
-      solutionCount: json['solution_count'] ?? 0,
-      role: json['role'] ?? 'user',
-      isVerified: json['is_verified'] ?? false,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
-      lastLogin: json['last_login'] != null
-          ? DateTime.parse(json['last_login'])
-          : null,
-    );
+    try {
+      // API'den gelen veriyi güvenli bir şekilde dönüştür
+      return User(
+        id: json['id']?.toString() ?? '0',
+        name: json['name']?.toString() ?? 'İsimsiz Kullanıcı',
+        email: json['email']?.toString() ?? '',
+        username: json['username']?.toString(),
+        phone: json['phone']?.toString(),
+        bio: json['bio']?.toString(),
+        profileImageUrl: json['profile_image_url']?.toString(),
+        coverImageUrl: json['cover_image_url']?.toString(),
+        cityId: json['city_id']?.toString() ?? '0',
+        districtId: json['district_id']?.toString(),
+        cityName: json['city_name']?.toString(),
+        districtName: json['district_name']?.toString(),
+        postCount: _parseIntSafely(json['post_count']),
+        followersCount: _parseIntSafely(json['followers_count']),
+        followingCount: _parseIntSafely(json['following_count']),
+        solutionCount: _parseIntSafely(json['solution_count']),
+        role: json['role']?.toString() ?? 'user',
+        isVerified: json['is_verified'] == true || json['is_verified'] == 1 || json['is_verified'] == '1',
+        createdAt: json['created_at'] != null
+            ? _parseDateTimeSafely(json['created_at'].toString())
+            : DateTime.now(),
+        lastLogin: json['last_login'] != null
+            ? _parseDateTimeSafely(json['last_login'].toString())
+            : null,
+      );
+    } catch (e) {
+      print('Error parsing User from JSON: $e - JSON: $json');
+      // Hata durumunda varsayılan bir kullanıcı döndür
+      return User(
+        id: '0',
+        name: 'Hata - Kullanıcı Yüklenemedi',
+        email: '',
+        cityId: '0',
+        createdAt: DateTime.now(),
+      );
+    }
+    
+  }
+  
+  // Int değerlerini güvenli şekilde ayrıştırma
+  static int _parseIntSafely(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) {
+      try {
+        return int.parse(value);
+      } catch (e) {
+        return 0;
+      }
+    }
+    return 0;
+  }
+  
+  // DateTime değerlerini güvenli şekilde ayrıştırma
+  static DateTime _parseDateTimeSafely(String value) {
+    try {
+      return DateTime.parse(value);
+    } catch (e) {
+      return DateTime.now();
+    }
   }
 
   Map<String, dynamic> toJson() {

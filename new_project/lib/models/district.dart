@@ -10,11 +10,21 @@ class District {
   });
 
   factory District.fromJson(Map<String, dynamic> json) {
-    return District(
-      id: json['id'].toString(),
-      name: json['name'],
-      cityId: json['city_id'].toString(),
-    );
+    try {
+      return District(
+        id: json['id']?.toString() ?? '0',
+        name: json['name']?.toString() ?? 'Bilinmeyen İlçe',
+        cityId: json['city_id']?.toString() ?? '0',
+      );
+    } catch (e) {
+      print('Error parsing District from JSON: $e - JSON: $json');
+      // Hata durumunda varsayılan bir ilçe döndür
+      return District(
+        id: '0',
+        name: 'Hata - İlçe Yüklenemedi',
+        cityId: '0',
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {
