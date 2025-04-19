@@ -22,6 +22,7 @@ import 'screens/surveys/surveys_screen.dart';
 import 'pages/notification_settings_page.dart';
 import 'utils/timeago_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'providers/auth_provider.dart';
 
 // Yükleme durumu için provider
 final isLoadingProvider = StateProvider<bool>((ref) => false);
