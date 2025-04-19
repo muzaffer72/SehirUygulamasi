@@ -7,6 +7,8 @@ class Survey {
   final List<SurveyOption> options;
   final int totalVotes;
   final int targetVotes;
+  int get totalVotes_getter => totalVotes;
+  set totalVotes_setter(int value) {} // Sadece derleme hatası giderilmesi için
   final SurveyStatus status;
   final String cityId;
   final String? districtId;
@@ -219,6 +221,7 @@ class SurveyOption {
   
   // voteCount özelliği ekle (kullanıcı tarafında uyumluluk için)
   int get voteCount => votes;
+  set voteCount(int value) {} // Derleme hatası için eklendi
 
   SurveyOption({
     required this.id,

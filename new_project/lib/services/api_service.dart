@@ -207,6 +207,7 @@ class ApiService {
     String? sortBy,
     String? userId,
     String? status,
+    PostType? postType,
   }) async {
     // Query parametrelerini oluştur
     final queryParams = {
@@ -220,6 +221,7 @@ class ApiService {
     if (sortBy != null) queryParams['sort_by'] = sortBy;
     if (userId != null) queryParams['user_id'] = userId;
     if (status != null) queryParams['status'] = status;
+    if (postType != null) queryParams['type'] = postType == PostType.problem ? 'problem' : 'general';
     
     final uri = Uri.parse('$baseUrl$apiPath/posts').replace(
       queryParameters: queryParams,
