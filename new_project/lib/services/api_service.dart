@@ -345,12 +345,9 @@ class ApiService {
   
   // Post detayını getir
   Future<Post> getPostById(String postId) async {
-    final uri = Uri.parse('$baseUrl$apiPath').replace(
-      queryParameters: {
-        'endpoint': 'post_detail',
-        'post_id': postId,
-      },
-    );
+    // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=post_detail&post_id=$postId');
+    final uri = Uri.parse(uriString);
     
     final response = await http.get(
       uri,
@@ -373,12 +370,10 @@ class ApiService {
   
   // Kullanıcıya göre bildirimleri getir
   Future<List<NotificationModel>> getNotificationsByUserId(String userId) async {
-    final uri = Uri.parse('$baseUrl$apiPath').replace(
-      queryParameters: {
-        'endpoint': 'user_notifications',
-        'user_id': userId,
-      },
-    );
+    // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=user_notifications&user_id=$userId');
+    final uri = Uri.parse(uriString);
+    
     final response = await http.get(
       uri,
       headers: await _getHeaders(),

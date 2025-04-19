@@ -12,6 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Veritabanı bağlantısını dahil et
+require_once('db_connection.php');
+
 // API anahtarı kontrolü
 function checkApiKey() {
     // 1. Önce URL'de API anahtarı var mı diye kontrol et
@@ -29,20 +32,35 @@ function checkApiKey() {
         exit;
     }
     
-    // Çok basit bir API anahtarı doğrulama örneği
-    $validApiKeys = [
-        '440bf0009c749943b440f7f5c6c2fd26' // Kullanıcının sağladığı API anahtarı
-    ];
+    // Veritabanında API anahtarını kontrol et
+    global $db;
+    $stmt = $db->prepare("SELECT * FROM api_keys WHERE api_key = ? AND active = TRUE LIMIT 1");
+    $stmt->bind_param('s', $apiKey);
+    $stmt->execute();
+    $result = $stmt->get_result();
     
-    // Ortam değişkenindeki API anahtarını da kontrol et
-    $envApiKey = getenv('API_KEY');
-    if ($envApiKey) {
-        $validApiKeys[] = $envApiKey;
-    }
-    
-    if (!in_array($apiKey, $validApiKeys)) {
-        sendResponse(['error' => 'Geçersiz API anahtarı'], 401);
-        exit;
+    if ($result->num_rows() === 0) {
+        // Statik anahtar kontrolü - geçiş dönemi için
+        $staticValidKeys = [
+            '440bf0009c749943b440f7f5c6c2fd26' // Kullanıcının sağladığı API anahtarı
+        ];
+        
+        // Ortam değişkeninden API anahtarı
+        $envApiKey = getenv('API_KEY');
+        if ($envApiKey) {
+            $staticValidKeys[] = $envApiKey;
+        }
+        
+        if (!in_array($apiKey, $staticValidKeys)) {
+            sendResponse(['error' => 'Geçersiz API anahtarı'], 401);
+            exit;
+        }
+    } else {
+        // API anahtarı geçerli, kullanım sayısını artır
+        $apiKeyData = $result->fetch_assoc();
+        $updateStmt = $db->prepare("UPDATE api_keys SET usage_count = usage_count + 1, last_used = NOW() WHERE id = ?");
+        $updateStmt->bind_param('i', $apiKeyData['id']);
+        $updateStmt->execute();
     }
 }
 
