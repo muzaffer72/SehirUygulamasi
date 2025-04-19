@@ -14,6 +14,7 @@ import 'package:belediye_iletisim_merkezi/widgets/create_post_fab.dart';
 import 'package:belediye_iletisim_merkezi/screens/posts/post_detail_screen.dart';
 import 'package:belediye_iletisim_merkezi/screens/notifications/notifications_screen.dart';
 import 'package:belediye_iletisim_merkezi/screens/profile/profile_screen.dart';
+import 'package:belediye_iletisim_merkezi/screens/create_post/create_post_screen.dart';
 import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -174,8 +175,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       // Gönderi oluşturma FAB - Twitter benzeri
       floatingActionButton: CreatePostFAB(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Gönderi oluşturma yakında!'))
+          // Yeni Gönderi oluşturma sayfasına yönlendir
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CreatePostScreen(postType: PostType.problem),
+            ),
           );
         },
       ),
