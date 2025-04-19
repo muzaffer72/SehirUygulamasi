@@ -219,6 +219,13 @@ class _FilteredPostsScreenState extends State<FilteredPostsScreen> {
           padding: const EdgeInsets.only(bottom: 16),
           child: PostCard(
             post: post,
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/post_detail',
+                arguments: post.id,
+              );
+            },
             onLike: () async {
               try {
                 await _apiService.likePost(post.id);
@@ -238,15 +245,15 @@ class _FilteredPostsScreenState extends State<FilteredPostsScreen> {
                 }
               }
             },
+            onHighlight: () {
+              // Öne çıkarma işlemi
+            },
             onComment: () {
               Navigator.pushNamed(
                 context,
                 '/post_detail',
                 arguments: post.id,
               );
-            },
-            onShare: () {
-              // Paylaşma işlemi
             },
           ),
         );

@@ -101,8 +101,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     
     try {
       final comment = await _apiService.addComment(
-        widget.id,
-        _commentController.text.trim(),
+        postId: widget.id,
+        content: _commentController.text.trim(),
       );
       
       setState(() {
@@ -285,8 +285,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               // Yorum giriş alanına odaklan
               FocusScope.of(context).requestFocus(FocusNode());
             },
-            onShare: () {
-              // Paylaşma işlemi
+            onHighlight: () {
+              // Öne çıkarma işlemi
             },
           ),
           
