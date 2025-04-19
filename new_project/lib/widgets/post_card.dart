@@ -532,7 +532,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                     ),
                   )
                 : FutureBuilder<User?>(
-                    future: _apiService.getUserById(widget.post.userId),
+                    future: ref.read(apiServiceProvider).getUserById(widget.post.userId),
                     builder: (context, snapshot) {
                       if (snapshot.hasData && snapshot.data!.profileImageUrl != null) {
                         return ClipOval(
