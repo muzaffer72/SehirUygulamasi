@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiKeyManager {
   static const String _apiKeyKey = 'api_key';
+  static const String _defaultApiKey = '440bf0009c749943b440f7f5c6c2fd26';
   
   // API anahtarını SharedPreferences'a kaydet
   static Future<bool> saveApiKey(String apiKey) async {
@@ -9,10 +10,10 @@ class ApiKeyManager {
     return prefs.setString(_apiKeyKey, apiKey);
   }
   
-  // Kaydedilmiş API anahtarını getir
-  static Future<String?> getApiKey() async {
+  // Kaydedilmiş API anahtarını getir, yoksa varsayılan API anahtarını döndür
+  static Future<String> getApiKey() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_apiKeyKey);
+    return prefs.getString(_apiKeyKey) ?? _defaultApiKey;
   }
   
   // API anahtarını temizle
@@ -21,9 +22,20 @@ class ApiKeyManager {
     return prefs.remove(_apiKeyKey);
   }
   
+  // API anahtarının varsayılan anahtardan farklı bir değere sahip olup olmadığını kontrol et
+  static Future<bool> hasCustomApiKey() async {
+    final apiKey = await getApiKey();
+    return apiKey != _defaultApiKey && apiKey.isNotEmpty;
+  }
+  
   // API anahtarının var olup olmadığını kontrol et
   static Future<bool> hasApiKey() async {
     final apiKey = await getApiKey();
-    return apiKey != null && apiKey.isNotEmpty;
+    return apiKey.isNotEmpty;
+  }
+  
+  // Varsayılan API anahtarını getir
+  static String getDefaultApiKey() {
+    return _defaultApiKey;
   }
 }

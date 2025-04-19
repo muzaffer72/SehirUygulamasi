@@ -229,7 +229,8 @@ app.use('/api', async (req, res) => {
     
     // İstek başlıklarını hazırla
     const headers = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-API-KEY': '440bf0009c749943b440f7f5c6c2fd26'
     };
     
     // Diğer başlıkları ekle (Auth vs.)

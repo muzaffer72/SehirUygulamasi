@@ -10,6 +10,7 @@ import 'package:belediye_iletisim_merkezi/models/district.dart';
 import 'package:belediye_iletisim_merkezi/models/category.dart';
 import 'package:belediye_iletisim_merkezi/models/comment.dart';
 import 'package:belediye_iletisim_merkezi/utils/api_helper.dart';
+import 'package:belediye_iletisim_merkezi/utils/api_key_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
@@ -26,17 +27,17 @@ class ApiService {
     // Kayıtlı token'ı al
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    final apiKey = prefs.getString('api_key');
+    
+    // API anahtarını ApiKeyManager'dan al (varsayılan değeri döndürür)
+    final apiKey = await ApiKeyManager.getApiKey();
     
     // Token varsa, Authorization header'ına ekle
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
     
-    // API anahtarı varsa, X-API-KEY header'ına ekle
-    if (apiKey != null) {
-      headers['X-API-KEY'] = apiKey;
-    }
+    // API anahtarını her zaman ekle (varsayılan veya kullanıcı tarafından kaydedilen)
+    headers['X-API-KEY'] = apiKey;
     
     return headers;
   }
