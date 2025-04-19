@@ -69,11 +69,11 @@ class CitiesListScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getScoreColor(city.problemSolvingRate),
+                    color: _getScoreColor(city.problemSolvingRate ?? 0.0),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    '%${city.problemSolvingRate.toInt()}',
+                    '%${(city.problemSolvingRate ?? 0.0).toInt()}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

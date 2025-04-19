@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:belediye_iletisim_merkezi/models/post.dart';
 import 'package:belediye_iletisim_merkezi/models/city_profile.dart';
-import 'package:belediye_iletisim_merkezi/providers/post_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/post_provider.dart' as post_provider;
 import 'package:belediye_iletisim_merkezi/providers/theme_provider.dart';
-import 'package:belediye_iletisim_merkezi/widgets/filter_bar.dart';
+import 'package:belediye_iletisim_merkezi/widgets/filter_bar.dart' as filter_widgets;
 import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
 import 'package:belediye_iletisim_merkezi/widgets/survey_slider.dart';
 import 'package:belediye_iletisim_merkezi/widgets/best_municipality_banner.dart';
@@ -75,9 +75,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     
     try {
       // Update filter providers
-      ref.read(cityFilterProvider.notifier).state = cityId;
-      ref.read(districtFilterProvider.notifier).state = districtId;
-      ref.read(categoryFilterProvider.notifier).state = categoryId;
+      ref.read(post_provider.cityFilterProvider.notifier).state = cityId;
+      ref.read(post_provider.districtFilterProvider.notifier).state = districtId;
+      ref.read(post_provider.categoryFilterProvider.notifier).state = categoryId;
       
       // Apply filters
       await ref.read(postsProvider.notifier).filterPosts(
@@ -104,9 +104,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
   
   void _clearFilters() {
-    ref.read(cityFilterProvider.notifier).state = null;
-    ref.read(districtFilterProvider.notifier).state = null;
-    ref.read(categoryFilterProvider.notifier).state = null;
+    ref.read(post_provider.cityFilterProvider.notifier).state = null;
+    ref.read(post_provider.districtFilterProvider.notifier).state = null;
+    ref.read(post_provider.categoryFilterProvider.notifier).state = null;
     
     _loadPosts();
   }

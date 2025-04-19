@@ -43,10 +43,12 @@ class CityProfileScreen extends ConsumerWidget {
     properties.add(StringProperty('cityId', cityId));
   }
   final String cityId;
+  final String? cityName; // Opsiyonel parametre olarak şehir ismi
 
   const CityProfileScreen({
     Key? key,
     required this.cityId,
+    this.cityName,
   }) : super(key: key);
 
   @override
