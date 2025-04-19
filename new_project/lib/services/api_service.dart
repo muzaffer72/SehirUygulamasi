@@ -585,7 +585,7 @@ class ApiService {
   }
   
   // Eski API ile uyumluluk için
-  Future<dynamic> getCityProfile(dynamic cityId) async {
+  Future<CityProfile?> getCityProfile(dynamic cityId) async {
     // String'e dönüştür
     final cityIdStr = cityId.toString();
     return await getCityProfileById(cityIdStr);
@@ -651,19 +651,24 @@ class ApiService {
     String surveyId,
     String userId,
   ) async {
-    final url = Uri.parse('$baseUrl$apiPath/surveys/$surveyId/votes/$userId');
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['data'];
-    } else if (response.statusCode == 404) {
-      return null; // Oy bulunamadı
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      final url = Uri.parse('$baseUrl$apiPath/surveys/$surveyId/votes/$userId');
+      final response = await http.get(
+        url,
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['data'] as Map<String, dynamic>;
+      } else if (response.statusCode == 404) {
+        return null; // Oy bulunamadı
+      } else {
+        throw Exception(_handleErrorResponse(response));
+      }
+    } catch (e) {
+      print('Error in getUserSurveyVote: $e');
+      return null;
     }
   }
   
