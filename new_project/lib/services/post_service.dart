@@ -48,14 +48,16 @@ class PostService {
     PostType? type,
     PostStatus? status,
   }) async {
-    return _apiService.filterPosts(
-      cityId: cityId,
-      districtId: districtId,
-      categoryId: categoryId,
-      sortBy: sortBy,
-      type: type,
-      status: status,
-    );
+    Map<String, dynamic> filterParams = {};
+    
+    if (cityId != null) filterParams['cityId'] = cityId;
+    if (districtId != null) filterParams['districtId'] = districtId;
+    if (categoryId != null) filterParams['categoryId'] = categoryId;
+    if (sortBy != null) filterParams['sortBy'] = sortBy;
+    if (type != null) filterParams['type'] = type.index;
+    if (status != null) filterParams['status'] = status.index;
+    
+    return _apiService.getFilteredPosts(filterParams);
   }
   
   // Like a post
@@ -69,7 +71,10 @@ class PostService {
   }
   
   // Update a post status
-  Future<void> updatePostStatus(String postId, PostStatus status) async {
-    return _apiService.updatePostStatus(postId, status);
+  Future<Post> updatePostStatus(String postId, PostStatus status) async {
+    return _apiService.updatePost(
+      id: postId,
+      status: status.index,
+    );
   }
 }
