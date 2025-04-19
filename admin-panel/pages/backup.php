@@ -790,12 +790,10 @@ function generate_unified_sql_export($with_drop = false, $export_type = 'full') 
             
             // Veri çıkarma
             $data_query = "SELECT * FROM \"$table\"";
-            $data_stmt = $db->prepare($data_query);
-            $data_stmt->execute();
-            $data_result = $data_stmt->get_result();
+            $data_result = $db->query($data_query);
             
             // Tablo boşsa not düş ve devam et
-            if ($data_result->num_rows == 0) {
+            if ($data_result->num_rows() == 0) {
                 fwrite($f, "-- Bu tablo boş, veri yok\n\n");
                 continue;
             }
@@ -1381,11 +1379,9 @@ function import_single_file($file_path, $replace_data = false) {
             error_log("JSON içe aktarma için tablo adı: $table_name");
             
             // Tablo zaten var mı kontrol et
-            $check_query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?";
-            $check_stmt = $db->prepare($check_query);
-            $check_stmt->bind_param("s", $table_name);
-            $check_stmt->execute();
-            $table_exists = $check_stmt->get_result()->num_rows > 0;
+            $check_query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '$table_name'";
+            $check_result = $db->query($check_query);
+            $table_exists = $check_result->num_rows() > 0;
             error_log("JSON tablo kontrolü: " . ($table_exists ? "Tablo var" : "Tablo yok"));
             
             if (!$table_exists) {
@@ -1477,11 +1473,9 @@ function import_single_file($file_path, $replace_data = false) {
             
             // Tablo zaten var mı kontrol et
             error_log("CSV için tablo varlığı kontrol ediliyor: $table_name");
-            $check_query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?";
-            $check_stmt = $db->prepare($check_query);
-            $check_stmt->bind_param("s", $table_name);
-            $check_stmt->execute();
-            $table_exists = $check_stmt->get_result()->num_rows > 0;
+            $check_query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '$table_name'";
+            $check_result = $db->query($check_query);
+            $table_exists = $check_result->num_rows() > 0;
             error_log("CSV tablo kontrolü: " . ($table_exists ? "Tablo var" : "Tablo yok"));
             
             if (!$table_exists) {
