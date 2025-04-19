@@ -540,13 +540,16 @@ class SurveysScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              // Veriyi yeniden yükleme
-              // ignore: deprecated_member_use
-              context.findAncestorStateOfType<ProviderState>()?.refresh(surveysProvider);
+          Consumer(
+            builder: (context, ref, child) {
+              return ElevatedButton(
+                onPressed: () {
+                  // Veriyi yeniden yükleme (Riverpod yöntemi)
+                  ref.refresh(surveysProvider);
+                },
+                child: const Text('Tekrar Dene'),
+              );
             },
-            child: const Text('Tekrar Dene'),
           ),
         ],
       ),

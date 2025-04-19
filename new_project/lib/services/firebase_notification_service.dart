@@ -147,4 +147,70 @@ class FirebaseNotificationService {
       debugPrint('Konuya abone olunurken hata: $e');
     }
   }
+  
+  /// Bildirim ayarlarını getir
+  static Future<Map<String, bool>> getNotificationSettings() async {
+    if (!_initialized) {
+      debugPrint('FirebaseNotificationService henüz başlatılmadı');
+      // Varsayılan ayarlar
+      return {
+        'all_notifications': true,
+        'likes': true,
+        'comments': true,
+        'new_replies': true,
+        'status_updates': true,
+        'announcements': true,
+        'local_notifications': true,
+      };
+    }
+    
+    try {
+      // Gerçek implementasyonda kullanıcı ayarları veri tabanından alınacak
+      // Şimdilik varsayılan değerleri döndürüyoruz
+      return {
+        'all_notifications': true,
+        'likes': true,
+        'comments': true,
+        'new_replies': true,
+        'status_updates': true,
+        'announcements': true,
+        'local_notifications': true,
+      };
+    } catch (e) {
+      debugPrint('Bildirim ayarları alınırken hata: $e');
+      return {
+        'all_notifications': true,
+      };
+    }
+  }
+  
+  /// Tüm bildirimleri aç/kapat
+  static Future<void> setNotificationsEnabled(bool enabled) async {
+    if (!_initialized) {
+      debugPrint('FirebaseNotificationService henüz başlatılmadı');
+      return;
+    }
+    
+    try {
+      // Gerçek implementasyonda kullanıcı ayarları veri tabanına kaydedilecek
+      debugPrint('Tüm bildirimler ${enabled ? 'etkinleştirildi' : 'devre dışı bırakıldı'}');
+    } catch (e) {
+      debugPrint('Bildirim ayarı değiştirilirken hata: $e');
+    }
+  }
+  
+  /// Belirli bir tür bildirimi aç/kapat
+  static Future<void> setNotificationTypeEnabled(String type, bool enabled) async {
+    if (!_initialized) {
+      debugPrint('FirebaseNotificationService henüz başlatılmadı');
+      return;
+    }
+    
+    try {
+      // Gerçek implementasyonda kullanıcı ayarları veri tabanına kaydedilecek
+      debugPrint('$type bildirimleri ${enabled ? 'etkinleştirildi' : 'devre dışı bırakıldı'}');
+    } catch (e) {
+      debugPrint('Bildirim türü ayarı değiştirilirken hata: $e');
+    }
+  }
 }
