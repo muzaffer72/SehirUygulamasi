@@ -104,7 +104,7 @@ class IletisimHomePage extends StatefulWidget {
   State<IletisimHomePage> createState() => _IletisimHomePageState();
 }
 
-class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerProviderStateMixin {
+class _IletisimHomePageState extends State<IletisimHomePage> {
   int _selectedIndex = 0;
   bool _hasNotification = true; // Örnek bildirim göstergesi
   
@@ -180,7 +180,7 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const CreatePostScreen()),
+            MaterialPageRoute(builder: (context) => const CreatePostScreen(postType: PostType.general)),
           );
         },
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -696,48 +696,7 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
     );
   }
   
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Belediye İletişim'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _showSearchModal,
-          ),
-          IconButton(
-            icon: Badge(
-              isLabelVisible: _hasNotification,
-              child: const Icon(Icons.notifications_outlined),
-            ),
-            onPressed: () {
-              // Bildirimler sayfasına git
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationsScreen(),
-                ),
-              );
-              
-              // Bildirimleri okundu olarak işaretle
-              setState(() {
-                _hasNotification = false;
-              });
-            },
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Akış'),
-            Tab(text: 'Anketler'),
-            Tab(text: 'Şehirler'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+  // İkinci build metodu kaldırıldı - duplicate hatasını çözmek için
         children: [
           _buildTabContent(0),
           _buildTabContent(1),

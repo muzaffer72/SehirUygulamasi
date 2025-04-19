@@ -41,6 +41,10 @@ class CityProfile {
   final String? info; // Şehir hakkında bilgi
   final String? website; // Websitesi (websiteUrl ile aynı)
   final int activeComplaints; // Aktif şikayet sayısı
+  
+  // CitiesListScreen için gerekli eklenen alanlar
+  final int complaintCount;  // Toplam şikayet sayısı
+  final int districtCount;   // İlçe sayısı
 
   CityProfile({
     required this.id,
@@ -84,6 +88,8 @@ class CityProfile {
     this.info,
     this.website,
     this.activeComplaints = 0,
+    this.complaintCount = 0,
+    this.districtCount = 0,
   });
 
   factory CityProfile.fromJson(Map<String, dynamic> json) {
@@ -160,6 +166,9 @@ class CityProfile {
       info: json['info'] ?? json['description'],
       website: json['website'] ?? json['website_url'],
       activeComplaints: json['active_complaints'] ?? json['total_waiting_issues'] ?? 0,
+      // CitiesListScreen için gerekli alanlar
+      complaintCount: json['complaint_count'] ?? json['total_complaints'] ?? 0,
+      districtCount: json['district_count'] ?? 0,
     );
   }
 
