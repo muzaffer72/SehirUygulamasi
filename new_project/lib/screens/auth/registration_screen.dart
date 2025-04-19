@@ -5,6 +5,7 @@ import 'package:belediye_iletisim_merkezi/providers/city_provider.dart';
 import 'package:belediye_iletisim_merkezi/models/city.dart';
 import 'package:belediye_iletisim_merkezi/models/district.dart';
 import 'package:belediye_iletisim_merkezi/utils/validators.dart';
+import 'package:belediye_iletisim_merkezi/controllers/auth_controller.dart';
 
 class RegistrationScreen extends ConsumerStatefulWidget {
   const RegistrationScreen({Key? key}) : super(key: key);
