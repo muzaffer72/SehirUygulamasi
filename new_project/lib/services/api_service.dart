@@ -440,18 +440,24 @@ class ApiService {
   
   // İlçe detayını getir
   Future<District?> getDistrictById(String districtId) async {
-    final url = Uri.parse('$baseUrl$apiPath/districts/$districtId');
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['data'] == null) return null;
-      return District.fromJson(data['data']);
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      final url = Uri.parse('$baseUrl$apiPath/districts/$districtId');
+      final response = await http.get(
+        url,
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['data'] == null) return null;
+        return District.fromJson(data['data']);
+      } else {
+        print('Error in getDistrictById: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Exception in getDistrictById: $e');
+      return null;
     }
   }
   
@@ -619,25 +625,31 @@ class ApiService {
   
   // Kullanıcı bilgisini getir
   Future<User?> getUserById(String userId) async {
-    final url = Uri.parse('$baseUrl$apiPath/users/$userId');
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['data'] == null) return null;
-      return User.fromJson(data['data']);
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      final url = Uri.parse('$baseUrl$apiPath/users/$userId');
+      final response = await http.get(
+        url,
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['data'] == null) return null;
+        return User.fromJson(data['data']);
+      } else {
+        print('Error in getUserById: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Exception in getUserById: $e');
+      return null;
     }
   }
   
   // Memnuniyet puanı ekle
   // Eski metod. Yeni projelerde submitSatisfaction kullanın.
   @Deprecated('Use submitSatisfaction instead')
-  Future<void> submitSatisfactionRating(String postId, int rating, {String? comment}) async {
+  Future<bool> submitSatisfactionRating(String postId, int rating, {String? comment}) async {
     // Yeni metoda yönlendir
     return submitSatisfaction(
       postId: postId,
@@ -811,23 +823,31 @@ class ApiService {
   }
   
   // Post memnuniyet puanı ekle
-  Future<void> submitSatisfaction({
+  Future<bool> submitSatisfaction({
     required String postId,
     required int rating,
     String? comment,
   }) async {
-    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/satisfaction');
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-      body: json.encode({
-        'rating': rating,
-        'comment': comment,
-      }),
-    );
-    
-    if (response.statusCode != 200) {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      final url = Uri.parse('$baseUrl$apiPath/posts/$postId/satisfaction');
+      final response = await http.post(
+        url,
+        headers: await _getHeaders(),
+        body: json.encode({
+          'rating': rating,
+          'comment': comment,
+        }),
+      );
+      
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        print('Error in submitSatisfaction: ${response.statusCode} - ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Exception in submitSatisfaction: $e');
+      return false;
     }
   }
 }
