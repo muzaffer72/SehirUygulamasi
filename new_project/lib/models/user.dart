@@ -1,182 +1,141 @@
 class User {
-  final String id;
-  final String name;
+  final int id;
   final String email;
+  final String name;
   final String? username;
-  final String? phone;
   final String? bio;
+  final String? phone;
   final String? profileImageUrl;
   final String? coverImageUrl;
-  final String cityId;
-  final String? districtId;
+  final int? cityId;
   final String? cityName;
+  final String? districtId;
   final String? districtName;
-  final int postCount;
-  final int followersCount;
-  final int followingCount;
-  final int solutionCount;
-  final String? role; // 'user', 'moderator', 'admin'
+  final int? postCount;
+  final int? followersCount;
+  final int? followingCount;
+  final int? points;
+  final String? role;
   final bool isVerified;
-  final DateTime createdAt;
-  final DateTime? lastLogin;
+  final String? lastActivity;
+  final String? createdAt;
 
   User({
     required this.id,
-    required this.name,
     required this.email,
+    required this.name,
     this.username,
-    this.phone,
     this.bio,
+    this.phone,
     this.profileImageUrl,
     this.coverImageUrl,
-    required this.cityId,
-    this.districtId,
+    this.cityId,
     this.cityName,
+    this.districtId,
     this.districtName,
-    this.postCount = 0,
-    this.followersCount = 0,
-    this.followingCount = 0,
-    this.solutionCount = 0,
-    this.role = 'user',
+    this.postCount,
+    this.followersCount,
+    this.followingCount,
+    this.points,
+    this.role,
     this.isVerified = false,
-    required this.createdAt,
-    this.lastLogin,
+    this.lastActivity,
+    this.createdAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    try {
-      // API'den gelen veriyi güvenli bir şekilde dönüştür
-      return User(
-        id: json['id']?.toString() ?? '0',
-        name: json['name']?.toString() ?? 'İsimsiz Kullanıcı',
-        email: json['email']?.toString() ?? '',
-        username: json['username']?.toString(),
-        phone: json['phone']?.toString(),
-        bio: json['bio']?.toString(),
-        profileImageUrl: json['profile_image_url']?.toString(),
-        coverImageUrl: json['cover_image_url']?.toString(),
-        cityId: json['city_id']?.toString() ?? '0',
-        districtId: json['district_id']?.toString(),
-        cityName: json['city_name']?.toString(),
-        districtName: json['district_name']?.toString(),
-        postCount: _parseIntSafely(json['post_count']),
-        followersCount: _parseIntSafely(json['followers_count']),
-        followingCount: _parseIntSafely(json['following_count']),
-        solutionCount: _parseIntSafely(json['solution_count']),
-        role: json['role']?.toString() ?? 'user',
-        isVerified: json['is_verified'] == true || json['is_verified'] == 1 || json['is_verified'] == '1',
-        createdAt: json['created_at'] != null
-            ? _parseDateTimeSafely(json['created_at'].toString())
-            : DateTime.now(),
-        lastLogin: json['last_login'] != null
-            ? _parseDateTimeSafely(json['last_login'].toString())
-            : null,
-      );
-    } catch (e) {
-      print('Error parsing User from JSON: $e - JSON: $json');
-      // Hata durumunda varsayılan bir kullanıcı döndür
-      return User(
-        id: '0',
-        name: 'Hata - Kullanıcı Yüklenemedi',
-        email: '',
-        cityId: '0',
-        createdAt: DateTime.now(),
-      );
-    }
-    
-  }
-  
-  // Int değerlerini güvenli şekilde ayrıştırma
-  static int _parseIntSafely(dynamic value) {
-    if (value == null) return 0;
-    if (value is int) return value;
-    if (value is String) {
-      try {
-        return int.parse(value);
-      } catch (e) {
-        return 0;
-      }
-    }
-    return 0;
-  }
-  
-  // DateTime değerlerini güvenli şekilde ayrıştırma
-  static DateTime _parseDateTimeSafely(String value) {
-    try {
-      return DateTime.parse(value);
-    } catch (e) {
-      return DateTime.now();
-    }
+    return User(
+      id: json['id'] is String ? int.parse(json['id']) : json['id'],
+      email: json['email'] ?? '',
+      name: json['name'] ?? '',
+      username: json['username'],
+      bio: json['bio'],
+      phone: json['phone'],
+      profileImageUrl: json['profile_image_url'],
+      coverImageUrl: json['cover_image_url'],
+      cityId: json['city_id'] is String ? int.parse(json['city_id']) : json['city_id'],
+      cityName: json['city_name'],
+      districtId: json['district_id']?.toString(),
+      districtName: json['district_name'],
+      postCount: json['post_count'] is String ? int.parse(json['post_count']) : json['post_count'],
+      followersCount: json['followers_count'] is String ? int.parse(json['followers_count']) : json['followers_count'],
+      followingCount: json['following_count'] is String ? int.parse(json['following_count']) : json['following_count'],
+      points: json['points'] is String ? int.parse(json['points']) : json['points'],
+      role: json['role'],
+      isVerified: json['is_verified'] == 1 || json['is_verified'] == '1' || json['is_verified'] == true,
+      lastActivity: json['last_activity'],
+      createdAt: json['created_at'],
+    );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
       'email': email,
+      'name': name,
       'username': username,
-      'phone': phone,
       'bio': bio,
+      'phone': phone,
       'profile_image_url': profileImageUrl,
       'cover_image_url': coverImageUrl,
       'city_id': cityId,
-      'district_id': districtId,
       'city_name': cityName,
+      'district_id': districtId,
       'district_name': districtName,
       'post_count': postCount,
       'followers_count': followersCount,
       'following_count': followingCount,
-      'solution_count': solutionCount,
+      'points': points,
       'role': role,
-      'is_verified': isVerified,
-      'created_at': createdAt.toIso8601String(),
-      'last_login': lastLogin?.toIso8601String(),
+      'is_verified': isVerified ? 1 : 0,
+      'last_activity': lastActivity,
+      'created_at': createdAt,
     };
   }
 
   User copyWith({
-    String? id,
-    String? name,
+    int? id,
     String? email,
+    String? name,
     String? username,
-    String? phone,
     String? bio,
+    String? phone,
     String? profileImageUrl,
     String? coverImageUrl,
-    String? cityId,
-    String? districtId,
+    int? cityId,
     String? cityName,
+    String? districtId,
     String? districtName,
     int? postCount,
     int? followersCount,
     int? followingCount,
-    int? solutionCount,
+    int? points,
     String? role,
     bool? isVerified,
-    DateTime? createdAt,
-    DateTime? lastLogin,
+    String? lastActivity,
+    String? createdAt,
   }) {
     return User(
       id: id ?? this.id,
-      name: name ?? this.name,
       email: email ?? this.email,
+      name: name ?? this.name,
       username: username ?? this.username,
-      phone: phone ?? this.phone,
       bio: bio ?? this.bio,
+      phone: phone ?? this.phone,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       coverImageUrl: coverImageUrl ?? this.coverImageUrl,
       cityId: cityId ?? this.cityId,
-      districtId: districtId ?? this.districtId,
       cityName: cityName ?? this.cityName,
+      districtId: districtId ?? this.districtId,
       districtName: districtName ?? this.districtName,
       postCount: postCount ?? this.postCount,
       followersCount: followersCount ?? this.followersCount,
       followingCount: followingCount ?? this.followingCount,
-      solutionCount: solutionCount ?? this.solutionCount,
+      points: points ?? this.points,
       role: role ?? this.role,
       isVerified: isVerified ?? this.isVerified,
+      lastActivity: lastActivity ?? this.lastActivity,
       createdAt: createdAt ?? this.createdAt,
-      lastLogin: lastLogin ?? this.lastLogin,
     );
   }
 }

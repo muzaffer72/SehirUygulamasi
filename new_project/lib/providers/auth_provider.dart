@@ -1,232 +1,153 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:belediye_iletisim_merkezi/models/user.dart';
-import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
+import '../models/user.dart';
+import '../services/api_service.dart';
 
-// Kullanıcı kimlik bilgilerini tutan provider
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.read(apiServiceProvider));
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError('SharedPreferences provider has not been initialized');
 });
 
-// Auth durumu enum
-enum AuthStatus {
-  initial,
-  authenticating,
-  authenticated,
-  unauthenticated,
-  error,
-}
+// User provider, AuthNotifier durumunu yayınlar
+final authProvider =
+    StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return AuthNotifier(apiService, prefs);
+});
 
-// Auth durumu sınıfı
-class AuthState {
-  final User? user;
-  final bool isLoading;
-  final String? error;
-  final bool isLoggedIn;
-  final AuthStatus status;
-  final String? errorMessage;
+// Kullanıcıyı sağlayan provider (eğer oturum açılmışsa)
+final userProvider = Provider<User?>((ref) {
+  final authState = ref.watch(authProvider);
+  return authState.when(
+    data: (user) => user,
+    error: (_, __) => null,
+    loading: () => null,
+  );
+});
 
-  AuthState({
-    this.user,
-    this.isLoading = false,
-    this.error,
-    this.isLoggedIn = false,
-    this.status = AuthStatus.initial,
-    this.errorMessage,
-  });
+// Kullanıcı oturumunun durumunu kontrol eden provider
+final isAuthenticatedProvider = Provider<bool>((ref) {
+  final user = ref.watch(userProvider);
+  return user != null;
+});
 
-  AuthState copyWith({
-    User? user,
-    bool? isLoading,
-    String? error,
-    bool? isLoggedIn,
-    AuthStatus? status,
-    String? errorMessage,
-  }) {
-    return AuthState(
-      user: user ?? this.user,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
-      isLoggedIn: isLoggedIn ?? this.isLoggedIn,
-      status: status ?? this.status,
-      errorMessage: errorMessage ?? this.error,
-    );
-  }
-}
-
-// Auth işlemlerini yöneten notifier
-class AuthNotifier extends StateNotifier<AuthState> {
+// Auth işlemlerini yöneten StateNotifier
+class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   final ApiService _apiService;
-  static const String _tokenKey = 'auth_token';
-  static const String _userKey = 'user_data';
+  final SharedPreferences _prefs;
 
-  AuthNotifier(this._apiService) : super(AuthState()) {
-    // Oturumu kontrol et ve varsa kullanıcıyı yükle
-    checkAuth();
+  AuthNotifier(this._apiService, this._prefs) : super(const AsyncValue.loading()) {
+    _init();
   }
 
-  // Oturum kontrolü
-  Future<void> checkAuth() async {
-    state = state.copyWith(isLoading: true, status: AuthStatus.authenticating);
-    
+  // Başlangıç durumunu kontrol et
+  Future<void> _init() async {
     try {
-      // SharedPreferences'tan token ve kullanıcı bilgilerini al
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString(_tokenKey);
-      
-      if (token != null) {
-        // API'den kullanıcı bilgilerini al
-        final user = await _apiService.getCurrentUser();
-        if (user != null) {
-          state = state.copyWith(
-            user: user,
-            isLoading: false,
-            isLoggedIn: true,
-            status: AuthStatus.authenticated,
-          );
-          return;
-        }
+      final token = _prefs.getString('token');
+      final userData = _prefs.getString('user');
+
+      if (token != null && userData != null) {
+        // Token varsa mevcut kullanıcıyı al
+        final userJson = jsonDecode(userData);
+        state = AsyncValue.data(User.fromJson(userJson));
+      } else {
+        // Token yoksa null kullanıcı
+        state = const AsyncValue.data(null);
       }
-      
-      // Token yoksa veya kullanıcı alınamazsa, çıkış yap
-      state = state.copyWith(
-        user: null,
-        isLoading: false,
-        isLoggedIn: false,
-        status: AuthStatus.unauthenticated,
-      );
     } catch (e) {
-      state = state.copyWith(
-        error: 'Oturum kontrolü sırasında bir hata oluştu: $e',
-        errorMessage: 'Oturum kontrolü sırasında bir hata oluştu: $e',
-        isLoading: false,
-        isLoggedIn: false,
-        status: AuthStatus.error,
-      );
+      state = const AsyncValue.data(null);
     }
   }
 
   // Giriş işlemi
   Future<void> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null, status: AuthStatus.authenticating);
-    
+    state = const AsyncValue.loading();
     try {
-      final result = await _apiService.login(email, password);
+      final response = await _apiService.login(email, password);
       
-      if (result['token'] != null && result['user'] != null) {
-        // Token'ı kaydet
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_tokenKey, result['token']);
+      if (response.containsKey('token') && response.containsKey('user')) {
+        // Token ve kullanıcı bilgilerini kaydet
+        final token = response['token'] as String;
+        await _prefs.setString('token', token);
         
-        // Kullanıcı bilgilerini state'e ekle
-        final user = User.fromJson(result['user']);
-        state = state.copyWith(
-          user: user,
-          isLoading: false,
-          isLoggedIn: true,
-          status: AuthStatus.authenticated,
-        );
+        // Kullanıcı modelini oluştur
+        final userData = response['user'] as Map<String, dynamic>;
+        final user = User.fromJson(userData);
+        
+        // Kullanıcı verilerini string olarak kaydet
+        await _prefs.setString('user', jsonEncode(userData));
+        
+        // State'i güncelle
+        state = AsyncValue.data(user);
       } else {
-        state = state.copyWith(
-          error: 'Geçersiz kullanıcı bilgileri',
-          errorMessage: 'Geçersiz kullanıcı bilgileri',
-          isLoading: false,
-          isLoggedIn: false,
-          status: AuthStatus.error,
-        );
+        throw Exception('Geçersiz login yanıtı');
       }
     } catch (e) {
-      state = state.copyWith(
-        error: 'Giriş yapılırken bir hata oluştu: $e',
-        errorMessage: 'Giriş yapılırken bir hata oluştu: $e',
-        isLoading: false,
-        isLoggedIn: false,
-        status: AuthStatus.error,
-      );
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
     }
   }
 
-  // Kayıt işlemi
+  // Kaydolma işlemi
   Future<void> register({
     required String name,
     required String email,
     required String password,
-    String? phone,
     required int cityId,
-    String? districtId,
+    required String districtId,
+    String? phone,
   }) async {
-    state = state.copyWith(isLoading: true, error: null, status: AuthStatus.authenticating);
-    
+    state = const AsyncValue.loading();
     try {
-      final result = await _apiService.register(
+      final response = await _apiService.register(
         name: name,
         email: email,
         password: password,
-        phone: phone,
-        cityId: cityId.toString(),
+        cityId: cityId,
         districtId: districtId,
+        phone: phone,
       );
       
-      if (result['token'] != null && result['user'] != null) {
-        // Token'ı kaydet
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_tokenKey, result['token']);
+      if (response.containsKey('token') && response.containsKey('user')) {
+        // Token ve kullanıcı bilgilerini kaydet
+        final token = response['token'] as String;
+        await _prefs.setString('token', token);
         
-        // Kullanıcı bilgilerini state'e ekle
-        final user = User.fromJson(result['user']);
-        state = state.copyWith(
-          user: user,
-          isLoading: false,
-          isLoggedIn: true,
-          status: AuthStatus.authenticated,
-        );
+        // Kullanıcı modelini oluştur
+        final userData = response['user'] as Map<String, dynamic>;
+        final user = User.fromJson(userData);
+        
+        // Kullanıcı verilerini string olarak kaydet
+        await _prefs.setString('user', jsonEncode(userData));
+        
+        // State'i güncelle
+        state = AsyncValue.data(user);
       } else {
-        state = state.copyWith(
-          error: 'Kayıt olurken bir hata oluştu.',
-          errorMessage: 'Kayıt olurken bir hata oluştu.',
-          isLoading: false,
-          isLoggedIn: false,
-          status: AuthStatus.error,
-        );
+        throw Exception('Geçersiz register yanıtı');
       }
     } catch (e) {
-      state = state.copyWith(
-        error: 'Kayıt olurken bir hata oluştu: $e',
-        errorMessage: 'Kayıt olurken bir hata oluştu: $e',
-        isLoading: false,
-        isLoggedIn: false,
-        status: AuthStatus.error,
-      );
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
     }
   }
 
   // Çıkış işlemi
   Future<void> logout() async {
-    state = state.copyWith(isLoading: true);
-    
     try {
       await _apiService.logout();
-      
-      // Token ve kullanıcı bilgilerini temizle
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_tokenKey);
-      await prefs.remove(_userKey);
-      
-      state = state.copyWith(
-        user: null,
-        isLoading: false,
-        isLoggedIn: false,
-      );
     } catch (e) {
-      state = state.copyWith(
-        error: 'Çıkış yapılırken bir hata oluştu: $e',
-        isLoading: false,
-      );
+      // API hatası olsa bile local olarak çıkış yapmaya devam et
+    } finally {
+      // Tüm kayıtlı verileri temizle
+      await _prefs.remove('token');
+      await _prefs.remove('user');
+      state = const AsyncValue.data(null);
     }
   }
 
-  // Kullanıcı bilgilerini güncelleme
+  // Profil güncelleme işlemi
   Future<void> updateProfile({
     String? name,
     String? username,
@@ -238,13 +159,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     int? cityId,
     String? districtId,
   }) async {
-    if (state.user == null) return;
-    
-    state = state.copyWith(isLoading: true, error: null);
-    
     try {
-      final updatedUser = await _apiService.updateProfile(
-        userId: state.user!.id,
+      final currentUser = state.value;
+      if (currentUser == null) {
+        throw Exception('Kullanıcı oturum açmamış');
+      }
+
+      final response = await _apiService.updateProfile(
+        userId: currentUser.id,
         name: name,
         username: username,
         bio: bio,
@@ -252,19 +174,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
         phone: phone,
         profileImageUrl: profileImageUrl,
         coverImageUrl: coverImageUrl,
-        cityId: cityId?.toString(),
+        cityId: cityId,
         districtId: districtId,
       );
       
-      state = state.copyWith(
-        user: updatedUser,
-        isLoading: false,
-      );
+      if (response.containsKey('user')) {
+        // Kullanıcı modelini oluştur
+        final userData = response['user'] as Map<String, dynamic>;
+        final updatedUser = User.fromJson(userData);
+        
+        // Kullanıcı verilerini string olarak kaydet
+        await _prefs.setString('user', jsonEncode(userData));
+        
+        // State'i güncelle
+        state = AsyncValue.data(updatedUser);
+      } else {
+        throw Exception('Geçersiz updateProfile yanıtı');
+      }
     } catch (e) {
-      state = state.copyWith(
-        error: 'Profil güncellenirken bir hata oluştu: $e',
-        isLoading: false,
-      );
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
     }
   }
 }
