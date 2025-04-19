@@ -52,7 +52,9 @@ class CityProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cityProfileAsync = ref.watch(cityProfileProvider(cityId));
-    final postsAsync = ref.watch(postsProvider);
+    final posts = ref.watch(postsProvider);
+    // Convert to AsyncValue for compatibility
+    final postsAsync = AsyncValue.data(posts);
     
     return Scaffold(
       appBar: AppBar(
