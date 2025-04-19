@@ -62,7 +62,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authProvider);
     
     // Başarılı giriş kontrolü
-    if (authState.isLoggedIn && authState.user != null) {
+    if (authState.status == AuthStatus.authenticated && authState.user != null) {
       // Widget ağacını yeniden oluşturma talebi gönder
       // Ana ekrana otomatik yönlendirme için
       WidgetsBinding.instance.addPostFrameCallback((_) {
