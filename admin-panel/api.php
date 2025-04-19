@@ -188,9 +188,156 @@ function handleGet($endpoint, $id) {
     
     switch ($endpoint) {
         case 'posts':
-            // TODO: Implement posts from database
-            // Şimdilik boş dizi döndür
-            sendResponse([]);
+            // POST listesini veritabanından getir
+            if ($id) {
+                // Tek bir gönderiyi ID ile getir
+                $stmt = $db->prepare("SELECT * FROM posts WHERE id = ?");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $post = $result->fetch_assoc();
+                
+                if ($post) {
+                    // Gönderi sahibi bilgilerini getir
+                    $userStmt = $db->prepare("SELECT id, name, username, profile_image_url FROM users WHERE id = ?");
+                    $userStmt->bind_param('i', $post['user_id']);
+                    $userStmt->execute();
+                    $userResult = $userStmt->get_result();
+                    $user = $userResult->fetch_assoc();
+                    
+                    // Şehir bilgilerini getir
+                    $cityStmt = $db->prepare("SELECT name FROM cities WHERE id = ?");
+                    $cityStmt->bind_param('i', $post['city_id']);
+                    $cityStmt->execute();
+                    $cityResult = $cityStmt->get_result();
+                    $city = $cityResult->fetch_assoc();
+                    
+                    // Kategori bilgilerini getir
+                    if ($post['category_id']) {
+                        $catStmt = $db->prepare("SELECT name, icon_name FROM categories WHERE id = ?");
+                        $catStmt->bind_param('i', $post['category_id']);
+                        $catStmt->execute();
+                        $catResult = $catStmt->get_result();
+                        $category = $catResult->fetch_assoc();
+                    } else {
+                        $category = null;
+                    }
+                    
+                    // İlçe bilgilerini getir
+                    if ($post['district_id']) {
+                        $districtStmt = $db->prepare("SELECT name FROM districts WHERE id = ?");
+                        $districtStmt->bind_param('i', $post['district_id']);
+                        $districtStmt->execute();
+                        $districtResult = $districtStmt->get_result();
+                        $district = $districtResult->fetch_assoc();
+                    } else {
+                        $district = null;
+                    }
+                    
+                    // Sonuçları birleştir
+                    $post['user'] = $user;
+                    $post['city_name'] = $city ? $city['name'] : null;
+                    $post['district_name'] = $district ? $district['name'] : null;
+                    $post['category_name'] = $category ? $category['name'] : null;
+                    $post['category_icon'] = $category ? $category['icon_name'] : null;
+                    
+                    sendResponse($post);
+                } else {
+                    sendResponse(['error' => 'Post not found'], 404);
+                }
+            } else {
+                // Tüm gönderileri getir
+                $sql = "SELECT p.*, 
+                           u.name as user_name, u.username, u.profile_image_url,
+                           c.name as city_name, 
+                           d.name as district_name,
+                           cat.name as category_name, cat.icon_name as category_icon
+                        FROM posts p
+                        LEFT JOIN users u ON p.user_id = u.id
+                        LEFT JOIN cities c ON p.city_id = c.id
+                        LEFT JOIN districts d ON p.district_id = d.id
+                        LEFT JOIN categories cat ON p.category_id = cat.id
+                        WHERE 1=1";
+                
+                // Filtreler
+                $params = [];
+                $types = '';
+                
+                $categoryId = $_GET['category_id'] ?? null;
+                if ($categoryId) {
+                    $sql .= " AND p.category_id = ?";
+                    $params[] = $categoryId;
+                    $types .= 'i';
+                }
+                
+                $cityId = $_GET['city_id'] ?? null;
+                if ($cityId) {
+                    $sql .= " AND p.city_id = ?";
+                    $params[] = $cityId;
+                    $types .= 'i';
+                }
+                
+                $districtId = $_GET['district_id'] ?? null;
+                if ($districtId) {
+                    $sql .= " AND p.district_id = ?";
+                    $params[] = $districtId;
+                    $types .= 'i';
+                }
+                
+                $status = $_GET['status'] ?? null;
+                if ($status) {
+                    $sql .= " AND p.status = ?";
+                    $params[] = $status;
+                    $types .= 's';
+                }
+                
+                $userId = $_GET['user_id'] ?? null;
+                if ($userId) {
+                    $sql .= " AND p.user_id = ?";
+                    $params[] = $userId;
+                    $types .= 'i';
+                }
+                
+                // Sıralama
+                $sql .= " ORDER BY p.created_at DESC";
+                
+                // Sayfalama
+                $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+                $perPage = isset($_GET['per_page']) ? intval($_GET['per_page']) : 10;
+                $offset = ($page - 1) * $perPage;
+                
+                $sql .= " LIMIT ? OFFSET ?";
+                $params[] = $perPage;
+                $types .= 'i';
+                $params[] = $offset;
+                $types .= 'i';
+                
+                // Sorguyu çalıştır
+                $stmt = $db->prepare($sql);
+                if (!empty($params)) {
+                    $stmt->bind_param($types, ...$params);
+                }
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                $posts = [];
+                while ($row = $result->fetch_assoc()) {
+                    // Kullanıcı bilgilerini yapılandır
+                    $row['user'] = [
+                        'id' => $row['user_id'],
+                        'name' => $row['user_name'],
+                        'username' => $row['username'],
+                        'profile_image_url' => $row['profile_image_url']
+                    ];
+                    
+                    // Gereksiz alanları kaldır
+                    unset($row['user_name']);
+                    
+                    $posts[] = $row;
+                }
+                
+                sendResponse($posts);
+            }
             break;
             
         case 'users':
