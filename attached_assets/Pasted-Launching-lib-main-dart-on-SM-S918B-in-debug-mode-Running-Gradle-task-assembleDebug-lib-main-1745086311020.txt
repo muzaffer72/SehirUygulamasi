@@ -1,0 +1,412 @@
+Launching lib\main.dart on SM S918B in debug mode...
+Running Gradle task 'assembleDebug'...
+lib/main.dart:700:9: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+        children: [
+        ^^^^^^^^
+lib/main.dart:700:9: Error: Expected ';' after this.
+        children: [
+        ^^^^^^^^
+lib/main.dart:700:17: Error: Expected a class member, but got ':'.
+        children: [
+                ^
+lib/main.dart:700:19: Error: Expected a class member, but got '['.
+        children: [
+                  ^
+lib/main.dart:701:28: Error: Expected an identifier, but got '0'.
+Try inserting an identifier before '0'.
+          _buildTabContent(0),
+                           ^
+lib/main.dart:701:30: Error: Expected '{' before this.
+          _buildTabContent(0),
+                             ^
+lib/main.dart:701:30: Error: Expected a class member, but got ','.
+          _buildTabContent(0),
+                             ^
+lib/main.dart:702:28: Error: Expected an identifier, but got '1'.
+Try inserting an identifier before '1'.
+          _buildTabContent(1),
+                           ^
+lib/main.dart:702:30: Error: Expected '{' before this.
+          _buildTabContent(1),
+                             ^
+lib/main.dart:702:30: Error: Expected a class member, but got ','.
+          _buildTabContent(1),
+                             ^
+lib/main.dart:703:28: Error: Expected an identifier, but got '2'.
+Try inserting an identifier before '2'.
+          _buildTabContent(2),
+                           ^
+lib/main.dart:703:30: Error: Expected '{' before this.
+          _buildTabContent(2),
+                             ^
+lib/main.dart:703:30: Error: Expected a class member, but got ','.
+          _buildTabContent(2),
+                             ^
+lib/main.dart:704:9: Error: Expected a class member, but got ']'.
+        ],
+        ^
+lib/main.dart:704:10: Error: Expected a class member, but got ','.
+        ],
+         ^
+lib/main.dart:705:7: Error: Expected a class member, but got ')'.
+      ),
+      ^
+lib/main.dart:705:8: Error: Expected a class member, but got ','.
+      ),
+       ^
+lib/main.dart:706:7: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+      floatingActionButton: FloatingActionButton(
+      ^^^^^^^^^^^^^^^^^^^^
+lib/main.dart:706:7: Error: Expected ';' after this.
+      floatingActionButton: FloatingActionButton(
+      ^^^^^^^^^^^^^^^^^^^^
+lib/main.dart:706:27: Error: Expected a class member, but got ':'.
+      floatingActionButton: FloatingActionButton(
+                          ^
+lib/main.dart:707:18: Error: Non-optional parameters can't have a default value.
+Try removing the default value or making the parameter optional.
+        onPressed: () {
+                 ^
+lib/main.dart:805:14: Error: Non-optional parameters can't have a default value.
+Try removing the default value or making the parameter optional.
+        child: const Icon(Icons.add),
+             ^
+lib/main.dart:806:8: Error: Expected '{' before this.
+      ),
+       ^
+lib/main.dart:806:8: Error: Expected a class member, but got ','.
+      ),
+       ^
+lib/main.dart:807:7: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+      bottomNavigationBar: NavigationBar(
+      ^^^^^^^^^^^^^^^^^^^
+lib/main.dart:807:7: Error: Expected ';' after this.
+      bottomNavigationBar: NavigationBar(
+      ^^^^^^^^^^^^^^^^^^^
+lib/main.dart:807:26: Error: Expected a class member, but got ':'.
+      bottomNavigationBar: NavigationBar(
+                         ^
+lib/main.dart:808:22: Error: Non-optional parameters can't have a default value.
+Try removing the default value or making the parameter optional.
+        selectedIndex: _selectedIndex,
+                     ^
+lib/main.dart:809:30: Error: Non-optional parameters can't have a default value.
+Try removing the default value or making the parameter optional.
+        onDestinationSelected: (index) {
+                             ^
+lib/main.dart:849:21: Error: Non-optional parameters can't have a default value.
+Try removing the default value or making the parameter optional.
+        destinations: const [
+                    ^
+lib/main.dart:871:8: Error: Expected '{' before this.
+      ),
+       ^
+lib/main.dart:871:8: Error: Expected a class member, but got ','.
+      ),
+       ^
+lib/main.dart:872:5: Error: Expected a class member, but got ')'.
+    );
+    ^
+lib/main.dart:872:6: Error: Expected a class member, but got ';'.
+    );
+     ^
+lib/main.dart:904:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/main.dart:701:11: Error: '_buildTabContent' is already declared in this scope.
+          _buildTabContent(0),
+          ^^^^^^^^^^^^^^^^
+lib/main.dart:258:10: Context: Previous declaration of '_buildTabContent'.
+  Widget _buildTabContent(int index) {
+         ^^^^^^^^^^^^^^^^
+lib/main.dart:702:11: Error: '_buildTabContent' is already declared in this scope.
+          _buildTabContent(1),
+          ^^^^^^^^^^^^^^^^
+lib/main.dart:258:10: Context: Previous declaration of '_buildTabContent'.
+  Widget _buildTabContent(int index) {
+         ^^^^^^^^^^^^^^^^
+lib/main.dart:703:11: Error: '_buildTabContent' is already declared in this scope.
+          _buildTabContent(2),
+          ^^^^^^^^^^^^^^^^
+lib/main.dart:258:10: Context: Previous declaration of '_buildTabContent'.
+  Widget _buildTabContent(int index) {
+         ^^^^^^^^^^^^^^^^
+lib/screens/cities/cities_list_screen.dart:11:10: Error: A value of type 'List<City>' can't be returned from an async function with return type 'Future<List<CityProfile>>'.
+ - 'List' is from 'dart:core'.
+ - 'City' is from 'package:belediye_iletisim_merkezi/models/city.dart' ('lib/models/city.dart').
+ - 'Future' is from 'dart:async'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+  return await apiService.getCities();
+         ^
+lib/main.dart:709:22: Error: Undefined name 'context'.
+            context: context,
+                     ^^^^^^^
+lib/main.dart:717:41: Error: Not a constant expression.
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                                        ^^^^^^^
+lib/main.dart:717:38: Error: Method invocation is not a constant expression.
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                                     ^^
+lib/main.dart:717:50: Error: Not a constant expression.
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                                                 ^^^^^^^^^^
+lib/main.dart:716:37: Error: Constant expression expected.
+Try inserting 'const'.
+                padding: EdgeInsets.only(
+                                    ^^^^
+lib/main.dart:733:54: Error: Constant expression expected.
+Try inserting 'const'.
+                          borderRadius: BorderRadius.circular(2),
+                                                     ^^^^^^^^
+lib/main.dart:733:54: Error: Cannot invoke a non-'const' constructor where a const expression is expected.
+Try using a constructor or factory that is 'const'.
+                          borderRadius: BorderRadius.circular(2),
+                                                     ^^^^^^^^
+lib/main.dart:731:37: Error: Constant expression expected.
+Try inserting 'const'.
+                        decoration: BoxDecoration(
+                                    ^^^^^^^^^^^^^
+lib/main.dart:727:30: Error: Constant expression expected.
+Try inserting 'const'.
+                      child: Container(
+                             ^^^^^^^^^
+lib/main.dart:727:30: Error: Cannot invoke a non-'const' constructor where a const expression is expected.
+Try using a constructor or factory that is 'const'.
+                      child: Container(
+                             ^^^^^^^^^
+lib/main.dart:726:21: Error: Constant expression expected.
+Try inserting 'const'.
+                    Center(
+                    ^^^^^^
+lib/main.dart:753:43: Error: Not a constant expression.
+                            Navigator.pop(context);
+                                          ^^^^^^^
+lib/main.dart:753:39: Error: Method invocation is not a constant expression.
+                            Navigator.pop(context);
+                                      ^^^
+lib/main.dart:757:42: Error: Not a constant expression.
+                                builder: (context) => const CreatePostScreen(
+                                         ^^^^^^^^^
+lib/main.dart:756:31: Error: Constant expression expected.
+Try inserting 'const'.
+                              MaterialPageRoute(
+                              ^^^^^^^^^^^^^^^^^
+lib/main.dart:756:31: Error: Cannot invoke a non-'const' constructor where a const expression is expected.
+Try using a constructor or factory that is 'const'.
+                              MaterialPageRoute(
+                              ^^^^^^^^^^^^^^^^^
+lib/main.dart:755:31: Error: Not a constant expression.
+                              context,
+                              ^^^^^^^
+lib/main.dart:754:39: Error: Method invocation is not a constant expression.
+                            Navigator.push(
+                                      ^^^^
+lib/main.dart:752:34: Error: Not a constant expression.
+                          onTap: () {
+                                 ^^
+lib/main.dart:748:25: Error: Method invocation is not a constant expression.
+                        _buildActionButton(
+                        ^^^^^^^^^^^^^^^^^^
+lib/main.dart:769:43: Error: Not a constant expression.
+                            Navigator.pop(context);
+                                          ^^^^^^^
+lib/main.dart:769:39: Error: Method invocation is not a constant expression.
+                            Navigator.pop(context);
+                                      ^^^
+lib/main.dart:773:42: Error: Not a constant expression.
+                                builder: (context) => const CreatePostScreen(
+                                         ^^^^^^^^^
+lib/main.dart:772:31: Error: Constant expression expected.
+Try inserting 'const'.
+                              MaterialPageRoute(
+                              ^^^^^^^^^^^^^^^^^
+lib/main.dart:772:31: Error: Cannot invoke a non-'const' constructor where a const expression is expected.
+Try using a constructor or factory that is 'const'.
+                              MaterialPageRoute(
+                              ^^^^^^^^^^^^^^^^^
+lib/main.dart:771:31: Error: Not a constant expression.
+                              context,
+                              ^^^^^^^
+lib/main.dart:770:39: Error: Method invocation is not a constant expression.
+                            Navigator.push(
+                                      ^^^^
+lib/main.dart:768:34: Error: Not a constant expression.
+                          onTap: () {
+                                 ^^
+lib/main.dart:764:25: Error: Method invocation is not a constant expression.
+                        _buildActionButton(
+                        ^^^^^^^^^^^^^^^^^^
+lib/main.dart:785:43: Error: Not a constant expression.
+                            Navigator.pop(context);
+                                          ^^^^^^^
+lib/main.dart:785:39: Error: Method invocation is not a constant expression.
+                            Navigator.pop(context);
+                                      ^^^
+lib/main.dart:789:42: Error: Not a constant expression.
+                                builder: (context) => const CreatePostScreen(
+                                         ^^^^^^^^^
+lib/main.dart:788:31: Error: Constant expression expected.
+Try inserting 'const'.
+                              MaterialPageRoute(
+                              ^^^^^^^^^^^^^^^^^
+lib/main.dart:788:31: Error: Cannot invoke a non-'const' constructor where a const expression is expected.
+Try using a constructor or factory that is 'const'.
+                              MaterialPageRoute(
+                              ^^^^^^^^^^^^^^^^^
+lib/main.dart:787:31: Error: Not a constant expression.
+                              context,
+                              ^^^^^^^
+lib/main.dart:786:39: Error: Method invocation is not a constant expression.
+                            Navigator.push(
+                                      ^^^^
+lib/main.dart:784:34: Error: Not a constant expression.
+                          onTap: () {
+                                 ^^
+lib/main.dart:780:25: Error: Method invocation is not a constant expression.
+                        _buildActionButton(
+                        ^^^^^^^^^^^^^^^^^^
+lib/main.dart:747:33: Error: Constant expression expected.
+Try inserting 'const'.
+                      children: [
+                                ^
+lib/main.dart:745:21: Error: Constant expression expected.
+Try inserting 'const'.
+                    Row(
+                    ^^^
+lib/main.dart:725:29: Error: Constant expression expected.
+Try inserting 'const'.
+                  children: [
+                            ^
+lib/main.dart:722:24: Error: Constant expression expected.
+Try inserting 'const'.
+                child: Column(
+                       ^^^^^^
+lib/main.dart:715:22: Error: Constant expression expected.
+Try inserting 'const'.
+              return Padding(
+                     ^^^^^^^
+lib/main.dart:714:22: Error: Not a constant expression.
+            builder: (context) {
+                     ^^^^^^^^^
+lib/main.dart:708:11: Error: Method invocation is not a constant expression.
+          showModalBottomSheet(
+          ^^^^^^^^^^^^^^^^^^^^
+lib/main.dart:707:20: Error: Not a constant expression.
+        onPressed: () {
+                   ^^
+lib/main.dart:808:24: Error: Undefined name '_selectedIndex'.
+        selectedIndex: _selectedIndex,
+                       ^^^^^^^^^^^^^^
+lib/main.dart:811:30: Error: Not a constant expression.
+            _selectedIndex = index;
+                             ^^^^^
+lib/main.dart:811:28: Error: Not a constant expression.
+            _selectedIndex = index;
+                           ^
+lib/main.dart:810:20: Error: Not a constant expression.
+          setState(() {
+                   ^^
+lib/main.dart:810:11: Error: Method not found: 'setState'.
+          setState(() {
+          ^^^^^^^^
+lib/main.dart:815:19: Error: Not a constant expression.
+          switch (index) {
+                  ^^^^^
+lib/main.dart:824:28: Error: Not a constant expression.
+                  builder: (context) => const CityProfileScreen(cityId: "1"),
+                           ^^^^^^^^^
+lib/main.dart:823:17: Error: Constant expression expected.
+Try inserting 'const'.
+                MaterialPageRoute(
+                ^^^^^^^^^^^^^^^^^
+lib/main.dart:823:17: Error: Cannot invoke a non-'const' constructor where a const expression is expected.
+Try using a constructor or factory that is 'const'.
+                MaterialPageRoute(
+                ^^^^^^^^^^^^^^^^^
+lib/main.dart:822:17: Error: Undefined name 'context'.
+                context,
+                ^^^^^^^
+lib/main.dart:821:25: Error: Method invocation is not a constant expression.
+              Navigator.push(
+                        ^^^^
+lib/main.dart:833:28: Error: Not a constant expression.
+                  builder: (context) => const ProfileScreen(),
+                           ^^^^^^^^^
+lib/main.dart:832:17: Error: Constant expression expected.
+Try inserting 'const'.
+                MaterialPageRoute(
+                ^^^^^^^^^^^^^^^^^
+lib/main.dart:832:17: Error: Cannot invoke a non-'const' constructor where a const expression is expected.
+Try using a constructor or factory that is 'const'.
+                MaterialPageRoute(
+                ^^^^^^^^^^^^^^^^^
+lib/main.dart:831:17: Error: Undefined name 'context'.
+                context,
+                ^^^^^^^
+lib/main.dart:830:25: Error: Method invocation is not a constant expression.
+              Navigator.push(
+                        ^^^^
+lib/main.dart:843:28: Error: Not a constant expression.
+                  builder: (context) => const NotificationsScreen(), // �imdilik bildirimlere y�nlendiriyoruz
+                           ^^^^^^^^^
+lib/main.dart:842:17: Error: Constant expression expected.
+Try inserting 'const'.
+                MaterialPageRoute(
+                ^^^^^^^^^^^^^^^^^
+lib/main.dart:842:17: Error: Cannot invoke a non-'const' constructor where a const expression is expected.
+Try using a constructor or factory that is 'const'.
+                MaterialPageRoute(
+                ^^^^^^^^^^^^^^^^^
+lib/main.dart:841:17: Error: Undefined name 'context'.
+                context,
+                ^^^^^^^
+lib/main.dart:840:25: Error: Method invocation is not a constant expression.
+              Navigator.push(
+                        ^^^^
+lib/main.dart:809:32: Error: Not a constant expression.
+        onDestinationSelected: (index) {
+                               ^^^^^^^
+lib/main.dart:179:49: Error: Too few positional arguments: 2 required, 0 given.
+      floatingActionButton: FloatingActionButton(
+                                                ^
+lib/main.dart:808:24: Error: Not a constant expression.
+        selectedIndex: _selectedIndex,
+                       ^^^^^^^^^^^^^^
+lib/main.dart:811:13: Error: Not a constant expression.
+            _selectedIndex = index;
+            ^^^^^^^^^^^^^^
+lib/screens/cities/cities_list_screen.dart:166:47: Error: 'ProviderState' isn't a type.
+              context.findAncestorStateOfType<ProviderState>()?.refresh(citiesProvider);
+                                              ^^^^^^^^^^^^^
+lib/pages/notification_settings_page.dart:27:56: Error: Member not found: 'FirebaseNotificationService.getNotificationSettings'.
+    final settings = await FirebaseNotificationService.getNotificationSettings();
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^
+lib/pages/notification_settings_page.dart:42:41: Error: Member not found: 'FirebaseNotificationService.setNotificationsEnabled'.
+      await FirebaseNotificationService.setNotificationsEnabled(value);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^
+lib/pages/notification_settings_page.dart:44:41: Error: Member not found: 'FirebaseNotificationService.setNotificationTypeEnabled'.
+      await FirebaseNotificationService.setNotificationTypeEnabled(key, value);
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib/screens/surveys/surveys_screen.dart:547:47: Error: 'ProviderState' isn't a type.
+              context.findAncestorStateOfType<ProviderState>()?.refresh(surveysProvider);
+                                              ^^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter29\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BU�LD FAILED in 13s
+Error: Gradle task assembleDebug failed with exit code 1
