@@ -8,7 +8,35 @@ import '../../widgets/post_card.dart';
 import '../posts/post_detail_screen.dart';
 import '../../models/post.dart';
 
+// Helper extension
+extension NullableDoubleHelpers on double? {
+  double getOr(double defaultValue) => this ?? defaultValue;
+}
+
 class CityProfileScreen extends ConsumerWidget {
+  // Helper methods for solution rate calculation
+  double _calculateSolutionRateValue(CityProfile city) {
+    if (city.solutionRate == null) return 0.0;
+    return (city.solutionRate is double) ? city.solutionRate!.getOr(0.0) : city.solutionRate!.getOr(0.0) / 100;
+  }
+  
+  Color _getSolutionRateColor(CityProfile city) {
+    if (city.solutionRate == null) return Colors.grey;
+    
+    final rate = _calculateSolutionRateValue(city);
+    if (rate > 0.7) return Colors.green;
+    if (rate > 0.4) return Colors.orange;
+    return Colors.red;
+  }
+  
+  String _formatSolutionRate(CityProfile city) {
+    if (city.solutionRate == null) return "0.0";
+    
+    final rate = city.solutionRate is double 
+        ? city.solutionRate!.getOr(0.0) * 100 
+        : city.solutionRate!.getOr(0.0);
+    return rate.toStringAsFixed(1);
+  }
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
@@ -188,20 +216,16 @@ class CityProfileScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         LinearProgressIndicator(
-                          value: (city.solutionRate is double) ? city.solutionRate : city.solutionRate / 100,
+                          value: _calculateSolutionRateValue(city),
                           minHeight: 10,
                           backgroundColor: Colors.grey[300],
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            (city.solutionRate is double ? city.solutionRate : city.solutionRate / 100) > 0.7 
-                              ? Colors.green 
-                              : (city.solutionRate is double ? city.solutionRate : city.solutionRate / 100) > 0.4 
-                                ? Colors.orange 
-                                : Colors.red,
+                            _getSolutionRateColor(city),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${(city.solutionRate is double ? city.solutionRate * 100 : city.solutionRate).toStringAsFixed(1)}% - ${city.solvedComplaints ?? city.totalSolvedIssues ?? 0} / ${city.totalComplaints ?? city.totalPosts ?? 0} çözüldü',
+                          '${_formatSolutionRate(city)}% - ${city.solvedComplaints ?? city.totalSolvedIssues ?? 0} / ${city.totalComplaints ?? city.totalPosts ?? 0} çözüldü',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),

@@ -602,11 +602,11 @@ class ApiService {
   
   // Eski API uyumluluğu için getCities metodu
   // getCitiesAsObjects metodunu kullanarak city objelerini alır
-  Future<List<dynamic>> getCities() async {
+  Future<List<City>> getCities() async {
     try {
-      // Obje listesini al ve json olarak döndür
+      // Obje listesini al
       final cities = await getCitiesAsObjects();
-      return cities.map((city) => city.toJson()).toList();
+      return cities;
     } catch (e) {
       print('Error in getCities: $e');
       return [];
@@ -615,11 +615,11 @@ class ApiService {
   
   // İlçeleri şehire göre filtreleme (eski API uyumluluğu)
   // getDistrictsByCityIdAsObjects metodunu kullanarak district objelerini alır
-  Future<List<dynamic>> getDistrictsByCityId(String cityId) async {
+  Future<List<District>> getDistrictsByCityId(String cityId) async {
     try {
-      // Obje listesini al ve json olarak döndür
+      // Obje listesini al 
       final districts = await getDistrictsByCityIdAsObjects(cityId);
-      return districts.map((district) => district.toJson()).toList();
+      return districts;
     } catch (e) {
       print('Error in getDistrictsByCityId: $e');
       return [];
