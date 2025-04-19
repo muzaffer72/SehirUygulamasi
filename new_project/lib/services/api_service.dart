@@ -554,7 +554,7 @@ class ApiService {
   // Şehir detayını getir
   Future<City?> getCityById(String cityId) async {
     // API anahtarını URL'ye ekle
-    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=get_city&city_id=$cityId');
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=cities&id=$cityId');
     final uri = Uri.parse(uriString);
     
     final response = await http.get(
@@ -575,7 +575,7 @@ class ApiService {
   Future<District?> getDistrictById(String districtId) async {
     try {
       // API anahtarını URL'ye ekle
-      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=get_district&district_id=$districtId');
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=districts&id=$districtId');
       final uri = Uri.parse(uriString);
       
       final response = await http.get(
@@ -690,7 +690,7 @@ class ApiService {
   Future<CityProfile?> getCityProfileById(String cityId) async {
     try {
       // API anahtarını URL'ye ekle
-      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=get_city_profile&city_id=$cityId');
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=city_profile&city_id=$cityId');
       final uri = Uri.parse(uriString);
       
       final response = await http.get(
@@ -771,7 +771,7 @@ class ApiService {
   Future<User?> getUserById(String userId) async {
     try {
       // API anahtarını URL'ye ekle
-      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=get_user&user_id=$userId');
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=users&id=$userId');
       final uri = Uri.parse(uriString);
       
       final response = await http.get(
