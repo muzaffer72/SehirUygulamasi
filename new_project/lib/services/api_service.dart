@@ -245,36 +245,58 @@ class ApiService {
     String? status,
     PostType? postType,
   }) async {
-    // Query parametrelerini oluştur
-    final queryParams = {
-      'page': page.toString(),
-      'per_page': limit.toString(), // limit yerine per_page parametresi kullanılıyor
-    };
-    
-    if (cityId != null) queryParams['city_id'] = cityId;
-    if (districtId != null) queryParams['district_id'] = districtId;
-    if (categoryId != null) queryParams['category_id'] = categoryId;
-    if (sortBy != null) queryParams['sort_by'] = sortBy;
-    if (userId != null) queryParams['user_id'] = userId;
-    if (status != null) queryParams['status'] = status;
-    if (postType != null) queryParams['type'] = postType == PostType.problem ? 'problem' : 'general';
-    
-    final uri = Uri.parse('$baseUrl$apiPath/posts').replace(
-      queryParameters: queryParams,
-    );
-    
-    final response = await http.get(
-      uri,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      // API yanıt formatı: { posts: [...], pagination: {...} }
-      final List<dynamic> postsJson = data['posts'] ?? [];
-      return postsJson.map((json) => Post.fromJson(json)).toList();
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      // Query parametrelerini oluştur
+      final queryParams = {
+        'page': page.toString(),
+        'per_page': limit.toString(), // limit yerine per_page parametresi kullanılıyor
+      };
+      
+      if (cityId != null) queryParams['city_id'] = cityId;
+      if (districtId != null) queryParams['district_id'] = districtId;
+      if (categoryId != null) queryParams['category_id'] = categoryId;
+      if (sortBy != null) queryParams['sort_by'] = sortBy;
+      if (userId != null) queryParams['user_id'] = userId;
+      if (status != null) queryParams['status'] = status;
+      if (postType != null) queryParams['type'] = postType == PostType.problem ? 'problem' : 'general';
+      
+      final uri = Uri.parse('$baseUrl$apiPath/posts').replace(
+        queryParameters: queryParams,
+      );
+      
+      print('Fetching posts from: $uri');
+      final response = await http.get(
+        uri,
+        headers: await _getHeaders(),
+      );
+      
+      print('API response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('API response body: ${response.body.substring(0, response.body.length > 100 ? 100 : response.body.length)}...');
+        
+        // Admin panel API yanıt formatı: { posts: [...], pagination: {...} }
+        final List<dynamic> postsJson = data['posts'] ?? [];
+        
+        // Eğer 'posts' alanı yoksa, doğrudan yanıtı deneyin (API format değişikliğine uyumluluk için)
+        if (postsJson.isEmpty && data is List) {
+          return data.map((json) => Post.fromJson(json)).toList();
+        }
+        
+        if (postsJson.isEmpty && data is Map && data.containsKey('data')) {
+          final List<dynamic> dataList = data['data'] ?? [];
+          return dataList.map((json) => Post.fromJson(json)).toList();
+        }
+        
+        return postsJson.map((json) => Post.fromJson(json)).toList();
+      } else {
+        print('API error: ${response.body}');
+        throw Exception(_handleErrorResponse(response));
+      }
+    } catch (e) {
+      print('Exception in getPosts: $e');
+      throw Exception('Gönderileri alırken bir hata oluştu: $e');
     }
   }
   
