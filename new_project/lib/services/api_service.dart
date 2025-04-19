@@ -411,21 +411,12 @@ class ApiService {
   }
   
   // Şehir ismi getir
-  Future<String> getCityNameById(String cityId) async {
+  Future<String?> getCityNameById(String cityId) async {
     try {
-      final url = Uri.parse('$baseUrl$apiPath/cities/$cityId');
-      final response = await http.get(
-        url,
-        headers: await _getHeaders(),
-      );
-      
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return data['data']['name'] ?? 'Bilinmeyen Şehir';
-      } else {
-        return 'Bilinmeyen Şehir';
-      }
+      final city = await getCityById(cityId);
+      return city?.name ?? 'Bilinmeyen Şehir';
     } catch (e) {
+      print('Error in getCityNameById: $e');
       return 'Bilinmeyen Şehir';
     }
   }
