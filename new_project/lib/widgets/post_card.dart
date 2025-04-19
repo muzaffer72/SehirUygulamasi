@@ -288,7 +288,7 @@ class _PostCardState extends State<PostCard> {
                           fontWeight: FontWeight.bold,
                         ),
                       )
-                    : FutureBuilder<User>(
+                    : FutureBuilder<User?>(
                         future: _apiService.getUserById(widget.post.userId),
                         builder: (context, snapshot) {
                           final userName = snapshot.hasData
@@ -535,7 +535,7 @@ class _PostCardState extends State<PostCard> {
                               fontSize: 15,
                             ),
                           )
-                        : FutureBuilder<User>(
+                        : FutureBuilder<User?>(
                             future: _apiService.getUserById(widget.post.userId),
                             builder: (context, snapshot) {
                               final userName = snapshot.hasData

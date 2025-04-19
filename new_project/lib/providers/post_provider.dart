@@ -122,7 +122,7 @@ class PostsNotifier extends StateNotifier<List<Post>> {
         cityId: cityId,
         districtId: districtId, 
         categoryId: categoryId,
-        type: type != null ? type == 'problem' ? PostType.problem : PostType.general : null,
+        postType: type != null ? type == 'problem' ? PostType.problem : PostType.general : null,
         page: _currentPage,
         limit: _postsPerPage,
       );
