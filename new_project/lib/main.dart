@@ -7,6 +7,7 @@ import 'services/firebase_service.dart';
 import 'services/notification_service.dart';
 import 'models/notification_model.dart';
 import 'providers/post_provider.dart' as post_provider;
+import 'providers/auth_provider.dart';
 import 'models/post.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
@@ -20,6 +21,7 @@ import 'screens/cities/cities_list_screen.dart';
 import 'screens/surveys/surveys_screen.dart';
 import 'pages/notification_settings_page.dart';
 import 'utils/timeago_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Yükleme durumu için provider
 final isLoadingProvider = StateProvider<bool>((ref) => false);
@@ -39,12 +41,19 @@ void main() async {
   // Bildirim servisini başlat
   await NotificationService.initialize();
   
+  // SharedPreferences instance oluştur
+  final prefs = await SharedPreferences.getInstance();
+  
   // Zone hatası için: runZonedGuarded ve runApp aynı zonda olmalı
   runZonedGuarded(() {
     // Riverpod ile uygulamayı başlat
     runApp(
-      const ProviderScope(
-        child: BelediyeIletisimApp(),
+      ProviderScope(
+        overrides: [
+          // SharedPreferences sağlayıcısı
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+        child: const BelediyeIletisimApp(),
       ),
     );
   }, (error, stack) {

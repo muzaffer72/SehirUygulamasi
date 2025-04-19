@@ -20,6 +20,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
       await _authNotifier.login(email, password);
       state = const AsyncValue.data(null);
     } catch (e, stackTrace) {
+      print('Login error: $e');
       state = AsyncValue.error(e, stackTrace);
     }
   }
@@ -45,6 +46,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
       );
       state = const AsyncValue.data(null);
     } catch (e, stackTrace) {
+      print('Registration error: $e');
       state = AsyncValue.error(e, stackTrace);
     }
   }
@@ -56,6 +58,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
       await _authNotifier.logout();
       state = const AsyncValue.data(null);
     } catch (e, stackTrace) {
+      print('Logout error: $e');
       state = AsyncValue.error(e, stackTrace);
     }
   }
@@ -87,6 +90,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
       );
       state = const AsyncValue.data(null);
     } catch (e, stackTrace) {
+      print('Update profile error: $e');
       state = AsyncValue.error(e, stackTrace);
     }
   }

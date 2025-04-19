@@ -183,15 +183,15 @@ class ApiService {
     
     if (response.statusCode == 200) {
       final data = _decodeResponse(response);
-      return User.fromJson(data);
+      return data;
     } else {
       throw Exception(_handleErrorResponse(response));
     }
   }
   
   // UserProvider için eski API uyumluluğu
-  Future<User> updateUserProfile({
-    required String userId,
+  Future<Map<String, dynamic>> updateUserProfile({
+    required int userId,
     String? name,
     String? username,
     String? bio,
@@ -213,8 +213,8 @@ class ApiService {
   }
   
   // Kullanıcı konum bilgilerini güncelleme
-  Future<User> updateUserLocation({
-    required String userId,
+  Future<Map<String, dynamic>> updateUserLocation({
+    required int userId,
     required String cityId,
     String? districtId,
   }) async {
