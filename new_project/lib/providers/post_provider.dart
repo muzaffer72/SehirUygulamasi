@@ -158,29 +158,39 @@ class PostsNotifier extends StateNotifier<List<Post>> {
   }
   
   Future<void> likePost(String postId) async {
-    await _apiService.likePost(postId);
-    
-    state = state.map((post) {
-      if (post.id == postId) {
-        return post.copyWith(
-          likes: post.likes + 1,
-        );
-      }
-      return post;
-    }).toList();
+    try {
+      // API endpoint olmadığında sadece yerel state güncellemesi yap
+      // await _apiService.likePost(postId);
+      
+      state = state.map((post) {
+        if (post.id == postId) {
+          return post.copyWith(
+            likes: post.likes + 1,
+          );
+        }
+        return post;
+      }).toList();
+    } catch (e) {
+      print('Error when liking post: $e');
+    }
   }
   
   Future<void> highlightPost(String postId) async {
-    await _apiService.highlightPost(postId);
-    
-    state = state.map((post) {
-      if (post.id == postId) {
-        return post.copyWith(
-          highlights: post.highlights + 1,
-        );
-      }
-      return post;
-    }).toList();
+    try {
+      // API endpoint olmadığında sadece yerel state güncellemesi yap
+      // await _apiService.highlightPost(postId);
+      
+      state = state.map((post) {
+        if (post.id == postId) {
+          return post.copyWith(
+            highlights: post.highlights + 1,
+          );
+        }
+        return post;
+      }).toList();
+    } catch (e) {
+      print('Error when highlighting post: $e');
+    }
   }
 }
 

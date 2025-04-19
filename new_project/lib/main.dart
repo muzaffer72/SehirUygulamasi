@@ -9,6 +9,9 @@ import 'models/notification_model.dart';
 import 'providers/post_provider.dart';
 import 'models/post.dart';
 
+// Yükleme durumu için provider
+final isLoadingProvider = StateProvider<bool>((ref) => false);
+
 void main() async {
   // Flutter bağlamını başlat
   WidgetsFlutterBinding.ensureInitialized();
@@ -190,22 +193,27 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
         final posts = ref.watch(postsProvider);
         
         // Veri yükleme durumunu izle
-        final isLoading = ref.watch(StateProvider((ref) => false));
+        final isLoading = ref.watch(isLoadingProvider);
         
         // İlk yüklemede verileri çek
-        if (posts.isEmpty && !isLoading.state) {
-          isLoading.state = true;
+        if (posts.isEmpty && !isLoading) {
+          // Yükleme durumunu güncelle
+          ref.read(isLoadingProvider.notifier).state = true;
+          
           Future.microtask(() async {
             try {
               await postsNotifier.loadPosts();
             } finally {
-              isLoading.state = false;
+              // Yükleme tamamlandı
+              if (ref.read(isLoadingProvider.notifier).mounted) {
+                ref.read(isLoadingProvider.notifier).state = false;
+              }
             }
           });
         }
         
         // Eğer veri yükleniyorsa veya henüz yüklenmediyse loading göster
-        if (isLoading.state) {
+        if (isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
         
