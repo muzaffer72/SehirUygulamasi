@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sikayet_var/models/survey.dart';
-import 'package:sikayet_var/screens/surveys/survey_detail_screen.dart';
-import 'package:sikayet_var/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/models/survey.dart';
+import 'package:belediye_iletisim_merkezi/screens/surveys/survey_detail_screen.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 import 'dart:async';
 
 class SurveySlider extends StatefulWidget {

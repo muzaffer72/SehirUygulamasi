@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/comment.dart';
-import 'package:sikayet_var/models/user.dart';
-import 'package:sikayet_var/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/models/comment.dart';
+import 'package:belediye_iletisim_merkezi/models/user.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class CommentItem extends ConsumerWidget {

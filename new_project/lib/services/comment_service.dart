@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:sikayet_var/models/comment.dart';
-import 'package:sikayet_var/utils/profanity_filter.dart';
+import 'package:belediye_iletisim_merkezi/models/comment.dart';
+import 'package:belediye_iletisim_merkezi/utils/profanity_filter.dart';
 
 class CommentService {
   final String baseUrl;

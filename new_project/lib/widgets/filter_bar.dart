@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sikayet_var/models/category.dart';
-import 'package:sikayet_var/models/city.dart';
-import 'package:sikayet_var/models/district.dart';
-import 'package:sikayet_var/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/models/category.dart';
+import 'package:belediye_iletisim_merkezi/models/city.dart';
+import 'package:belediye_iletisim_merkezi/models/district.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 
 class FilterBar extends StatefulWidget {
   final Function(String?, String?, String?) onFilterApplied;

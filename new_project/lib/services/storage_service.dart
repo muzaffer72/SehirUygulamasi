@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:sikayet_var/utils/constants.dart';
+import 'package:belediye_iletisim_merkezi/utils/constants.dart';
 
 class StorageService {
   final String baseUrl = Constants.apiBaseUrl;

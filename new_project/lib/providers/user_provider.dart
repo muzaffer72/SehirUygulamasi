@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/user.dart';
-import 'package:sikayet_var/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/models/user.dart';
+import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 
 // State Notifier for user settings
 class UserNotifier extends StateNotifier<AsyncValue<User?>> {

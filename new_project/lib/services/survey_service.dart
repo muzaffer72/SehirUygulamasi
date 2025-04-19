@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sikayet_var/models/survey.dart';
-import 'package:sikayet_var/utils/constants.dart';
+import 'package:belediye_iletisim_merkezi/models/survey.dart';
+import 'package:belediye_iletisim_merkezi/utils/constants.dart';
 
 class SurveyService {
   final String baseUrl = Constants.apiBaseUrl;

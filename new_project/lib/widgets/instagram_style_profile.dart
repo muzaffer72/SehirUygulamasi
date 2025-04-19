@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sikayet_var/models/user.dart';
-import 'package:sikayet_var/providers/user_provider.dart';
-import 'package:sikayet_var/widgets/user_badge_widget.dart';
+import 'package:belediye_iletisim_merkezi/models/user.dart';
+import 'package:belediye_iletisim_merkezi/providers/user_provider.dart';
+import 'package:belediye_iletisim_merkezi/widgets/user_badge_widget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class InstagramStyleProfile extends ConsumerWidget {

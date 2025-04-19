@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sikayet_var/models/user.dart';
+import 'package:belediye_iletisim_merkezi/models/user.dart';
 
 class UserBadgeWidget extends StatelessWidget {
   final UserBadge badge;

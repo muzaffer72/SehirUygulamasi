@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sikayet_var/models/political_party.dart';
-import 'package:sikayet_var/services/party_service.dart';
+import 'package:belediye_iletisim_merkezi/models/political_party.dart';
+import 'package:belediye_iletisim_merkezi/services/party_service.dart';
 
 class PartyPerformanceScroll extends StatefulWidget {
   final double height;
