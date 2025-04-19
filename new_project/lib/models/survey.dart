@@ -7,8 +7,12 @@ class Survey {
   final List<SurveyOption> options;
   final int totalVotes;
   final int targetVotes;
+  // totaLVotes için getter ve setter metodları
   int get totalVotes_getter => totalVotes;
-  set totalVotes_setter(int value) {} // Sadece derleme hatası giderilmesi için
+  set totalVotes_setter(int value) {
+    // Bu setter metodu, sınıfın dışarıdan totalVotes değerini değiştirememesi için
+    // boş bir implementasyon içerir, final bir alan olduğundan değiştirilemiyor
+  }
   final SurveyStatus status;
   final String cityId;
   final String? districtId;
@@ -215,13 +219,16 @@ class Survey {
 class SurveyOption {
   final String id;
   final String text;
-  final int votes;
+  int votes; // final kaldırıldı, değeri değiştirilebilmesi için
   final double? percentage;
   final String? surveyId; // Ekledik: anket ID'si
   
   // voteCount özelliği ekle (kullanıcı tarafında uyumluluk için)
   int get voteCount => votes;
-  set voteCount(int value) {} // Derleme hatası için eklendi
+  set voteCount(int value) {
+    // Votes değerini güncelleme (sınıf dışından değeri değiştirmek için gerekli)
+    votes = value;
+  }
 
   SurveyOption({
     required this.id,
