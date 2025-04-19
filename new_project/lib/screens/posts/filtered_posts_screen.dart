@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:belediye_iletisim_merkezi/models/post.dart';
 import 'package:belediye_iletisim_merkezi/models/category.dart';
 import 'package:belediye_iletisim_merkezi/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
 import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
 import 'package:belediye_iletisim_merkezi/widgets/app_shimmer.dart';
 
-class FilteredPostsScreen extends StatefulWidget {
+class FilteredPostsScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? filterParams;
   
   const FilteredPostsScreen({
@@ -14,11 +16,10 @@ class FilteredPostsScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<FilteredPostsScreen> createState() => _FilteredPostsScreenState();
+  ConsumerState<FilteredPostsScreen> createState() => _FilteredPostsScreenState();
 }
 
-class _FilteredPostsScreenState extends State<FilteredPostsScreen> {
-  final ApiService _apiService = ApiService();
+class _FilteredPostsScreenState extends ConsumerState<FilteredPostsScreen> {
   bool _isLoading = false;
   List<Post> _posts = [];
   String _title = 'Filtreli Gönderiler';
@@ -35,7 +36,7 @@ class _FilteredPostsScreenState extends State<FilteredPostsScreen> {
     if (params == null) return;
     
     if (params['categoryId'] != null) {
-      _apiService.getCategoryById(params['categoryId']).then((category) {
+      ref.read(apiServiceProvider).getCategoryById(int.parse(params['categoryId'])).then((category) {
         if (mounted && category != null) {
           setState(() {
             _title = '${category.name} Gönderileri';
@@ -43,7 +44,7 @@ class _FilteredPostsScreenState extends State<FilteredPostsScreen> {
         }
       });
     } else if (params['cityId'] != null) {
-      _apiService.getCityNameById(params['cityId']).then((cityName) {
+      ref.read(apiServiceProvider).getCityNameById(int.parse(params['cityId'])).then((cityName) {
         if (mounted && cityName != null) {
           setState(() {
             _title = '$cityName Gönderileri';

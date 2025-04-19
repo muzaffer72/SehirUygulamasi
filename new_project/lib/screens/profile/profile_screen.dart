@@ -301,7 +301,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SafeSingleTi
             // District selection (only if city is selected)
             if (_selectedCityId != null)
               FutureBuilder<List<District>>(
-                future: ref.read(apiServiceProvider).getDistrictsByCityId(_selectedCityId!),
+                future: ref.read(apiServiceProvider).getDistrictsByCityId(int.parse(_selectedCityId!)),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -534,9 +534,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SafeSingleTi
           if (user.cityId != null)
             FutureBuilder<List<dynamic>>(
               future: Future.wait([
-                ref.read(apiServiceProvider).getCityById(user.cityId!),
+                ref.read(apiServiceProvider).getCityById(int.parse(user.cityId!)),
                 if (user.districtId != null)
-                  ref.read(apiServiceProvider).getDistrictById(user.districtId!)
+                  ref.read(apiServiceProvider).getDistrictById(int.parse(user.districtId!))
                 else
                   Future.value(null),
               ]),
