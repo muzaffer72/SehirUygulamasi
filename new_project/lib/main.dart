@@ -14,6 +14,7 @@ import 'screens/create_post/create_post_screen.dart';
 import 'screens/location/city_profile_screen.dart';
 import 'screens/posts/post_detail_screen.dart';
 import 'screens/auth/login_screen.dart';
+import 'utils/timeago_config.dart';
 
 // Yükleme durumu için provider
 final isLoadingProvider = StateProvider<bool>((ref) => false);
@@ -21,6 +22,9 @@ final isLoadingProvider = StateProvider<bool>((ref) => false);
 void main() async {
   // Flutter bağlamını başlat
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Timeago kütüphanesini Türkçe dil desteği ile yapılandır
+  configureTimeAgo();
   
   // Hata yakalama için global işleyici
   runZonedGuarded(() async {

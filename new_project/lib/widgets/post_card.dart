@@ -493,31 +493,87 @@ class _PostCardState extends State<PostCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Avatar (veya şikayet tipi ikonu)
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: widget.post.type == PostType.problem
-                  ? Colors.red.withOpacity(0.1)
-                  : Colors.green.withOpacity(0.1),
-              shape: BoxShape.circle,
-              border: Border.all(
+          GestureDetector(
+            onTap: () {
+              if (!widget.post.isAnonymous) {
+                // Kullanıcı profiline git
+                Navigator.pushNamed(
+                  context,
+                  '/profile',
+                  arguments: widget.post.userId,
+                );
+              }
+            },
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
                 color: widget.post.type == PostType.problem
-                    ? Colors.red.withOpacity(0.3)
-                    : Colors.green.withOpacity(0.3),
-                width: 1,
+                    ? Colors.red.withOpacity(0.1)
+                    : Colors.green.withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: widget.post.type == PostType.problem
+                      ? Colors.red.withOpacity(0.3)
+                      : Colors.green.withOpacity(0.3),
+                  width: 1,
+                ),
               ),
-            ),
-            child: Center(
-              child: Icon(
-                widget.post.type == PostType.problem
-                    ? Icons.warning_rounded
-                    : Icons.lightbulb_outline,
-                color: widget.post.type == PostType.problem
-                    ? Colors.red
-                    : Colors.green,
-                size: 24,
-              ),
+              child: widget.post.isAnonymous
+                ? Center(
+                    child: Icon(
+                      widget.post.type == PostType.problem
+                          ? Icons.warning_rounded
+                          : Icons.lightbulb_outline,
+                      color: widget.post.type == PostType.problem
+                          ? Colors.red
+                          : Colors.green,
+                      size: 24,
+                    ),
+                  )
+                : FutureBuilder<User?>(
+                    future: _apiService.getUserById(widget.post.userId),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData && snapshot.data!.profileImageUrl != null) {
+                        return ClipOval(
+                          child: CachedNetworkImage(
+                            imageUrl: snapshot.data!.profileImageUrl!,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Center(
+                              child: Icon(
+                                widget.post.type == PostType.problem
+                                    ? Icons.warning_rounded
+                                    : Icons.lightbulb_outline,
+                                color: widget.post.type == PostType.problem
+                                    ? Colors.red
+                                    : Colors.green,
+                                size: 24,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Center(
+                              child: Icon(
+                                Icons.person,
+                                color: Theme.of(context).primaryColor,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                        );
+                      } else {
+                        return Center(
+                          child: Icon(
+                            widget.post.type == PostType.problem
+                                ? Icons.warning_rounded
+                                : Icons.lightbulb_outline,
+                            color: widget.post.type == PostType.problem
+                                ? Colors.red
+                                : Colors.green,
+                            size: 24,
+                          ),
+                        );
+                      }
+                    },
+                  ),
             ),
           ),
           const SizedBox(width: 8),
@@ -541,15 +597,26 @@ class _PostCardState extends State<PostCard> {
                         : FutureBuilder<User?>(
                             future: _apiService.getUserById(widget.post.userId),
                             builder: (context, snapshot) {
-                              final userName = snapshot.hasData
-                                  ? snapshot.data!.name
-                                  : 'Yükleniyor...';
+                              String userName = 'Yükleniyor...';
+                              if (snapshot.hasData && snapshot.data!.name != null) {
+                                userName = snapshot.data!.name!;
+                              }
                               
-                              return Text(
-                                userName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
+                              return GestureDetector(
+                                onTap: () {
+                                  // Kullanıcı profiline git
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/profile',
+                                    arguments: widget.post.userId,
+                                  );
+                                },
+                                child: Text(
+                                  userName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
                                 ),
                               );
                             },
