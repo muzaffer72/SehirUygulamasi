@@ -387,7 +387,7 @@ class ApiService {
   }
   
   // Kullanıcıya göre bildirimleri getir
-  Future<List<NotificationModel>> getNotificationsByUserId(String userId) async {
+  Future<List<NotificationModel>> getNotificationsByUserId(int userId) async {
     // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
     final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=user_notifications&user_id=$userId');
     final uri = Uri.parse(uriString);
@@ -409,7 +409,7 @@ class ApiService {
   }
   
   // Bildirimi okundu olarak işaretle
-  Future<void> markNotificationAsRead(String notificationId, String userId) async {
+  Future<void> markNotificationAsRead(String notificationId, int userId) async {
     // API anahtarını URL'ye ekle
     final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=mark_notification_read&notification_id=$notificationId&user_id=$userId');
     final uri = Uri.parse(uriString);
@@ -424,7 +424,7 @@ class ApiService {
   }
   
   // Tüm bildirimleri okundu olarak işaretle
-  Future<void> markAllNotificationsAsRead(String userId) async {
+  Future<void> markAllNotificationsAsRead(int userId) async {
     final url = Uri.parse('$baseUrl$apiPath/users/$userId/notifications/read-all');
     final response = await http.put(
       url,

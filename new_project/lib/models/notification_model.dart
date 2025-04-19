@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class NotificationModel {
   final String id;
-  final String userId;
+  final int userId;
   final String title;
   final String message;
   final String type; // 'comment', 'like', 'mention', 'system', 'status_update'
@@ -28,7 +28,7 @@ class NotificationModel {
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
       id: json['id'].toString(),
-      userId: json['user_id'].toString(),
+      userId: json['user_id'] is String ? int.parse(json['user_id']) : json['user_id'] ?? 1,
       title: json['title'] ?? '',
       message: json['message'] ?? '',
       type: json['type'] ?? 'system',
@@ -59,7 +59,7 @@ class NotificationModel {
 
   NotificationModel copyWith({
     String? id,
-    String? userId,
+    int? userId,
     String? title,
     String? message,
     String? type,

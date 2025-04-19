@@ -259,7 +259,7 @@ class NotificationService {
     
     return NotificationModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      userId: extraData['user_id']?.toString() ?? '1', // Varsayılan kullanıcı ID
+      userId: extraData['user_id'] != null ? int.parse(extraData['user_id'].toString()) : 1, // Varsayılan kullanıcı ID
       title: title,
       message: messageText,
       type: type,
