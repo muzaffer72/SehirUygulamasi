@@ -35,6 +35,12 @@ class CityProfile {
   final String? instagramAccount;
   final String? facebookAccount;
   final String? youtubeAccount;
+  // City profile screen için gerekli eklenen alanlar
+  final String? politicalParty; // Parti adı
+  final String? politicalPartyLogoUrl; // Parti logosu
+  final String? info; // Şehir hakkında bilgi
+  final String? website; // Websitesi (websiteUrl ile aynı)
+  final int activeComplaints; // Aktif şikayet sayısı
 
   CityProfile({
     required this.id,
@@ -73,6 +79,11 @@ class CityProfile {
     this.instagramAccount,
     this.facebookAccount,
     this.youtubeAccount,
+    this.politicalParty,
+    this.politicalPartyLogoUrl,
+    this.info,
+    this.website,
+    this.activeComplaints = 0,
   });
 
   factory CityProfile.fromJson(Map<String, dynamic> json) {
@@ -143,6 +154,12 @@ class CityProfile {
       instagramAccount: json['instagram_account'],
       facebookAccount: json['facebook_account'],
       youtubeAccount: json['youtube_account'],
+      // Yeni eklenen alanlar
+      politicalParty: json['political_party'] ?? json['mayor_party'],
+      politicalPartyLogoUrl: json['political_party_logo_url'] ?? json['mayor_party_logo'],
+      info: json['info'] ?? json['description'],
+      website: json['website'] ?? json['website_url'],
+      activeComplaints: json['active_complaints'] ?? json['total_waiting_issues'] ?? 0,
     );
   }
 
@@ -184,6 +201,12 @@ class CityProfile {
       'instagram_account': instagramAccount,
       'facebook_account': facebookAccount,
       'youtube_account': youtubeAccount,
+      // Eklenen alanlar
+      'political_party': politicalParty,
+      'political_party_logo_url': politicalPartyLogoUrl,
+      'info': info,
+      'website': website,
+      'active_complaints': activeComplaints,
     };
   }
 

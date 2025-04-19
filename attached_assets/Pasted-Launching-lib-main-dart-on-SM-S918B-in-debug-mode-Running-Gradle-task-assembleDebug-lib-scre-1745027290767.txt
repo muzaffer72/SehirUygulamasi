@@ -1,0 +1,116 @@
+Launching lib\main.dart on SM S918B in debug mode...
+Running Gradle task 'assembleDebug'...
+lib/screens/profile/profile_screen.dart:420:55: Error: Too many positional arguments: 0 allowed, but 5 found.
+Try removing the extra positional arguments.
+        await ref.read(authProvider.notifier).register(
+                                                      ^
+lib/services/api_service.dart:614:13: Error: No named parameter with the name 'activeComplaints'.
+            activeComplaints: 0,
+            ^^^^^^^^^^^^^^^^
+lib/models/city_profile.dart:39:3: Context: Found this candidate, but the arguments don't match.
+  CityProfile({
+  ^^^^^^^^^^^
+lib/screens/location/city_profile_screen.dart:62:57: Error: The argument type 'CityProfile?' can't be assigned to the parameter type 'CityProfile' because 'CityProfile?' is nullable and 'CityProfile' isn't.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+        data: (city) => _buildCityProfile(context, ref, city, postsAsync),
+                                                        ^
+lib/screens/location/city_profile_screen.dart:62:63: Error: The argument type 'List<Post>' can't be assigned to the parameter type 'AsyncValue<List<Post>>'.
+ - 'List' is from 'dart:core'.
+ - 'Post' is from 'package:belediye_iletisim_merkezi/models/post.dart' ('lib/models/post.dart').
+ - 'AsyncValue' is from 'package:riverpod/src/common.dart' ('/C:/Users/guzel/AppData/Local/Pub/Cache/hosted/pub.dev/riverpod-2.6.1/lib/src/common.dart').
+        data: (city) => _buildCityProfile(context, ref, city, postsAsync),
+                                                              ^
+lib/screens/location/city_profile_screen.dart:114:28: Error: The getter 'politicalParty' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'politicalParty'.
+                  if (city.politicalParty != null && city.politicalParty!.isNotEmpty)
+                           ^^^^^^^^^^^^^^
+lib/screens/location/city_profile_screen.dart:114:59: Error: The getter 'politicalParty' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'politicalParty'.
+                  if (city.politicalParty != null && city.politicalParty!.isNotEmpty)
+                                                          ^^^^^^^^^^^^^^
+lib/screens/location/city_profile_screen.dart:120:36: Error: The getter 'politicalPartyLogoUrl' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'politicalPartyLogoUrl'.
+                          if (city.politicalPartyLogoUrl != null)
+                                   ^^^^^^^^^^^^^^^^^^^^^
+lib/screens/location/city_profile_screen.dart:122:36: Error: The getter 'politicalPartyLogoUrl' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'politicalPartyLogoUrl'.
+                              city.politicalPartyLogoUrl!,
+                                   ^^^^^^^^^^^^^^^^^^^^^
+lib/screens/location/city_profile_screen.dart:131:34: Error: The getter 'politicalParty' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'politicalParty'.
+                            city.politicalParty!,
+                                 ^^^^^^^^^^^^^^
+lib/screens/location/city_profile_screen.dart:141:28: Error: The getter 'info' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'info'.
+                  if (city.info != null && city.info!.isNotEmpty)
+                           ^^^^
+lib/screens/location/city_profile_screen.dart:141:49: Error: The getter 'info' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'info'.
+                  if (city.info != null && city.info!.isNotEmpty)
+                                                ^^^^
+lib/screens/location/city_profile_screen.dart:145:30: Error: The getter 'info' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'info'.
+                        city.info!,
+                             ^^^^
+lib/screens/location/city_profile_screen.dart:154:86: Error: The getter 'website' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'website'.
+                  if (city.contactPhone != null || city.contactEmail != null || city.website != null)
+                                                                                     ^^^^^^^
+lib/screens/location/city_profile_screen.dart:189:38: Error: The getter 'website' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'website'.
+                            if (city.website != null)
+                                     ^^^^^^^
+lib/screens/location/city_profile_screen.dart:196:47: Error: The getter 'website' isn't defined for the class 'CityProfile'.
+ - 'CityProfile' is from 'package:belediye_iletisim_merkezi/models/city_profile.dart' ('lib/models/city_profile.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'website'.
+                                    Text(city.website!),
+                                              ^^^^^^^
+lib/screens/location/city_profile_screen.dart:294:34: Error: The getter 'selectedPostProvider' isn't defined for the class 'CityProfileScreen'.
+ - 'CityProfileScreen' is from 'package:belediye_iletisim_merkezi/screens/location/city_profile_screen.dart' ('lib/screens/location/city_profile_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'selectedPostProvider'.
+                        ref.read(selectedPostProvider.notifier).state = post;
+                                 ^^^^^^^^^^^^^^^^^^^^
+lib/screens/location/city_profile_screen.dart:310:34: Error: The getter 'selectedPostProvider' isn't defined for the class 'CityProfileScreen'.
+ - 'CityProfileScreen' is from 'package:belediye_iletisim_merkezi/screens/location/city_profile_screen.dart' ('lib/screens/location/city_profile_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'selectedPostProvider'.
+                        ref.read(selectedPostProvider.notifier).state = post;
+                                 ^^^^^^^^^^^^^^^^^^^^
+lib/screens/surveys/survey_detail_screen.dart:426:21: Error: The setter 'totalVotes' isn't defined for the class 'Survey'.
+ - 'Survey' is from 'package:belediye_iletisim_merkezi/models/survey.dart' ('lib/models/survey.dart').
+Try correcting the name to the name of an existing setter, or defining a setter or field named 'totalVotes'.
+      widget.survey.totalVotes++;
+                    ^^^^^^^^^^
+lib/providers/user_provider.dart:34:64: Error: Too many positional arguments: 0 allowed, but 1 found.
+Try removing the extra positional arguments.
+        final updatedUser = await _apiService.updateUserProfile(
+                                                               ^
+lib/providers/user_provider.dart:58:65: Error: Too many positional arguments: 0 allowed, but 1 found.
+Try removing the extra positional arguments.
+        final updatedUser = await _apiService.updateUserLocation(
+                                                                ^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter29\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BU�LD FAILED in 1m 25s
