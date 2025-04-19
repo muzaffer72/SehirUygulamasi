@@ -7,7 +7,7 @@ $error_message = '';
 $suggestion_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 // Veritabanı bağlantısını al
-require_once '../db_connection.php';
+require_once __DIR__ . '/../includes/db_connection.php';
 if (!$conn) {
     $error_message = "Veritabanı bağlantı hatası: " . pg_last_error();
 }

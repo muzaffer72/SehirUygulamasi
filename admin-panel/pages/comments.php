@@ -7,14 +7,19 @@ $operation = isset($_GET['op']) ? $_GET['op'] : '';
 $message = '';
 $error = '';
 
+// Veritabanı bağlantısını al
+require_once __DIR__ . '/../includes/db_connection.php';
+if (!$conn) {
+    $error = "Veritabanı bağlantı hatası: " . pg_last_error();
+}
+
 // Yorum silme işlemi
 if ($operation === 'delete' && isset($_GET['id'])) {
     $commentId = (int)$_GET['id'];
     
     try {
-        $query = "DELETE FROM comments WHERE id = ?";
-        $stmt = $pdo->prepare($query);
-        $result = $stmt->execute([$commentId]);
+        $query = "DELETE FROM comments WHERE id = $1";
+        $result = pg_query_params($conn, $query, [$commentId]);
         
         if ($result) {
             $message = "Yorum başarıyla silindi.";
@@ -209,28 +214,67 @@ try {
         LIMIT ? OFFSET ?
     ";
     
-    // Sorgu parametreleri
-    $params[] = $limit;
-    $params[] = $offset;
+    // PostgreSQL parametreleri güncelle
+    $pg_params = $params;
+    $pg_params[] = $limit;
+    $pg_params[] = $offset;
     
-    $stmt = $pdo->prepare($query);
-    $stmt->execute($params);
-    $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // PostgreSQL sorgusu için $1, $2, ... formatına dönüştür
+    $i = 1;
+    $pg_where = $whereClause;
+    foreach ($conditions as &$condition) {
+        $condition = str_replace('?', '$'.$i, $condition);
+        $i++;
+    }
+    if (!empty($conditions)) {
+        $pg_where = " WHERE " . implode(" AND ", $conditions);
+    }
     
-    // Toplam sayıyı getir
+    $pg_query = "
+        SELECT c.*, 
+               u.username as user_username, u.name as user_name,
+               p.title as post_title,
+               parent.id as parent_comment_id, parent.content as parent_content,
+               parent_user.username as parent_user_username
+        FROM comments c
+        LEFT JOIN users u ON c.user_id = u.id
+        LEFT JOIN posts p ON c.post_id = p.id
+        LEFT JOIN comments parent ON c.parent_id = parent.id
+        LEFT JOIN users parent_user ON parent.user_id = parent_user.id
+        $pg_where
+        ORDER BY c.created_at DESC
+        LIMIT $" . ($i) . " OFFSET $" . ($i+1) . "
+    ";
+    
+    $result = pg_query_params($conn, $pg_query, $pg_params);
+    if (!$result) {
+        $error = "Sorgu hatası: " . pg_last_error($conn);
+        $comments = [];
+    } else {
+        $comments = [];
+        while ($row = pg_fetch_assoc($result)) {
+            $comments[] = $row;
+        }
+    }
+    
+    // Toplam sayıyı getir - PostgreSQL uyumlu
     $countQuery = "
         SELECT COUNT(*) as total
         FROM comments c
-        $whereClause
+        $pg_where
     ";
     
     $countParams = $params;
-    array_pop($countParams); // limit parametresini çıkar
-    array_pop($countParams); // offset parametresini çıkar
+    // limit ve offset parametrelerini çıkar
     
-    $countStmt = $pdo->prepare($countQuery);
-    $countStmt->execute($countParams);
-    $totalRows = $countStmt->fetchColumn();
+    $countResult = pg_query_params($conn, $countQuery, $countParams);
+    if (!$countResult) {
+        $error = "Toplam sayı sorgu hatası: " . pg_last_error($conn);
+        $totalRows = 0;
+    } else {
+        $countRow = pg_fetch_assoc($countResult);
+        $totalRows = $countRow['total'];
+    }
     
     $totalPages = ceil($totalRows / $limit);
 } catch (Exception $e) {
@@ -240,29 +284,41 @@ try {
     $totalPages = 0;
 }
 
-// Kullanıcıları al (filtre için)
+// Kullanıcıları al (filtre için) - PostgreSQL uyumlu
 try {
     $usersQuery = "SELECT id, username, name FROM users ORDER BY name ASC LIMIT 200";
-    $usersStmt = $pdo->prepare($usersQuery);
-    $usersStmt->execute();
-    $users = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
+    $usersResult = pg_query($conn, $usersQuery);
+    if (!$usersResult) {
+        throw new Exception(pg_last_error($conn));
+    }
+    
+    $users = [];
+    while ($row = pg_fetch_assoc($usersResult)) {
+        $users[] = $row;
+    }
 } catch (Exception $e) {
     $error = "Kullanıcılar alınırken hata: " . $e->getMessage();
     $users = [];
 }
 
-// Paylaşımları al (filtre için)
+// Paylaşımları al (filtre için) - PostgreSQL uyumlu
 try {
     $postsQuery = "SELECT id, title FROM posts ORDER BY created_at DESC LIMIT 100";
-    $postsStmt = $pdo->prepare($postsQuery);
-    $postsStmt->execute();
-    $posts = $postsStmt->fetchAll(PDO::FETCH_ASSOC);
+    $postsResult = pg_query($conn, $postsQuery);
+    if (!$postsResult) {
+        throw new Exception(pg_last_error($conn));
+    }
+    
+    $posts = [];
+    while ($row = pg_fetch_assoc($postsResult)) {
+        $posts[] = $row;
+    }
 } catch (Exception $e) {
     $error = "Paylaşımlar alınırken hata: " . $e->getMessage();
     $posts = [];
 }
 
-// Yorum detayları
+// Yorum detayları - PostgreSQL uyumlu
 if ($operation === 'view' && isset($_GET['id'])) {
     $commentId = (int)$_GET['id'];
     
@@ -278,12 +334,15 @@ if ($operation === 'view' && isset($_GET['id'])) {
             LEFT JOIN posts p ON c.post_id = p.id
             LEFT JOIN comments parent ON c.parent_id = parent.id
             LEFT JOIN users parent_user ON parent.user_id = parent_user.id
-            WHERE c.id = ?
+            WHERE c.id = $1
         ";
         
-        $stmt = $pdo->prepare($query);
-        $stmt->execute([$commentId]);
-        $comment = $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = pg_query_params($conn, $query, [$commentId]);
+        if (!$result) {
+            throw new Exception(pg_last_error($conn));
+        }
+        
+        $comment = pg_fetch_assoc($result);
         
         if (!$comment) {
             $error = "Yorum bulunamadı.";
@@ -293,13 +352,19 @@ if ($operation === 'view' && isset($_GET['id'])) {
                 SELECT r.*, u.username as user_username, u.name as user_name
                 FROM comments r
                 LEFT JOIN users u ON r.user_id = u.id
-                WHERE r.parent_id = ?
+                WHERE r.parent_id = $1
                 ORDER BY r.created_at ASC
             ";
             
-            $repliesStmt = $pdo->prepare($repliesQuery);
-            $repliesStmt->execute([$commentId]);
-            $replies = $repliesStmt->fetchAll(PDO::FETCH_ASSOC);
+            $repliesResult = pg_query_params($conn, $repliesQuery, [$commentId]);
+            if (!$repliesResult) {
+                throw new Exception(pg_last_error($conn));
+            }
+            
+            $replies = [];
+            while ($row = pg_fetch_assoc($repliesResult)) {
+                $replies[] = $row;
+            }
         }
     } catch (Exception $e) {
         $error = "Yorum detayları alınırken bir hata oluştu: " . $e->getMessage();
