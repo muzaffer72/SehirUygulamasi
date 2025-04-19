@@ -27,23 +27,14 @@ class ApiHelper {
   
   // Android platformu için API URL'i
   static String _getAndroidApiBaseUrl() {
-    // Yerel geliştirme için
-    if (kDebugMode) {
-      // Emülatör için 10.0.2.2 (localhost yerine)
-      return 'http://10.0.2.2:9000';
-    }
-    // Gerçek cihazlar için - güncel URL
-    return 'http://0.0.0.0:9000';
+    // Gerçek cihazlar için yeni API URL
+    return 'https://sehir.muzaffersanli.com';
   }
   
   // iOS platformu için API URL'i
   static String _getIOSApiBaseUrl() {
-    // Yerel geliştirme için
-    if (kDebugMode) {
-      return 'http://localhost:9000';
-    }
-    // Gerçek cihazlar için - güncel URL
-    return 'http://0.0.0.0:9000';
+    // Gerçek cihazlar için yeni API URL 
+    return 'https://sehir.muzaffersanli.com';
   }
   
   // API yolunu standart hale getir

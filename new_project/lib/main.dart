@@ -8,6 +8,12 @@ import 'services/notification_service.dart';
 import 'models/notification_model.dart';
 import 'providers/post_provider.dart';
 import 'models/post.dart';
+import 'screens/profile/profile_screen.dart';
+import 'screens/notifications/notifications_screen.dart';
+import 'screens/create_post/create_post_screen.dart';
+import 'screens/location/city_profile_screen.dart';
+import 'screens/posts/post_detail_screen.dart';
+import 'screens/auth/login_screen.dart';
 
 // Yükleme durumu için provider
 final isLoadingProvider = StateProvider<bool>((ref) => false);

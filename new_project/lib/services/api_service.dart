@@ -14,7 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   final String baseUrl = ApiHelper.getBaseUrl();
-  final String apiPath = '/api';
+  final String apiPath = '/api.php';
   
   // HTTP istek başlıklarını hazırla (token varsa ekleyerek)
   Future<Map<String, String>> _getHeaders() async {
