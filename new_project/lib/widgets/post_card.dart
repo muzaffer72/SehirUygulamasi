@@ -597,10 +597,31 @@ class _PostCardState extends State<PostCard> {
                         : FutureBuilder<User?>(
                             future: _apiService.getUserById(widget.post.userId),
                             builder: (context, snapshot) {
-                              String userName = 'Yükleniyor...';
-                              if (snapshot.hasData && snapshot.data!.name != null) {
-                                userName = snapshot.data!.name!;
+                              // Yükleme durumu, hata durumu veya veri yoksa
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const Text(
+                                  'Yükleniyor...',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: Colors.grey,
+                                  ),
+                                );
                               }
+                              
+                              if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                                return const Text(
+                                  'Bilinmeyen Kullanıcı',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: Colors.grey,
+                                  ),
+                                );
+                              }
+                              
+                              // Güvenli erişim için null kontrolü
+                              final userName = snapshot.data!.name ?? 'İsimsiz Kullanıcı';
                               
                               return GestureDetector(
                                 onTap: () {
@@ -659,9 +680,9 @@ class _PostCardState extends State<PostCard> {
                         Future.value(null),
                     ]),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
+                      if (!snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty || snapshot.data![0] == null) {
                         return Text(
-                          'Yükleniyor...',
+                          'Konum bilgisi alınamadı',
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey[600],
@@ -672,9 +693,22 @@ class _PostCardState extends State<PostCard> {
                       final city = snapshot.data![0];
                       final district = snapshot.data!.length > 1 ? snapshot.data![1] : null;
                       
-                      final locationText = district != null 
-                          ? '${district.name}, ${city.name}' 
-                          : city.name;
+                      if (city == null) {
+                        return Text(
+                          'Şehir bilgisi bulunamadı',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                          ),
+                        );
+                      }
+                      
+                      final cityName = city.name ?? 'Bilinmeyen Şehir';
+                      final districtName = district?.name;
+                      
+                      final locationText = (districtName != null && districtName.isNotEmpty)
+                          ? '$districtName, $cityName' 
+                          : cityName;
                       
                       return Row(
                         children: [
@@ -711,11 +745,20 @@ class _PostCardState extends State<PostCard> {
                   FutureBuilder<Category?>(
                     future: _apiService.getCategoryById(widget.post.categoryId!),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
+                      // Yükleme, hata veya veri yoksa
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox.shrink();
+                      }
+                      
+                      if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
                         return const SizedBox.shrink();
                       }
                       
                       final category = snapshot.data!;
+                      // Kategori adı yoksa gösterme
+                      if (category.name == null || category.name.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
                       
                       return GestureDetector(
                         onTap: () {
