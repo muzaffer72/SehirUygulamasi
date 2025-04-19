@@ -1,0 +1,42 @@
+Performing hot restart...
+Syncing files to device SM S918B...
+lib/services/api_service.dart:804:34: Error: The argument type 'Map<dynamic, dynamic>' can't be assigned to the parameter type 'Map<String, dynamic>'.
+ - 'Map' is from 'dart:core'.
+            return User.fromJson(data);
+                                 ^
+Restarted application in 2.194ms.
+I/flutter (27781): Loading posts page 1
+I/flutter (27781): Fetching posts from: https://sehir.muzaffersanli.com/api.php?endpoint=posts&page=1&per_page=10&api_key=440bf0009c749943b440f7f5c6c2fd26
+I/flutter (27781): API response status: 200
+I/flutter (27781): API response body: [{"id":"85","title":"OtobÃ¼s hatlarÄ±nÄ±n yetersizliÄi","content":"BazÄ± sokaklar yeterince aydÄ±nl...
+I/flutter (27781): Parsed 10 posts successfully
+I/flutter (27781): Loaded 10 posts
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Beğeni API hatası: 401 - {"error":"API anahtarÄ± gerekli. URL parametresi olarak api_key=KEY veya X-API-KEY header'Ä± kullanabilirsiniz."}
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+W/WindowOnBackDispatcher(27781): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher(27781): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+I/flutter (27781): Loading posts page 1
+I/flutter (27781): Fetching posts from: https://sehir.muzaffersanli.com/api.php?endpoint=posts&page=1&per_page=10&api_key=440bf0009c749943b440f7f5c6c2fd26
+I/flutter (27781): API response status: 200
+I/flutter (27781): API response body: [{"id":"85","title":"OtobÃ¼s hatlarÄ±nÄ±n yetersizliÄi","content":"BazÄ± sokaklar yeterince aydÄ±nl...
+I/flutter (27781): Parsed 10 posts successfully
+I/flutter (27781): Loaded 10 posts
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'
+I/flutter (27781): Exception in getUserById: type 'String' is not a subtype of type 'int' of 'index'

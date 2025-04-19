@@ -792,21 +792,34 @@ class ApiService {
       );
       
       if (response.statusCode == 200) {
-        // Türkçe karakter desteği için UTF-8 decode kullan
-        final data = _decodeResponse(response);
-        if (data == null || (data is Map && data['data'] == null)) return null;
-        
-        // API yanıt formatlarna göre işlem yap
-        if (data is Map) {
-          if (data.containsKey('data')) {
-            return User.fromJson(data['data']);
-          } else {
-            return User.fromJson(data);
+        try {
+          // Türkçe karakter desteği için UTF-8 decode kullan
+          final data = _decodeResponse(response);
+          if (data == null) return null;
+          
+          // API yanıt formatlarına göre işlem yap
+          if (data is Map<String, dynamic>) {
+            if (data.containsKey('data')) {
+              final userData = data['data'];
+              if (userData is Map<String, dynamic>) {
+                return User.fromJson(userData);
+              }
+            } else {
+              return User.fromJson(data as Map<String, dynamic>);
+            }
+          } else if (data is List && data.isNotEmpty) {
+            final firstItem = data[0];
+            if (firstItem is Map<String, dynamic>) {
+              return User.fromJson(firstItem);
+            }
           }
-        } else if (data is List && data.isNotEmpty) {
-          return User.fromJson(data[0]);
+          
+          print('Unexpected data format in getUserById: $data');
+          return null;
+        } catch (formatError) {
+          print('Data format error in getUserById: $formatError');
+          return null;
         }
-        return null;
       } else {
         print('Error in getUserById: ${response.statusCode} - ${response.body}');
         return null;
@@ -845,14 +858,50 @@ class ApiService {
       );
       
       if (response.statusCode == 200) {
-        // Türkçe karakter desteği için UTF-8 decode kullan
-        final data = _decodeResponse(response);
-        if (data is Map && data.containsKey('data')) {
-          return data['data'] as Map<String, dynamic>;
-        } else if (data is Map) {
-          return data as Map<String, dynamic>;
+        try {
+          // Türkçe karakter desteği için UTF-8 decode kullan
+          final data = _decodeResponse(response);
+          if (data == null) return null;
+          
+          // API yanıt formatlarına göre işlem yap
+          if (data is Map<String, dynamic> && data.containsKey('data')) {
+            final voteData = data['data'];
+            if (voteData is Map<String, dynamic>) {
+              return voteData;
+            }
+          } else if (data is Map<String, dynamic>) {
+            return data;
+          }
+          
+          // API yanıt formatından emin olamıyorsak tip dönüşümünü elle yapalım
+          if (data is Map) {
+            Map<String, dynamic> safeMap = {};
+            data.forEach((key, value) {
+              if (key is String) {
+                safeMap[key] = value;
+              }
+            });
+            
+            if (safeMap.containsKey('data') && safeMap['data'] is Map) {
+              final voteMap = safeMap['data'] as Map;
+              Map<String, dynamic> safeVoteMap = {};
+              voteMap.forEach((key, value) {
+                if (key is String) {
+                  safeVoteMap[key] = value;
+                }
+              });
+              return safeVoteMap;
+            }
+            
+            return safeMap;
+          }
+          
+          print('Unexpected data format in getUserSurveyVote: $data');
+          return null;
+        } catch (formatError) {
+          print('Data format error in getUserSurveyVote: $formatError');
+          return null;
         }
-        return null;
       } else if (response.statusCode == 404) {
         return null; // Oy bulunamadı
       } else {
@@ -900,38 +949,73 @@ class ApiService {
     String? status,
     bool anonymous = false,
   }) async {
-    // API anahtarını URL'ye ekle
-    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=create_post');
-    final uri = Uri.parse(uriString);
-    
-    final Map<String, dynamic> postData = {
-      'title': title,
-      'content': content,
-      'city_id': cityId,
-    };
-    
-    if (districtId != null) postData['district_id'] = districtId;
-    if (categoryId != null) postData['category_id'] = categoryId;
-    if (imageUrls != null) postData['image_urls'] = imageUrls;
-    if (location != null) postData['location'] = location;
-    if (status != null) postData['status'] = status;
-    postData['anonymous'] = anonymous;
-    
-    final response = await http.post(
-      uri,
-      headers: await _getHeaders(),
-      body: json.encode(postData),
-    );
-    
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final data = _decodeResponse(response);
-      if (data is Map && data.containsKey('data')) {
-        return Post.fromJson(data['data']);
+    try {
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=create_post');
+      final uri = Uri.parse(uriString);
+      
+      final Map<String, dynamic> postData = {
+        'title': title,
+        'content': content,
+        'city_id': cityId,
+      };
+      
+      if (districtId != null) postData['district_id'] = districtId;
+      if (categoryId != null) postData['category_id'] = categoryId;
+      if (imageUrls != null) postData['image_urls'] = imageUrls;
+      if (location != null) postData['location'] = location;
+      if (status != null) postData['status'] = status;
+      postData['anonymous'] = anonymous;
+      
+      final response = await http.post(
+        uri,
+        headers: await _getHeaders(),
+        body: json.encode(postData),
+      );
+      
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = _decodeResponse(response);
+        
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          final postData = data['data'];
+          if (postData is Map<String, dynamic>) {
+            return Post.fromJson(postData);
+          }
+        } else if (data is Map<String, dynamic>) {
+          return Post.fromJson(data);
+        }
+        
+        // Bu kısma ulaşırsa, API yanıt formatından emin olamıyoruz
+        // Tip dönüşümünü elle yapalım
+        if (data is Map) {
+          Map<String, dynamic> safeMap = {};
+          data.forEach((key, value) {
+            if (key is String) {
+              safeMap[key] = value;
+            }
+          });
+          
+          if (safeMap.containsKey('data') && safeMap['data'] is Map) {
+            final postMap = safeMap['data'] as Map;
+            Map<String, dynamic> safePostMap = {};
+            postMap.forEach((key, value) {
+              if (key is String) {
+                safePostMap[key] = value;
+              }
+            });
+            return Post.fromJson(safePostMap);
+          }
+          
+          return Post.fromJson(safeMap);
+        }
+        
+        throw Exception('Invalid API response format');
       } else {
-        return Post.fromJson(data);
+        throw Exception(_handleErrorResponse(response));
       }
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    } catch (e) {
+      print('Error in createPost: $e');
+      rethrow;
     }
   }
   
@@ -944,32 +1028,66 @@ class ApiService {
     List<String>? imageUrls,
     String? status,
   }) async {
-    // API anahtarını URL'ye ekle
-    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=update_post&post_id=$postId');
-    final uri = Uri.parse(uriString);
-    
-    final Map<String, dynamic> postData = {};
-    if (title != null) postData['title'] = title;
-    if (content != null) postData['content'] = content;
-    if (categoryId != null) postData['category_id'] = categoryId;
-    if (imageUrls != null) postData['image_urls'] = imageUrls;
-    if (status != null) postData['status'] = status;
-    
-    final response = await http.put(
-      uri,
-      headers: await _getHeaders(),
-      body: json.encode(postData),
-    );
-    
-    if (response.statusCode == 200) {
-      final data = _decodeResponse(response);
-      if (data is Map && data.containsKey('data')) {
-        return Post.fromJson(data['data']);
+    try {
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=update_post&post_id=$postId');
+      final uri = Uri.parse(uriString);
+      
+      final Map<String, dynamic> postData = {};
+      if (title != null) postData['title'] = title;
+      if (content != null) postData['content'] = content;
+      if (categoryId != null) postData['category_id'] = categoryId;
+      if (imageUrls != null) postData['image_urls'] = imageUrls;
+      if (status != null) postData['status'] = status;
+      
+      final response = await http.put(
+        uri,
+        headers: await _getHeaders(),
+        body: json.encode(postData),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = _decodeResponse(response);
+        
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          final postData = data['data'];
+          if (postData is Map<String, dynamic>) {
+            return Post.fromJson(postData);
+          }
+        } else if (data is Map<String, dynamic>) {
+          return Post.fromJson(data);
+        }
+        
+        // API yanıt formatından emin olamıyorsak tip dönüşümünü elle yapalım
+        if (data is Map) {
+          Map<String, dynamic> safeMap = {};
+          data.forEach((key, value) {
+            if (key is String) {
+              safeMap[key] = value;
+            }
+          });
+          
+          if (safeMap.containsKey('data') && safeMap['data'] is Map) {
+            final postMap = safeMap['data'] as Map;
+            Map<String, dynamic> safePostMap = {};
+            postMap.forEach((key, value) {
+              if (key is String) {
+                safePostMap[key] = value;
+              }
+            });
+            return Post.fromJson(safePostMap);
+          }
+          
+          return Post.fromJson(safeMap);
+        }
+        
+        throw Exception('Invalid API response format');
       } else {
-        return Post.fromJson(data);
+        throw Exception(_handleErrorResponse(response));
       }
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    } catch (e) {
+      print('Error in updatePost: $e');
+      rethrow;
     }
   }
   

@@ -27,19 +27,35 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _scrollController = ScrollController();
   bool _isLoading = false;
+  bool _isLoadingMore = false;
   
   @override
   void initState() {
     super.initState();
     _loadPosts();
+    
+    // Sonsuz kaydırma için scroll listener ekle
+    _scrollController.addListener(_scrollListener);
   }
   
   @override
   void dispose() {
+    _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
   }
   
+  // Kaydırma dinleyicisi
+  void _scrollListener() {
+    // Sayfanın altına yaklaşıldığında yeni gönderiler yükle
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 500 && 
+        !_isLoading && 
+        !_isLoadingMore) {
+      _loadMorePosts();
+    }
+  }
+  
+  // İlk yükleme
   Future<void> _loadPosts() async {
     setState(() {
       _isLoading = true;
@@ -60,6 +76,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
+        });
+      }
+    }
+  }
+  
+  // Daha fazla gönderi yükle
+  Future<void> _loadMorePosts() async {
+    print('Yeni gönderiler yükleniyor...');
+    
+    setState(() {
+      _isLoadingMore = true;
+    });
+    
+    try {
+      // Mevcut filtreleri al
+      final filters = ref.read(post_provider.postFiltersProvider);
+      
+      if (filters.hasFilters) {
+        // Filtreler varsa, filtreli içeriği devam ettir
+        await ref.read(post_provider.postsProvider.notifier).filterPosts(
+          cityId: filters.cityId,
+          districtId: filters.districtId,
+          categoryId: filters.categoryId,
+          refresh: false, // Önemli: Mevcut içeriği değiştirmeden ekleme yapmak için
+        );
+      } else {
+        // Filtre yoksa standart içeriği devam ettir
+        await ref.read(post_provider.postsProvider.notifier).loadPosts(refresh: false);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Daha fazla gönderi yüklenirken hata oluştu: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingMore = false;
         });
       }
     }
@@ -219,7 +277,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ? _buildEmptyState(filters.hasFilters)
                       : ListView.separated(
                           controller: _scrollController,
-                          itemCount: posts.length + 2, // +1 for survey, +1 for municipality banner
+                          itemCount: posts.length + 3, // +1 for survey, +1 for banner, +1 for loading indicator
                           separatorBuilder: (context, index) => const Divider(height: 1, thickness: 0.5),
                           itemBuilder: (context, index) {
                             if (index == 0) {
@@ -234,6 +292,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 awardScore: 92,
                                 awardText: "Hızlı şikayet çözüm oranı",
                               );
+                            }
+                            
+                            // Son eleman loading indicator
+                            if (index == posts.length + 2) {
+                              return _isLoadingMore 
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Theme.of(context).colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(height: 60); // Boşluk
                             }
                             
                             // Twitter tarzı post card
