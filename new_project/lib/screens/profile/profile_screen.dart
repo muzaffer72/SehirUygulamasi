@@ -534,9 +534,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SafeSingleTi
           if (user.cityId != null)
             FutureBuilder<List<dynamic>>(
               future: Future.wait([
-                _apiService.getCityById(user.cityId!),
+                ref.read(apiServiceProvider).getCityById(user.cityId!),
                 if (user.districtId != null)
-                  _apiService.getDistrictById(user.districtId!)
+                  ref.read(apiServiceProvider).getDistrictById(user.districtId!)
                 else
                   Future.value(null),
               ]),
