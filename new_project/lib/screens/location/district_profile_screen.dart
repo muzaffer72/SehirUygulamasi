@@ -278,7 +278,7 @@ class DistrictProfileScreen extends ConsumerWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PostDetailScreen(post: post),
+                            builder: (context) => PostDetailScreen(id: post.id),
                           ),
                         );
                       },

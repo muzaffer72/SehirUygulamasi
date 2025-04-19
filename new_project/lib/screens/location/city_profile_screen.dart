@@ -271,12 +271,15 @@ class CityProfileScreen extends ConsumerWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PostDetailScreen(post: post),
+                            builder: (context) => PostDetailScreen(id: post.id),
                           ),
                         );
                       },
                       onLike: () {
                         ref.read(postsProvider.notifier).likePost(post.id);
+                      },
+                      onHighlight: () {
+                        // Öne çıkarma işlevi
                       },
                       onComment: () {
                         // Yorum yapma işlevi
@@ -284,7 +287,7 @@ class CityProfileScreen extends ConsumerWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PostDetailScreen(post: post),
+                            builder: (context) => PostDetailScreen(id: post.id),
                           ),
                         );
                       },
