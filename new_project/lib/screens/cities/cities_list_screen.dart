@@ -21,7 +21,7 @@ final citiesProvider = FutureProvider<List<CityProfile>>((ref) async {
 });
 
 class CitiesListScreen extends ConsumerWidget {
-  const CitiesListScreen({Key? key}) : super(key: key);
+  const CitiesListScreen({super.key});
   
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -140,44 +140,48 @@ class CitiesListScreen extends ConsumerWidget {
   }
   
   Widget _buildErrorWidget(BuildContext context, Object error) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 60,
-            color: Colors.red[300],
+    // Consumer widget kullanarak WidgetRef'e erişiyoruz
+    return Consumer(
+      builder: (context, ref, child) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 60,
+                color: Colors.red[300],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Şehir bilgileri yüklenirken bir hata oluştu',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  // Provider'ı yenileyin (Riverpod ile)
+                  ref.refresh(citiesProvider);
+                },
+                child: const Text('Tekrar Dene'),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Şehir bilgileri yüklenirken bir hata oluştu',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            error.toString(),
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              // Provider'ı yenileyin
-              // ignore: deprecated_member_use
-              context.findAncestorStateOfType<ProviderState>()?.refresh(citiesProvider);
-            },
-            child: const Text('Tekrar Dene'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
