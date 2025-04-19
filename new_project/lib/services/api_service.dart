@@ -759,12 +759,10 @@ class ApiService {
   // Kullanıcı bilgisini getir
   Future<User?> getUserById(String userId) async {
     try {
-      final uri = Uri.parse('$baseUrl$apiPath').replace(
-        queryParameters: {
-          'endpoint': 'get_user',
-          'user_id': userId,
-        },
-      );
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=get_user&user_id=$userId');
+      final uri = Uri.parse(uriString);
+      
       final response = await http.get(
         uri,
         headers: await _getHeaders(),
