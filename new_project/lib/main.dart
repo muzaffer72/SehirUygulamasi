@@ -629,22 +629,17 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
               child: const Icon(Icons.notifications_outlined),
             ),
             onPressed: () {
-              // Bildirim test ekleme
-              NotificationService.addNotification(
-                NotificationModel(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  userId: '1', // Geçici olarak sabit bir kullanıcı ID
-                  title: 'Test Bildirimi',
-                  message: 'Bu bir test bildirimidir.',
-                  createdAt: DateTime.now(),
-                  type: 'test',
+              // Bildirimler sayfasına git
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(),
                 ),
               );
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Test bildirimi oluşturuldu')),
-              );
+              
+              // Bildirimleri okundu olarak işaretle
               setState(() {
-                _hasNotification = true;
+                _hasNotification = false;
               });
             },
           ),
@@ -712,19 +707,49 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
                           icon: Icons.report_problem_outlined,
                           label: 'Sorun Bildir',
                           color: Colors.redAccent,
-                          onTap: () => Navigator.pop(context),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CreatePostScreen(
+                                  postType: PostType.problem,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                         _buildActionButton(
                           icon: Icons.lightbulb_outline,
                           label: 'Öneri Yap',
                           color: Colors.amber,
-                          onTap: () => Navigator.pop(context),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CreatePostScreen(
+                                  postType: PostType.suggestion,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                         _buildActionButton(
                           icon: Icons.thumb_up_outlined,
                           label: 'Teşekkür Et',
                           color: Colors.green,
-                          onTap: () => Navigator.pop(context),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CreatePostScreen(
+                                  postType: PostType.general,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -743,6 +768,41 @@ class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerPr
           setState(() {
             _selectedIndex = index;
           });
+          
+          // Sayfalar arası gezinme
+          switch (index) {
+            case 0:
+              // Ana Sayfa - zaten buradayız, bir şey yapmaya gerek yok
+              break;
+            case 1:
+              // Harita - şehir profili listesi veya harita sayfasına git
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CityProfileScreen(),
+                ),
+              );
+              break;
+            case 2:
+              // Profil - kullanıcı profil sayfasına git
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfileScreen(),
+                ),
+              );
+              break;
+            case 3:
+              // Ayarlar - ayarlar sayfasına git
+              // Ayarlar sayfasını ekleyin veya mevcut bir sayfaya yönlendirin
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(), // Şimdilik bildirimlere yönlendiriyoruz
+                ),
+              );
+              break;
+          }
         },
         destinations: const [
           NavigationDestination(

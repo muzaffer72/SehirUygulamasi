@@ -260,8 +260,11 @@ class ApiService {
       if (status != null) queryParams['status'] = status;
       if (postType != null) queryParams['type'] = postType == PostType.problem ? 'problem' : 'general';
       
-      final uri = Uri.parse('$baseUrl$apiPath/posts').replace(
-        queryParameters: queryParams,
+      final uri = Uri.parse('$baseUrl$apiPath').replace(
+        queryParameters: {
+          'endpoint': 'get_posts',
+          ...queryParams
+        },
       );
       
       print('Fetching posts from: $uri');
@@ -273,30 +276,40 @@ class ApiService {
       print('API response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final dynamic data = json.decode(response.body);
         print('API response body: ${response.body.substring(0, response.body.length > 100 ? 100 : response.body.length)}...');
         
-        // Admin panel API yanıt formatı: { posts: [...], pagination: {...} }
-        final List<dynamic> postsJson = data['posts'] ?? [];
-        
-        // Eğer 'posts' alanı yoksa, doğrudan yanıtı deneyin (API format değişikliğine uyumluluk için)
-        if (postsJson.isEmpty && data is List) {
-          return data.map((json) => Post.fromJson(json)).toList();
+        // Farklı API yanıt formatlarını kontrol et ve uygun şekilde işle
+        if (data == null) {
+          print('API returned null data');
+          return [];
         }
         
-        if (postsJson.isEmpty && data is Map && data.containsKey('data')) {
-          final List<dynamic> dataList = data['data'] ?? [];
-          return dataList.map((json) => Post.fromJson(json)).toList();
+        List<dynamic> postsJson = [];
+        
+        // API return format: { posts: [...], pagination: {...} }
+        if (data is Map<String, dynamic> && data.containsKey('posts')) {
+          postsJson = data['posts'] as List<dynamic>;
+        } 
+        // API return format: { data: [...] }
+        else if (data is Map<String, dynamic> && data.containsKey('data')) {
+          postsJson = data['data'] as List<dynamic>;
+        }
+        // API return format: [...]
+        else if (data is List) {
+          postsJson = data;
         }
         
-        return postsJson.map((json) => Post.fromJson(json)).toList();
+        final posts = postsJson.map((json) => Post.fromJson(json)).toList();
+        print('Parsed ${posts.length} posts successfully');
+        return posts;
       } else {
         print('API error: ${response.body}');
         throw Exception(_handleErrorResponse(response));
       }
     } catch (e) {
       print('Exception in getPosts: $e');
-      throw Exception('Gönderileri alırken bir hata oluştu: $e');
+      rethrow; // Hatayı tekrar fırlat (daha fazla bilgi için)
     }
   }
   
