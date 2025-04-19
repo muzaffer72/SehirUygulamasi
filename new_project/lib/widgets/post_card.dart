@@ -3,10 +3,12 @@ import 'package:belediye_iletisim_merkezi/models/post.dart';
 import 'package:belediye_iletisim_merkezi/models/user.dart';
 import 'package:belediye_iletisim_merkezi/models/category.dart';
 import 'package:belediye_iletisim_merkezi/services/api_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:cached_network_image/cached_network_image.dart';
 
-class PostCard extends StatefulWidget {
+class PostCard extends ConsumerStatefulWidget {
   final Post post;
   final VoidCallback onTap;
   final VoidCallback onLike;
@@ -14,6 +16,7 @@ class PostCard extends StatefulWidget {
   final bool showFullContent;
   final bool isDetailView;
   final VoidCallback? onComment;
+  final VoidCallback? onShare;
 
   const PostCard({
     Key? key,
@@ -26,15 +29,12 @@ class PostCard extends StatefulWidget {
     this.onComment,
     this.onShare,
   }) : super(key: key);
-  
-  final VoidCallback? onShare;
 
   @override
-  State<PostCard> createState() => _PostCardState();
+  ConsumerState<PostCard> createState() => _PostCardState();
 }
 
-class _PostCardState extends State<PostCard> {
-  final ApiService _apiService = ApiService();
+class _PostCardState extends ConsumerState<PostCard> {
   bool _isExpanded = false;
 
   @override
@@ -292,7 +292,7 @@ class _PostCardState extends State<PostCard> {
                         ),
                       )
                     : FutureBuilder<User?>(
-                        future: _apiService.getUserById(widget.post.userId),
+                        future: ref.read(apiServiceProvider).getUserById(widget.post.userId),
                         builder: (context, snapshot) {
                           final userName = snapshot.hasData
                               ? snapshot.data!.name
@@ -336,9 +336,9 @@ class _PostCardState extends State<PostCard> {
                       const SizedBox(width: 2),
                       FutureBuilder<List<dynamic>>(
                         future: Future.wait([
-                          _apiService.getCityById(widget.post.cityId!),
+                          ref.read(apiServiceProvider).getCityById(widget.post.cityId!),
                           if (widget.post.districtId != null) 
-                            _apiService.getDistrictById(widget.post.districtId!) 
+                            ref.read(apiServiceProvider).getDistrictById(widget.post.districtId!) 
                           else 
                             Future.value(null),
                         ]),
