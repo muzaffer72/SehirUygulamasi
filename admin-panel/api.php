@@ -365,18 +365,4 @@ function handleDelete($endpoint, $id) {
     }
 }
 
-// Sadece sendResponse() fonksiyonunu koru
-function sendResponse($data, $statusCode = 200) {
-    http_response_code($statusCode);
-    
-    // Eğer $data bağımsız bir dizi değilse, onu bir API yanıtı formatına çevir
-    if (!isset($data['endpoint']) && !isset($data['error']) && !isset($data['status'])) {
-        $data = [
-            'status' => 'success',
-            'data' => $data
-        ];
-    }
-    
-    echo json_encode($data, JSON_UNESCAPED_UNICODE);
-    exit;
-}
+// Not: sendResponse fonksiyonu dosyanın başında tanımlandığı için burada tekrar tanımlamaya gerek yok.
