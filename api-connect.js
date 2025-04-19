@@ -218,11 +218,35 @@ app.use('/api', async (req, res) => {
     let targetUrl = '';
     
     if (endpoint) {
-      // Yeni API formatı için query string yapısını koru
-      targetUrl = `http://0.0.0.0:3001/api${apiPath}`;
+      // Yeni API formatı için - endpoint parametresini doğrudan kullan
+      targetUrl = `http://0.0.0.0:3001/api.php?endpoint=${endpoint}`;
+      
+      // Diğer query parametrelerini de ekle
+      url.searchParams.forEach((value, key) => {
+        if (key !== 'endpoint') {
+          targetUrl += `&${key}=${value}`;
+        }
+      });
     } else {
-      // Klasik path bazlı yapıyı hedefle
-      targetUrl = `http://0.0.0.0:3001/api${url.pathname}`;
+      // Klasik path bazlı yapıyı api.php endpoint formatına dönüştür
+      const pathParts = url.pathname.split('/').filter(part => part.length > 0);
+      if (pathParts.length > 0) {
+        const endpoint = pathParts[0];
+        targetUrl = `http://0.0.0.0:3001/api.php?endpoint=${endpoint}`;
+        
+        // Path'teki ID değeri varsa ekle
+        if (pathParts.length > 1) {
+          targetUrl += `&id=${pathParts[1]}`;
+        }
+        
+        // Diğer query parametrelerini de ekle
+        url.searchParams.forEach((value, key) => {
+          targetUrl += `&${key}=${value}`;
+        });
+      } else {
+        // Endpoint olmadan doğrudan admin panel API'sine yönlendir
+        targetUrl = `http://0.0.0.0:3001/api.php`;
+      }
     }
     
     console.log(`İstek yönlendiriliyor: ${targetUrl}`);
