@@ -79,36 +79,33 @@ function getPosts($db) {
         $types .= "i";
     }
     
-    // Sıralama ve sayfalama
-    $query .= " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
-    $params[] = $per_page;
-    $params[] = $offset;
-    $types .= "ii";
+    // Sıralama ve sayfalama - PostgreSQL için numerik parametreler
+    $query .= " ORDER BY p.created_at DESC LIMIT $per_page OFFSET $offset";
+    // PostgreSQL direkt değerleri kullandığımız için parametre listesine eklemiyoruz
     
     // Toplam kayıt sayısını al
-    $count_stmt = $db->prepare($count_query);
     if (!empty($params) && !empty($types)) {
-        $count_types = substr($types, 0, -2); // Son iki karakteri (ii) kaldır
-        $count_params = array_slice($params, 0, -2); // Son iki parametreyi kaldır
-        
-        if (!empty($count_params)) {
-            $count_stmt->bind_param($count_types, ...$count_params);
-        }
+        $count_params = array_slice($params, 0, -2); // Son iki parametreyi (sayfalama parametrelerini) kaldır
+        $count_result = pg_query_params($db, $count_query, $count_params);
+    } else {
+        $count_result = pg_query($db, $count_query);
     }
-    $count_stmt->execute();
-    $count_result = $count_stmt->get_result();
-    $total = $count_result->fetch_assoc()['total'];
     
-    // Gönderileri al
-    $stmt = $db->prepare($query);
-    if (!empty($params) && !empty($types)) {
-        $stmt->bind_param($types, ...$params);
+    if (!$count_result) {
+        sendError("Veritabanı sorgu hatası: " . pg_last_error($db), 500);
     }
-    $stmt->execute();
-    $result = $stmt->get_result();
+    
+    $count_row = pg_fetch_assoc($count_result);
+    $total = $count_row['total'];
+    
+    // Gönderileri al - doğrudan pg_query_params kullanarak
+    $result = pg_query_params($db, $query, $params);
+    if (!$result) {
+        sendError("Veritabanı sorgu hatası: " . pg_last_error($db), 500);
+    }
     
     $posts = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = pg_fetch_assoc($result)) {
         // Her gönderi için yorum sayısını al
         $comment_query = "SELECT COUNT(*) as count FROM comments WHERE post_id = ?";
         $comment_stmt = $db->prepare($comment_query);
