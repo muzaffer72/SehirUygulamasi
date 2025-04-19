@@ -423,7 +423,8 @@ class _SurveyDetailScreenState extends ConsumerState<SurveyDetailScreen> {
       }
       
       // Toplam oy sayısını güncelle
-      widget.survey.totalVotes++;
+      // totalVotes setter'ı olmadığı için bu satırı kaldırıyoruz, bunun yerine
+      // anket değerini yeniden çekeceğiz (refreshSurvey metodu ile)
       
       setState(() {
         _hasVoted = true;
