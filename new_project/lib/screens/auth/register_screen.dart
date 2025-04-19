@@ -54,7 +54,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
     
     try {
-      final apiService = ApiService();
+      final apiService = ref.read(apiServiceProvider);
       final cities = await apiService.getCities();
       setState(() {
         _cities = cities;
@@ -75,7 +75,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
     
     try {
-      final apiService = ApiService();
+      final apiService = ref.read(apiServiceProvider);
       final districts = await apiService.getDistrictsByCityId(cityId.toString());
       setState(() {
         _districts = districts;
@@ -118,9 +118,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       
       // Hata kontrolü
       final authState = ref.read(authProvider);
-      if (authState.error != null) {
+      if (authState.status == AuthStatus.error && authState.errorMessage != null) {
         setState(() {
-          _errorMessage = authState.error;
+          _errorMessage = authState.errorMessage;
         });
       }
     } catch (e) {
@@ -135,7 +135,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authState = ref.watch(authProvider);
     
     // Başarılı kayıt kontrolü
-    if (authState.isLoggedIn && authState.user != null) {
+    if (authState.status == AuthStatus.authenticated && authState.user != null) {
       // Widget ağacını yeniden oluşturma talebi gönder
       // Ana ekrana otomatik yönlendirme için
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -381,7 +381,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       
                       // Kayıt ol butonu
                       ElevatedButton(
-                        onPressed: authState.isLoading ? null : _register,
+                        onPressed: authState.status == AuthStatus.authenticating ? null : _register,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           minimumSize: const Size(double.infinity, 50),
@@ -389,7 +389,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: authState.isLoading
+                        child: authState.status == AuthStatus.authenticating
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,

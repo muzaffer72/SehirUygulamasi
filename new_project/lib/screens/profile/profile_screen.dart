@@ -8,6 +8,7 @@ import 'package:belediye_iletisim_merkezi/models/district.dart';
 import 'package:belediye_iletisim_merkezi/models/auth_state.dart';
 import 'package:belediye_iletisim_merkezi/models/user.dart';
 import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
 import 'package:belediye_iletisim_merkezi/screens/profile/location_settings_screen.dart';
 import 'package:belediye_iletisim_merkezi/services/api_service.dart';
 
@@ -29,7 +30,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SafeSingleTi
   void activate() {
     super.activate();
   }
-  final ApiService _apiService = ApiService();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
@@ -263,7 +263,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SafeSingleTi
           if (!_isLoggingIn) ... [
             // City selection
             FutureBuilder<List<City>>(
-              future: _apiService.getCities(),
+              future: ref.read(apiServiceProvider).getCities(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -301,7 +301,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SafeSingleTi
             // District selection (only if city is selected)
             if (_selectedCityId != null)
               FutureBuilder<List<District>>(
-                future: _apiService.getDistrictsByCityId(_selectedCityId!),
+                future: ref.read(apiServiceProvider).getDistrictsByCityId(_selectedCityId!),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
