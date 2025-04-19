@@ -14,6 +14,11 @@ import 'screens/create_post/create_post_screen.dart';
 import 'screens/location/city_profile_screen.dart';
 import 'screens/posts/post_detail_screen.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/home/home_screen.dart';
+import 'screens/explore/explore_screen.dart';
+import 'screens/cities/cities_list_screen.dart';
+import 'screens/surveys/surveys_screen.dart';
+import 'pages/notification_settings_page.dart';
 import 'utils/timeago_config.dart';
 
 // Yükleme durumu için provider
@@ -100,20 +105,88 @@ class IletisimHomePage extends StatefulWidget {
 }
 
 class _IletisimHomePageState extends State<IletisimHomePage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
   int _selectedIndex = 0;
   bool _hasNotification = true; // Örnek bildirim göstergesi
   
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
   }
   
   @override
   void dispose() {
-    _tabController.dispose();
     super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    // Ekranlar
+    final List<Widget> _screens = [
+      const HomeScreen(),
+      const ExploreScreen(),
+      const CitiesListScreen(),
+      const SurveysScreen(),
+      const ProfileScreen(),
+    ];
+
+    return Scaffold(
+      body: _screens[_selectedIndex],
+      
+      // Twitter tarzı bottom navigation bar
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        elevation: 8.0,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Ana Sayfa',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search_outlined),
+            activeIcon: Icon(Icons.search),
+            label: 'Keşfet',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.location_city_outlined),
+            activeIcon: Icon(Icons.location_city),
+            label: 'Şehirler',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.poll_outlined),
+            activeIcon: Icon(Icons.poll),
+            label: 'Anketler',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profil',
+          ),
+        ],
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+      ),
+      
+      // Twitter tarzı gönderi oluşturma FAB
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreatePostScreen()),
+          );
+        },
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
   }
   
   void _showSearchModal() {
