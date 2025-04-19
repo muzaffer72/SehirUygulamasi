@@ -46,10 +46,22 @@ class ApiService {
   // API'den alınan hata mesajını işle
   String _handleErrorResponse(http.Response response) {
     try {
-      final decodedResponse = json.decode(response.body);
+      // UTF-8 karakter kodlamasıyla decode et
+      final decodedResponse = json.decode(utf8.decode(response.bodyBytes));
       return decodedResponse['message'] ?? 'Bilinmeyen hata: ${response.statusCode}';
     } catch (e) {
       return 'Bilinmeyen hata: ${response.statusCode}';
+    }
+  }
+  
+  // JSON yanıtını doğru şekilde decode et (Türkçe karakterler için)
+  dynamic _decodeResponse(http.Response response) {
+    try {
+      // Türkçe karakterler için UTF-8 decode kullan
+      return json.decode(utf8.decode(response.bodyBytes));
+    } catch (e) {
+      // Hata durumunda ham string döndür
+      return response.body;
     }
   }
 
@@ -66,7 +78,7 @@ class ApiService {
     );
     
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      return _decodeResponse(response);
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -96,7 +108,7 @@ class ApiService {
     );
     
     if (response.statusCode == 201) {
-      return json.decode(response.body);
+      return _decodeResponse(response);
     } else {
       throw Exception(_handleErrorResponse(response));
     }

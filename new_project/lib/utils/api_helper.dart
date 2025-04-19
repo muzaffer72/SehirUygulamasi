@@ -19,6 +19,11 @@ class ApiHelper {
     }
   }
   
+  // API baz URL'ini döndürür (alternatif isim - eski kodlar için uyumluluk)
+  static String getApiBaseUrl() {
+    return getBaseUrl();
+  }
+  
   // Web platformu için API URL'i
   static String _getWebApiBaseUrl() {
     // Web'de aynı domain'de çalışacak şekilde ("/api" prefix ile)
