@@ -45,6 +45,25 @@ class CityProfile {
   // CitiesListScreen için gerekli eklenen alanlar
   final int complaintCount;  // Toplam şikayet sayısı
   final int districtCount;   // İlçe sayısı
+  
+  // Eksik alanlar için varsayılan değerler
+  final String? awardText; // Ödül metni
+  final String? awardMonth; // Ödül ayı
+  final double? awardScore; // Ödül puanı
+  final String? demoCoverImageUrl; // Kapak fotoğrafı
+  final String? demoImageUrl; // Tanıtım fotoğrafı
+  final String? demoMayorImageUrl; // Başkan fotoğrafı
+  final String? demoMayorName; // Başkan adı
+  final int? population; // Nüfus
+  final String? performanceMonth; // Performans ayı
+  final int? performanceYear; // Performans yılı
+  final List<double>? monthlyPerformance; // Aylık performans
+  final String? emergencyPhone; // Acil telefon
+  final String? demoProjectImageUrl; // Proje görseli
+  final String? demoEventImageUrl; // Etkinlik görseli
+  final List<Map<String, dynamic>>? projects; // Projeler
+  final List<Map<String, dynamic>>? events; // Etkinlikler
+  final List<Map<String, dynamic>>? stats; // İstatistikler
 
   CityProfile({
     required this.id,
@@ -90,6 +109,24 @@ class CityProfile {
     this.activeComplaints = 0,
     this.complaintCount = 0,
     this.districtCount = 0,
+    // Yeni eklenen alanlar
+    this.awardText,
+    this.awardMonth,
+    this.awardScore,
+    this.demoCoverImageUrl,
+    this.demoImageUrl,
+    this.demoMayorImageUrl,
+    this.demoMayorName,
+    this.population,
+    this.performanceMonth,
+    this.performanceYear,
+    this.monthlyPerformance,
+    this.emergencyPhone,
+    this.demoProjectImageUrl,
+    this.demoEventImageUrl,
+    this.projects,
+    this.events,
+    this.stats,
   });
 
   factory CityProfile.fromJson(Map<String, dynamic> json) {
@@ -123,6 +160,41 @@ class CityProfile {
       importantPlaces = List<String>.from(json['important_places']);
     }
 
+    // Aylık performans verileri dönüştür
+    List<double>? monthlyPerformance;
+    if (json['monthly_performance'] != null && json['monthly_performance'] is List) {
+      monthlyPerformance = List<double>.from(
+        (json['monthly_performance'] as List).map((item) => (item is num) ? item.toDouble() : 0.0)
+      );
+    }
+    
+    // Proje verileri dönüştür
+    List<Map<String, dynamic>>? projects;
+    if (json['projects'] != null && json['projects'] is List) {
+      projects = List<Map<String, dynamic>>.from(
+        (json['projects'] as List).map((item) => 
+          (item is Map) ? Map<String, dynamic>.from(item as Map) : <String, dynamic>{})
+      );
+    }
+    
+    // Etkinlik verileri dönüştür
+    List<Map<String, dynamic>>? events;
+    if (json['events'] != null && json['events'] is List) {
+      events = List<Map<String, dynamic>>.from(
+        (json['events'] as List).map((item) => 
+          (item is Map) ? Map<String, dynamic>.from(item as Map) : <String, dynamic>{})
+      );
+    }
+    
+    // İstatistik verileri dönüştür
+    List<Map<String, dynamic>>? stats;
+    if (json['stats'] != null && json['stats'] is List) {
+      stats = List<Map<String, dynamic>>.from(
+        (json['stats'] as List).map((item) => 
+          (item is Map) ? Map<String, dynamic>.from(item as Map) : <String, dynamic>{})
+      );
+    }
+    
     return CityProfile(
       id: json['id'].toString(),
       cityId: json['city_id'].toString(),
@@ -169,6 +241,24 @@ class CityProfile {
       // CitiesListScreen için gerekli alanlar
       complaintCount: json['complaint_count'] ?? json['total_complaints'] ?? 0,
       districtCount: json['district_count'] ?? 0,
+      // City Profile Screen için gerekli eklenen alanlar
+      awardText: json['award_text'],
+      awardMonth: json['award_month'],
+      awardScore: json['award_score']?.toDouble(),
+      demoCoverImageUrl: json['demo_cover_image_url'] ?? json['cover_image_url'],
+      demoImageUrl: json['demo_image_url'] ?? (photos != null && photos.isNotEmpty ? photos[0] : null),
+      demoMayorImageUrl: json['demo_mayor_image_url'] ?? json['mayor_photo'],
+      demoMayorName: json['demo_mayor_name'] ?? json['mayor'],
+      population: json['population'] ?? json['population_count'],
+      performanceMonth: json['performance_month'],
+      performanceYear: json['performance_year'],
+      monthlyPerformance: monthlyPerformance,
+      emergencyPhone: json['emergency_phone'] ?? json['contact_phone'],
+      demoProjectImageUrl: json['demo_project_image_url'],
+      demoEventImageUrl: json['demo_event_image_url'],
+      projects: projects,
+      events: events,
+      stats: stats,
     );
   }
 
@@ -216,6 +306,26 @@ class CityProfile {
       'info': info,
       'website': website,
       'active_complaints': activeComplaints,
+      'complaint_count': complaintCount,
+      'district_count': districtCount,
+      // City Profile Screen için gerekli alanlar
+      'award_text': awardText,
+      'award_month': awardMonth,
+      'award_score': awardScore,
+      'demo_cover_image_url': demoCoverImageUrl,
+      'demo_image_url': demoImageUrl,
+      'demo_mayor_image_url': demoMayorImageUrl,
+      'demo_mayor_name': demoMayorName,
+      'population': population,
+      'performance_month': performanceMonth,
+      'performance_year': performanceYear,
+      'monthly_performance': monthlyPerformance,
+      'emergency_phone': emergencyPhone,
+      'demo_project_image_url': demoProjectImageUrl,
+      'demo_event_image_url': demoEventImageUrl,
+      'projects': projects,
+      'events': events,
+      'stats': stats,
     };
   }
 

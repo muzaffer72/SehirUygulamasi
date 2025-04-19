@@ -919,21 +919,23 @@ class ApiService {
     required String optionId,
     required String userId,
   }) async {
-    final uri = Uri.parse('$baseUrl$apiPath').replace(
-      queryParameters: {
-        'endpoint': 'vote_survey',
-        'survey_id': surveyId,
-        'option_id': optionId,
-        'user_id': userId,
-      },
-    );
-    final response = await http.post(
-      uri,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode != 200) {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=vote_survey&survey_id=$surveyId&option_id=$optionId&user_id=$userId');
+      final uri = Uri.parse(uriString);
+      
+      final response = await http.post(
+        uri,
+        headers: await _getHeaders(),
+      );
+      
+      if (response.statusCode != 200) {
+        print('Anket oy verme API hatası: ${response.statusCode} - ${response.body}');
+        throw Exception(_handleErrorResponse(response));
+      }
+    } catch (e) {
+      print('Error in voteSurvey: $e');
+      rethrow;
     }
   }
   
@@ -1141,30 +1143,64 @@ class ApiService {
     required String content,
     String? parentId,
   }) async {
-    // API anahtarını URL'ye ekle
-    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=add_comment&post_id=$postId');
-    final uri = Uri.parse(uriString);
-    
-    final Map<String, dynamic> commentData = {
-      'content': content,
-    };
-    if (parentId != null) commentData['parent_id'] = parentId;
-    
-    final response = await http.post(
-      uri,
-      headers: await _getHeaders(),
-      body: json.encode(commentData),
-    );
-    
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final data = _decodeResponse(response);
-      if (data is Map && data.containsKey('data')) {
-        return Comment.fromJson(data['data']);
+    try {
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=add_comment&post_id=$postId');
+      final uri = Uri.parse(uriString);
+      
+      final Map<String, dynamic> commentData = {
+        'content': content,
+      };
+      if (parentId != null) commentData['parent_id'] = parentId;
+      
+      final response = await http.post(
+        uri,
+        headers: await _getHeaders(),
+        body: json.encode(commentData),
+      );
+      
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = _decodeResponse(response);
+        
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          final commentData = data['data'];
+          if (commentData is Map<String, dynamic>) {
+            return Comment.fromJson(commentData);
+          }
+        } else if (data is Map<String, dynamic>) {
+          return Comment.fromJson(data);
+        }
+        
+        // API yanıt formatından emin olamıyorsak tip dönüşümünü elle yapalım
+        if (data is Map) {
+          Map<String, dynamic> safeMap = {};
+          data.forEach((key, value) {
+            if (key is String) {
+              safeMap[key] = value;
+            }
+          });
+          
+          if (safeMap.containsKey('data') && safeMap['data'] is Map) {
+            final commentMap = safeMap['data'] as Map;
+            Map<String, dynamic> safeCommentMap = {};
+            commentMap.forEach((key, value) {
+              if (key is String) {
+                safeCommentMap[key] = value;
+              }
+            });
+            return Comment.fromJson(safeCommentMap);
+          }
+          
+          return Comment.fromJson(safeMap);
+        }
+        
+        throw Exception('Invalid API response format');
       } else {
-        return Comment.fromJson(data);
+        throw Exception(_handleErrorResponse(response));
       }
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    } catch (e) {
+      print('Error in commentPost: $e');
+      rethrow;
     }
   }
   
