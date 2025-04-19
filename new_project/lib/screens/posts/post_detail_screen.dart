@@ -289,6 +289,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             onHighlight: () {
               // Öne çıkarma işlemi
             },
+            onShare: () {
+              // Paylaşım işlemi
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Paylaşım özelliği yakında eklenecek')),
+              );
+            },
           ),
           
           // Çözüm memnuniyeti (sadece çözülen gönderiler için)
