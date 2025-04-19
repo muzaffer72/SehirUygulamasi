@@ -418,11 +418,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SafeSingleTi
         final name = _nameController.text.trim();
         
         await ref.read(authProvider.notifier).register(
-          name,
-          email,
-          password,
-          _selectedCityId,
-          _selectedDistrictId,
+          name: name,
+          email: email,
+          password: password,
+          cityId: int.tryParse(_selectedCityId ?? "0") ?? 0,
+          districtId: _selectedDistrictId,
         );
         
         if (mounted) {
