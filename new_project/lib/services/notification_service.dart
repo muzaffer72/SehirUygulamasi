@@ -38,19 +38,41 @@ class NotificationService {
   /// Firebase bildirim servisini başlatır, saklanan bildirimleri yükler,
   /// ve bildirim dinleyicilerini ayarlar.
   static Future<void> initialize() async {
-    // Saklanan bildirimleri yükle
-    await _loadSavedNotifications();
-    
-    // Firebase bildirim servisini başlat
-    await FirebaseNotificationService.initialize();
-    
-    // Bildirim streams'ini yayınla
-    _notificationsListController.add(_notifications);
-    
-    // TODO: Bildirim işleyicilerini Firebase servisi ile bağla
-    // Bu kısım, FCM'den gelen bildirimleri alıp _addNotification metoduna iletecek
-    
-    debugPrint('Bildirim servisi başlatıldı');
+    try {
+      // Saklanan bildirimleri yükle
+      await _loadSavedNotifications();
+      
+      // Firebase bildirim servisini başlat
+      await FirebaseNotificationService.initialize();
+      
+      // Kullanıcı henüz giriş yapmışsa FCM token'ı kaydet
+      final userId = await _getUserIdFromPrefs();
+      if (userId != null && userId.isNotEmpty) {
+        await FirebaseNotificationService.saveUserIdWithToken(userId);
+      }
+      
+      // Bildirim streams'ini yayınla
+      _notificationsListController.add(_notifications);
+      
+      // Firebase token'ını kontrol et ve debug logunu yaz
+      final token = await FirebaseNotificationService.getToken();
+      debugPrint('FCM Token durumu: ${token != null ? "Alındı" : "Alınamadı"}');
+      
+      debugPrint('Bildirim servisi başarıyla başlatıldı');
+    } catch (e) {
+      debugPrint('Bildirim servisi başlatılırken hata: $e');
+    }
+  }
+  
+  /// Mevcut kullanıcı ID'sini alır
+  static Future<String?> _getUserIdFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('user_id');
+    } catch (e) {
+      debugPrint('Kullanıcı ID alınırken hata: $e');
+      return null;
+    }
   }
   
   /// Yerel depodan kaydedilmiş bildirimleri yükler.

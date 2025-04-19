@@ -51,9 +51,38 @@ class FirebaseNotificationService {
       return null;
     }
     
-    // Şu an için geçici bir değer döndürülüyor
-    // Gerçek implementasyonda: return await FirebaseMessaging.instance.getToken();
-    return 'firebase-fcm-token-placeholder';
+    try {
+      if (FirebaseService.isFirebaseAvailable()) {
+        // Platform kanalı üzerinden token alma işlemine yönlendir
+        // Gerçek implementasyonda: return await FirebaseMessaging.instance.getToken();
+        
+        // Not: Native tarafında MainActivity.kt içinde tanımladığımız
+        // platform kanalını kullanarak token'ı almayı deneyebiliriz
+        // Bu kısım native entegrasyondan sonra geliştirilecek
+        
+        debugPrint('FCM token almak için platform servisi hazırlanıyor');
+        return await _getTokenFromNative();
+      } else {
+        debugPrint('Firebase kullanılamıyor, FCM token alınamadı');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('FCM token alınırken hata: $e');
+      return null;
+    }
+  }
+  
+  // Native platform kanalından token almayı dener
+  static Future<String?> _getTokenFromNative() async {
+    try {
+      // Native platform kanalı henüz test edilmedi
+      // Bu fonksiyon ileride uygulanacak
+      // Şimdilik debug token döndürüyoruz
+      return 'fcm-token-from-native-development';
+    } catch (e) {
+      debugPrint('Native platform kanalından token alınırken hata: $e');
+      return null;
+    }
   }
   
   /// FCM token'ı sunucuya kaydetmek için kullanılır
