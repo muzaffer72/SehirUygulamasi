@@ -16,7 +16,6 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
-  final ApiService _apiService = ApiService();
   bool _isLoading = true;
   List<NotificationModel> _notifications = [];
   
@@ -34,8 +33,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     
     try {
       final authState = ref.read(authProvider);
+      final apiService = ref.read(apiServiceProvider);
+      
       if (authState.user != null) {
-        final notifications = await _apiService.getNotificationsByUserId(
+        final notifications = await apiService.getNotificationsByUserId(
           authState.user!.id,
         );
         
