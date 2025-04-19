@@ -216,14 +216,16 @@ app.use('/api', async (req, res) => {
     
     // Admin panel URL'sini oluştur
     let targetUrl = '';
+    // API anahtarı doğrudan URL'ye eklenecek
+    const apiKey = '440bf0009c749943b440f7f5c6c2fd26';
     
     if (endpoint) {
       // Yeni API formatı için - endpoint parametresini doğrudan kullan
-      targetUrl = `http://0.0.0.0:3001/api.php?endpoint=${endpoint}`;
+      targetUrl = `http://0.0.0.0:3001/api.php?endpoint=${endpoint}&api_key=${apiKey}`;
       
       // Diğer query parametrelerini de ekle
       url.searchParams.forEach((value, key) => {
-        if (key !== 'endpoint') {
+        if (key !== 'endpoint' && key !== 'api_key') {
           targetUrl += `&${key}=${value}`;
         }
       });
@@ -232,7 +234,7 @@ app.use('/api', async (req, res) => {
       const pathParts = url.pathname.split('/').filter(part => part.length > 0);
       if (pathParts.length > 0) {
         const endpoint = pathParts[0];
-        targetUrl = `http://0.0.0.0:3001/api.php?endpoint=${endpoint}`;
+        targetUrl = `http://0.0.0.0:3001/api.php?endpoint=${endpoint}&api_key=${apiKey}`;
         
         // Path'teki ID değeri varsa ekle
         if (pathParts.length > 1) {
@@ -241,20 +243,21 @@ app.use('/api', async (req, res) => {
         
         // Diğer query parametrelerini de ekle
         url.searchParams.forEach((value, key) => {
-          targetUrl += `&${key}=${value}`;
+          if (key !== 'api_key') {
+            targetUrl += `&${key}=${value}`;
+          }
         });
       } else {
         // Endpoint olmadan doğrudan admin panel API'sine yönlendir
-        targetUrl = `http://0.0.0.0:3001/api.php`;
+        targetUrl = `http://0.0.0.0:3001/api.php?api_key=${apiKey}`;
       }
     }
     
     console.log(`İstek yönlendiriliyor: ${targetUrl}`);
     
-    // İstek başlıklarını hazırla
+    // İstek başlıklarını hazırla - API anahtarı artık URL'de olduğu için header'da göndermeye gerek yok
     const headers = {
-      'Content-Type': 'application/json',
-      'X-API-KEY': '440bf0009c749943b440f7f5c6c2fd26'
+      'Content-Type': 'application/json'
     };
     
     // CORS ve X-API-KEY başlığı debug

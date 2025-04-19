@@ -14,11 +14,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // API anahtarı kontrolü
 function checkApiKey() {
-    $headers = getallheaders();
-    $apiKey = $headers['X-API-KEY'] ?? null;
+    // 1. Önce URL'de API anahtarı var mı diye kontrol et
+    $apiKey = $_GET['api_key'] ?? null;
     
+    // 2. URL'de yoksa, header'larda kontrol et (geriye uyumluluk için)
     if (!$apiKey) {
-        sendResponse(['error' => 'API anahtarı gerekli'], 401);
+        $headers = getallheaders();
+        $apiKey = $headers['X-API-KEY'] ?? null;
+    }
+    
+    // Her iki yöntemde de API anahtarı bulunamadıysa hata döndür
+    if (!$apiKey) {
+        sendResponse(['error' => 'API anahtarı gerekli. URL parametresi olarak api_key=KEY veya X-API-KEY header\'ı kullanabilirsiniz.'], 401);
         exit;
     }
     
