@@ -8,7 +8,16 @@ import '../location/city_profile_screen.dart';
 // Şehir listesi için basit bir provider
 final citiesProvider = FutureProvider<List<CityProfile>>((ref) async {
   final apiService = ApiService();
-  return await apiService.getCities();
+  final cities = await apiService.getCities();
+  // City -> CityProfile dönüşümü yap
+  return cities.map((city) => CityProfile(
+    id: city.id,
+    cityId: city.id,
+    name: city.name,
+    complaintCount: city.complaintCount ?? 0,
+    districtCount: city.districtCount ?? 0,
+    problemSolvingRate: city.solutionRate,
+  )).toList();
 });
 
 class CitiesListScreen extends ConsumerWidget {

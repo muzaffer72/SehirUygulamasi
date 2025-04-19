@@ -6,7 +6,7 @@ import 'app.dart';
 import 'services/firebase_service.dart';
 import 'services/notification_service.dart';
 import 'models/notification_model.dart';
-import 'providers/post_provider.dart';
+import 'providers/post_provider.dart' as post_provider;
 import 'models/post.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
@@ -272,8 +272,8 @@ class _IletisimHomePageState extends State<IletisimHomePage> {
     return Consumer(
       builder: (context, ref, child) {
         // API'den gönderileri al
-        final postsNotifier = ref.watch(postsProvider.notifier);
-        final posts = ref.watch(postsProvider);
+        final postsNotifier = ref.watch(post_provider.postsProvider.notifier);
+        final posts = ref.watch(post_provider.postsProvider);
         
         // Veri yükleme durumunu izle
         final isLoading = ref.watch(isLoadingProvider);
