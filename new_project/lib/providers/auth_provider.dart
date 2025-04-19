@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
+import '../models/auth_state.dart';
 import '../services/api_service.dart';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
@@ -11,7 +12,7 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 
 // User provider, AuthNotifier durumunu yayınlar
 final authProvider =
-    StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
+    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final apiService = ref.watch(apiServiceProvider);
   final prefs = ref.watch(sharedPreferencesProvider);
   return AuthNotifier(apiService, prefs);
@@ -20,25 +21,21 @@ final authProvider =
 // Kullanıcıyı sağlayan provider (eğer oturum açılmışsa)
 final userProvider = Provider<User?>((ref) {
   final authState = ref.watch(authProvider);
-  return authState.when(
-    data: (user) => user,
-    error: (_, __) => null,
-    loading: () => null,
-  );
+  return authState.user;
 });
 
 // Kullanıcı oturumunun durumunu kontrol eden provider
 final isAuthenticatedProvider = Provider<bool>((ref) {
-  final user = ref.watch(userProvider);
-  return user != null;
+  final authState = ref.watch(authProvider);
+  return authState.isLoggedIn;
 });
 
 // Auth işlemlerini yöneten StateNotifier
-class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
+class AuthNotifier extends StateNotifier<AuthState> {
   final ApiService _apiService;
   final SharedPreferences _prefs;
 
-  AuthNotifier(this._apiService, this._prefs) : super(const AsyncValue.loading()) {
+  AuthNotifier(this._apiService, this._prefs) : super(AuthState.initial()) {
     _init();
   }
 
@@ -51,19 +48,20 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       if (token != null && userData != null) {
         // Token varsa mevcut kullanıcıyı al
         final userJson = jsonDecode(userData);
-        state = AsyncValue.data(User.fromJson(userJson));
+        final user = User.fromJson(userJson);
+        state = AuthState.authenticated(user);
       } else {
         // Token yoksa null kullanıcı
-        state = const AsyncValue.data(null);
+        state = AuthState.unauthenticated();
       }
     } catch (e) {
-      state = const AsyncValue.data(null);
+      state = AuthState.unauthenticated();
     }
   }
 
   // Giriş işlemi
   Future<void> login(String email, String password) async {
-    state = const AsyncValue.loading();
+    state = AuthState.authenticating();
     try {
       final response = await _apiService.login(email, password);
       
@@ -80,12 +78,12 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         await _prefs.setString('user', jsonEncode(userData));
         
         // State'i güncelle
-        state = AsyncValue.data(user);
+        state = AuthState.authenticated(user);
       } else {
         throw Exception('Geçersiz login yanıtı');
       }
     } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
+      state = AuthState.error(e.toString());
       rethrow;
     }
   }
@@ -99,7 +97,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     required String districtId,
     String? phone,
   }) async {
-    state = const AsyncValue.loading();
+    state = AuthState.authenticating();
     try {
       final response = await _apiService.register(
         name: name,
@@ -123,12 +121,12 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         await _prefs.setString('user', jsonEncode(userData));
         
         // State'i güncelle
-        state = AsyncValue.data(user);
+        state = AuthState.authenticated(user);
       } else {
         throw Exception('Geçersiz register yanıtı');
       }
     } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
+      state = AuthState.error(e.toString());
       rethrow;
     }
   }
@@ -143,7 +141,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       // Tüm kayıtlı verileri temizle
       await _prefs.remove('token');
       await _prefs.remove('user');
-      state = const AsyncValue.data(null);
+      state = AuthState.unauthenticated();
     }
   }
 
@@ -160,7 +158,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     String? districtId,
   }) async {
     try {
-      final currentUser = state.value;
+      final currentUser = state.user;
       if (currentUser == null) {
         throw Exception('Kullanıcı oturum açmamış');
       }
@@ -187,12 +185,12 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         await _prefs.setString('user', jsonEncode(userData));
         
         // State'i güncelle
-        state = AsyncValue.data(updatedUser);
+        state = AuthState.authenticated(updatedUser);
       } else {
         throw Exception('Geçersiz updateProfile yanıtı');
       }
     } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
+      state = AuthState.error(e.toString());
       rethrow;
     }
   }

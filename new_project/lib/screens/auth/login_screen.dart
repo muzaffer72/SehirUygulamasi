@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
 import 'package:belediye_iletisim_merkezi/screens/auth/register_screen.dart';
 import 'package:belediye_iletisim_merkezi/utils/validators.dart';
+import 'package:belediye_iletisim_merkezi/models/auth_state.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -44,9 +45,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       
       // Hata kontrolü
       final authState = ref.read(authProvider);
-      if (authState.error != null) {
+      if (authState.status == AuthStatus.error && authState.errorMessage != null) {
         setState(() {
-          _errorMessage = authState.error;
+          _errorMessage = authState.errorMessage;
         });
       }
     } catch (e) {
