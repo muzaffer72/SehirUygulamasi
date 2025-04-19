@@ -17,7 +17,7 @@ class ApiService {
   final String baseUrl = ApiHelper.getBaseUrl();
   final String apiPath = '/api.php';
   
-  // HTTP istek başlıklarını hazırla (token ve API anahtarı varsa ekleyerek)
+  // HTTP istek başlıklarını hazırla (token varsa ekleyerek)
   Future<Map<String, String>> _getHeaders() async {
     final headers = {
       'Content-Type': 'application/json',
@@ -28,18 +28,19 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
     
-    // API anahtarını ApiKeyManager'dan al (varsayılan değeri döndürür)
-    final apiKey = await ApiKeyManager.getApiKey();
-    
     // Token varsa, Authorization header'ına ekle
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
     
-    // API anahtarını her zaman ekle (varsayılan veya kullanıcı tarafından kaydedilen)
-    headers['X-API-KEY'] = apiKey;
+    // NOT: Artık API anahtarı header yerine URL'de gönderilecek
     
     return headers;
+  }
+  
+  // URL'ye API anahtarını ekle
+  Future<String> _appendApiKeyToUrl(String url) async {
+    return ApiKeyManager.appendApiKeyToUrl(url);
   }
 
   // API'den alınan hata mesajını işle
@@ -208,11 +209,9 @@ class ApiService {
   
   // Şehir listesini getir
   Future<List<City>> getCitiesAsObjects() async {
-    final uri = Uri.parse('$baseUrl$apiPath').replace(
-      queryParameters: {
-        'endpoint': 'cities',
-      },
-    );
+    // API anahtarını URL'ye ekleyen Uri.parse kullanımı
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=cities');
+    final uri = Uri.parse(uriString);
     
     final response = await http.get(
       uri,
@@ -237,12 +236,9 @@ class ApiService {
   
   // Belirli bir şehre ait ilçeleri getir
   Future<List<District>> getDistrictsByCityIdAsObjects(String cityId) async {
-    final uri = Uri.parse('$baseUrl$apiPath').replace(
-      queryParameters: {
-        'endpoint': 'districts',
-        'city_id': cityId,
-      },
-    );
+    // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=districts&city_id=$cityId');
+    final uri = Uri.parse(uriString);
     
     final response = await http.get(
       uri,
@@ -280,26 +276,22 @@ class ApiService {
     PostType? postType,
   }) async {
     try {
-      // Query parametrelerini oluştur
-      final queryParams = {
-        'page': page.toString(),
-        'per_page': limit.toString(), // limit yerine per_page parametresi kullanılıyor
-      };
+      // URL parametrelerini oluştur
+      String url = '$baseUrl$apiPath?endpoint=posts';
+      url += '&page=$page';
+      url += '&per_page=$limit'; // limit yerine per_page parametresi kullanılıyor
       
-      if (cityId != null) queryParams['city_id'] = cityId;
-      if (districtId != null) queryParams['district_id'] = districtId;
-      if (categoryId != null) queryParams['category_id'] = categoryId;
-      if (sortBy != null) queryParams['sort_by'] = sortBy;
-      if (userId != null) queryParams['user_id'] = userId;
-      if (status != null) queryParams['status'] = status;
-      if (postType != null) queryParams['type'] = postType == PostType.problem ? 'problem' : 'general';
+      if (cityId != null) url += '&city_id=$cityId';
+      if (districtId != null) url += '&district_id=$districtId';
+      if (categoryId != null) url += '&category_id=$categoryId';
+      if (sortBy != null) url += '&sort_by=$sortBy';
+      if (userId != null) url += '&user_id=$userId';
+      if (status != null) url += '&status=$status';
+      if (postType != null) url += '&type=${postType == PostType.problem ? 'problem' : 'general'}';
       
-      final uri = Uri.parse('$baseUrl$apiPath').replace(
-        queryParameters: {
-          'endpoint': 'posts',
-          ...queryParams
-        },
-      );
+      // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
+      final uriString = await _appendApiKeyToUrl(url);
+      final uri = Uri.parse(uriString);
       
       print('Fetching posts from: $uri');
       final response = await http.get(
@@ -507,11 +499,9 @@ class ApiService {
   
   // Kategoriler listesini getir
   Future<List<Category>> getCategories() async {
-    final uri = Uri.parse('$baseUrl$apiPath').replace(
-      queryParameters: {
-        'endpoint': 'categories',
-      },
-    );
+    // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=categories');
+    final uri = Uri.parse(uriString);
     
     final response = await http.get(
       uri,

@@ -38,4 +38,17 @@ class ApiKeyManager {
   static String getDefaultApiKey() {
     return _defaultApiKey;
   }
+  
+  // URL'ye API anahtarını ekle
+  static Future<String> appendApiKeyToUrl(String url) async {
+    final apiKey = await getApiKey();
+    final separator = url.contains('?') ? '&' : '?';
+    return '$url${separator}api_key=$apiKey';
+  }
+  
+  // API anahtarını HTTP başlıklarına ekle (geriye uyumluluk için)
+  static Future<Map<String, String>> getApiKeyHeader() async {
+    final apiKey = await getApiKey();
+    return {'X-API-KEY': apiKey};
+  }
 }
