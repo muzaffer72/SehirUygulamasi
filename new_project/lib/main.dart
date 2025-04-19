@@ -32,13 +32,15 @@ void main() async {
   configureTimeAgo();
   
   // Hata yakalama için global işleyici
-  runZonedGuarded(() async {
-    // Firebase servislerini başlat
-    await FirebaseService.initialize();
-    
-    // Bildirim servisini başlat
-    await NotificationService.initialize();
-    
+  // Zone mismatch hatasını önlemek için ensureInitialized ve runApp aynı zone'da olmalı
+  // Firebase servislerini başlat
+  await FirebaseService.initialize();
+  
+  // Bildirim servisini başlat
+  await NotificationService.initialize();
+  
+  // Zone hatası için: runZonedGuarded ve runApp aynı zonda olmalı
+  runZonedGuarded(() {
     // Riverpod ile uygulamayı başlat
     runApp(
       const ProviderScope(
