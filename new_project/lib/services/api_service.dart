@@ -792,9 +792,21 @@ class ApiService {
       );
       
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['data'] == null) return null;
-        return User.fromJson(data['data']);
+        // Türkçe karakter desteği için UTF-8 decode kullan
+        final data = _decodeResponse(response);
+        if (data == null || (data is Map && data['data'] == null)) return null;
+        
+        // API yanıt formatlarna göre işlem yap
+        if (data is Map) {
+          if (data.containsKey('data')) {
+            return User.fromJson(data['data']);
+          } else {
+            return User.fromJson(data);
+          }
+        } else if (data is List && data.isNotEmpty) {
+          return User.fromJson(data[0]);
+        }
+        return null;
       } else {
         print('Error in getUserById: ${response.statusCode} - ${response.body}');
         return null;
@@ -833,8 +845,14 @@ class ApiService {
       );
       
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return data['data'] as Map<String, dynamic>;
+        // Türkçe karakter desteği için UTF-8 decode kullan
+        final data = _decodeResponse(response);
+        if (data is Map && data.containsKey('data')) {
+          return data['data'] as Map<String, dynamic>;
+        } else if (data is Map) {
+          return data as Map<String, dynamic>;
+        }
+        return null;
       } else if (response.statusCode == 404) {
         return null; // Oy bulunamadı
       } else {
@@ -882,11 +900,10 @@ class ApiService {
     String? status,
     bool anonymous = false,
   }) async {
-    final uri = Uri.parse('$baseUrl$apiPath').replace(
-      queryParameters: {
-        'endpoint': 'create_post',
-      },
-    );
+    // API anahtarını URL'ye ekle
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=create_post');
+    final uri = Uri.parse(uriString);
+    
     final Map<String, dynamic> postData = {
       'title': title,
       'content': content,
@@ -906,9 +923,13 @@ class ApiService {
       body: json.encode(postData),
     );
     
-    if (response.statusCode == 201) {
-      final data = json.decode(response.body);
-      return Post.fromJson(data['data']);
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final data = _decodeResponse(response);
+      if (data is Map && data.containsKey('data')) {
+        return Post.fromJson(data['data']);
+      } else {
+        return Post.fromJson(data);
+      }
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -923,22 +944,30 @@ class ApiService {
     List<String>? imageUrls,
     String? status,
   }) async {
-    final url = Uri.parse('$baseUrl$apiPath/posts/$postId');
+    // API anahtarını URL'ye ekle
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=update_post&post_id=$postId');
+    final uri = Uri.parse(uriString);
+    
+    final Map<String, dynamic> postData = {};
+    if (title != null) postData['title'] = title;
+    if (content != null) postData['content'] = content;
+    if (categoryId != null) postData['category_id'] = categoryId;
+    if (imageUrls != null) postData['image_urls'] = imageUrls;
+    if (status != null) postData['status'] = status;
+    
     final response = await http.put(
-      url,
+      uri,
       headers: await _getHeaders(),
-      body: json.encode({
-        'title': title,
-        'content': content,
-        'category_id': categoryId,
-        'image_urls': imageUrls,
-        'status': status,
-      }),
+      body: json.encode(postData),
     );
     
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return Post.fromJson(data['data']);
+      final data = _decodeResponse(response);
+      if (data is Map && data.containsKey('data')) {
+        return Post.fromJson(data['data']);
+      } else {
+        return Post.fromJson(data);
+      }
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -947,12 +976,10 @@ class ApiService {
   // Post'u beğen
   Future<void> likePost(String postId) async {
     try {
-      final uri = Uri.parse('$baseUrl$apiPath').replace(
-        queryParameters: {
-          'endpoint': 'like_post',
-          'post_id': postId,
-        },
-      );
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=like_post&post_id=$postId');
+      final uri = Uri.parse(uriString);
+      
       final response = await http.post(
         uri,
         headers: await _getHeaders(),
@@ -971,9 +998,12 @@ class ApiService {
   // Post beğeniyi kaldır
   Future<void> unlikePost(String postId) async {
     try {
-      final url = Uri.parse('$baseUrl$apiPath/posts/$postId/unlike');
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=unlike_post&post_id=$postId');
+      final uri = Uri.parse(uriString);
+      
       final response = await http.post(
-        url,
+        uri,
         headers: await _getHeaders(),
       );
       
@@ -993,19 +1023,28 @@ class ApiService {
     required String content,
     String? parentId,
   }) async {
-    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/comments');
+    // API anahtarını URL'ye ekle
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=add_comment&post_id=$postId');
+    final uri = Uri.parse(uriString);
+    
+    final Map<String, dynamic> commentData = {
+      'content': content,
+    };
+    if (parentId != null) commentData['parent_id'] = parentId;
+    
     final response = await http.post(
-      url,
+      uri,
       headers: await _getHeaders(),
-      body: json.encode({
-        'content': content,
-        'parent_id': parentId,
-      }),
+      body: json.encode(commentData),
     );
     
-    if (response.statusCode == 201) {
-      final data = json.decode(response.body);
-      return Comment.fromJson(data['data']);
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final data = _decodeResponse(response);
+      if (data is Map && data.containsKey('data')) {
+        return Comment.fromJson(data['data']);
+      } else {
+        return Comment.fromJson(data);
+      }
     } else {
       throw Exception(_handleErrorResponse(response));
     }
@@ -1018,13 +1057,9 @@ class ApiService {
     String? comment,
   }) async {
     try {
-      final uri = Uri.parse('$baseUrl$apiPath').replace(
-        queryParameters: {
-          'endpoint': 'submit_satisfaction',
-          'post_id': postId,
-          'rating': rating.toString(),
-        },
-      );
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=submit_satisfaction&post_id=$postId&rating=$rating');
+      final uri = Uri.parse(uriString);
       
       final Map<String, dynamic> satisfactionData = {};
       if (comment != null) satisfactionData['comment'] = comment;
