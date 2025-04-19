@@ -174,7 +174,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         phone: phone,
         profileImageUrl: profileImageUrl,
         coverImageUrl: coverImageUrl,
-        cityId: cityId != null ? cityId.toString() : null,
+        cityId: cityId,
         districtId: districtId,
       );
       

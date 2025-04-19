@@ -96,7 +96,7 @@ class ApiService {
     required String email,
     required String password,
     String? phone,
-    required String cityId,
+    required int cityId,
     String? districtId,
   }) async {
     final url = Uri.parse('$baseUrl$apiPath/register');
@@ -161,7 +161,7 @@ class ApiService {
     String? phone,
     String? profileImageUrl,
     String? coverImageUrl,
-    String? cityId,
+    int? cityId,
     String? districtId,
   }) async {
     final url = Uri.parse('$baseUrl$apiPath/users/$userId');
@@ -215,7 +215,7 @@ class ApiService {
   // Kullanıcı konum bilgilerini güncelleme
   Future<Map<String, dynamic>> updateUserLocation({
     required int userId,
-    required String cityId,
+    required int cityId,
     String? districtId,
   }) async {
     return updateProfile(
@@ -786,7 +786,7 @@ class ApiService {
   }
   
   // Kullanıcı bilgisini getir
-  Future<User?> getUserById(String userId) async {
+  Future<User?> getUserById(int userId) async {
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=users&id=$userId');
@@ -851,7 +851,7 @@ class ApiService {
   // Kullanıcının anketteki oyunu getir
   Future<Map<String, dynamic>?> getUserSurveyVote(
     String surveyId,
-    String userId,
+    int userId,
   ) async {
     try {
       // API anahtarını URL'ye ekle
@@ -923,7 +923,7 @@ class ApiService {
   Future<void> voteSurvey({
     required String surveyId,
     required String optionId,
-    required String userId,
+    required int userId,
   }) async {
     try {
       // API anahtarını URL'ye ekle
