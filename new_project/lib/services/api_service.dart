@@ -136,7 +136,7 @@ class ApiService {
     );
     
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = _decodeResponse(response);
       return User.fromJson(data);
     } else if (response.statusCode == 401) {
       return null; // Token geçersiz veya oturum süresi dolmuş
@@ -176,7 +176,7 @@ class ApiService {
     );
     
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = _decodeResponse(response);
       return User.fromJson(data);
     } else {
       throw Exception(_handleErrorResponse(response));
@@ -231,7 +231,7 @@ class ApiService {
     );
     
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = _decodeResponse(response);
       List<dynamic> citiesJson = [];
       
       if (data is Map && data.containsKey('data')) {
@@ -258,7 +258,7 @@ class ApiService {
     );
     
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = _decodeResponse(response);
       List<dynamic> districtsJson = [];
       
       if (data is Map && data.containsKey('data')) {
@@ -314,7 +314,7 @@ class ApiService {
       print('API response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
-        final dynamic data = json.decode(response.body);
+        final dynamic data = _decodeResponse(response);
         print('API response body: ${response.body.substring(0, response.body.length > 100 ? 100 : response.body.length)}...');
         
         // Farklı API yanıt formatlarını kontrol et ve uygun şekilde işle
@@ -367,7 +367,7 @@ class ApiService {
     );
     
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = _decodeResponse(response);
       if (data is Map && data.containsKey('data')) {
         return Post.fromJson(data['data']);
       } else if (data is Map && data.containsKey('status') && data.containsKey('data')) {
@@ -392,7 +392,7 @@ class ApiService {
     );
     
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = _decodeResponse(response);
       final List<dynamic> notificationsJson = data['data'] ?? [];
       return notificationsJson
           .map((json) => NotificationModel.fromJson(json))
@@ -439,7 +439,7 @@ class ApiService {
     );
     
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      final data = _decodeResponse(response);
       final List<dynamic> surveysJson = data['data'] ?? [];
       return surveysJson.map((json) => Survey.fromJson(json)).toList();
     } else {
