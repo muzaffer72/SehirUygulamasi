@@ -16,7 +16,7 @@ class ApiService {
   final String baseUrl = ApiHelper.getBaseUrl();
   final String apiPath = '/api.php';
   
-  // HTTP istek başlıklarını hazırla (token varsa ekleyerek)
+  // HTTP istek başlıklarını hazırla (token ve API anahtarı varsa ekleyerek)
   Future<Map<String, String>> _getHeaders() async {
     final headers = {
       'Content-Type': 'application/json',
@@ -26,10 +26,16 @@ class ApiService {
     // Kayıtlı token'ı al
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
+    final apiKey = prefs.getString('api_key');
     
     // Token varsa, Authorization header'ına ekle
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
+    }
+    
+    // API anahtarı varsa, X-API-KEY header'ına ekle
+    if (apiKey != null) {
+      headers['X-API-KEY'] = apiKey;
     }
     
     return headers;
