@@ -9,8 +9,8 @@ class CityProfile {
   final String? area;
   final String? established;
   final String? website;
-  final String? phone;
-  final String? email;
+  final String? contactPhone;
+  final String? contactEmail;
   final String? address;
   final double? latitude;
   final double? longitude;
@@ -25,6 +25,19 @@ class CityProfile {
   final double responseRate;
   final double problemSolvingRate;
   final int averageResponseTime;
+  final String? politicalParty;
+  final String? politicalPartyLogoUrl;
+  final String? info;
+  final int? totalPosts;
+  final int? totalSolvedIssues;
+  final double? solutionRate;
+  
+  // CityProfileScreen.dart'ta kullanılan getterlar
+  String? get phone => contactPhone;
+  String? get email => contactEmail;
+  String? get websiteUrl => website;
+  int get solvedIssuesCount => totalSolvedIssues ?? solvedComplaints;
+  int get totalIssuesCount => totalPosts ?? (totalComplaints + totalSuggestions);
 
   CityProfile({
     required this.id,
@@ -37,8 +50,8 @@ class CityProfile {
     this.area,
     this.established,
     this.website,
-    this.phone,
-    this.email,
+    this.contactPhone,
+    this.contactEmail,
     this.address,
     this.latitude,
     this.longitude,
@@ -53,11 +66,17 @@ class CityProfile {
     this.responseRate = 0.0,
     this.problemSolvingRate = 0.0,
     this.averageResponseTime = 0,
+    this.politicalParty,
+    this.politicalPartyLogoUrl,
+    this.info,
+    this.totalPosts,
+    this.totalSolvedIssues,
+    this.solutionRate,
   });
 
   factory CityProfile.fromJson(Map<String, dynamic> json) {
     return CityProfile(
-      id: json['id'].toString(),
+      id: json['id']?.toString() ?? '',
       cityId: json['city_id']?.toString() ?? '',
       name: json['name'] ?? '',
       description: json['description'],
@@ -67,8 +86,8 @@ class CityProfile {
       area: json['area']?.toString(),
       established: json['established'],
       website: json['website'],
-      phone: json['phone'],
-      email: json['email'],
+      contactPhone: json['contact_phone'] ?? json['phone'],
+      contactEmail: json['contact_email'] ?? json['email'],
       address: json['address'],
       latitude: json['latitude']?.toDouble(),
       longitude: json['longitude']?.toDouble(),
@@ -83,6 +102,12 @@ class CityProfile {
       responseRate: json['response_rate']?.toDouble() ?? 0.0,
       problemSolvingRate: json['problem_solving_rate']?.toDouble() ?? 0.0,
       averageResponseTime: json['average_response_time'] ?? 0,
+      politicalParty: json['political_party'],
+      politicalPartyLogoUrl: json['political_party_logo_url'],
+      info: json['info'],
+      totalPosts: json['total_posts'],
+      totalSolvedIssues: json['total_solved_issues'],
+      solutionRate: json['solution_rate']?.toDouble(),
     );
   }
 
@@ -98,8 +123,8 @@ class CityProfile {
       'area': area,
       'established': established,
       'website': website,
-      'phone': phone,
-      'email': email,
+      'contact_phone': contactPhone,
+      'contact_email': contactEmail,
       'address': address,
       'latitude': latitude,
       'longitude': longitude,
@@ -114,6 +139,12 @@ class CityProfile {
       'response_rate': responseRate,
       'problem_solving_rate': problemSolvingRate,
       'average_response_time': averageResponseTime,
+      'political_party': politicalParty,
+      'political_party_logo_url': politicalPartyLogoUrl,
+      'info': info,
+      'total_posts': totalPosts,
+      'total_solved_issues': totalSolvedIssues,
+      'solution_rate': solutionRate,
     };
   }
 
