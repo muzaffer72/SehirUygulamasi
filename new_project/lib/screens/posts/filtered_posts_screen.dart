@@ -104,7 +104,7 @@ class _FilteredPostsScreenState extends ConsumerState<FilteredPostsScreen> {
     });
     
     try {
-      final posts = await _apiService.getFilteredPosts(widget.filterParams ?? {});
+      final posts = await ref.read(apiServiceProvider).getFilteredPosts(widget.filterParams ?? {});
       setState(() {
         _posts = posts;
         _isLoading = false;
@@ -229,7 +229,7 @@ class _FilteredPostsScreenState extends ConsumerState<FilteredPostsScreen> {
             },
             onLike: () async {
               try {
-                await _apiService.likePost(post.id);
+                await ref.read(apiServiceProvider).likePost(post.id);
                 setState(() {
                   _posts[index] = post.copyWith(
                     likes: post.likes + 1,

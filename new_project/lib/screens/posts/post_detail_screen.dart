@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:belediye_iletisim_merkezi/models/post.dart';
 import 'package:belediye_iletisim_merkezi/models/comment.dart';
 import 'package:belediye_iletisim_merkezi/services/api_service.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
 import 'package:belediye_iletisim_merkezi/widgets/app_shimmer.dart';
 import 'package:belediye_iletisim_merkezi/widgets/post_card.dart';
 import 'package:belediye_iletisim_merkezi/widgets/comment_card.dart';
 
-class PostDetailScreen extends StatefulWidget {
+class PostDetailScreen extends ConsumerStatefulWidget {
   final String id;
   
   const PostDetailScreen({
@@ -15,11 +17,10 @@ class PostDetailScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<PostDetailScreen> createState() => _PostDetailScreenState();
+  ConsumerState<PostDetailScreen> createState() => _PostDetailScreenState();
 }
 
-class _PostDetailScreenState extends State<PostDetailScreen> {
-  final ApiService _apiService = ApiService();
+class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   final TextEditingController _commentController = TextEditingController();
   bool _isLoading = true;
   bool _isLoadingComments = true;
@@ -46,7 +47,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     });
     
     try {
-      final post = await _apiService.getPostById(widget.id);
+      final post = await ref.read(apiServiceProvider).getPostById(widget.id);
       setState(() {
         _post = post;
         _isLoading = false;
@@ -72,7 +73,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     });
     
     try {
-      final comments = await _apiService.getCommentsByPostId(widget.id);
+      final comments = await ref.read(apiServiceProvider).getCommentsByPostId(widget.id);
       setState(() {
         _comments = comments;
         _isLoadingComments = false;
@@ -100,7 +101,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     });
     
     try {
-      final comment = await _apiService.addComment(
+      final comment = await ref.read(apiServiceProvider).addComment(
         postId: widget.id,
         content: _commentController.text.trim(),
       );
@@ -136,7 +137,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   
   Future<void> _submitSatisfactionRating(int rating) async {
     try {
-      bool success = await _apiService.submitSatisfaction(
+      bool success = await ref.read(apiServiceProvider).submitSatisfaction(
         postId: widget.id, 
         rating: rating
       );
@@ -275,7 +276,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             onTap: () {}, // Zaten detay görünümündeyiz, tıklama gereksiz
             onLike: () async {
               try {
-                await _apiService.likePost(_post!.id);
+                await ref.read(apiServiceProvider).likePost(_post!.id);
                 setState(() {
                   _post = _post!.copyWith(
                     likes: _post!.likes + 1,
