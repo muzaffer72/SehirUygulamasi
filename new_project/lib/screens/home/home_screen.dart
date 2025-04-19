@@ -130,20 +130,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundImage: const AssetImage('assets/images/default_avatar.png'),
-            radius: 16,
-            backgroundColor: Colors.grey[200],
-            onBackgroundImageError: (e, stackTrace) {
-              debugPrint('Avatar yükleme hatası: $e');
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
             },
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                );
-              },
+            child: CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.grey[200],
+              child: Icon(Icons.person, size: 20, color: Colors.grey[600]),
             ),
           ),
         ),
