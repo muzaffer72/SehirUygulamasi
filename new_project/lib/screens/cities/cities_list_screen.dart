@@ -1,76 +1,96 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:belediye_iletisim_merkezi/models/city.dart';
-import 'package:belediye_iletisim_merkezi/providers/city_profile_provider.dart';
-import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
-import 'package:belediye_iletisim_merkezi/screens/cities/city_profile_screen.dart';
+import '../../models/city_profile.dart';
+import '../../services/api_service.dart';
+import '../../widgets/app_shimmer.dart';
+import '../location/city_profile_screen.dart';
+
+// Şehir listesi için basit bir provider
+final citiesProvider = FutureProvider<List<CityProfile>>((ref) async {
+  final apiService = ApiService();
+  return await apiService.getCities();
+});
 
 class CitiesListScreen extends ConsumerWidget {
   const CitiesListScreen({Key? key}) : super(key: key);
-
+  
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final citiesAsync = ref.watch(cityListProvider);
+    final citiesAsyncValue = ref.watch(citiesProvider);
     
     return Scaffold(
       appBar: AppBar(
         title: const Text('Şehirler'),
-        elevation: 2,
+        elevation: 0.5,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Şehir arama özelliği yakında!'))
+              );
+            },
+          ),
+        ],
       ),
-      body: citiesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Text('Şehirler yüklenirken hata oluştu: $error'),
-        ),
-        data: (cities) {
-          return _buildCitiesList(context, cities);
-        },
+      body: citiesAsyncValue.when(
+        data: (cities) => _buildCitiesList(context, cities),
+        loading: () => _buildLoadingShimmer(),
+        error: (error, stack) => _buildErrorWidget(context, error),
       ),
     );
   }
   
-  Widget _buildCitiesList(BuildContext context, List<dynamic> cities) {
-    // Şehirleri alfabetik olarak sırala
-    cities.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+  Widget _buildCitiesList(BuildContext context, List<CityProfile> cities) {
+    if (cities.isEmpty) {
+      return const Center(
+        child: Text('Henüz şehir bilgisi bulunmuyor.'),
+      );
+    }
     
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
       itemCount: cities.length,
       itemBuilder: (context, index) {
         final city = cities[index];
-        final cityId = int.parse(city['id'].toString());
-        final cityName = city['name'] as String;
-        
         return Card(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: Text(
-                cityName.substring(0, 1),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+              child: Text(city.name.substring(0, 1)),
+              backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            ),
+            title: Text(city.name),
+            subtitle: Text('${city.complaintCount} şikayet, ${city.districtCount} ilçe'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Şehirin performans puanı
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getScoreColor(city.problemSolvingRate),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '%${city.problemSolvingRate.toInt()}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward_ios, size: 16),
+              ],
             ),
-            title: Text(
-              cityName,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: city['district_count'] != null 
-              ? Text('${city['district_count']} ilçe')
-              : null,
-            trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(
-                context,
+                context, 
                 MaterialPageRoute(
                   builder: (context) => CityProfileScreen(
-                    cityId: cityId,
-                    cityName: cityName,
+                    cityId: city.id,
+                    cityName: city.name,
                   ),
                 ),
               );
@@ -78,6 +98,77 @@ class CitiesListScreen extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+  
+  Color _getScoreColor(double score) {
+    if (score >= 75) {
+      return Colors.green[600]!;
+    } else if (score >= 50) {
+      return Colors.orange[600]!;
+    } else {
+      return Colors.red[600]!;
+    }
+  }
+  
+  Widget _buildLoadingShimmer() {
+    return ListView.builder(
+      itemCount: 10,
+      itemBuilder: (context, index) {
+        return const Card(
+          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: AppShimmer(
+            child: ListTile(
+              leading: CircleAvatar(),
+              title: SizedBox(height: 12, width: 100),
+              subtitle: SizedBox(height: 8, width: 150),
+              trailing: SizedBox(width: 50),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildErrorWidget(BuildContext context, Object error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 60,
+            color: Colors.red[300],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Şehir bilgileri yüklenirken bir hata oluştu',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            error.toString(),
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              // Provider'ı yenileyin
+              // ignore: deprecated_member_use
+              context.findAncestorStateOfType<ProviderState>()?.refresh(citiesProvider);
+            },
+            child: const Text('Tekrar Dene'),
+          ),
+        ],
+      ),
     );
   }
 }
