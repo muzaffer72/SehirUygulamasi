@@ -163,6 +163,42 @@ class ApiService {
     }
   }
   
+  // UserProvider için eski API uyumluluğu
+  Future<User> updateUserProfile({
+    required String userId,
+    String? name,
+    String? username,
+    String? bio,
+    String? email, 
+    String? phone,
+    String? profileImageUrl,
+    String? coverImageUrl,
+  }) async {
+    return updateProfile(
+      userId: userId,
+      name: name,
+      username: username,
+      bio: bio,
+      email: email,
+      phone: phone,
+      profileImageUrl: profileImageUrl,
+      coverImageUrl: coverImageUrl,
+    );
+  }
+  
+  // Kullanıcı konum bilgilerini güncelleme
+  Future<User> updateUserLocation({
+    required String userId,
+    required String cityId,
+    String? districtId,
+  }) async {
+    return updateProfile(
+      userId: userId,
+      cityId: cityId,
+      districtId: districtId,
+    );
+  }
+  
   // Şehir listesini getir
   Future<List<City>> getCitiesAsObjects() async {
     final url = Uri.parse('$baseUrl$apiPath/cities');

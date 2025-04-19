@@ -24,7 +24,10 @@ class PostCard extends StatefulWidget {
     this.showFullContent = false,
     this.isDetailView = false,
     this.onComment,
+    this.onShare,
   }) : super(key: key);
+  
+  final VoidCallback? onShare;
 
   @override
   State<PostCard> createState() => _PostCardState();
@@ -212,7 +215,7 @@ class _PostCardState extends State<PostCard> {
                       activeIcon: Icons.share,
                       count: 0,
                       color: Colors.blue,
-                      onTap: () {
+                      onTap: widget.onShare ?? () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Paylaşım özelliği yakında eklenecek')),
                         );
