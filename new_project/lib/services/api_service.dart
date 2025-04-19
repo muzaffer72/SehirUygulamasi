@@ -757,9 +757,14 @@ class ApiService {
   // Kullanıcı bilgisini getir
   Future<User?> getUserById(String userId) async {
     try {
-      final url = Uri.parse('$baseUrl$apiPath/users/$userId');
+      final uri = Uri.parse('$baseUrl$apiPath').replace(
+        queryParameters: {
+          'endpoint': 'get_user',
+          'user_id': userId,
+        },
+      );
       final response = await http.get(
-        url,
+        uri,
         headers: await _getHeaders(),
       );
       
@@ -821,14 +826,17 @@ class ApiService {
     required String optionId,
     required String userId,
   }) async {
-    final url = Uri.parse('$baseUrl$apiPath/surveys/$surveyId/vote');
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-      body: json.encode({
+    final uri = Uri.parse('$baseUrl$apiPath').replace(
+      queryParameters: {
+        'endpoint': 'vote_survey',
+        'survey_id': surveyId,
         'option_id': optionId,
         'user_id': userId,
-      }),
+      },
+    );
+    final response = await http.post(
+      uri,
+      headers: await _getHeaders(),
     );
     
     if (response.statusCode != 200) {
@@ -848,21 +856,28 @@ class ApiService {
     String? status,
     bool anonymous = false,
   }) async {
-    final url = Uri.parse('$baseUrl$apiPath/posts');
+    final uri = Uri.parse('$baseUrl$apiPath').replace(
+      queryParameters: {
+        'endpoint': 'create_post',
+      },
+    );
+    final Map<String, dynamic> postData = {
+      'title': title,
+      'content': content,
+      'city_id': cityId,
+    };
+    
+    if (districtId != null) postData['district_id'] = districtId;
+    if (categoryId != null) postData['category_id'] = categoryId;
+    if (imageUrls != null) postData['image_urls'] = imageUrls;
+    if (location != null) postData['location'] = location;
+    if (status != null) postData['status'] = status;
+    postData['anonymous'] = anonymous;
+    
     final response = await http.post(
-      url,
+      uri,
       headers: await _getHeaders(),
-      body: json.encode({
-        'title': title,
-        'content': content,
-        'city_id': cityId,
-        'district_id': districtId,
-        'category_id': categoryId,
-        'image_urls': imageUrls,
-        'location': location,
-        'status': status,
-        'anonymous': anonymous,
-      }),
+      body: json.encode(postData),
     );
     
     if (response.statusCode == 201) {
@@ -906,9 +921,14 @@ class ApiService {
   // Post'u beğen
   Future<void> likePost(String postId) async {
     try {
-      final url = Uri.parse('$baseUrl$apiPath/posts/$postId/like');
+      final uri = Uri.parse('$baseUrl$apiPath').replace(
+        queryParameters: {
+          'endpoint': 'like_post',
+          'post_id': postId,
+        },
+      );
       final response = await http.post(
-        url,
+        uri,
         headers: await _getHeaders(),
       );
       
@@ -972,14 +992,21 @@ class ApiService {
     String? comment,
   }) async {
     try {
-      final url = Uri.parse('$baseUrl$apiPath/posts/$postId/satisfaction');
+      final uri = Uri.parse('$baseUrl$apiPath').replace(
+        queryParameters: {
+          'endpoint': 'submit_satisfaction',
+          'post_id': postId,
+          'rating': rating.toString(),
+        },
+      );
+      
+      final Map<String, dynamic> satisfactionData = {};
+      if (comment != null) satisfactionData['comment'] = comment;
+      
       final response = await http.post(
-        url,
+        uri,
         headers: await _getHeaders(),
-        body: json.encode({
-          'rating': rating,
-          'comment': comment,
-        }),
+        body: json.encode(satisfactionData),
       );
       
       if (response.statusCode == 200) {
