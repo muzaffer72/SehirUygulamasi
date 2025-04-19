@@ -195,8 +195,8 @@ class CityProfile {
     String? area,
     String? established,
     String? website,
-    String? phone,
-    String? email,
+    String? contactPhone,
+    String? contactEmail,
     String? address,
     double? latitude,
     double? longitude,
@@ -211,6 +211,12 @@ class CityProfile {
     double? responseRate,
     double? problemSolvingRate,
     int? averageResponseTime,
+    String? politicalParty,
+    String? politicalPartyLogoUrl,
+    String? info,
+    int? totalPosts,
+    int? totalSolvedIssues,
+    double? solutionRate,
   }) {
     return CityProfile(
       id: id ?? this.id,
@@ -223,8 +229,8 @@ class CityProfile {
       area: area ?? this.area,
       established: established ?? this.established,
       website: website ?? this.website,
-      phone: phone ?? this.phone,
-      email: email ?? this.email,
+      contactPhone: contactPhone ?? this.contactPhone,
+      contactEmail: contactEmail ?? this.contactEmail,
       address: address ?? this.address,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
@@ -239,6 +245,12 @@ class CityProfile {
       responseRate: responseRate ?? this.responseRate,
       problemSolvingRate: problemSolvingRate ?? this.problemSolvingRate,
       averageResponseTime: averageResponseTime ?? this.averageResponseTime,
+      politicalParty: politicalParty ?? this.politicalParty,
+      politicalPartyLogoUrl: politicalPartyLogoUrl ?? this.politicalPartyLogoUrl,
+      info: info ?? this.info,
+      totalPosts: totalPosts ?? this.totalPosts,
+      totalSolvedIssues: totalSolvedIssues ?? this.totalSolvedIssues,
+      solutionRate: solutionRate ?? this.solutionRate,
     );
   }
 }

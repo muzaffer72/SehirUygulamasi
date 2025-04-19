@@ -43,7 +43,7 @@ class CityProfileScreen extends ConsumerWidget {
   Widget _buildCityProfile(
     BuildContext context,
     WidgetRef ref,
-    dynamic city,
+    CityProfile city,
     AsyncValue<List<Post>> postsAsync,
   ) {
     return RefreshIndicator(

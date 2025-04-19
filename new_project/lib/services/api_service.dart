@@ -571,6 +571,8 @@ class ApiService {
             name: city.name,
             description: city.description,
             logoUrl: city.logoUrl,
+            contactPhone: city.contactPhone,
+            contactEmail: city.contactEmail,
             totalComplaints: 0,
             solvedComplaints: 0, 
             activeComplaints: 0,
@@ -578,7 +580,8 @@ class ApiService {
             satisfactionRate: 0,
             responseRate: 0,
             problemSolvingRate: 0,
-            averageResponseTime: 0
+            averageResponseTime: 0,
+            solutionRate: 0.0
           );
         }
         return null;
