@@ -2,9 +2,49 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const https = require('https');
 const app = express();
 // Replit sadece 5000 portuna dışarıdan erişime izin veriyor
 const PORT = 5000;
+
+// API'den veri çekme fonksiyonu
+function fetchApiData(endpoint) {
+  return new Promise((resolve, reject) => {
+    // API proxy üzerinden istek yap
+    const apiUrl = `http://0.0.0.0:9000/api/${endpoint}`;
+    console.log(`API isteği yapılıyor: ${apiUrl}`);
+    
+    http.get(apiUrl, (res) => {
+      let data = '';
+      
+      // Veri parçalarını topla
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      // Tüm veri alındığında
+      res.on('end', () => {
+        if (res.statusCode === 200) {
+          try {
+            const jsonData = JSON.parse(data);
+            console.log('API yanıtı başarılı');
+            resolve(jsonData);
+          } catch (error) {
+            console.error('JSON ayrıştırma hatası:', error);
+            reject(error);
+          }
+        } else {
+          console.error(`API hatası: ${res.statusCode}`);
+          reject(new Error(`API hatası: ${res.statusCode}`));
+        }
+      });
+    }).on('error', (error) => {
+      console.error('API bağlantı hatası:', error);
+      reject(error);
+    });
+  });
+}
 
 // Console logları için renkler
 const colors = {
@@ -407,8 +447,107 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Mobil görünüm
-app.get('/mobile', (req, res) => {
+// Mobil görünüm - Admin panel API entegrasyonlu
+app.get('/mobile', async (req, res) => {
+  let postsHtml = '';
+  
+  try {
+    // API'den gönderileri çek
+    const postsData = await fetchApiData('posts');
+    console.log('Gönderiler API\'den başarıyla çekildi');
+    
+    // API yanıtından gönderileri al
+    const posts = postsData.posts || [];
+    
+    if (posts.length > 0) {
+      // Her bir gönderi için HTML oluştur
+      postsHtml = posts.map(post => `
+        <div class="post-card">
+          <div class="post-header">
+            <div class="post-avatar">
+              <span>${post.user_name ? post.user_name.charAt(0) : '?'}</span>
+            </div>
+            <div class="post-info">
+              <div class="post-author">${post.user_name || 'İsimsiz Kullanıcı'}</div>
+              <div class="post-meta">${post.city_name || ''} ${post.district_name ? '- ' + post.district_name : ''} • ${formatDate(post.created_at)}</div>
+            </div>
+          </div>
+          <div class="post-content">
+            <h3 class="post-title">${post.title}</h3>
+            <p class="post-text">${post.content}</p>
+            ${post.media && post.media.length > 0 ? 
+              `<div class="post-image-container">
+                <img src="${post.media[0].url}" class="post-image" alt="Gönderi resmi">
+              </div>` : ''}
+          </div>
+          <div class="post-actions">
+            <div class="post-action">
+              <i class="action-icon">👍</i>
+              <span>${post.like_count || 0}</span>
+            </div>
+            <div class="post-action">
+              <i class="action-icon">💬</i>
+              <span>${post.comment_count || 0}</span>
+            </div>
+            <div class="post-action">
+              <i class="action-icon">${getStatusIcon(post.status)}</i>
+              <span>${getStatusText(post.status)}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      postsHtml = `
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>Henüz Gönderi Yok</h3>
+          <p>Şu anda gösterilecek gönderi bulunmuyor</p>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('Gönderileri çekerken hata oluştu:', error);
+    postsHtml = `
+      <div class="error-state">
+        <div class="error-icon">❌</div>
+        <h3>Gönderileri Yüklerken Hata Oluştu</h3>
+        <p>Lütfen daha sonra tekrar deneyin: ${error.message}</p>
+      </div>
+    `;
+  }
+  
+  // Gönderi durum metni ve ikonları için yardımcı fonksiyonlar
+  function getStatusText(status) {
+    switch (status) {
+      case 'awaitingSolution': return 'Çözüm Bekliyor';
+      case 'inProgress': return 'İşlemde';
+      case 'solved': return 'Çözüldü';
+      case 'rejected': return 'Reddedildi';
+      default: return 'Bilinmiyor';
+    }
+  }
+  
+  function getStatusIcon(status) {
+    switch (status) {
+      case 'awaitingSolution': return '⏳';
+      case 'inProgress': return '🔄';
+      case 'solved': return '✅';
+      case 'rejected': return '❌';
+      default: return '❓';
+    }
+  }
+  
+  // Tarih formatı için yardımcı fonksiyon
+  function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+  
   res.send(`
   <!DOCTYPE html>
   <html>
@@ -424,6 +563,98 @@ app.get('/mobile', (req, res) => {
         padding: 0;
         background-color: #f8f9fa;
         color: #333;
+      }
+      
+      /* Gönderi kartları için stiller */
+      .post-card {
+        background-color: white;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        overflow: hidden;
+      }
+      .post-header {
+        display: flex;
+        padding: 12px 16px;
+        align-items: center;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .post-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #1976d2;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 12px;
+      }
+      .post-info {
+        flex-grow: 1;
+      }
+      .post-author {
+        font-weight: 500;
+        margin-bottom: 2px;
+      }
+      .post-meta {
+        font-size: 12px;
+        color: #757575;
+      }
+      .post-content {
+        padding: 16px;
+      }
+      .post-title {
+        margin-top: 0;
+        margin-bottom: 8px;
+        font-size: 18px;
+      }
+      .post-text {
+        margin-bottom: 16px;
+        color: #333;
+      }
+      .post-image-container {
+        margin: 0 -16px;
+        margin-bottom: -16px;
+      }
+      .post-image {
+        width: 100%;
+        display: block;
+      }
+      .post-actions {
+        display: flex;
+        border-top: 1px solid #f0f0f0;
+        padding: 8px 0;
+      }
+      .post-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        padding: 8px 0;
+        color: #757575;
+        font-size: 14px;
+      }
+      .action-icon {
+        margin-right: 6px;
+        font-style: normal;
+      }
+      
+      /* Boş durum ve hata durumu için stiller */
+      .empty-state, .error-state {
+        padding: 32px 16px;
+        text-align: center;
+        background-color: white;
+        border-radius: 8px;
+        margin-bottom: 16px;
+      }
+      .empty-icon, .error-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+      .error-state {
+        background-color: #ffebee;
       }
       .header {
         background-color: #1976d2;
