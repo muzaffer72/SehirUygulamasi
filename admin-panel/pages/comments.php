@@ -31,24 +31,33 @@ if ($operation === 'delete' && isset($_GET['id'])) {
     }
 }
 
-// Yorum gizleme/gösterme işlemi
+// Yorum gizleme/gösterme işlemi - PostgreSQL uyumlu
 if ($operation === 'toggle_visibility' && isset($_GET['id'])) {
     $commentId = (int)$_GET['id'];
     
     try {
         // Önce yorumun mevcut durumunu al
-        $checkQuery = "SELECT is_hidden FROM comments WHERE id = ?";
-        $checkStmt = $pdo->prepare($checkQuery);
-        $checkStmt->execute([$commentId]);
-        $comment = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        $checkQuery = "SELECT is_hidden FROM comments WHERE id = $1";
+        $checkResult = pg_query_params($conn, $checkQuery, [$commentId]);
+        if (!$checkResult) {
+            throw new Exception(pg_last_error($conn));
+        }
+        
+        if (pg_num_rows($checkResult) == 0) {
+            throw new Exception("Yorum bulunamadı");
+        }
+        
+        $comment = pg_fetch_assoc($checkResult);
+        
+        // PostgreSQL'de boolean değerleri 't' veya 'f' olarak döner
+        $isCurrentlyHidden = $comment['is_hidden'] === 't';
         
         // Durumu tersine çevir
-        $isHidden = !$comment['is_hidden'];
+        $isHidden = !$isCurrentlyHidden;
         
-        // Durumu güncelle
-        $updateQuery = "UPDATE comments SET is_hidden = ? WHERE id = ?";
-        $updateStmt = $pdo->prepare($updateQuery);
-        $result = $updateStmt->execute([$isHidden, $commentId]);
+        // PostgreSQL'de boolean değerler direkt değer olarak gider
+        $updateQuery = "UPDATE comments SET is_hidden = $1 WHERE id = $2";
+        $result = pg_query_params($conn, $updateQuery, [$isHidden, $commentId]);
         
         if ($result) {
             $message = "Yorum " . ($isHidden ? "gizlendi" : "görünür hale getirildi") . ".";
@@ -60,70 +69,81 @@ if ($operation === 'toggle_visibility' && isset($_GET['id'])) {
     }
 }
 
-// Yanıt ekleme işlemi
+// Yanıt ekleme işlemi - PostgreSQL uyumlu
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_reply'])) {
     $parentId = isset($_POST['parent_id']) ? (int)$_POST['parent_id'] : 0;
     $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
     $postId = isset($_POST['post_id']) ? (int)$_POST['post_id'] : 0;
     $content = isset($_POST['content']) ? $_POST['content'] : '';
-    $isAnonymous = isset($_POST['is_anonymous']) ? 'TRUE' : 'FALSE';
+    $isAnonymous = isset($_POST['is_anonymous']) ? true : false;
     
     if ($parentId > 0 && $userId > 0 && $postId > 0 && !empty($content)) {
         try {
-            // PostgreSQL için boolean değerler sorguya direk yazılmalıdır
-            $query = "INSERT INTO comments (post_id, user_id, content, parent_id, is_anonymous) VALUES (?, ?, ?, ?, $isAnonymous)";
-            $stmt = $pdo->prepare($query);
-            $result = $stmt->execute([$postId, $userId, $content, $parentId]);
+            // PostgreSQL için boolean değer direkt parametre olarak geçilebilir
+            $query = "INSERT INTO comments (post_id, user_id, content, parent_id, is_anonymous) VALUES ($1, $2, $3, $4, $5) RETURNING id";
+            $result = pg_query_params($conn, $query, [$postId, $userId, $content, $parentId, $isAnonymous]);
             
-            if ($result) {
+            if ($result && pg_num_rows($result) > 0) {
+                $newComment = pg_fetch_assoc($result);
+                $newCommentId = $newComment['id'];
+                
                 // Paylaşımın yorum sayısını güncelle
-                $updatePostQuery = "UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?";
-                $updatePostStmt = $pdo->prepare($updatePostQuery);
-                $updatePostStmt->execute([$postId]);
+                $updatePostQuery = "UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1";
+                $updatePostResult = pg_query_params($conn, $updatePostQuery, [$postId]);
                 
                 // Kullanıcının yorum sayısını güncelle
-                $updateUserQuery = "UPDATE users SET comment_count = comment_count + 1 WHERE id = ?";
-                $updateUserStmt = $pdo->prepare($updateUserQuery);
-                $updateUserStmt->execute([$userId]);
+                $updateUserQuery = "UPDATE users SET comment_count = comment_count + 1 WHERE id = $1";
+                $updateUserResult = pg_query_params($conn, $updateUserQuery, [$userId]);
                 
                 // Bildirim oluştur
                 // Önce orijinal yorumun sahibini bul
-                $parentCommentQuery = "SELECT user_id FROM comments WHERE id = ?";
-                $parentCommentStmt = $pdo->prepare($parentCommentQuery);
-                $parentCommentStmt->execute([$parentId]);
-                $parentComment = $parentCommentStmt->fetch(PDO::FETCH_ASSOC);
+                $parentCommentQuery = "SELECT user_id FROM comments WHERE id = $1";
+                $parentCommentResult = pg_query_params($conn, $parentCommentQuery, [$parentId]);
                 
-                if ($parentComment && $parentComment['user_id'] !== $userId) {
-                    // Yorumu yapan kullanıcının adını al
-                    $usernameQuery = "SELECT username FROM users WHERE id = ?";
-                    $usernameStmt = $pdo->prepare($usernameQuery);
-                    $usernameStmt->execute([$userId]);
-                    $usernameRow = $usernameStmt->fetch(PDO::FETCH_ASSOC);
-                    $username = $usernameRow ? $usernameRow['username'] : 'Bir kullanıcı';
+                if ($parentCommentResult && pg_num_rows($parentCommentResult) > 0) {
+                    $parentComment = pg_fetch_assoc($parentCommentResult);
                     
-                    // Paylaşım başlığını al
-                    $postTitleQuery = "SELECT title FROM posts WHERE id = ?";
-                    $postTitleStmt = $pdo->prepare($postTitleQuery);
-                    $postTitleStmt->execute([$postId]);
-                    $postTitleRow = $postTitleStmt->fetch(PDO::FETCH_ASSOC);
-                    $postTitle = $postTitleRow ? $postTitleRow['title'] : 'bir paylaşım';
-                    
-                    // Bildirim ekle
-                    $notificationTitle = "Yorumunuza yanıt geldi";
-                    $notificationContent = "@$username yorumunuza yanıt verdi: \"" . substr($content, 0, 100) . (strlen($content) > 100 ? '...' : '') . "\"";
-                    $notificationType = "reply";
-                    $notificationSourceId = $parentId;
-                    $notificationSourceType = "comment";
-                    $recipientId = $parentComment['user_id'];
-                    
-                    $notificationQuery = "INSERT INTO notifications (user_id, title, content, type, source_id, source_type) VALUES (?, ?, ?, ?, ?, ?)";
-                    $notificationStmt = $pdo->prepare($notificationQuery);
-                    $notificationStmt->execute([$recipientId, $notificationTitle, $notificationContent, $notificationType, $notificationSourceId, $notificationSourceType]);
+                    if ($parentComment && $parentComment['user_id'] != $userId) {
+                        // Yorumu yapan kullanıcının adını al
+                        $usernameQuery = "SELECT username FROM users WHERE id = $1";
+                        $usernameResult = pg_query_params($conn, $usernameQuery, [$userId]);
+                        $username = 'Bir kullanıcı';
+                        
+                        if ($usernameResult && pg_num_rows($usernameResult) > 0) {
+                            $usernameRow = pg_fetch_assoc($usernameResult);
+                            $username = $usernameRow['username'];
+                        }
+                        
+                        // Paylaşım başlığını al
+                        $postTitleQuery = "SELECT title FROM posts WHERE id = $1";
+                        $postTitleResult = pg_query_params($conn, $postTitleQuery, [$postId]);
+                        $postTitle = 'bir paylaşım';
+                        
+                        if ($postTitleResult && pg_num_rows($postTitleResult) > 0) {
+                            $postTitleRow = pg_fetch_assoc($postTitleResult);
+                            $postTitle = $postTitleRow['title'];
+                        }
+                        
+                        // Bildirim ekle
+                        $notificationTitle = "Yorumunuza yanıt geldi";
+                        $notificationContent = "@$username yorumunuza yanıt verdi: \"" . substr($content, 0, 100) . (strlen($content) > 100 ? '...' : '') . "\"";
+                        $notificationType = "reply";
+                        $notificationSourceId = $parentId;
+                        $notificationSourceType = "comment";
+                        $recipientId = $parentComment['user_id'];
+                        
+                        $notificationQuery = "INSERT INTO notifications (user_id, title, content, type, source_id, source_type) VALUES ($1, $2, $3, $4, $5, $6)";
+                        $notificationResult = pg_query_params(
+                            $conn, 
+                            $notificationQuery, 
+                            [$recipientId, $notificationTitle, $notificationContent, $notificationType, $notificationSourceId, $notificationSourceType]
+                        );
+                    }
                 }
                 
                 $message = "Yanıt başarıyla eklendi.";
             } else {
-                $error = "Yanıt eklenirken bir hata oluştu.";
+                $error = "Yanıt eklenirken bir hata oluştu: " . pg_last_error($conn);
             }
         } catch (Exception $e) {
             $error = "Veritabanı hatası: " . $e->getMessage();
@@ -133,21 +153,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_reply'])) {
     }
 }
 
-// Yorum düzenleme işlemi
+// Yorum düzenleme işlemi - PostgreSQL uyumlu
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_comment'])) {
     $commentId = isset($_POST['comment_id']) ? (int)$_POST['comment_id'] : 0;
     $content = isset($_POST['content']) ? $_POST['content'] : '';
     
     if ($commentId > 0 && !empty($content)) {
         try {
-            $query = "UPDATE comments SET content = ? WHERE id = ?";
-            $stmt = $pdo->prepare($query);
-            $result = $stmt->execute([$content, $commentId]);
+            $query = "UPDATE comments SET content = $1, updated_at = NOW() WHERE id = $2";
+            $result = pg_query_params($conn, $query, [$content, $commentId]);
             
             if ($result) {
                 $message = "Yorum başarıyla güncellendi.";
             } else {
-                $error = "Yorum güncellenirken bir hata oluştu.";
+                $error = "Yorum güncellenirken bir hata oluştu: " . pg_last_error($conn);
             }
         } catch (Exception $e) {
             $error = "Veritabanı hatası: " . $e->getMessage();
