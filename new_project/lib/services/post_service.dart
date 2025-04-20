@@ -30,12 +30,12 @@ class PostService {
     return _apiService.createPost(
       title: post.title,
       content: post.content,
-      type: post.type,
       categoryId: post.categoryId,
       cityId: post.cityId,
       districtId: post.districtId,
-      isAnonymous: post.isAnonymous,
+      anonymous: post.isAnonymous,
       imageUrls: post.imageUrls,
+      status: post.status,
     );
   }
   
@@ -73,8 +73,8 @@ class PostService {
   // Update a post status
   Future<Post> updatePostStatus(String postId, PostStatus status) async {
     return _apiService.updatePost(
-      id: postId,
-      status: status.index,
+      postId: postId,
+      status: status.index.toString(),
     );
   }
 }
