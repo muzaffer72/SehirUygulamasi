@@ -113,7 +113,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         password: _passwordController.text,
         phone: _phoneController.text.isEmpty ? null : _phoneController.text.trim(),
         cityId: _selectedCityId!,
-        districtId: _selectedDistrictId,
+        districtId: _selectedDistrictId ?? "",
       );
       
       // Hata kontrolü
