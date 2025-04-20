@@ -1,0 +1,42 @@
+Launching lib\main.dart on SM S918B in debug mode...
+Running Gradle task 'assembleDebug'...
+lib/services/post_service.dart:38:20: Error: The argument type 'PostStatus' can't be assigned to the parameter type 'String?'.
+ - 'PostStatus' is from 'package:belediye_iletisim_merkezi/models/post.dart' ('lib/models/post.dart').
+      status: post.status,
+                   ^
+lib/providers/user_provider.dart:35:27: Error: The argument type 'String' can't be assigned to the parameter type 'int'.
+          userId: user.id.toString(),
+                          ^
+lib/providers/user_provider.dart:42:35: Error: The argument type 'Map<String, dynamic>' can't be assigned to the parameter type 'User?'.
+ - 'Map' is from 'dart:core'.
+ - 'User' is from 'package:belediye_iletisim_merkezi/models/user.dart' ('lib/models/user.dart').
+          state = AsyncValue.data(updatedUser);
+                                  ^
+lib/providers/user_provider.dart:63:27: Error: The argument type 'String' can't be assigned to the parameter type 'int'.
+          userId: user.id.toString(),
+                          ^
+lib/providers/user_provider.dart:64:26: Error: The argument type 'String' can't be assigned to the parameter type 'int'.
+          cityId: cityId ?? "0",
+                         ^
+lib/providers/user_provider.dart:69:35: Error: The argument type 'Map<String, dynamic>' can't be assigned to the parameter type 'User?'.
+ - 'Map' is from 'dart:core'.
+ - 'User' is from 'package:belediye_iletisim_merkezi/models/user.dart' ('lib/models/user.dart').
+          state = AsyncValue.data(updatedUser);
+                                  ^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter29\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BU�LD FAILED in 12s
+Error: Gradle task assembleDebug failed with exit code 1

@@ -147,7 +147,7 @@ class ApiService {
   
   // Kullanıcı profili güncelleme
   Future<Map<String, dynamic>> updateProfile({
-    required int userId,
+    required dynamic userId,
     String? name,
     String? username,
     String? bio,
@@ -155,9 +155,12 @@ class ApiService {
     String? phone,
     String? profileImageUrl,
     String? coverImageUrl,
-    int? cityId,
+    dynamic cityId,
     String? districtId,
   }) async {
+    // ID'leri string formatına dönüştür
+    final userIdStr = userId.toString();
+    final cityIdStr = cityId != null ? cityId.toString() : null;
     final url = Uri.parse('$baseUrl$apiPath/users/$userId');
     final response = await http.put(
       url,

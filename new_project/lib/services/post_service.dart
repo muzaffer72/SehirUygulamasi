@@ -35,7 +35,7 @@ class PostService {
       districtId: post.districtId,
       anonymous: post.isAnonymous,
       imageUrls: post.imageUrls,
-      status: post.status,
+      status: post.status.index.toString(),
     );
   }
   
