@@ -986,14 +986,18 @@ class ApiService {
   Future<Post> createPost({
     required String title,
     required String content,
-    required String cityId,
-    String? districtId,
-    String? categoryId,
+    required dynamic cityId,
+    dynamic districtId,
+    dynamic categoryId,
     List<String>? imageUrls,
     Map<String, double>? location,
     String? status,
     bool anonymous = false,
   }) async {
+    // ID'leri string formatına dönüştür
+    final cityIdStr = cityId.toString();
+    final districtIdStr = districtId != null ? districtId.toString() : null;
+    final categoryIdStr = categoryId != null ? categoryId.toString() : null;
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=create_post');
@@ -1066,13 +1070,16 @@ class ApiService {
   
   // Post güncelle
   Future<Post> updatePost({
-    required String postId,
+    required dynamic postId,
     String? title,
     String? content,
-    String? categoryId,
+    dynamic categoryId,
     List<String>? imageUrls,
     String? status,
   }) async {
+    // ID'leri string formatına dönüştür
+    final postIdStr = postId.toString();
+    final categoryIdStr = categoryId != null ? categoryId.toString() : null;
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=update_post&post_id=$postId');
@@ -1161,7 +1168,9 @@ class ApiService {
   }
   
   // Post beğeniyi kaldır
-  Future<void> unlikePost(String postId) async {
+  Future<void> unlikePost(dynamic postId) async {
+    // ID'yi string formatına dönüştür
+    final postIdStr = postId.toString();
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=unlike_post&post_id=$postId');
@@ -1184,10 +1193,13 @@ class ApiService {
   
   // Post'a yorum ekle
   Future<Comment> commentPost({
-    required String postId,
+    required dynamic postId,
     required String content,
-    String? parentId,
+    dynamic parentId,
   }) async {
+    // ID'leri string formatına dönüştür
+    final postIdStr = postId.toString();
+    final parentIdStr = parentId != null ? parentId.toString() : null;
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=add_comment&post_id=$postId');
