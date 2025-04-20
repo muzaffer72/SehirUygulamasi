@@ -38,10 +38,15 @@ class UserNotifier extends StateNotifier<AsyncValue<User?>> {
           profileImageUrl: profileImageUrl,
         );
         
+        User? userObj;
         if (updatedUser is User) {
-          state = AsyncValue.data(updatedUser);
+          userObj = updatedUser;
         } else if (updatedUser is Map<String, dynamic>) {
-          state = AsyncValue.data(User.fromJson(updatedUser));
+          userObj = User.fromJson(updatedUser);
+        }
+        
+        if (userObj != null) {
+          state = AsyncValue.data(userObj);
         }
       });
     } catch (e, stack) {
@@ -65,10 +70,15 @@ class UserNotifier extends StateNotifier<AsyncValue<User?>> {
           districtId: districtId,
         );
         
+        User? userObj;
         if (updatedUser is User) {
-          state = AsyncValue.data(updatedUser);
+          userObj = updatedUser;
         } else if (updatedUser is Map<String, dynamic>) {
-          state = AsyncValue.data(User.fromJson(updatedUser));
+          userObj = User.fromJson(updatedUser);
+        }
+        
+        if (userObj != null) {
+          state = AsyncValue.data(userObj);
         }
       });
     } catch (e, stack) {
