@@ -247,7 +247,9 @@ class ApiService {
   }
   
   // Belirli bir şehre ait ilçeleri getir
-  Future<List<District>> getDistrictsByCityIdAsObjects(String cityId) async {
+  Future<List<District>> getDistrictsByCityIdAsObjects(dynamic cityId) async {
+    // ID'yi string formatına dönüştür 
+    final cityIdStr = cityId.toString();
     // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
     final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=districts&city_id=$cityId');
     final uri = Uri.parse(uriString);
@@ -536,7 +538,9 @@ class ApiService {
   }
   
   // Kategori detayını getir
-  Future<Category?> getCategoryById(String categoryId) async {
+  Future<Category?> getCategoryById(dynamic categoryId) async {
+    // ID'yi string formatına dönüştür
+    final categoryIdStr = categoryId.toString();
     final url = Uri.parse('$baseUrl$apiPath/categories/$categoryId');
     final response = await http.get(
       url,
@@ -553,7 +557,9 @@ class ApiService {
   }
   
   // Şehir ismi getir
-  Future<String?> getCityNameById(String cityId) async {
+  Future<String?> getCityNameById(dynamic cityId) async {
+    // ID'yi string formatına dönüştür
+    final cityIdStr = cityId.toString();
     try {
       final city = await getCityById(cityId);
       return city?.name ?? 'Bilinmeyen Şehir';
@@ -564,7 +570,9 @@ class ApiService {
   }
   
   // Şehir detayını getir
-  Future<City?> getCityById(String cityId) async {
+  Future<City?> getCityById(dynamic cityId) async {
+    // ID'yi string formatına dönüştür
+    final cityIdStr = cityId.toString();
     // API anahtarını URL'ye ekle
     final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=cities&id=$cityId');
     final uri = Uri.parse(uriString);
@@ -584,7 +592,9 @@ class ApiService {
   }
   
   // İlçe detayını getir
-  Future<District?> getDistrictById(String districtId) async {
+  Future<District?> getDistrictById(dynamic districtId) async {
+    // ID'yi string formatına dönüştür
+    final districtIdStr = districtId.toString();
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=districts&id=$districtId');
@@ -699,7 +709,9 @@ class ApiService {
   }
   
   // Şehir profil bilgilerini getir
-  Future<CityProfile?> getCityProfileById(String cityId) async {
+  Future<CityProfile?> getCityProfileById(dynamic cityId) async {
+    // ID'yi string formatına dönüştür
+    final cityIdStr = cityId.toString();
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=city_profile&city_id=$cityId');
@@ -768,7 +780,9 @@ class ApiService {
   
   // İlçeleri şehire göre filtreleme (eski API uyumluluğu)
   // getDistrictsByCityIdAsObjects metodunu kullanarak district objelerini alır
-  Future<List<District>> getDistrictsByCityId(String cityId) async {
+  Future<List<District>> getDistrictsByCityId(dynamic cityId) async {
+    // ID'yi string formatına dönüştür
+    final cityIdStr = cityId.toString();
     try {
       // Obje listesini al 
       final districts = await getDistrictsByCityIdAsObjects(cityId);
