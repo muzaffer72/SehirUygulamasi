@@ -482,7 +482,9 @@ class ApiService {
   }
 
   // Şehir anketlerini getir
-  Future<List<Survey>> getCitySurveys(String cityId) async {
+  Future<List<Survey>> getCitySurveys(dynamic cityId) async {
+    // ID'yi string formatına dönüştür
+    final cityIdStr = cityId.toString();
     final url = Uri.parse('$baseUrl$apiPath/surveys?city_id=$cityId');
     final response = await http.get(
       url,
@@ -499,7 +501,9 @@ class ApiService {
   }
   
   // İlçe anketlerini getir
-  Future<List<Survey>> getDistrictSurveys(String districtId) async {
+  Future<List<Survey>> getDistrictSurveys(dynamic districtId) async {
+    // ID'yi string formatına dönüştür
+    final districtIdStr = districtId.toString();
     final url = Uri.parse('$baseUrl$apiPath/surveys?district_id=$districtId');
     final response = await http.get(
       url,
@@ -656,7 +660,9 @@ class ApiService {
   }
   
   // Yorumları getir
-  Future<List<Comment>> getCommentsByPostId(String postId) async {
+  Future<List<Comment>> getCommentsByPostId(dynamic postId) async {
+    // ID'yi string formatına dönüştür
+    final postIdStr = postId.toString();
     final url = Uri.parse('$baseUrl$apiPath/posts/$postId/comments');
     final response = await http.get(
       url,
@@ -674,10 +680,13 @@ class ApiService {
   
   // Yorum ekle
   Future<Comment> addComment({
-    required String postId, 
+    required dynamic postId, 
     required String content,
-    String? parentId
+    dynamic parentId
   }) async {
+    // ID'leri string formatına dönüştür
+    final postIdStr = postId.toString();
+    final parentIdStr = parentId != null ? parentId.toString() : null;
     final url = Uri.parse('$baseUrl$apiPath/posts/$postId/comments');
     final response = await http.post(
       url,
@@ -697,7 +706,9 @@ class ApiService {
   }
   
   // Gönderiyi öne çıkar
-  Future<void> highlightPost(String postId) async {
+  Future<void> highlightPost(dynamic postId) async {
+    // ID'yi string formatına dönüştür
+    final postIdStr = postId.toString();
     try {
       final url = Uri.parse('$baseUrl$apiPath/posts/$postId/highlight');
       final response = await http.post(
@@ -856,7 +867,9 @@ class ApiService {
   // Memnuniyet puanı ekle
   // Eski metod. Yeni projelerde submitSatisfaction kullanın.
   @Deprecated('Use submitSatisfaction instead')
-  Future<bool> submitSatisfactionRating(String postId, int rating, {String? comment}) async {
+  Future<bool> submitSatisfactionRating(dynamic postId, int rating, {String? comment}) async {
+    // ID'yi string formatına dönüştür
+    final postIdStr = postId.toString();
     // Yeni metoda yönlendir
     return submitSatisfaction(
       postId: postId,
@@ -1124,7 +1137,9 @@ class ApiService {
   }
   
   // Post'u beğen
-  Future<void> likePost(String postId) async {
+  Future<void> likePost(dynamic postId) async {
+    // ID'yi string formatına dönüştür
+    final postIdStr = postId.toString();
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=like_post&post_id=$postId');
@@ -1236,10 +1251,12 @@ class ApiService {
   
   // Post memnuniyet puanı ekle
   Future<bool> submitSatisfaction({
-    required String postId,
+    required dynamic postId,
     required int rating,
     String? comment,
   }) async {
+    // ID'yi string formatına dönüştür
+    final postIdStr = postId.toString();
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=submit_satisfaction&post_id=$postId&rating=$rating');
