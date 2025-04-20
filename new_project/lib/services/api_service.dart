@@ -820,19 +820,27 @@ class ApiService {
     final userIdInt = userId is int ? userId : int.tryParse(userId.toString()) ?? 0;
     try {
       // API anahtarını URL'ye ekle
-      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=users&id=$userId');
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=user&id=$userId');
       final uri = Uri.parse(uriString);
       
+      print('Fetching user from: $uri');
       final response = await http.get(
         uri,
         headers: await _getHeaders(),
       );
       
+      print('User API response status: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
         try {
           // Türkçe karakter desteği için UTF-8 decode kullan
           final data = _decodeResponse(response);
-          if (data == null) return null;
+          print('User API response data: $data');
+          
+          if (data == null) {
+            print('API returned null data for user');
+            return null;
+          }
           
           // API yanıt formatlarına göre işlem yap
           if (data is Map<String, dynamic>) {
@@ -840,9 +848,15 @@ class ApiService {
               final userData = data['data'];
               if (userData is Map<String, dynamic>) {
                 return User.fromJson(userData);
+              } else if (userData is List && userData.isNotEmpty) {
+                final firstItem = userData[0];
+                if (firstItem is Map<String, dynamic>) {
+                  return User.fromJson(firstItem);
+                }
               }
             } else {
-              return User.fromJson(data as Map<String, dynamic>);
+              // Direkt map olarak döndüğünde
+              return User.fromJson(data);
             }
           } else if (data is List && data.isNotEmpty) {
             final firstItem = data[0];
@@ -852,7 +866,19 @@ class ApiService {
           }
           
           print('Unexpected data format in getUserById: $data');
-          return null;
+          
+          // Varsayılan kullanıcı oluştur
+          return User(
+            id: userIdInt,
+            name: 'Kullanıcı#$userIdInt',
+            email: '',
+            profileImageUrl: '',
+            cityId: 0,
+            districtId: 0,
+            isAdmin: false,
+            createdAt: DateTime.now().toString(),
+            updatedAt: DateTime.now().toString(),
+          );
         } catch (formatError) {
           print('Data format error in getUserById: $formatError');
           return null;
