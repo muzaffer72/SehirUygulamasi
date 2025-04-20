@@ -874,10 +874,9 @@ class ApiService {
             email: '',
             profileImageUrl: '',
             cityId: 0,
-            districtId: 0,
-            isAdmin: false,
+            districtId: '0',
+            isVerified: false,
             createdAt: DateTime.now().toString(),
-            updatedAt: DateTime.now().toString(),
           );
         } catch (formatError) {
           print('Data format error in getUserById: $formatError');
