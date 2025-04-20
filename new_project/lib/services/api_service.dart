@@ -188,7 +188,7 @@ class ApiService {
   
   // UserProvider için eski API uyumluluğu
   Future<Map<String, dynamic>> updateUserProfile({
-    required int userId,
+    required dynamic userId,
     String? name,
     String? username,
     String? bio,
@@ -211,8 +211,8 @@ class ApiService {
   
   // Kullanıcı konum bilgilerini güncelleme
   Future<Map<String, dynamic>> updateUserLocation({
-    required int userId,
-    required int cityId,
+    required dynamic userId,
+    required dynamic cityId,
     String? districtId,
   }) async {
     return updateProfile(
