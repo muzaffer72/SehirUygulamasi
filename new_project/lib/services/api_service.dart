@@ -383,7 +383,9 @@ class ApiService {
   }
   
   // Kullanıcıya göre bildirimleri getir
-  Future<List<NotificationModel>> getNotificationsByUserId(int userId) async {
+  Future<List<NotificationModel>> getNotificationsByUserId(dynamic userId) async {
+    // ID'yi int formatına dönüştürmeye çalış
+    final userIdInt = userId is int ? userId : int.tryParse(userId.toString()) ?? 0;
     // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
     final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=user_notifications&user_id=$userId');
     final uri = Uri.parse(uriString);
@@ -405,7 +407,10 @@ class ApiService {
   }
   
   // Bildirimi okundu olarak işaretle
-  Future<void> markNotificationAsRead(String notificationId, int userId) async {
+  Future<void> markNotificationAsRead(dynamic notificationId, dynamic userId) async {
+    // ID'leri string ve int formatına dönüştürmeye çalış
+    final notificationIdStr = notificationId.toString();
+    final userIdInt = userId is int ? userId : int.tryParse(userId.toString()) ?? 0;
     // API anahtarını URL'ye ekle
     final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=mark_notification_read&notification_id=$notificationId&user_id=$userId');
     final uri = Uri.parse(uriString);
@@ -420,7 +425,9 @@ class ApiService {
   }
   
   // Tüm bildirimleri okundu olarak işaretle
-  Future<void> markAllNotificationsAsRead(int userId) async {
+  Future<void> markAllNotificationsAsRead(dynamic userId) async {
+    // ID'yi int formatına dönüştürmeye çalış
+    final userIdInt = userId is int ? userId : int.tryParse(userId.toString()) ?? 0;
     final url = Uri.parse('$baseUrl$apiPath/users/$userId/notifications/read-all');
     final response = await http.put(
       url,
@@ -794,7 +801,9 @@ class ApiService {
   }
   
   // Kullanıcı bilgisini getir
-  Future<User?> getUserById(int userId) async {
+  Future<User?> getUserById(dynamic userId) async {
+    // ID'yi int formatına dönüştürmeye çalış
+    final userIdInt = userId is int ? userId : int.tryParse(userId.toString()) ?? 0;
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=users&id=$userId');
@@ -858,9 +867,12 @@ class ApiService {
   
   // Kullanıcının anketteki oyunu getir
   Future<Map<String, dynamic>?> getUserSurveyVote(
-    String surveyId,
-    int userId,
+    dynamic surveyId,
+    dynamic userId,
   ) async {
+    // ID'leri string ve int formatına dönüştürmeye çalış
+    final surveyIdStr = surveyId.toString();
+    final userIdInt = userId is int ? userId : int.tryParse(userId.toString()) ?? 0;
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=get_survey_vote&survey_id=$surveyId&user_id=$userId');
@@ -929,10 +941,14 @@ class ApiService {
   
   // Ankete oy ver
   Future<void> voteSurvey({
-    required String surveyId,
-    required String optionId,
-    required int userId,
+    required dynamic surveyId,
+    required dynamic optionId,
+    required dynamic userId,
   }) async {
+    // ID'leri string ve int formatına dönüştürmeye çalış
+    final surveyIdStr = surveyId.toString();
+    final optionIdStr = optionId.toString();
+    final userIdInt = userId is int ? userId : int.tryParse(userId.toString()) ?? 0;
     try {
       // API anahtarını URL'ye ekle
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=vote_survey&survey_id=$surveyId&option_id=$optionId&user_id=$userId');
