@@ -337,7 +337,7 @@ class ApiService {
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=districts&city_id=$cityId');
       final uri = Uri.parse(uriString);
       
-      print('İlçe bilgileri alınıyor: $uri');
+      print('İlçe bilgileri alınıyor: $uri, sehirId: $cityIdStr');
       
       final response = await http.get(
         uri,
@@ -385,9 +385,11 @@ class ApiService {
               District(id: '2', name: 'Diğer', cityId: cityIdStr),
             ];
           }
-            
-          // İlçeleri dönüştür
-          return districtsJson.map((json) {
+          
+          // API'nin döndürdüğü ilçeleri işle
+          List<District> districts = [];
+          
+          for (var json in districtsJson) {
             try {
               if (json is Map) {
                 Map<String, dynamic> safeJson = {};
@@ -396,16 +398,45 @@ class ApiService {
                     safeJson[key] = value;
                   }
                 });
-                return District.fromJson(safeJson);
+                
+                // Şehir ID'sini kontrol et ve gerekirse güncelle
+                if (safeJson.containsKey('city_id')) {
+                  var jsonCityId = safeJson['city_id'];
+                  if (jsonCityId.toString() != cityIdStr) {
+                    print('İlçe için şehir ID'si uyumsuzluğu: Beklenen $cityIdStr, API'den gelen ${jsonCityId.toString()}');
+                    // API'nin döndürdüğü şehir ID'sini kullanmak yerine bizim gönderdiğimiz ID'yi kullan
+                    safeJson['city_id'] = cityIdStr;
+                  }
+                } else {
+                  // city_id yoksa ekle
+                  safeJson['city_id'] = cityIdStr;
+                }
+                
+                // ID kontrolü
+                if (!safeJson.containsKey('id') || safeJson['id'] == null) {
+                  safeJson['id'] = '${districts.length + 1}'; // Benzersiz ID oluştur
+                }
+                
+                // İlçe adı kontrolü
+                if (!safeJson.containsKey('name') || safeJson['name'] == null) {
+                  safeJson['name'] = 'İlçe ${districts.length + 1}';
+                }
+                
+                print('District JSON içeriği: $safeJson');
+                var district = District.fromJson(safeJson);
+                print('District parsed - ID: ${district.id}, Name: ${district.name}, CityID: ${district.cityId}');
+                districts.add(district);
               } else {
                 print('Geçersiz ilçe verisi: $json');
-                return District(id: '0', name: 'Bilinmeyen İlçe', cityId: cityIdStr);
+                districts.add(District(id: '${districts.length + 1}', name: 'Bilinmeyen İlçe', cityId: cityIdStr));
               }
             } catch (e) {
               print('İlçe dönüştürme hatası: $e');
-              return District(id: '0', name: 'Hata', cityId: cityIdStr);
+              districts.add(District(id: '${districts.length + 1}', name: 'Hata İlçe', cityId: cityIdStr));
             }
-          }).toList();
+          }
+          
+          return districts;
         } catch (formatError) {
           print('İlçe verisi format hatası: $formatError');
           return [
