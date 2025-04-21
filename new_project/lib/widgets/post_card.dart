@@ -319,8 +319,8 @@ class _PostCardState extends ConsumerState<PostCard> {
                       ),
                     ),
                     
-                    // Location
-                    if (widget.post.cityId != null) ...[
+                    // Location - Önce doğrudan Post nesnesindeki konum bilgilerini kontrol et
+                    if (widget.post.hasLocationInfo) ...[
                       Text(
                         ' • ',
                         style: TextStyle(
@@ -334,52 +334,87 @@ class _PostCardState extends ConsumerState<PostCard> {
                         color: Colors.grey,
                       ),
                       const SizedBox(width: 2),
-                      FutureBuilder<List<dynamic>>(
-                        future: Future.wait([
-                          ref.read(apiServiceProvider).getCityById(widget.post.cityId!),
-                          if (widget.post.districtId != null) 
-                            ref.read(apiServiceProvider).getDistrictById(widget.post.districtId!) 
-                          else 
-                            Future.value(null),
-                        ]),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return Text(
-                              'Yükleniyor...',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                      
+                      // Post üzerindeki şehir/ilçe adı bilgisini kullan
+                      if (widget.post.cityName != null) 
+                        GestureDetector(
+                          onTap: () {
+                            // Şehir profil sayfasına yönlendirme
+                            Navigator.pushNamed(
+                              context,
+                              '/city_profile',
+                              arguments: widget.post.cityId,
+                            );
+                          },
+                          child: Text(
+                            widget.post.districtName != null 
+                                ? '${widget.post.districtName}, ${widget.post.cityName}' 
+                                : widget.post.cityName!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.primary,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        )
+                      // Yalnızca cityId varsa, API'den bilgileri çek
+                      else if (widget.post.cityId != null)
+                        FutureBuilder<List<dynamic>>(
+                          future: Future.wait([
+                            ref.read(apiServiceProvider).getCityById(widget.post.cityId!),
+                            if (widget.post.districtId != null) 
+                              ref.read(apiServiceProvider).getDistrictById(widget.post.districtId!) 
+                            else 
+                              Future.value(null),
+                          ]),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return Text(
+                                'Yükleniyor...',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              );
+                            }
+                            
+                            if (snapshot.data == null || snapshot.data!.isEmpty || snapshot.data![0] == null) {
+                              return Text(
+                                'Bilinmeyen Konum',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              );
+                            }
+                            
+                            final city = snapshot.data![0];
+                            final district = snapshot.data!.length > 1 ? snapshot.data![1] : null;
+                            
+                            final locationText = district != null 
+                                ? '${district.name}, ${city.name}' 
+                                : city.name;
+                            
+                            return GestureDetector(
+                              onTap: () {
+                                // Şehir profil sayfasına yönlendirme
+                                Navigator.pushNamed(
+                                  context,
+                                  '/city_profile',
+                                  arguments: city.id,
+                                );
+                              },
+                              child: Text(
+                                locationText,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  decoration: TextDecoration.underline,
+                                ),
                               ),
                             );
-                          }
-                          
-                          final city = snapshot.data![0];
-                          final district = snapshot.data!.length > 1 ? snapshot.data![1] : null;
-                          
-                          final locationText = district != null 
-                              ? '${district.name}, ${city.name}' 
-                              : city.name;
-                          
-                          return GestureDetector(
-                            onTap: () {
-                              // Şehir profil sayfasına yönlendirme
-                              Navigator.pushNamed(
-                                context,
-                                '/city_profile',
-                                arguments: city.id,
-                              );
-                            },
-                            child: Text(
-                              locationText,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).colorScheme.primary,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                          },
+                        ),
                     ],
                   ],
                 ),
@@ -387,8 +422,42 @@ class _PostCardState extends ConsumerState<PostCard> {
             ),
           ),
           
-          // Category
-          if (widget.post.categoryId != null)
+          // Category - doğrudan Posttan veya API'den kategori bilgisi göster
+          if (widget.post.categoryName != null) // Önce doğrudan Post nesnesindeki kategori adını kullan
+            GestureDetector(
+              onTap: () {
+                // Kategori filtresi için
+                Navigator.pushNamed(
+                  context,
+                  '/filtered_posts',
+                  arguments: {
+                    'filterType': 'category',
+                    'categoryId': widget.post.categoryId,
+                    'categoryName': widget.post.categoryName,
+                  },
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey[400]!,
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  widget.post.categoryName!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+            )
+          // Eğer Post nesnesinde categoryName yoksa ama categoryId varsa
+          else if (widget.post.categoryId != null)
             FutureBuilder<Category?>(
               future: ref.read(apiServiceProvider).getCategoryById(widget.post.categoryId!),
               builder: (context, snapshot) {
@@ -594,36 +663,9 @@ class _PostCardState extends ConsumerState<PostCard> {
                               fontSize: 15,
                             ),
                           )
-                        : FutureBuilder<User?>(
-                            future: ref.read(apiServiceProvider).getUserById(int.parse(widget.post.userId)),
-                            builder: (context, snapshot) {
-                              // Yükleme durumu, hata durumu veya veri yoksa
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return const Text(
-                                  'Yükleniyor...',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: Colors.grey,
-                                  ),
-                                );
-                              }
-                              
-                              if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-                                return const Text(
-                                  'Bilinmeyen Kullanıcı',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: Colors.grey,
-                                  ),
-                                );
-                              }
-                              
-                              // Güvenli erişim için null kontrolü
-                              final userName = snapshot.data!.name ?? 'İsimsiz Kullanıcı';
-                              
-                              return GestureDetector(
+                        : widget.post.username != null
+                            // Post nesnesindeki username bilgisini kullan
+                            ? GestureDetector(
                                 onTap: () {
                                   // Kullanıcı profiline git
                                   Navigator.pushNamed(
@@ -633,15 +675,62 @@ class _PostCardState extends ConsumerState<PostCard> {
                                   );
                                 },
                                 child: Text(
-                                  userName,
+                                  widget.post.username!,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15,
                                   ),
                                 ),
-                              );
-                            },
-                          ),
+                              )
+                            // Yoksa API'den kullanıcı bilgisini çek
+                            : FutureBuilder<User?>(
+                                future: ref.read(apiServiceProvider).getUserById(int.parse(widget.post.userId)),
+                                builder: (context, snapshot) {
+                                  // Yükleme durumu, hata durumu veya veri yoksa
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return const Text(
+                                      'Yükleniyor...',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  }
+                                  
+                                  if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                                    return const Text(
+                                      'Bilinmeyen Kullanıcı',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  }
+                                  
+                                  // Güvenli erişim için null kontrolü
+                                  final userName = snapshot.data!.name ?? 'İsimsiz Kullanıcı';
+                                  
+                                  return GestureDetector(
+                                    onTap: () {
+                                      // Kullanıcı profiline git
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/profile',
+                                        arguments: widget.post.userId,
+                                      );
+                                    },
+                                    child: Text(
+                                      userName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                     
                     if (!widget.post.isAnonymous)
                       const Icon(
@@ -669,79 +758,143 @@ class _PostCardState extends ConsumerState<PostCard> {
                   ],
                 ),
                 
-                // Konum bilgisi
-                if (widget.post.cityId != null)
-                  FutureBuilder<List<dynamic>>(
-                    future: Future.wait([
-                      ref.read(apiServiceProvider).getCityById(int.parse(widget.post.cityId!)),
-                      if (widget.post.districtId != null) 
-                        ref.read(apiServiceProvider).getDistrictById(int.parse(widget.post.districtId!)) 
-                      else 
-                        Future.value(null),
-                    ]),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty || snapshot.data![0] == null) {
-                        return Text(
-                          'Konum bilgisi alınamadı',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                          ),
-                        );
-                      }
-                      
-                      final city = snapshot.data![0];
-                      final district = snapshot.data!.length > 1 ? snapshot.data![1] : null;
-                      
-                      if (city == null) {
-                        return Text(
-                          'Şehir bilgisi bulunamadı',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                          ),
-                        );
-                      }
-                      
-                      final cityName = city.name ?? 'Bilinmeyen Şehir';
-                      final districtName = district?.name;
-                      
-                      final locationText = (districtName != null && districtName.isNotEmpty)
-                          ? '$districtName, $cityName' 
-                          : cityName;
-                      
-                      return Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on,
-                            size: 12,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 2),
-                          GestureDetector(
-                            onTap: () {
-                              // Şehir profil sayfasına git
-                              Navigator.pushNamed(
-                                context,
-                                '/city_profile',
-                                arguments: city.id,
-                              );
-                            },
-                            child: Text(
-                              locationText,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                // Konum bilgisi - önce doğrudan Post nesnesindeki konum bilgilerini kontrol et
+                if (widget.post.hasLocationInfo) 
+                  // Post üzerindeki konum bilgisini göster
+                  widget.post.cityName != null 
+                  ? Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          size: 12,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 2),
+                        GestureDetector(
+                          onTap: () {
+                            // Şehir profil sayfasına git
+                            Navigator.pushNamed(
+                              context,
+                              '/city_profile',
+                              arguments: widget.post.cityId,
+                            );
+                          },
+                          child: Text(
+                            widget.post.districtName != null
+                                ? '${widget.post.districtName}, ${widget.post.cityName}'
+                                : widget.post.cityName!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
-                        ],
+                        ),
+                      ],
+                    )
+                  // Eğer API'den konum bilgisi almak gerekiyorsa
+                  : FutureBuilder<List<dynamic>>(
+                      future: Future.wait([
+                        ref.read(apiServiceProvider).getCityById(int.parse(widget.post.cityId!)),
+                        if (widget.post.districtId != null) 
+                          ref.read(apiServiceProvider).getDistrictById(int.parse(widget.post.districtId!)) 
+                        else 
+                          Future.value(null),
+                      ]),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty || snapshot.data![0] == null) {
+                          return Text(
+                            'Konum bilgisi alınamadı',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                          );
+                        }
+                        
+                        final city = snapshot.data![0];
+                        final district = snapshot.data!.length > 1 ? snapshot.data![1] : null;
+                        
+                        if (city == null) {
+                          return Text(
+                            'Şehir bilgisi bulunamadı',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                          );
+                        }
+                        
+                        final cityName = city.name ?? 'Bilinmeyen Şehir';
+                        final districtName = district?.name;
+                        
+                        final locationText = (districtName != null && districtName.isNotEmpty)
+                            ? '$districtName, $cityName' 
+                            : cityName;
+                        
+                        return Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on,
+                              size: 12,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 2),
+                            GestureDetector(
+                              onTap: () {
+                                // Şehir profil sayfasına git
+                                Navigator.pushNamed(
+                                  context,
+                                  '/city_profile',
+                                  arguments: city.id,
+                                );
+                              },
+                              child: Text(
+                                locationText,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                
+                // Kategori - Önce posttan kategori adı bilgisini kontrol et
+                if (widget.post.categoryName != null)
+                  // Post üzerindeki kategori adını göster
+                  GestureDetector(
+                    onTap: () {
+                      // Kategori filtresi için
+                      Navigator.pushNamed(
+                        context,
+                        '/filtered_posts',
+                        arguments: {
+                          'filterType': 'category',
+                          'categoryId': widget.post.categoryId,
+                          'categoryName': widget.post.categoryName,
+                        },
                       );
                     },
-                  ),
-                
-                // Kategori
-                if (widget.post.categoryId != null)
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        widget.post.categoryName!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  )
+                // Kategori bilgisi yoksa API'den çek
+                else if (widget.post.categoryId != null)
                   FutureBuilder<Category?>(
                     future: ref.read(apiServiceProvider).getCategoryById(int.parse(widget.post.categoryId!)),
                     builder: (context, snapshot) {

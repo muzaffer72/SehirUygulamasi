@@ -39,6 +39,8 @@ class Post {
   final String? categoryName; // Kategori adı
   final String? userEmail;    // Kullanıcı e-postası
   
+
+  
   // Widget'lar için getter'lar
   int get likeCount => likes;
   int get highlightCount => highlights;
