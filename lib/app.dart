@@ -75,12 +75,28 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/city_profile') {
-          final cityId = settings.arguments as String;
+          // Daha esnek giriş tipi kontrolü
+          String cityId;
+          if (settings.arguments is String) {
+            cityId = settings.arguments as String;
+          } else if (settings.arguments is int) {
+            cityId = (settings.arguments as int).toString();
+          } else {
+            cityId = settings.arguments.toString();
+          }
           return MaterialPageRoute(
             builder: (context) => CityProfileScreen(cityId: cityId),
           );
         } else if (settings.name == '/district_profile') {
-          final districtId = settings.arguments as String;
+          // Daha esnek giriş tipi kontrolü
+          String districtId;
+          if (settings.arguments is String) {
+            districtId = settings.arguments as String;
+          } else if (settings.arguments is int) {
+            districtId = (settings.arguments as int).toString();
+          } else {
+            districtId = settings.arguments.toString();
+          }
           return MaterialPageRoute(
             builder: (context) => DistrictProfileScreen(districtId: districtId),
           );
