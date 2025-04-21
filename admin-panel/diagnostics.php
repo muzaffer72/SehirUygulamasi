@@ -97,13 +97,13 @@ try {
     require_once 'db_connection.php';
     echo "<span style='color:green'>✓ MySQLiCompatWrapper başarıyla yüklendi</span><br>";
     
-    // Test sorgusu çalıştır
-    $test_result = $conn->query("SELECT COUNT(*) as count FROM comments");
+    // Test sorgusu çalıştır - global $db değişkenini kullan ($conn yerine)
+    $test_result = $db->query("SELECT COUNT(*) as count FROM comments");
     if ($test_result) {
         $row = $test_result->fetch_assoc();
         echo "<span style='color:green'>✓ Wrapper ile sorgu çalıştı, yorum sayısı: " . $row['count'] . "</span><br>";
     } else {
-        echo "<span style='color:red'>✗ Wrapper sorgusu çalışmadı</span><br>";
+        echo "<span style='color:red'>✗ Wrapper sorgusu çalışmadı: " . $db->error() . "</span><br>";
     }
 } catch (Exception $e) {
     echo "<span style='color:red'>✗ MySQLiCompatWrapper hatası: " . $e->getMessage() . "</span><br>";
