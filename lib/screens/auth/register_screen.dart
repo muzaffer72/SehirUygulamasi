@@ -14,6 +14,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -40,6 +41,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose(); // Username controller'ı da temizle
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -110,6 +112,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
     return null;
   }
+  
+  // Username validator
+  String? _validateUsername(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Kullanıcı adı gerekli';
+    }
+    if (value.length < 3) {
+      return 'Kullanıcı adı en az 3 karakter olmalıdır';
+    }
+    // Kullanıcı adı formatı kontrol (harf, rakam ve alt çizgi izin verilir)
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+      return 'Kullanıcı adı sadece harf, rakam ve alt çizgi içerebilir';
+    }
+    return null;
+  }
 
   // Email validator
   String? _validateEmail(String? value) {
@@ -162,6 +179,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       try {
         await ref.read(authProvider.notifier).register(
           _nameController.text.trim(),
+          _usernameController.text.trim(),
           _emailController.text.trim(),
           _passwordController.text,
           _selectedCityId,
@@ -226,6 +244,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         border: OutlineInputBorder(),
                       ),
                       validator: _validateName,
+                      enabled: !isLoading,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Username field
+                    TextFormField(
+                      controller: _usernameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Kullanıcı Adı',
+                        prefixIcon: Icon(Icons.person_outline),
+                        border: OutlineInputBorder(),
+                        hintText: 'Örn: ahmet_85',
+                      ),
+                      validator: _validateUsername,
                       enabled: !isLoading,
                     ),
                     const SizedBox(height: 16),

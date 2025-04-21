@@ -88,7 +88,11 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
             cityId = settings.arguments as String;
           } else if (settings.arguments is int) {
             cityId = (settings.arguments as int).toString();
+          } else if (settings.arguments == null) {
+            // Eğer argüman yoksa, varsayılan değeri kullanalım
+            cityId = '0';
           } else {
+            // Diğer tüm tiplerde toString() kullanalım
             cityId = settings.arguments.toString();
           }
           return MaterialPageRoute(
@@ -101,14 +105,27 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
             districtId = settings.arguments as String;
           } else if (settings.arguments is int) {
             districtId = (settings.arguments as int).toString();
+          } else if (settings.arguments == null) {
+            // Eğer argüman yoksa, varsayılan değeri kullanalım
+            districtId = '0';
           } else {
+            // Diğer tüm tiplerde toString() kullanalım
             districtId = settings.arguments.toString();
           }
           return MaterialPageRoute(
             builder: (context) => DistrictProfileScreen(districtId: districtId),
           );
         }
-        return null;
+        
+        // Eğer bir route bulamazsak onUnknownRoute işlevselliği ekleyelim
+        print("Bilinmeyen route: ${settings.name} ile argümanlar: ${settings.arguments}");
+        return MaterialPageRoute(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: Text('Sayfa bulunamadı: ${settings.name}'),
+            ),
+          ),
+        );
       },
     );
   }
