@@ -292,7 +292,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                         ),
                       )
                     : FutureBuilder<User?>(
-                        future: ref.read(apiServiceProvider).getUserById(int.parse(widget.post.userId)),
+                        future: ref.read(apiServiceProvider).getUserById(widget.post.userId),
                         builder: (context, snapshot) {
                           final userName = snapshot.hasData
                               ? snapshot.data!.name
@@ -684,7 +684,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                               )
                             // Yoksa API'den kullanıcı bilgisini çek
                             : FutureBuilder<User?>(
-                                future: ref.read(apiServiceProvider).getUserById(int.parse(widget.post.userId)),
+                                future: ref.read(apiServiceProvider).getUserById(widget.post.userId),
                                 builder: (context, snapshot) {
                                   // Yükleme durumu, hata durumu veya veri yoksa
                                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -794,9 +794,9 @@ class _PostCardState extends ConsumerState<PostCard> {
                   // Eğer API'den konum bilgisi almak gerekiyorsa
                   : FutureBuilder<List<dynamic>>(
                       future: Future.wait([
-                        ref.read(apiServiceProvider).getCityById(int.parse(widget.post.cityId!)),
+                        ref.read(apiServiceProvider).getCityById(widget.post.cityId!),
                         if (widget.post.districtId != null) 
-                          ref.read(apiServiceProvider).getDistrictById(int.parse(widget.post.districtId!)) 
+                          ref.read(apiServiceProvider).getDistrictById(widget.post.districtId!) 
                         else 
                           Future.value(null),
                       ]),
@@ -896,7 +896,7 @@ class _PostCardState extends ConsumerState<PostCard> {
                 // Kategori bilgisi yoksa API'den çek
                 else if (widget.post.categoryId != null)
                   FutureBuilder<Category?>(
-                    future: ref.read(apiServiceProvider).getCategoryById(int.parse(widget.post.categoryId!)),
+                    future: ref.read(apiServiceProvider).getCategoryById(widget.post.categoryId!),
                     builder: (context, snapshot) {
                       // Yükleme, hata veya veri yoksa
                       if (snapshot.connectionState == ConnectionState.waiting) {
