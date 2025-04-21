@@ -1,5 +1,6 @@
 <?php
 require_once '../db_connection.php';
+// $db değişkeni db_connection.php içinde tanımlandı
 
 header('Content-Type: application/json');
 
@@ -13,21 +14,21 @@ if (empty($action) || $post_id <= 0) {
 }
 
 try {
-    global $pdo;
+    // PDO yerine $db değişkenini kullan
     $response = ['success' => false];
     
     switch ($action) {
         case 'clear_likes':
             // Paylaşıma ait tüm beğenileri sil
             $query = "DELETE FROM user_likes WHERE post_id = ?";
-            $stmt = $pdo->prepare($query);
+            $stmt = $db->prepare($query);
             $stmt->execute([$post_id]);
             $rowCount = $stmt->rowCount();
             
             if ($rowCount > 0) {
                 // Paylaşımın beğeni sayacını sıfırla
                 $update_post = "UPDATE posts SET likes = 0 WHERE id = ?";
-                $update_stmt = $pdo->prepare($update_post);
+                $update_stmt = $db->prepare($update_post);
                 $update_stmt->execute([$post_id]);
                 
                 $response = [
@@ -55,7 +56,7 @@ try {
             }
             
             $query = "DELETE FROM user_likes WHERE id = ?";
-            $stmt = $pdo->prepare($query);
+            $stmt = $db->prepare($query);
             $stmt->execute([$like_id]);
             $rowCount = $stmt->rowCount();
             
@@ -68,7 +69,7 @@ try {
                     )
                     WHERE id = ?
                 ";
-                $update_stmt = $pdo->prepare($update_post);
+                $update_stmt = $db->prepare($update_post);
                 $update_stmt->execute([$post_id]);
                 
                 $response = [
@@ -97,9 +98,9 @@ try {
             
             // Daha önce beğeni var mı kontrol et
             $check_query = "SELECT id FROM user_likes WHERE user_id = ? AND post_id = ?";
-            $check_stmt = $pdo->prepare($check_query);
+            $check_stmt = $db->prepare($check_query);
             $check_stmt->execute([$user_id, $post_id]);
-            $exists = $check_stmt->fetch(PDO::FETCH_ASSOC);
+            $exists = $check_stmt->fetch_assoc();
             
             if ($exists) {
                 $response = [
@@ -111,18 +112,18 @@ try {
             
             // Yeni beğeni ekle
             $query = "INSERT INTO user_likes (user_id, post_id) VALUES (?, ?)";
-            $stmt = $pdo->prepare($query);
+            $stmt = $db->prepare($query);
             $stmt->execute([$user_id, $post_id]);
             $rowCount = $stmt->rowCount();
             
             if ($rowCount > 0) {
                 // Paylaşımın beğeni sayacını güncelle
                 $update_post = "UPDATE posts SET likes = likes + 1 WHERE id = ?";
-                $update_stmt = $pdo->prepare($update_post);
+                $update_stmt = $db->prepare($update_post);
                 $update_stmt->execute([$post_id]);
                 
                 // Yeni eklenen beğeninin ID'sini al
-                $new_id = $pdo->lastInsertId();
+                $new_id = $db->insert_id();
                 
                 // Eklenen beğeninin verilerini getir
                 $get_like = "
@@ -134,9 +135,9 @@ try {
                     JOIN users u ON l.user_id = u.id
                     WHERE l.id = ?
                 ";
-                $get_stmt = $pdo->prepare($get_like);
+                $get_stmt = $db->prepare($get_like);
                 $get_stmt->execute([$new_id]);
-                $like = $get_stmt->fetch(PDO::FETCH_ASSOC);
+                $like = $get_stmt->fetch_assoc();
                 
                 $response = [
                     'success' => true,
