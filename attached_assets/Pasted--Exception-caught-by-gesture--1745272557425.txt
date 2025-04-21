@@ -1,0 +1,44 @@
+======== Exception caught by gesture ===============================================================
+The following assertion was thrown while handling a gesture:
+Could not find a generator for route RouteSettings("/city_profile", 6) in the _WidgetsAppState.
+
+Make sure your root app widget has provided a way to generate 
+this route.
+Generators for routes are searched for in the following order:
+ 1. For the "/" route, the "home" property, if non-null, is used.
+ 2. Otherwise, the "routes" table is used, if it has an entry for the route.
+ 3. Otherwise, onGenerateRoute is called. It should return a non-null value for any valid route not handled by "home" and "routes".
+ 4. Finally if all else fails onUnknownRoute is called.
+Unfortunately, onUnknownRoute was not set.
+When the exception was thrown, this was the stack: 
+#0      _WidgetsAppState._onUnknownRoute.<anonymous closure> (package:flutter/src/widgets/app.dart:1561:9)
+#1      _WidgetsAppState._onUnknownRoute (package:flutter/src/widgets/app.dart:1576:6)
+#2      NavigatorState._routeNamed (package:flutter/src/widgets/navigator.dart:4682:37)
+#3      NavigatorState.pushNamed (package:flutter/src/widgets/navigator.dart:4729:21)
+#4      Navigator.pushNamed (package:flutter/src/widgets/navigator.dart:1896:34)
+#5      _PostCardState._buildTwitterHeader.<anonymous closure> (package:belediye_iletisim_merkezi/widgets/post_card.dart:776:39)
+#6      GestureRecognizer.invokeCallback (package:flutter/src/gestures/recognizer.dart:357:24)
+#7      TapGestureRecognizer.handleTapUp (package:flutter/src/gestures/tap.dart:653:11)
+#8      BaseTapGestureRecognizer._checkUp (package:flutter/src/gestures/tap.dart:307:5)
+#9      BaseTapGestureRecognizer.acceptGesture (package:flutter/src/gestures/tap.dart:277:7)
+#10     GestureArenaManager.sweep (package:flutter/src/gestures/arena.dart:173:27)
+#11     GestureBinding.handleEvent (package:flutter/src/gestures/binding.dart:534:20)
+#12     GestureBinding.dispatchEvent (package:flutter/src/gestures/binding.dart:499:22)
+#13     RendererBinding.dispatchEvent (package:flutter/src/rendering/binding.dart:460:11)
+#14     GestureBinding._handlePointerEventImmediately (package:flutter/src/gestures/binding.dart:437:7)
+#15     GestureBinding.handlePointerEvent (package:flutter/src/gestures/binding.dart:394:5)
+#16     GestureBinding._flushPointerEventQueue (package:flutter/src/gestures/binding.dart:341:7)
+#17     GestureBinding._handlePointerDataPacket (package:flutter/src/gestures/binding.dart:308:9)
+#18     _invoke1 (dart:ui/hooks.dart:332:13)
+#19     PlatformDispatcher._dispatchPointerDataPacket (dart:ui/platform_dispatcher.dart:451:7)
+#20     _dispatchPointerDataPacket (dart:ui/hooks.dart:267:31)
+Handler: "onTap"
+Recognizer: TapGestureRecognizer#f91cb
+  debugOwner: GestureDetector
+  state: ready
+  won arena
+  finalPosition: Offset(182.1, 124.4)
+  finalLocalPosition: Offset(96.1, 8.8)
+  button: 1
+  sent tap down
+====================================================================================================

@@ -26,6 +26,9 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
     super.initState();
     _loadThemePreference();
     _checkNotificationPreferences();
+    
+    // Auth durumunu kontrol et
+    ref.read(authProvider.notifier).checkAuth();
   }
   
   // Bildirim ayarlarını kontrol et
@@ -60,7 +63,7 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeProvider);
-    final currentUser = ref.watch(currentUserProvider);
+    final authState = ref.watch(authProvider);
     
     return MaterialApp(
       title: 'ŞikayetVar',
@@ -68,8 +71,12 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
       themeMode: themeMode,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      home: currentUser != null ? const HomeScreen() : const LoginScreen(),
+      home: authState.status == AuthStatus.authenticated 
+          ? const HomeScreen() 
+          : const LoginScreen(),
       routes: {
+        '/home': (context) => const HomeScreen(),
+        '/login': (context) => const LoginScreen(),
         '/city_profile': (context) => const CityProfileScreen(cityId: '0'), // Geçici olarak 0 veriliyor, argümanlar ile değiştirilecek
         '/district_profile': (context) => const DistrictProfileScreen(districtId: '0'), // Geçici olarak 0 veriliyor, argümanlar ile değiştirilecek
       },
