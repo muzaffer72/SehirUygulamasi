@@ -67,9 +67,14 @@ class ApiService {
 
   // Giriş yap
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final url = Uri.parse('$baseUrl$apiPath/login');
+    // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=login');
+    final uri = Uri.parse(uriString);
+    
+    print('Giriş denemesi: $uri');
+    
     final response = await http.post(
-      url,
+      uri,
       headers: await _getHeaders(),
       body: json.encode({
         'email': email,
@@ -77,9 +82,14 @@ class ApiService {
       }),
     );
     
+    print('Giriş API yanıtı: ${response.statusCode}');
+    
     if (response.statusCode == 200) {
-      return _decodeResponse(response);
+      final data = _decodeResponse(response);
+      print('Giriş yanıtı: $data');
+      return data;
     } else {
+      print('Giriş hatası: ${response.body}');
       throw Exception(_handleErrorResponse(response));
     }
   }
@@ -93,9 +103,15 @@ class ApiService {
     required int cityId,
     String? districtId,
   }) async {
-    final url = Uri.parse('$baseUrl$apiPath/register');
+    // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=register');
+    final uri = Uri.parse(uriString);
+    
+    print('Kayıt denemesi: $uri');
+    print('Kayıt verileri: name=$name, email=$email, cityId=$cityId, districtId=$districtId');
+    
     final response = await http.post(
-      url,
+      uri,
       headers: await _getHeaders(),
       body: json.encode({
         'name': name,
@@ -107,40 +123,72 @@ class ApiService {
       }),
     );
     
-    if (response.statusCode == 201) {
-      return _decodeResponse(response);
+    print('Kayıt API yanıtı: ${response.statusCode}');
+    
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final data = _decodeResponse(response);
+      print('Kayıt yanıtı: $data');
+      return data;
     } else {
+      print('Kayıt hatası: ${response.body}');
       throw Exception(_handleErrorResponse(response));
     }
   }
   
   // Çıkış yap
   Future<void> logout() async {
-    final url = Uri.parse('$baseUrl$apiPath/logout');
+    // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=logout');
+    final uri = Uri.parse(uriString);
+    
+    print('Çıkış yapılıyor: $uri');
+    
     final response = await http.post(
-      url,
+      uri,
       headers: await _getHeaders(),
     );
     
+    print('Çıkış API yanıtı: ${response.statusCode}');
+    
     if (response.statusCode != 200) {
+      print('Çıkış hatası: ${response.body}');
       throw Exception(_handleErrorResponse(response));
     }
   }
   
   // Mevcut kullanıcı bilgilerini getir
   Future<User?> getCurrentUser() async {
-    final url = Uri.parse('$baseUrl$apiPath/user');
+    // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=current_user');
+    final uri = Uri.parse(uriString);
+    
+    print('Kullanıcı bilgileri alınıyor: $uri');
+    
     final response = await http.get(
-      url,
+      uri,
       headers: await _getHeaders(),
     );
     
+    print('Kullanıcı API yanıtı: ${response.statusCode}');
+    
     if (response.statusCode == 200) {
       final data = _decodeResponse(response);
-      return User.fromJson(data);
+      print('Kullanıcı yanıtı: $data');
+      if (data == null) return null;
+      
+      // API yanıt formatını kontrol et
+      if (data is Map<String, dynamic> && data.containsKey('data')) {
+        return User.fromJson(data['data']);
+      } else if (data is Map<String, dynamic> && data.containsKey('status') && data.containsKey('data')) {
+        return User.fromJson(data['data']);
+      } else {
+        return User.fromJson(data);
+      }
     } else if (response.statusCode == 401) {
+      print('Kullanıcı yetkilendirme hatası: ${response.body}');
       return null; // Token geçersiz veya oturum süresi dolmuş
     } else {
+      print('Kullanıcı bilgi alma hatası: ${response.body}');
       throw Exception(_handleErrorResponse(response));
     }
   }
@@ -257,13 +305,18 @@ class ApiService {
     final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=districts&city_id=$cityId');
     final uri = Uri.parse(uriString);
     
+    print('İlçe bilgileri alınıyor: $uri');
+    
     final response = await http.get(
       uri,
       headers: await _getHeaders(),
     );
     
+    print('İlçe API yanıtı: ${response.statusCode}');
+    
     if (response.statusCode == 200) {
       final data = _decodeResponse(response);
+      print('İlçe yanıtı: $data');
       List<dynamic> districtsJson = [];
       
       if (data is Map && data.containsKey('data')) {
@@ -274,8 +327,11 @@ class ApiService {
         districtsJson = data;
       }
       
-      return districtsJson.map((json) => District.fromJson(json)).toList();
+      final districts = districtsJson.map((json) => District.fromJson(json)).toList();
+      print('Parsed ${districts.length} districts successfully');
+      return districts;
     } else {
+      print('İlçe listesi alınırken hata oluştu: ${response.body}');
       throw Exception(_handleErrorResponse(response));
     }
   }
