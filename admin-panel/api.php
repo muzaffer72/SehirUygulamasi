@@ -39,22 +39,33 @@ function checkApiKey() {
     $stmt->execute();
     $result = $stmt->get_result();
     
-    // PostgreSQL veya MySQL uyumlu num_rows kontrolü
+    // PostgreSQL veya MySQL uyumlu num_rows kontrolü - Güvenli yöntem
     $rowCount = 0;
-    if (method_exists($result, 'num_rows')) {
-        $rowCount = $result->num_rows; // MySQL yöntemi
-    } else if (function_exists('pg_num_rows') && get_class($result) === 'PgSql\Result') {
-        $rowCount = pg_num_rows($result); // PostgreSQL yöntemi
-    } else {
-        // Manuel sayım yöntemi
-        $temp = [];
-        while ($row = $result->fetch_assoc()) {
-            $temp[] = $row;
-        }
-        $rowCount = count($temp);
-        // İmleci başa sar (eğer destekleniyorsa)
-        if (method_exists($result, 'data_seek')) {
-            $result->data_seek(0);
+    
+    // PgSQLResult için özel kontrol
+    if (is_object($result)) {
+        $resultClass = get_class($result);
+        // PostgreSQL için ayrı kontrol yapalım
+        if (strpos($resultClass, 'PgSQL') !== false || strpos($resultClass, 'Pg') !== false) {
+            // PostgreSQL için güvenli yaklaşım: Bir sorgu ile sayı al
+            $resource = $db->query("SELECT COUNT(*) as total FROM api_keys WHERE api_key = '" . $db->real_escape_string($apiKey) . "'");
+            if ($resource && $countRow = $resource->fetch_assoc()) {
+                $rowCount = intval($countRow['total']);
+            }
+        } else if (method_exists($result, 'num_rows')) {
+            // MySQL için standart yaklaşım
+            $rowCount = $result->num_rows;
+        } else {
+            // Fallback: Manuel sayım
+            $temp = [];
+            while ($row = $result->fetch_assoc()) {
+                $temp[] = $row;
+            }
+            $rowCount = count($temp);
+            // İmleci başa sar (eğer destekleniyorsa)
+            if (method_exists($result, 'data_seek')) {
+                @$result->data_seek(0);
+            }
         }
     }
     
