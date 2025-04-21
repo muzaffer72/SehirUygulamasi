@@ -187,7 +187,7 @@ class _BelediyeIletisimAppState extends ConsumerState<BelediyeIletisimApp> {
         } else if (settings.name == '/city_profile') {
           return MaterialPageRoute(
             builder: (context) => CityProfileScreen(
-              cityId: (settings.arguments as String),
+              cityId: settings.arguments.toString(),
             ),
           );
         } else if (settings.name == '/filtered_posts') {
