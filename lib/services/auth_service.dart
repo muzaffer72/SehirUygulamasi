@@ -18,7 +18,7 @@ class AuthService {
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.login}'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'username': email,  // Laravel admin panel username olarak bekliyor
+          'username': email,  // Laravel admin panel username olarak bekliyor (burada email kullanılabilir)
           'password': password,
         }),
       );
@@ -76,13 +76,14 @@ class AuthService {
   // Kayıt işlemi
   Future<User> register(
     String name,
+    String username,
     String email,
     String password,
     String? cityId,
     String? districtId,
   ) async {
     try {
-      print('Registering with: $email, $password');
+      print('Registering with: $username, $email, $password');
       
       // Admin panel ile uyumlu kayıt isteği yapıyoruz
       final response = await http.post(
@@ -90,7 +91,7 @@ class AuthService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': name,
-          'username': email,  // Laravel admin panelde username olarak bekliyor
+          'username': username, // Artık email değil ayrı bir username kullanıyoruz
           'email': email,
           'password': password,
           'city_id': cityId, // Zaten string

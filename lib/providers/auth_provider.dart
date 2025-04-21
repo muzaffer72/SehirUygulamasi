@@ -91,6 +91,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   // Register a new user
   Future<void> register(
     String name,
+    String username,
     String email,
     String password,
     String? cityId,
@@ -101,14 +102,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
       
       final user = await _authService.register(
         name,
+        username,
         email,
         password,
         cityId,
         districtId,
       );
       
-      // After registration, login the user
-      await login(email, password);
+      // After registration, set the user state directly instead of calling login
+      // This prevents confusion between username and email in login process
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+        errorMessage: null,
+      );
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
