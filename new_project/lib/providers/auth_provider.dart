@@ -94,7 +94,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String name,
     required String email,
     required String password,
-    required int cityId,
+    String? username,
+    required String cityId, // int -> String olarak değiştirildi
     required String districtId,
     String? phone,
   }) async {
@@ -104,6 +105,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         name: name,
         email: email,
         password: password,
+        username: username,
         cityId: cityId,
         districtId: districtId,
         phone: phone,

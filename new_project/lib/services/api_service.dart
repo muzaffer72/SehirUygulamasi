@@ -124,16 +124,20 @@ class ApiService {
     required String name,
     required String email,
     required String password,
+    String? username,
     String? phone,
-    required int cityId,
+    required dynamic cityId, // int yerine dynamic olarak güncellendi (String olabilir)
     String? districtId,
   }) async {
     // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
     final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=register');
     final uri = Uri.parse(uriString);
     
+    // cityId'yi string formatına dönüştür
+    final cityIdStr = cityId.toString();
+    
     print('Kayıt denemesi: $uri');
-    print('Kayıt verileri: name=$name, email=$email, cityId=$cityId, districtId=$districtId');
+    print('Kayıt verileri: name=$name, username=$username, email=$email, cityId=$cityIdStr, districtId=$districtId');
     
     final response = await http.post(
       uri,
@@ -141,9 +145,10 @@ class ApiService {
       body: json.encode({
         'name': name,
         'email': email,
+        'username': username, // username eklendi
         'password': password,
         'phone': phone,
-        'city_id': cityId,
+        'city_id': cityIdStr, // string olarak gönderildi
         'district_id': districtId,
       }),
     );
