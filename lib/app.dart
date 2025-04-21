@@ -67,6 +67,24 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       home: currentUser != null ? const HomeScreen() : const LoginScreen(),
+      routes: {
+        '/city_profile': (context) => const CityProfileScreen(cityId: '0'), // Geçici olarak 0 veriliyor, argümanlar ile değiştirilecek
+        '/district_profile': (context) => const DistrictProfileScreen(districtId: '0'), // Geçici olarak 0 veriliyor, argümanlar ile değiştirilecek
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/city_profile') {
+          final cityId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) => CityProfileScreen(cityId: cityId),
+          );
+        } else if (settings.name == '/district_profile') {
+          final districtId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) => DistrictProfileScreen(districtId: districtId),
+          );
+        }
+        return null;
+      },
     );
   }
 }
