@@ -1780,16 +1780,16 @@ class ApiService {
   }
   
   Future<List<District>> getDistrictsByCityId(String cityId) async {
-    print('Fetching districts for city ID: $cityId');
+    print('İlçe bilgileri alınıyor: sehirId: $cityId');
     try {
-      // API endpoint için farklı URL formatlarını dene
+      // API endpoint için farklı URL formatlarını dene - limit parametresini ekleyelim (100 adet ilçe için)
       var endpointUrls = [
+        // API kök noktası ile alternatif - Bu en güvenilir kaynak
+        '$baseUrl/api.php?endpoint=districts&city_id=$cityId&limit=100&api_key=440bf0009c749943b440f7f5c6c2fd26',
         // Ana endpointler
-        '$baseUrl/api/districts?city_id=$cityId',
+        '$baseUrl/api/districts?city_id=$cityId&per_page=100',
         // Yedek endpoint
-        '$baseUrl/districts?city_id=$cityId',
-        // API kök noktası ile alternatif
-        '$baseUrl/api.php?endpoint=districts&city_id=$cityId&api_key=440bf0009c749943b440f7f5c6c2fd26'
+        '$baseUrl/districts?city_id=$cityId&limit=100'
       ];
       
       List<District> results = [];
@@ -1799,7 +1799,7 @@ class ApiService {
       // Sırayla tüm endpoint'leri dene
       for (var url in endpointUrls) {
         try {
-          print('Trying endpoint: $url');
+          print('İlçe bilgileri alınıyor: $url, sehirId: $cityId');
           final response = await _client.get(
             Uri.parse(url),
             headers: {
@@ -1810,19 +1810,30 @@ class ApiService {
           
           statusCode = response.statusCode;
           responseBody = response.body;
-          print('Response status: $statusCode from $url');
+          print('İlçe API yanıtı: $statusCode');
           
           if (statusCode == 200) {
             // Debug için ham yanıtı logla
-            print('Raw districts response: ${responseBody.substring(0, responseBody.length > 100 ? 100 : responseBody.length)}...');
+            print('İlçe yanıtı: $responseBody');
             
             // JSON parse denemesi
             final dynamic data = jsonDecode(responseBody);
             
             // Liste biçiminde doğrudan veri
             if (data is List) {
+              // Her bir district JSON objesini detaylı olarak logla
+              for (var item in data) {
+                print('District JSON içeriği: $item');
+                try {
+                  District district = District.fromJson(item);
+                  print('District parsed - ID: ${district.id}, Name: ${district.name}, CityID: ${district.cityId}');
+                } catch (e) {
+                  print('District parsing error: $e');
+                }
+              }
+              
               results = data.map((item) => District.fromJson(item)).toList();
-              print('Parsed ${results.length} districts directly from list');
+              print('İlçe sayısı: ${results.length}');
               if (results.isNotEmpty) break; // Başarılı olduysa döngüden çık
             } 
             // Sarmalanmış veri
@@ -1841,14 +1852,25 @@ class ApiService {
               }
               
               if (districtsData != null) {
+                // Her bir district JSON objesini detaylı olarak logla
+                for (var item in districtsData) {
+                  print('District JSON içeriği: $item');
+                  try {
+                    District district = District.fromJson(item);
+                    print('District parsed - ID: ${district.id}, Name: ${district.name}, CityID: ${district.cityId}');
+                  } catch (e) {
+                    print('District parsing error: $e');
+                  }
+                }
+                
                 results = districtsData.map((item) => District.fromJson(item)).toList();
-                print('Parsed ${results.length} districts from nested data');
+                print('İlçe sayısı: ${results.length}');
                 if (results.isNotEmpty) break; // Başarılı olduysa döngüden çık
               }
             }
           }
         } catch (innerError) {
-          print('Error with endpoint $url: $innerError');
+          print('İlçe bilgileri alınırken hata oluştu: $innerError');
           // Bu endpoint'te hata oldu, sıradaki endpoint'i dene
           continue;
         }
@@ -1856,42 +1878,48 @@ class ApiService {
       
       // Sonuçları kontrol et
       if (results.isNotEmpty) {
-        print('Successfully retrieved ${results.length} districts for city ID: $cityId');
+        print('İlçe bilgileri başarıyla alındı: ${results.length} ilçe, şehir ID: $cityId');
         return results;
       } else {
-        print('Could not retrieve districts from any endpoint. Last status code: $statusCode, response: $responseBody');
+        print('Hiçbir endpoint\'ten ilçe bilgisi alınamadı. Son durum kodu: $statusCode, yanıt: $responseBody');
         return await _getFallbackDistrictsByCityId(cityId);
       }
     } catch (e) {
-      print('Error in getDistrictsByCityId: $e');
+      print('İlçe bilgileri alınırken genel hata: $e');
       return await _getFallbackDistrictsByCityId(cityId);
     }
   }
   
   // Yedek ilce listesi yukleme (sehir ID'sine gore)
   Future<List<District>> _getFallbackDistrictsByCityId(String cityId) async {
-    print('Using fallback endpoint for districts by city ID: $cityId');
+    print('Yedek ilçe bilgileri endpointi kullanılıyor: $cityId');
     try {
-      final response = await _client.get(Uri.parse('$baseUrl/districts?city_id=$cityId'));
+      // Limit parametresi ekleyelim
+      final response = await _client.get(Uri.parse('$baseUrl/districts?city_id=$cityId&limit=100'));
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print('Yedek ilçe yanıtı: $data');
         
         if (data is List) {
-          return data.map((item) => District.fromJson(item)).toList();
+          final results = data.map((item) => District.fromJson(item)).toList();
+          print('Yedek endpoint\'ten ${results.length} ilçe alındı (doğrudan liste)');
+          return results;
         } else if (data is Map<String, dynamic> && data.containsKey('districts')) {
           final List<dynamic> districtsData = data['districts'];
-          return districtsData.map((item) => District.fromJson(item)).toList();
+          final results = districtsData.map((item) => District.fromJson(item)).toList();
+          print('Yedek endpoint\'ten ${results.length} ilçe alındı (districts alanı)');
+          return results;
         } else {
-          print('Invalid fallback districts by city format');
+          print('Geçersiz yedek ilçe veri formatı');
           return [];
         }
       } else {
-        print('Failed to load fallback districts by city: ${response.body}');
+        print('Yedek ilçe bilgileri alınamadı: ${response.body}');
         return [];
       }
     } catch (e) {
-      print('Error fetching fallback districts by city: $e');
+      print('Yedek ilçe bilgileri alınırken hata: $e');
       return [];
     }
   }
