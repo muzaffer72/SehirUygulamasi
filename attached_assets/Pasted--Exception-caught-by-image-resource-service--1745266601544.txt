@@ -1,0 +1,46 @@
+======== Exception caught by image resource service ================================================
+The following ArgumentError was thrown resolving an image codec:
+Invalid argument(s): No host specified in URI
+
+When the exception was thrown, this was the stack: 
+#0      _HttpClient._openUrl (dart:_http/http_impl.dart:3002:9)
+#1      _HttpClient.openUrl (dart:_http/http_impl.dart:2858:7)
+#2      IOClient.send (package:http/src/io_client.dart:117:38)
+#3      HttpFileService.get (package:flutter_cache_manager/src/web/file_service.dart:37:44)
+#4      WebHelper._download (package:flutter_cache_manager/src/web/web_helper.dart:115:24)
+#5      WebHelper._updateFile (package:flutter_cache_manager/src/web/web_helper.dart:96:28)
+<asynchronous suspension>
+#6      WebHelper._downloadOrAddToQueue (package:flutter_cache_manager/src/web/web_helper.dart:64:7)
+<asynchronous suspension>
+Image provider: CachedNetworkImageProvider("", scale: 1.0)
+Image key: CachedNetworkImageProvider("", scale: 1.0)
+====================================================================================================
+
+======== Exception caught by widgets library =======================================================
+The following NoSuchMethodError was thrown building FutureBuilder<List<dynamic>>(dirty, state: _FutureBuilderState<List<dynamic>>#ff0ef):
+The getter 'name' was called on null.
+Receiver: null
+Tried calling: name
+
+The relevant error-causing widget was: 
+  FutureBuilder<List<dynamic>> FutureBuilder:file:///C:/uygulamalar/SehirUygulamasison/new_project/lib/screens/profile/profile_screen.dart:535:13
+When the exception was thrown, this was the stack: 
+#0      Object.noSuchMethod (dart:core-patch/object_patch.dart:38:5)
+#1      _ProfileScreenState._buildProfileView.<anonymous closure> (package:belediye_iletisim_merkezi/screens/profile/profile_screen.dart:558:28)
+#2      _FutureBuilderState.build (package:flutter/src/widgets/async.dart:627:55)
+#3      StatefulElement.build (package:flutter/src/widgets/framework.dart:5841:27)
+#4      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5733:15)
+#5      StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5892:11)
+#6      Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#7      BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2704:15)
+#8      BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2762:11)
+#9      BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3066:18)
+#10     WidgetsBinding.drawFrame (package:flutter/src/widgets/binding.dart:1229:21)
+#11     RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:482:5)
+#12     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1442:15)
+#13     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1355:9)
+#14     SchedulerBinding._handleDrawFrame (package:flutter/src/scheduler/binding.dart:1208:5)
+#15     _invoke (dart:ui/hooks.dart:316:13)
+#16     PlatformDispatcher._drawFrame (dart:ui/platform_dispatcher.dart:428:5)
+#17     _drawFrame (dart:ui/hooks.dart:288:31)
+====================================================================================================

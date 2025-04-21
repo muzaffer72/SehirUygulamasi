@@ -466,16 +466,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SafeSingleTi
           CircleAvatar(
             radius: 50,
             backgroundColor: Theme.of(context).colorScheme.primary,
-            child: user.profileImageUrl != null
-                ? null
-                : Text(
+            child: (user.profileImageUrl == null || user.profileImageUrl!.isEmpty)
+                ? Text(
                     user.name.substring(0, 1).toUpperCase(),
                     style: const TextStyle(
                       fontSize: 30,
                       color: Colors.white,
                     ),
-                  ),
-            backgroundImage: user.profileImageUrl != null
+                  )
+                : null,
+            backgroundImage: (user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty)
                 ? NetworkImage(user.profileImageUrl!)
                 : null,
           ),
