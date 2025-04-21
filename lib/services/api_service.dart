@@ -1600,18 +1600,16 @@ class ApiService {
     }
   }
   
-  // Şehir profil bilgilerini getir
-  // Şehir profil bilgilerini getir
-  // Eski metod - geriye uyumluluk için kalıyor
-  // Yeni uygulamalarda getCityProfileById kullanın
+  // Sehir profil bilgilerini getir
+  // Geriye uyumluluk icin, her zaman String tipinde cityId kullanir
   Future<CityProfile?> getCityProfile(dynamic cityId) async {
-    // cityId'yi String'e dönüştür (int veya String olabilir)
+    // cityId'yi String'e donustur (int veya String olabilir)
     final String cityIdStr = cityId.toString();
-    print('getCityProfile metodu kullanılıyor - Ideal olan getCityProfileById kullanımıdır');
+    print('getCityProfile method called with ID: $cityIdStr');
     return getCityProfileById(cityIdStr);
   }
   
-  // Güncel metod, getCityProfileById - bu metodu tercih edin
+  // Guncel metod, getCityProfileById - bu metodu tercih edin
   Future<CityProfile?> getCityProfileById(String cityId) async {
     print('Fetching city profile by ID: $cityId');
     try {
@@ -1632,7 +1630,7 @@ class ApiService {
         if (data is Map<String, dynamic>) {
           if (data.containsKey('data')) {
             final profile = CityProfile.fromJson(data['data']);
-            // CityProfileScreen.dart için solutionRate değerini hesapla
+            // CityProfileScreen.dart icin solutionRate degerini hesapla
             if (profile.solutionRate == null && profile.totalComplaints > 0) {
               final solutionRate = profile.solvedComplaints / profile.totalComplaints;
               return profile.copyWith(solutionRate: solutionRate);
@@ -1659,13 +1657,13 @@ class ApiService {
     }
   }
   
-  // Yedek şehir profil bilgilerini getir
+  // Yedek sehir profil bilgilerini getir
   Future<CityProfile?> _getFallbackCityProfile(dynamic cityId) async {
-    // cityId'yi String'e dönüştür (int veya String olabilir)
+    // cityId'yi String'e donustur (int veya String olabilir)
     final String cityIdStr = cityId.toString();
-    print('Using fallback endpoint for city profile ID: $cityId');
+    print('Using fallback endpoint for city profile ID: $cityIdStr');
     try {
-      final response = await _client.get(Uri.parse('$baseUrl/cities/${cityId.toString()}/profile'));
+      final response = await _client.get(Uri.parse('$baseUrl/cities/$cityIdStr/profile'));
       
       if (response.statusCode == 200) {
         return CityProfile.fromJson(jsonDecode(response.body));
@@ -1840,7 +1838,7 @@ class ApiService {
     }
   }
   
-  // Yedek ilçe listesi yükleme (şehir ID'sine göre)
+  // Yedek ilce listesi yukleme (sehir ID'sine gore)
   Future<List<District>> _getFallbackDistrictsByCityId(String cityId) async {
     print('Using fallback endpoint for districts by city ID: $cityId');
     try {
@@ -1907,7 +1905,7 @@ class ApiService {
     }
   }
   
-  // Yedek ilçe detay yükleme
+  // Yedek ilce detay yukleme
   Future<District?> _getFallbackDistrictById(String id) async {
     try {
       final response = await _client.get(Uri.parse('$baseUrl/districts/$id'));
