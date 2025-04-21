@@ -126,12 +126,16 @@ class ApiService {
     }
   }
   
-  Future<User> register(String name, String email, String password, {String? cityId, String? districtId}) async {
+  Future<User> register(String name, String username, String email, String password, {String? cityId, String? districtId}) async {
+    print('Kayıt denemesi: $baseUrl/register');
+    print('Kayıt verileri: name=$name, username=$username, email=$email, cityId=$cityId, districtId=$districtId');
+    
     final response = await _client.post(
       Uri.parse('$baseUrl/register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'name': name,
+        'username': username,
         'email': email,
         'password': password,
         'city_id': cityId,

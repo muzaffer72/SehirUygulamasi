@@ -1,0 +1,28 @@
+    I  İlçe bilgileri alınıyor: https://sehir.muzaffersanli.com/api.php?endpoint=districts&city_id=55&api_key=440bf0009c749943b440f7f5c6c2fd26, sehirId: 55
+2025-04-22 01:05:51.048 14888-14888 flutter                 belediye.iletisim.merkezi            I  İlçe API yanıtı: 200
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  İlçe yanıtı: [{id: 918, name: HASANKEYF, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 65}, {id: 919, name: KOZLUK, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 14}, {id: 920, name: MERKEZ, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 11}, {id: 921, name: SASON, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 42}]
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  İlçe sayısı: 4
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District JSON içeriği: {id: 918, name: HASANKEYF, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 65}
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District JSON içeriği: {id: 918, name: HASANKEYF, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 65}
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District parsed - ID: 918, Name: HASANKEYF, CityID: 55
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District parsed - ID: 918, Name: HASANKEYF, CityID: 55
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District JSON içeriği: {id: 919, name: KOZLUK, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 14}
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District JSON içeriği: {id: 919, name: KOZLUK, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 14}
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District parsed - ID: 919, Name: KOZLUK, CityID: 55
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District parsed - ID: 919, Name: KOZLUK, CityID: 55
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District JSON içeriği: {id: 920, name: MERKEZ, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 11}
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District JSON içeriği: {id: 920, name: MERKEZ, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 11}
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District parsed - ID: 920, Name: MERKEZ, CityID: 55
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District parsed - ID: 920, Name: MERKEZ, CityID: 55
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District JSON içeriği: {id: 921, name: SASON, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 42}
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District JSON içeriği: {id: 921, name: SASON, city_id: 55, created_at: 2025-04-10 03:23:01.107079+03, problem_solving_rate: 42}
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District parsed - ID: 921, Name: SASON, CityID: 55
+2025-04-22 01:05:51.049 14888-14888 flutter                 belediye.iletisim.merkezi            I  District parsed - ID: 921, Name: SASON, CityID: 55
+2025-04-22 01:06:04.367 14888-14888 ViewRootIm...nActivity] belediye.iletisim.merkezi            I  ViewPostIme pointer 0
+2025-04-22 01:06:04.525 14888-14888 ViewRootIm...nActivity] belediye.iletisim.merkezi            I  ViewPostIme pointer 1
+2025-04-22 01:06:05.267 14888-14888 ViewRootIm...nActivity] belediye.iletisim.merkezi            I  ViewPostIme pointer 0
+2025-04-22 01:06:05.323 14888-14888 ViewRootIm...nActivity] belediye.iletisim.merkezi            I  ViewPostIme pointer 1
+2025-04-22 01:06:05.326 14888-14888 flutter                 belediye.iletisim.merkezi            I  Kayıt denemesi: https://sehir.muzaffersanli.com/api.php?endpoint=register&api_key=440bf0009c749943b440f7f5c6c2fd26
+2025-04-22 01:06:05.326 14888-14888 flutter                 belediye.iletisim.merkezi            I  Kayıt verileri: name=muzaffer sanli, username=null, email=muzaffer.sanli@alfa-norm.com, cityId=55, districtId=920
+2025-04-22 01:06:05.617 14888-14888 flutter                 belediye.iletisim.merkezi            I  Kayıt API yanıtı: 501
+2025-04-22 01:06:05.617 14888-14888 flutter                 belediye.iletisim.merkezi            I  Kayıt hatası: {"error":"Bu özellik henüz uygulanmadı"}
