@@ -74,16 +74,19 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
       home: authState.status == AuthStatus.authenticated 
           ? const HomeScreen() 
           : const LoginScreen(),
+      // Genel rotaları tanımlama
       routes: {
         '/home': (context) => const HomeScreen(),
         '/login': (context) => const LoginScreen(),
-        '/city_profile': (context) => const CityProfileScreen(cityId: '0'), // Geçici olarak 0 veriliyor, argümanlar ile değiştirilecek
-        '/district_profile': (context) => const DistrictProfileScreen(districtId: '0'), // Geçici olarak 0 veriliyor, argümanlar ile değiştirilecek
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/city_profile') {
           // Daha esnek giriş tipi kontrolü
           String cityId;
+          
+          // Debugging bilgisi
+          print("Şehir profili route argümanı: ${settings.arguments} (${settings.arguments.runtimeType})");
+          
           if (settings.arguments is String) {
             cityId = settings.arguments as String;
           } else if (settings.arguments is int) {
@@ -101,6 +104,10 @@ class _SikayetVarAppState extends ConsumerState<SikayetVarApp> {
         } else if (settings.name == '/district_profile') {
           // Daha esnek giriş tipi kontrolü
           String districtId;
+          
+          // Debugging bilgisi
+          print("İlçe profili route argümanı: ${settings.arguments} (${settings.arguments.runtimeType})");
+          
           if (settings.arguments is String) {
             districtId = settings.arguments as String;
           } else if (settings.arguments is int) {
