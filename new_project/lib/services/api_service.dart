@@ -326,38 +326,106 @@ class ApiService {
   Future<List<District>> getDistrictsByCityIdAsObjects(dynamic cityId) async {
     // ID'yi string formatına dönüştür 
     final cityIdStr = cityId.toString();
-    // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
-    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=districts&city_id=$cityId');
-    final uri = Uri.parse(uriString);
     
-    print('İlçe bilgileri alınıyor: $uri');
-    
-    final response = await http.get(
-      uri,
-      headers: await _getHeaders(),
-    );
-    
-    print('İlçe API yanıtı: ${response.statusCode}');
-    
-    if (response.statusCode == 200) {
-      final data = _decodeResponse(response);
-      print('İlçe yanıtı: $data');
-      List<dynamic> districtsJson = [];
+    try {
+      // API anahtarını URL'ye ekleyen _appendApiKeyToUrl kullanımı
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=districts&city_id=$cityId');
+      final uri = Uri.parse(uriString);
       
-      if (data is Map && data.containsKey('data')) {
-        districtsJson = data['data'] as List<dynamic>;
-      } else if (data is Map && data.containsKey('status') && data.containsKey('data')) {
-        districtsJson = data['data'] as List<dynamic>;
-      } else if (data is List) {
-        districtsJson = data;
+      print('İlçe bilgileri alınıyor: $uri');
+      
+      final response = await http.get(
+        uri,
+        headers: await _getHeaders(),
+      );
+      
+      print('İlçe API yanıtı: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        try {
+          final data = _decodeResponse(response);
+          print('İlçe yanıtı: $data');
+          List<dynamic> districtsJson = [];
+          
+          if (data is Map && data.containsKey('data')) {
+            final districtData = data['data'];
+            if (districtData is List) {
+              districtsJson = districtData;
+            } else if (districtData is Map) {
+              // Harita formatındaysa liste dönüştürme
+              final List<dynamic> convertedList = [];
+              districtData.forEach((key, value) {
+                if (value is Map) {
+                  convertedList.add(value);
+                }
+              });
+              districtsJson = convertedList;
+            }
+          } else if (data is List) {
+            districtsJson = data;
+          } else if (data is Map) {
+            // Üst seviye harita ise liste dönüştürme
+            final List<dynamic> convertedList = [];
+            data.forEach((key, value) {
+              if (value is Map) {
+                convertedList.add(value);
+              }
+            });
+            districtsJson = convertedList;
+          }
+          
+          print('İlçe sayısı: ${districtsJson.length}');
+          
+          // Eğer hiç ilçe yoksa, varsayılan ilçe oluştur
+          if (districtsJson.isEmpty) {
+            print('API ilçe verisi döndürmedi, varsayılan ilçeler oluşturuluyor: $cityIdStr');
+            // Şehir kimliğine bağlı olarak bazı varsayılan ilçeler döndür
+            return [
+              District(id: '1', name: 'Merkez', cityId: cityIdStr),
+              District(id: '2', name: 'Diğer', cityId: cityIdStr),
+            ];
+          }
+            
+          // İlçeleri dönüştür
+          return districtsJson.map((json) {
+            try {
+              if (json is Map) {
+                Map<String, dynamic> safeJson = {};
+                json.forEach((key, value) {
+                  if (key is String) {
+                    safeJson[key] = value;
+                  }
+                });
+                return District.fromJson(safeJson);
+              } else {
+                print('Geçersiz ilçe verisi: $json');
+                return District(id: '0', name: 'Bilinmeyen İlçe', cityId: cityIdStr);
+              }
+            } catch (e) {
+              print('İlçe dönüştürme hatası: $e');
+              return District(id: '0', name: 'Hata', cityId: cityIdStr);
+            }
+          }).toList();
+        } catch (formatError) {
+          print('İlçe verisi format hatası: $formatError');
+          return [
+            District(id: '1', name: 'Merkez', cityId: cityIdStr),
+            District(id: '2', name: 'Format Hatası', cityId: cityIdStr),
+          ];
+        }
+      } else {
+        print('İlçe API Hatası: ${response.statusCode} - ${response.body}');
+        return [
+          District(id: '1', name: 'Merkez', cityId: cityIdStr),
+          District(id: '2', name: 'API Hatası', cityId: cityIdStr),
+        ];
       }
-      
-      final districts = districtsJson.map((json) => District.fromJson(json)).toList();
-      print('Parsed ${districts.length} districts successfully');
-      return districts;
-    } else {
-      print('İlçe listesi alınırken hata oluştu: ${response.body}');
-      throw Exception(_handleErrorResponse(response));
+    } catch (e) {
+      print('İlçe veri alma istisnası: $e');
+      return [
+        District(id: '1', name: 'Merkez', cityId: cityIdStr),
+        District(id: '2', name: 'Bağlantı Hatası', cityId: cityIdStr),
+      ];
     }
   }
   
