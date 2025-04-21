@@ -155,7 +155,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String? phone,
     String? profileImageUrl,
     String? coverImageUrl,
-    int? cityId,
+    String? cityId,  // int? -> String? olarak değiştirildi
     String? districtId,
   }) async {
     try {

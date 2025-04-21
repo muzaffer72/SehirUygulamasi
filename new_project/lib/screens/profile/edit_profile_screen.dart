@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:belediye_iletisim_merkezi/models/user.dart';
+import 'package:belediye_iletisim_merkezi/models/city.dart';
+import 'package:belediye_iletisim_merkezi/models/district.dart';
 import 'package:belediye_iletisim_merkezi/providers/auth_provider.dart';
 import 'package:belediye_iletisim_merkezi/providers/city_provider.dart';
+import 'package:belediye_iletisim_merkezi/providers/api_service_provider.dart';
 import 'dart:io';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -79,25 +82,27 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     });
 
     try {
-      // In a real app, we would upload the avatar first if selected
-      // and then get the avatar URL from the server
+      // Profil resmi değiştiyse önce yükle - gerçek API entegrasyonu için hazırlık
+      String? profileImageUrl;
+      if (_selectedAvatar != null) {
+        // API üzerinden profil resmi yükleme işlemi gerçek projelerde burada yapılacak
+        // Şimdilik seçilen resmin lokasyonunu loglayalım
+        print('Yeni profil resmi yolunu yüklemek için: ${_selectedAvatar!.path}');
+        // Gerçek projede API'ye resim yükleyeceğiz, örnek:
+        // profileImageUrl = await ref.read(apiServiceProvider).uploadProfileImage(_selectedAvatar!.path);
+      }
       
-      // For now, we'll just simulate updating the user profile
-      final updatedUser = User(
-        id: widget.user.id,
-        email: widget.user.email,
+      // API üzerinden gerçekten profili güncelle
+      await ref.read(authProvider.notifier).updateProfile(
+        name: widget.user.name, // İsim düzenlenmeyecekse mevcut değeri gönder
         username: _usernameController.text.trim(),
-        avatar: _selectedAvatar != null ? 'new_avatar_url' : widget.user.avatar,
         bio: _bioController.text.trim(),
-        hiddenName: _hiddenNameController.text.trim().isEmpty ? null : _hiddenNameController.text.trim(),
-        cityId: _selectedCityId!,
-        districtId: _selectedDistrictId!,
-        contactInfo: _contactInfoController.text.trim(),
-        createdAt: widget.user.createdAt,
-        updatedAt: DateTime.now(),
+        email: widget.user.email, // Email düzenlenmeyecekse mevcut değeri gönder
+        phone: widget.user.phone, // Varsa gönder
+        profileImageUrl: profileImageUrl, // Resim değiştiyse yeni URL'yi gönder
+        cityId: _selectedCityId,
+        districtId: _selectedDistrictId,
       );
-
-      await ref.read(authControllerProvider.notifier).updateProfile(updatedUser);
       
       if (mounted) {
         Navigator.pop(context);
