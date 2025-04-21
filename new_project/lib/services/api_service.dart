@@ -796,18 +796,49 @@ class ApiService {
   Future<List<Comment>> getCommentsByPostId(dynamic postId) async {
     // ID'yi string formatına dönüştür
     final postIdStr = postId.toString();
-    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/comments');
+    
+    // Yeni API yapısı için URL'yi güncelle
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=comments&action=getByPostId&post_id=$postId');
+    final uri = Uri.parse(uriString);
+    
+    print('Fetching comments from: $uri');
     final response = await http.get(
-      url,
+      uri,
       headers: await _getHeaders(),
     );
     
+    print('Comments API response status: ${response.statusCode}');
+    
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final List<dynamic> commentsJson = data['data'] ?? [];
-      return commentsJson.map((json) => Comment.fromJson(json)).toList();
+      try {
+        // UTF-8 düzgün decodele
+        final data = _decodeResponse(response);
+        print('Comments API response data: $data');
+        
+        if (data == null) {
+          print('API returned null data for comments');
+          return [];
+        }
+        
+        List<dynamic> commentsJson = [];
+        
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          final commentsData = data['data'];
+          if (commentsData is List) {
+            commentsJson = commentsData;
+          }
+        } else if (data is List) {
+          commentsJson = data;
+        }
+        
+        return commentsJson.map((json) => Comment.fromJson(json)).toList();
+      } catch (formatError) {
+        print('Data format error in getCommentsByPostId: $formatError');
+        return [];
+      }
     } else {
-      throw Exception(_handleErrorResponse(response));
+      print('Error in getCommentsByPostId: ${response.statusCode} - ${response.body}');
+      return []; // Hata durumunda boş liste döndür
     }
   }
   
@@ -820,20 +851,58 @@ class ApiService {
     // ID'leri string formatına dönüştür
     final postIdStr = postId.toString();
     final parentIdStr = parentId != null ? parentId.toString() : null;
-    final url = Uri.parse('$baseUrl$apiPath/posts/$postId/comments');
+    
+    // Yeni API yapısı için URL'yi güncelle
+    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=comments&action=add');
+    final uri = Uri.parse(uriString);
+    
+    print('Adding comment via: $uri');
     final response = await http.post(
-      url,
+      uri,
       headers: await _getHeaders(),
       body: json.encode({
+        'post_id': postId,
         'content': content,
         'parent_id': parentId,
       }),
     );
     
-    if (response.statusCode == 201) {
-      final data = json.decode(response.body);
-      return Comment.fromJson(data['data']);
+    print('Add comment response status: ${response.statusCode}');
+    
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      try {
+        final data = _decodeResponse(response);
+        print('Add comment response data: $data');
+        
+        if (data == null) {
+          print('API returned null data for add comment');
+          throw Exception('Failed to add comment: Null response data');
+        }
+        
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          final commentData = data['data'];
+          if (commentData is Map<String, dynamic>) {
+            return Comment.fromJson(commentData);
+          }
+        } else if (data is Map<String, dynamic>) {
+          return Comment.fromJson(data);
+        }
+        
+        // Comment objesi oluşturamadıysan basit bir yorum objesi oluştur
+        print('Creating basic comment object from API response');
+        return Comment(
+          id: 0,
+          postId: int.parse(postIdStr),
+          userId: 0,
+          content: content,
+          createdAt: DateTime.now().toString(),
+        );
+      } catch (formatError) {
+        print('Data format error in addComment: $formatError');
+        throw Exception('Failed to parse comment data: $formatError');
+      }
     } else {
+      print('Error in addComment: ${response.statusCode} - ${response.body}');
       throw Exception(_handleErrorResponse(response));
     }
   }
