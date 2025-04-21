@@ -53,17 +53,20 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   
   // Zone uyumsuzluğunu önlemek için aynı zonda runApp çağrısı yapılıyor
-  _initializationZone!.runGuarded(() {
-    // Riverpod ile uygulamayı başlat
-    runApp(
-      ProviderScope(
-        overrides: [
-          // SharedPreferences sağlayıcısı
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
-        child: const BelediyeIletisimApp(),
-      ),
-    );
+  runZonedGuarded(() {
+    // Aynı zonda çalıştırıyoruz
+    _initializationZone!.run(() {
+      // Riverpod ile uygulamayı başlat
+      runApp(
+        ProviderScope(
+          overrides: [
+            // SharedPreferences sağlayıcısı
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: const BelediyeIletisimApp(),
+        ),
+      );
+    });
   }, (error, stack) {
     // Hata loglama işlemleri
     debugPrint('Kritik hata: $error');

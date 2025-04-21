@@ -124,12 +124,12 @@ class CityProfileScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        color: Colors.blue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.business_center,
-                        color: Theme.of(context).primaryColor,
+                        color: Colors.blue,
                         size: 20,
                       ),
                     ),
