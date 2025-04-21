@@ -1095,7 +1095,7 @@ class ApiService {
       name: 'Kullanıcı#$userIdInt',
       email: '',
       profileImageUrl: '',
-      cityId: 0,
+      cityId: '0', // String olarak değiştirildi
       districtId: '0',
       isVerified: false,
       createdAt: DateTime.now().toString(),
