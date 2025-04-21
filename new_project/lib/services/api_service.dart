@@ -857,57 +857,102 @@ class ApiService {
     }
   }
   
-  // Yorumları getir
+  // Yorumları getir - API'ye uygun olarak iyileştirildi
   Future<List<Comment>> getCommentsByPostId(dynamic postId) async {
     // ID'yi string formatına dönüştür
     final postIdStr = postId.toString();
     
-    // Yeni API yapısı için URL'yi güncelle
-    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=comments&action=getByPostId&post_id=$postId');
-    final uri = Uri.parse(uriString);
-    
-    print('Fetching comments from: $uri');
-    final response = await http.get(
-      uri,
-      headers: await _getHeaders(),
-    );
-    
-    print('Comments API response status: ${response.statusCode}');
-    
-    if (response.statusCode == 200) {
-      try {
-        // UTF-8 düzgün decodele
-        final data = _decodeResponse(response);
-        print('Comments API response data: $data');
-        
-        if (data == null) {
-          print('API returned null data for comments');
+    try {
+      // API yapısına uygun URL güncellendi
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=comments&post_id=$postIdStr');
+      final uri = Uri.parse(uriString);
+      
+      print('Fetching comments from: $uri');
+      final response = await http.get(
+        uri,
+        headers: await _getHeaders(),
+      );
+      
+      print('Comments API response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        try {
+          // UTF-8 düzgün decodele
+          final data = _decodeResponse(response);
+          print('Comments API response data: $data');
+          
+          if (data == null) {
+            print('API returned null data for comments');
+            return [];
+          }
+          
+          List<dynamic> commentsJson = [];
+          
+          if (data is Map<String, dynamic> && data.containsKey('data')) {
+            final commentsData = data['data'];
+            if (commentsData is List) {
+              commentsJson = commentsData;
+            } else if (commentsData is Map) {
+              print('Received unexpected map for comments data, trying to convert');
+              final List<dynamic> convertedList = [];
+              commentsData.forEach((key, value) {
+                if (value is Map) {
+                  convertedList.add(value);
+                }
+              });
+              commentsJson = convertedList;
+            }
+          } else if (data is List) {
+            commentsJson = data;
+          } else if (data is Map) {
+            // Eğer data bir map ise, içerisindeki herbir value bir yorum olabilir
+            final List<dynamic> convertedList = [];
+            data.forEach((key, value) {
+              if (value is Map) {
+                convertedList.add(value);
+              }
+            });
+            commentsJson = convertedList;
+          }
+          
+          print('Parsed ${commentsJson.length} comments');
+          final comments = commentsJson.map((json) {
+            try {
+              if (json is Map) {
+                final Map<String, dynamic> safeMap = {};
+                json.forEach((key, value) {
+                  if (key is String) {
+                    safeMap[key] = value;
+                  }
+                });
+                print('Converting comment: $safeMap');
+                return Comment.fromJson(safeMap);
+              } else {
+                print('Invalid comment data: $json');
+                throw Exception('Invalid comment format');
+              }
+            } catch (e) {
+              print('Failed to convert comment: $e');
+              throw e;
+            }
+          }).toList();
+          
+          return comments;
+        } catch (formatError) {
+          print('Data format error in getCommentsByPostId: $formatError');
           return [];
         }
-        
-        List<dynamic> commentsJson = [];
-        
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          final commentsData = data['data'];
-          if (commentsData is List) {
-            commentsJson = commentsData;
-          }
-        } else if (data is List) {
-          commentsJson = data;
-        }
-        
-        return commentsJson.map((json) => Comment.fromJson(json)).toList();
-      } catch (formatError) {
-        print('Data format error in getCommentsByPostId: $formatError');
-        return [];
+      } else {
+        print('Error in getCommentsByPostId: ${response.statusCode} - ${response.body}');
+        return []; // Hata durumunda boş liste döndür
       }
-    } else {
-      print('Error in getCommentsByPostId: ${response.statusCode} - ${response.body}');
+    } catch (e) {
+      print('Exception in getCommentsByPostId: $e');
       return []; // Hata durumunda boş liste döndür
     }
   }
   
-  // Yorum ekle
+  // Yorum ekle - API'ye uygun olarak iyileştirildi
   Future<Comment> addComment({
     required dynamic postId, 
     required String content,
@@ -917,58 +962,86 @@ class ApiService {
     final postIdStr = postId.toString();
     final parentIdStr = parentId != null ? parentId.toString() : null;
     
-    // Yeni API yapısı için URL'yi güncelle
-    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=comments&action=add');
-    final uri = Uri.parse(uriString);
-    
-    print('Adding comment via: $uri');
-    final response = await http.post(
-      uri,
-      headers: await _getHeaders(),
-      body: json.encode({
-        'post_id': postId,
+    try {
+      // API yapısına uygun URL güncellendi
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=comments&action=add&post_id=$postIdStr');
+      final uri = Uri.parse(uriString);
+      
+      // Json içeriğini hazırla
+      final Map<String, dynamic> commentData = {
         'content': content,
-        'parent_id': parentId,
-      }),
-    );
-    
-    print('Add comment response status: ${response.statusCode}');
-    
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      try {
-        final data = _decodeResponse(response);
-        print('Add comment response data: $data');
-        
-        if (data == null) {
-          print('API returned null data for add comment');
-          throw Exception('Failed to add comment: Null response data');
-        }
-        
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          final commentData = data['data'];
-          if (commentData is Map<String, dynamic>) {
-            return Comment.fromJson(commentData);
-          }
-        } else if (data is Map<String, dynamic>) {
-          return Comment.fromJson(data);
-        }
-        
-        // Comment objesi oluşturamadıysan basit bir yorum objesi oluştur
-        print('Creating basic comment object from API response');
-        return Comment(
-          id: "0",
-          postId: postIdStr,
-          userId: "0",
-          content: content,
-          createdAt: DateTime.now(),
-        );
-      } catch (formatError) {
-        print('Data format error in addComment: $formatError');
-        throw Exception('Failed to parse comment data: $formatError');
+      };
+      
+      // Üst yorum varsa ekle
+      if (parentId != null) {
+        commentData['parent_id'] = parentIdStr;
       }
-    } else {
-      print('Error in addComment: ${response.statusCode} - ${response.body}');
-      throw Exception(_handleErrorResponse(response));
+      
+      print('Adding comment via: $uri');
+      print('Comment data: $commentData');
+      
+      final response = await http.post(
+        uri,
+        headers: await _getHeaders(),
+        body: json.encode(commentData),
+      );
+      
+      print('Add comment response status: ${response.statusCode}');
+      
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        try {
+          final data = _decodeResponse(response);
+          print('Add comment response data: $data');
+          
+          if (data == null) {
+            print('API returned null data for add comment');
+            throw Exception('Failed to add comment: Null response data');
+          }
+          
+          Map<String, dynamic> commentJson = {};
+          
+          if (data is Map<String, dynamic> && data.containsKey('data')) {
+            final commentData = data['data'];
+            if (commentData is Map<String, dynamic>) {
+              commentJson = commentData;
+            }
+          } else if (data is Map<String, dynamic>) {
+            commentJson = data;
+          }
+          
+          if (commentJson.isNotEmpty) {
+            // API'den post_id ve user_id'yi alamamış olabiliriz, o durumda kenimiz ekleriz
+            if (!commentJson.containsKey('post_id')) {
+              commentJson['post_id'] = postIdStr;
+            }
+            
+            if (!commentJson.containsKey('content')) {
+              commentJson['content'] = content;
+            }
+            
+            return Comment.fromJson(commentJson);
+          }
+          
+          // Comment objesi oluşturamadıysan basit bir yorum objesi oluştur
+          print('Creating basic comment object from API response');
+          return Comment(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            postId: postIdStr,
+            userId: "0",
+            content: content,
+            createdAt: DateTime.now(),
+          );
+        } catch (formatError) {
+          print('Data format error in addComment: $formatError');
+          throw Exception('Failed to parse comment data: $formatError');
+        }
+      } else {
+        print('Error in addComment: ${response.statusCode} - ${response.body}');
+        throw Exception(_handleErrorResponse(response));
+      }
+    } catch (e) {
+      print('Exception in addComment: $e');
+      throw Exception('Failed to add comment: $e');
     }
   }
   
@@ -1015,27 +1088,24 @@ class ApiService {
         print('Error in getCityProfileById: ${response.statusCode} - ${response.body}');
         // Şehir bilgilerini getir, profil bulunamazsa
         final city = await getCityById(cityId);
-        if (city != null) {
-          // City'den CityProfile oluştur
-          return CityProfile(
-            id: city.id,
-            cityId: city.id,
-            name: city.name,
-            description: city.description,
-            logoUrl: city.logoUrl,
-            contactPhone: city.contactPhone,
-            contactEmail: city.contactEmail,
-            totalComplaints: 0,
-            solvedComplaints: 0, 
-            activeComplaints: 0,
-            satisfactionRate: 0,
-            responseRate: 0,
-            problemSolvingRate: 0,
-            averageResponseTime: 0,
-            solutionRate: -0.0
-          );
-        }
-        return null;
+        // City'den CityProfile oluştur
+        return CityProfile(
+          id: city.id,
+          cityId: city.id,
+          name: city.name,
+          description: city.description,
+          logoUrl: city.logoUrl,
+          contactPhone: city.contactPhone,
+          contactEmail: city.contactEmail,
+          totalComplaints: 0,
+          solvedComplaints: 0, 
+          activeComplaints: 0,
+          satisfactionRate: 0,
+          responseRate: 0,
+          problemSolvingRate: 0,
+          averageResponseTime: 0,
+          solutionRate: 0.0
+        );
       }
     } catch (e) {
       print('Exception in getCityProfileById: $e');
