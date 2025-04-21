@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/city_profile.dart';
+import '../../models/city_service.dart';
+import '../../models/city_project.dart';
 import '../../providers/city_profile_provider.dart';
 import '../../providers/post_provider.dart' as post_provider;
 import '../../widgets/post_card.dart';
@@ -44,6 +46,181 @@ class CityProfileScreen extends ConsumerWidget {
   }
   final String cityId;
   final String? cityName; // Opsiyonel parametre olarak şehir ismi
+  
+  // Şehir Hizmetleri bölümünü oluşturan widget
+  Widget _buildServicesSection(CityProfile city) {
+    List<CityService> services = [];
+    
+    // Api'den gelen hizmetleri işle veya mock veri oluştur
+    if (city.projects != null && city.projects!.isNotEmpty) {
+      // API'den gelen verileri CityService nesnelerine dönüştür
+      for (var serviceData in city.projects!) {
+        services.add(CityService(
+          id: serviceData['id'] is int ? serviceData['id'] : int.tryParse(serviceData['id'].toString()) ?? 0,
+          name: serviceData['name'] ?? 'Hizmet',
+          description: serviceData['description'],
+          type: serviceData['type'],
+          category: serviceData['category'],
+          iconUrl: serviceData['icon_url'],
+        ));
+      }
+    } else {
+      // Eğer veri yoksa örnek hizmetler oluştur
+      services = [
+        CityService(
+          id: 1,
+          name: 'Su ve Kanalizasyon Hizmetleri',
+          description: 'Şehrin temiz su dağıtımı ve kanalizasyon sistemi bakım hizmetleri',
+          type: 'active',
+          category: 'altyapı',
+        ),
+        CityService(
+          id: 2,
+          name: 'Çöp Toplama ve Temizlik',
+          description: 'Düzenli çöp toplama ve cadde temizleme hizmetleri',
+          type: 'active',
+          category: 'temizlik',
+        ),
+        CityService(
+          id: 3,
+          name: 'Toplu Taşıma',
+          description: 'Şehir içi otobüs ve minibüs hatları',
+          type: 'active',
+          category: 'ulaşım',
+        ),
+        CityService(
+          id: 4,
+          name: 'Park ve Bahçe Bakımı',
+          description: 'Şehirdeki park, bahçe ve yeşil alanların bakımı',
+          type: 'active',
+          category: 'park ve bahçeler',
+        ),
+      ];
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Belediye Hizmetleri',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Tüm hizmetleri göster (ileride eklenecek)
+                },
+                child: const Text('Tümünü Gör'),
+              ),
+            ],
+          ),
+          const Divider(),
+          const SizedBox(height: 8),
+          // Hizmet kartları
+          ...services.map((service) => _buildServiceCard(service)).toList(),
+        ],
+      ),
+    );
+  }
+  
+  // Şehir projeleri bölümünü oluşturan widget
+  Widget _buildProjectsSection(CityProfile city) {
+    List<CityProject> projects = [];
+    
+    // Api'den gelen projeleri işle veya mock veri oluştur
+    if (city.projects != null && city.projects!.isNotEmpty) {
+      // API'den gelen verileri CityProject nesnelerine dönüştür
+      for (var projectData in city.projects!) {
+        projects.add(CityProject(
+          id: projectData['id'] is int ? projectData['id'] : int.tryParse(projectData['id'].toString()) ?? 0,
+          name: projectData['name'] ?? 'Proje',
+          description: projectData['description'],
+          status: projectData['status'],
+          budget: projectData['budget'] is double ? projectData['budget'] : 
+                  double.tryParse(projectData['budget'].toString()),
+          startDate: projectData['start_date'] ?? projectData['startDate'],
+          endDate: projectData['end_date'] ?? projectData['endDate'],
+          imageUrl: projectData['image_url'] ?? projectData['imageUrl'],
+          location: projectData['location'],
+          completionRate: projectData['completion_rate'] is double ? projectData['completion_rate'] : 
+                          double.tryParse(projectData['completion_rate'].toString()),
+          projectManager: projectData['project_manager'] ?? projectData['projectManager'],
+        ));
+      }
+    } else {
+      // Eğer veri yoksa örnek projeler oluştur
+      projects = [
+        CityProject(
+          id: 1,
+          name: 'Şehir Merkezi Yenileme Projesi',
+          description: 'Şehir merkezindeki tarihi binaların restore edilmesi ve çevre düzenlemelerinin yapılması',
+          status: 'inProgress',
+          budget: 32500000,
+          startDate: '15 Mart 2025',
+          endDate: '20 Aralık 2025',
+          completionRate: 0.35,
+        ),
+        CityProject(
+          id: 2,
+          name: 'Akıllı Şehir Uygulamaları',
+          description: 'Şehir genelinde akıllı aydınlatma, akıllı ulaşım ve akıllı atık yönetimi sistemlerinin kurulması',
+          status: 'planned',
+          budget: 45000000,
+          startDate: '10 Eylül 2025',
+          endDate: '30 Haziran 2026',
+          completionRate: 0.0,
+        ),
+        CityProject(
+          id: 3,
+          name: 'Yeni Kültür Merkezi',
+          description: 'Modern mimari ile tasarlanmış, konser salonu, tiyatro sahnesi ve sergi alanları içeren çok amaçlı kültür merkezi',
+          status: 'completed',
+          budget: 25000000,
+          startDate: '5 Ocak 2024',
+          endDate: '20 Şubat 2025',
+          completionRate: 1.0,
+        ),
+      ];
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Belediye Projeleri',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Tüm projeleri göster (ileride eklenecek)
+                },
+                child: const Text('Tümünü Gör'),
+              ),
+            ],
+          ),
+          const Divider(),
+          const SizedBox(height: 8),
+          // Proje kartları
+          ...projects.map((project) => _buildProjectCard(project)).toList(),
+        ],
+      ),
+    );
+  }
 
   const CityProfileScreen({
     Key? key,
@@ -274,6 +451,16 @@ class CityProfileScreen extends ConsumerWidget {
             ),
           ),
           
+          // Şehir Hizmetleri
+          SliverToBoxAdapter(
+            child: _buildServicesSection(city),
+          ),
+          
+          // Şehir Projeleri
+          SliverToBoxAdapter(
+            child: _buildProjectsSection(city),
+          ),
+          
           // City posts
           postsAsync.when(
             data: (posts) {
@@ -337,5 +524,344 @@ class CityProfileScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+  
+  // Hizmet kartı widget
+  Widget _buildServiceCard(CityService service) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _getServiceIcon(service.category ?? ''),
+                    color: Colors.blue,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        service.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      if (service.category != null)
+                        Text(
+                          _formatCategory(service.category!),
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (service.type != null)
+                  _buildServiceStatusChip(service.type!),
+              ],
+            ),
+            if (service.description != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  service.description!,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Proje kartı widget
+  Widget _buildProjectCard(CityProject project) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Proje görseli (varsa)
+          if (project.imageUrl != null)
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+              child: Image.network(
+                project.imageUrl!,
+                width: double.infinity,
+                height: 150,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: double.infinity,
+                  height: 120,
+                  color: Colors.grey[300],
+                  child: const Center(
+                    child: Icon(Icons.image_not_supported, size: 30, color: Colors.grey),
+                  ),
+                ),
+              ),
+            ),
+          
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Durum ve bütçe
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (project.status != null)
+                      _buildProjectStatusChip(project.status!),
+                    if (project.budget != null)
+                      Text(
+                        _formatCurrency(project.budget!),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                  ],
+                ),
+                
+                // Proje adı
+                const SizedBox(height: 8),
+                Text(
+                  project.name,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                
+                // Proje açıklaması
+                if (project.description != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      project.description!,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                
+                // Başlangıç ve bitiş tarihleri
+                if (project.startDate != null || project.endDate != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${project.startDate ?? 'N/A'} - ${project.endDate ?? 'Devam ediyor'}',
+                          style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                // Tamamlanma oranı
+                if (project.completionRate != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tamamlanma: %${(project.completionRate! * 100).toStringAsFixed(0)}',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        LinearProgressIndicator(
+                          value: project.completionRate!,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey[300],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _getCompletionColor(project.completionRate!),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Hizmet tipi için chip widget
+  Widget _buildServiceStatusChip(String type) {
+    Color color;
+    String text;
+    
+    switch (type.toLowerCase()) {
+      case 'active':
+        color = Colors.green;
+        text = 'Aktif';
+        break;
+      case 'passive':
+        color = Colors.red;
+        text = 'Pasif';
+        break;
+      case 'planned':
+        color = Colors.orange;
+        text = 'Planlanan';
+        break;
+      default:
+        color = Colors.blue;
+        text = type;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  // Proje durumu için chip widget
+  Widget _buildProjectStatusChip(String status) {
+    Color color;
+    String text;
+    IconData icon;
+    
+    switch (status.toLowerCase()) {
+      case 'completed':
+      case 'tamamlandı':
+        color = Colors.green;
+        text = 'Tamamlandı';
+        icon = Icons.check_circle;
+        break;
+      case 'inprogress':
+      case 'in_progress':
+      case 'in-progress':
+      case 'devam ediyor':
+        color = Colors.blue;
+        text = 'Devam Ediyor';
+        icon = Icons.autorenew;
+        break;
+      case 'planned':
+      case 'planning':
+      case 'planlanan':
+        color = Colors.orange;
+        text = 'Planlanan';
+        icon = Icons.calendar_today;
+        break;
+      case 'cancelled':
+      case 'iptal':
+        color = Colors.red;
+        text = 'İptal Edildi';
+        icon = Icons.cancel;
+        break;
+      default:
+        color = Colors.grey;
+        text = status;
+        icon = Icons.info;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Hizmet kategorisine göre ikon seçimi
+  IconData _getServiceIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'altyapı':
+        return Icons.build;
+      case 'temizlik':
+        return Icons.cleaning_services;
+      case 'ulaşım':
+        return Icons.directions_bus;
+      case 'park ve bahçeler':
+        return Icons.park;
+      case 'eğitim':
+        return Icons.school;
+      case 'sağlık':
+        return Icons.local_hospital;
+      case 'kültür':
+        return Icons.theater_comedy;
+      case 'sosyal':
+        return Icons.people;
+      default:
+        return Icons.miscellaneous_services;
+    }
+  }
+
+  // Kategori adını formatlı gösterme
+  String _formatCategory(String category) {
+    // İlk harfleri büyük yap
+    return category.split(' ').map((word) {
+      if (word.isEmpty) return '';
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
+  // Para birimini formatlı gösterme
+  String _formatCurrency(double amount) {
+    if (amount >= 1000000) {
+      return '${(amount / 1000000).toStringAsFixed(1)} Milyon ₺';
+    } else if (amount >= 1000) {
+      return '${(amount / 1000).toStringAsFixed(1)} Bin ₺';
+    } else {
+      return '$amount ₺';
+    }
+  }
+
+  // Tamamlanma oranına göre renk seçimi
+  Color _getCompletionColor(double rate) {
+    if (rate >= 0.75) return Colors.green;
+    if (rate >= 0.5) return Colors.lightGreen;
+    if (rate >= 0.25) return Colors.orange;
+    return Colors.red;
   }
 }
