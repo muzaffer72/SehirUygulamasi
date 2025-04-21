@@ -124,19 +124,34 @@ function getCities() {
 // Veritabanından ilçeleri çek
 function getDistricts($cityId = null) {
     global $db;
-    $sql = "SELECT * FROM districts";
-    if ($cityId) {
-        $sql .= " WHERE city_id = " . intval($cityId);
-    }
-    $sql .= " ORDER BY name";
     
-    $result = $db->query($sql);
+    if ($cityId) {
+        // Parametreleri güvenli şekilde kullan
+        $stmt = $db->prepare("SELECT * FROM districts WHERE city_id = ? ORDER BY name");
+        // cityId'yi string veya int olarak kabul et
+        $cityIdParam = is_numeric($cityId) ? intval($cityId) : $cityId;
+        $stmt->bind_param('s', $cityIdParam); // String parametresi olarak gönder
+        $stmt->execute();
+        $result = $stmt->get_result();
+    } else {
+        // Tüm ilçeleri getir
+        $result = $db->query("SELECT * FROM districts ORDER BY name");
+    }
+    
     $districts = array();
     if ($result) {
+        // Sonuçları güvenli şekilde işle
         while ($row = $result->fetch_assoc()) {
             $districts[] = $row;
         }
+        
+        // İlçelerin sayısını debug için logla
+        error_log("Toplam " . count($districts) . " ilçe bulundu" . ($cityId ? " (Şehir ID: $cityId için)" : ""));
+    } else {
+        // Hata durumunu logla
+        error_log("İlçe sorgusunda hata: " . $db->error);
     }
+    
     return $districts;
 }
 
