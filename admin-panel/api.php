@@ -125,19 +125,92 @@ function getCities() {
 function getDistricts($cityId = null) {
     global $db;
     
-    if ($cityId) {
-        // Parametreleri güvenli şekilde kullan
-        $stmt = $db->prepare("SELECT * FROM districts WHERE city_id = ? ORDER BY name");
-        // cityId'yi string veya int olarak kabul et
-        $cityIdParam = is_numeric($cityId) ? intval($cityId) : $cityId;
-        $stmt->bind_param('s', $cityIdParam); // String parametresi olarak gönder
-        $stmt->execute();
-        $result = $stmt->get_result();
-    } else {
-        // Tüm ilçeleri getir
-        $result = $db->query("SELECT * FROM districts ORDER BY name");
+    // Ham sorgu ve parametreleri logla
+    error_log("getDistricts fonksiyonu çağrıldı, city_id parametresi: " . ($cityId === null ? 'NULL' : $cityId));
+    
+    // Sorgu öncesi veritabanı bağlantısını kontrol et
+    if (!$db) {
+        error_log("Veritabanı bağlantısı yok veya geçersiz!");
+        return [];
     }
     
+    // İlk olarak manuel olarak direkt SQL sorgusu logla
+    $testSql = "SELECT COUNT(*) as count FROM districts WHERE 1=1" . ($cityId ? " AND city_id = '$cityId'" : "");
+    $testResult = $db->query($testSql);
+    if ($testResult) {
+        $countRow = $testResult->fetch_assoc();
+        error_log("İlçe toplam sayısı: " . $countRow['count'] . ($cityId ? " (Şehir ID: $cityId için)" : " (tüm ilçeler)"));
+    } else {
+        error_log("Test sorgusu hata verdi: " . $db->error);
+    }
+    
+    // Şehir ID'si varsa, sorguyu hazırla (yedek sorgu dahil)
+    try {
+        if ($cityId) {
+            // İlk yöntem: Prepared Statement
+            error_log("Prepared statement kullanılıyor...");
+            $stmt = $db->prepare("SELECT * FROM districts WHERE city_id = ? ORDER BY name");
+            if (!$stmt) {
+                error_log("Prepared statement oluşturulamadı: " . $db->error);
+                // Alternatif yöntemi dene
+                $sql = "SELECT * FROM districts WHERE city_id = '" . $db->real_escape_string($cityId) . "' ORDER BY name";
+                error_log("Alternatif sorgu: $sql");
+                $result = $db->query($sql);
+            } else {
+                // cityId'yi string veya int olarak kabul et
+                $cityIdParam = is_numeric($cityId) ? $cityId : $cityId;
+                error_log("Parametre hazırlandı: $cityIdParam (tip: " . gettype($cityIdParam) . ")");
+                
+                // Parametre tipini belirle
+                $paramType = is_numeric($cityIdParam) ? 'i' : 's';
+                error_log("Parametre tipi: $paramType");
+                
+                $stmt->bind_param($paramType, $cityIdParam);
+                $success = $stmt->execute();
+                
+                if (!$success) {
+                    error_log("Sorgu çalıştırma hatası: " . $stmt->error);
+                    // Alternatif sorguyu dene
+                    $sql = "SELECT * FROM districts WHERE city_id = '" . $db->real_escape_string($cityId) . "' ORDER BY name";
+                    error_log("Alternatif sorgu çalıştırılıyor: $sql");
+                    $result = $db->query($sql);
+                } else {
+                    $result = $stmt->get_result();
+                }
+            }
+            
+            // Eğer hiçbir ilçe bulunamazsa, LIKE sorgusu dene
+            if ($result && $result->num_rows == 0) {
+                error_log("Tam eşleşmede ilçe bulunamadı, LIKE sorgusu deneniyor...");
+                $likeSql = "SELECT * FROM districts WHERE city_id LIKE '%" . $db->real_escape_string($cityId) . "%' ORDER BY name";
+                error_log("LIKE sorgusu: $likeSql");
+                $result = $db->query($likeSql);
+            }
+            
+            // Yine de bulunamazsa, tüm ilçeleri getir
+            if ($result && $result->num_rows == 0) {
+                error_log("LIKE sorgusu ile de ilçe bulunamadı. Veritabanındaki tüm ilçeleri kontrol etme...");
+                $allDistrictsSQL = "SELECT id, name, city_id FROM districts ORDER BY id LIMIT 30";
+                $allResult = $db->query($allDistrictsSQL);
+                if ($allResult) {
+                    error_log("Veritabanındaki ilk 30 ilçe:");
+                    while ($row = $allResult->fetch_assoc()) {
+                        error_log("ID: {$row['id']}, Name: {$row['name']}, City ID: {$row['city_id']}");
+                    }
+                }
+            }
+            
+        } else {
+            // Tüm ilçeleri getir
+            error_log("Tüm ilçeler getiriliyor");
+            $result = $db->query("SELECT * FROM districts ORDER BY name");
+        }
+    } catch (Exception $e) {
+        error_log("İlçe sorgusunda istisna: " . $e->getMessage());
+        $result = null;
+    }
+    
+    // Sonuçları işle
     $districts = array();
     if ($result) {
         // Sonuçları güvenli şekilde işle
@@ -417,18 +490,57 @@ function handleGet($endpoint, $id) {
             break;
             
         case 'districts':
+            // Gelen tüm parametreleri logla
+            error_log("Districts endpoint'ine istek: " . json_encode($_GET));
+            
             if ($id) {
                 // Tek ilçeyi getir
+                error_log("Tek ilçe getiriliyor, ID: $id");
                 $district = getDistrictById($id);
                 if ($district) {
+                    error_log("İlçe bulundu: " . json_encode($district));
                     sendResponse($district);
                 } else {
+                    error_log("İlçe bulunamadı: $id");
                     sendResponse(['error' => 'İlçe bulunamadı'], 404);
                 }
             } else {
                 // Tüm ilçeleri getir veya şehir filtresine göre getir
                 $cityId = $_GET['city_id'] ?? null;
+                
+                // API'nin farklı parametre formatlarını kontrol et
+                if (!$cityId) {
+                    // Diğer olası parametre isimlerini kontrol et
+                    foreach (['city', 'city-id', 'cityId', 'cityid', 'city_id'] as $possibleParam) {
+                        if (isset($_GET[$possibleParam])) {
+                            $cityId = $_GET[$possibleParam];
+                            error_log("Alternatif parametre ile şehir ID'si bulundu: $possibleParam = $cityId");
+                            break;
+                        }
+                    }
+                }
+                
+                // Veritabanından ilçeleri getir
+                error_log("İlçeler getiriliyor, şehir ID: " . ($cityId ? $cityId : "tümü"));
                 $districts = getDistricts($cityId);
+                
+                // Sonuçları logla ve döndür
+                error_log("Sonuç ilçe sayısı: " . count($districts));
+                if (count($districts) == 0) {
+                    error_log("UYARI: Hiç ilçe bulunamadı. Bu bir veri problemi olabilir!");
+                    
+                    // Bazı test verilerini loglayalım
+                    $testQuery = "SELECT city_id, COUNT(*) as count FROM districts GROUP BY city_id ORDER BY count DESC LIMIT 10";
+                    $testResult = $db->query($testQuery);
+                    if ($testResult) {
+                        error_log("En çok ilçesi olan 10 şehir:");
+                        while ($row = $testResult->fetch_assoc()) {
+                            error_log("Şehir ID: {$row['city_id']} - İlçe sayısı: {$row['count']}");
+                        }
+                    }
+                }
+                
+                // Sonuçları döndür
                 sendResponse($districts);
             }
             break;
