@@ -714,29 +714,69 @@ class ApiService {
   }
   
   // Şehir detayını getir
-  Future<City?> getCityById(dynamic cityId) async {
+  Future<City> getCityById(dynamic cityId) async {
     // ID'yi string formatına dönüştür
     final cityIdStr = cityId.toString();
-    // API anahtarını URL'ye ekle
-    final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=cities&id=$cityId');
-    final uri = Uri.parse(uriString);
-    
-    final response = await http.get(
-      uri,
-      headers: await _getHeaders(),
-    );
-    
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['data'] == null) return null;
-      return City.fromJson(data['data']);
-    } else {
-      throw Exception(_handleErrorResponse(response));
+    try {
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=cities&id=$cityId');
+      final uri = Uri.parse(uriString);
+      
+      print('Fetching city from: $uri');
+      final response = await http.get(
+        uri,
+        headers: await _getHeaders(),
+      );
+      
+      print('City API response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('City API response data: $data');
+        
+        if (data['data'] != null) {
+          return City.fromJson(data['data']);
+        } else if (data is Map<String, dynamic>) {
+          return City.fromJson(data);
+        } else {
+          // Geçici olarak varsayılan şehir nesnesi dön
+          return City(
+            id: cityIdStr,
+            name: 'Bilinmeyen Şehir',
+            description: '',
+            contactPhone: '',
+            contactEmail: '',
+            logoUrl: '',
+          );
+        }
+      } else {
+        print('Error in getCityById: ${response.statusCode} - ${response.body}');
+        // Varsayılan şehir nesnesi dön
+        return City(
+          id: cityIdStr,
+          name: 'Şehir Bulunamadı',
+          description: '',
+          contactPhone: '',
+          contactEmail: '',
+          logoUrl: '',
+        );
+      }
+    } catch (e) {
+      print('Exception in getCityById: $e');
+      // Hata durumunda varsayılan şehir nesnesi dön
+      return City(
+        id: cityIdStr,
+        name: 'Hata',
+        description: '',
+        contactPhone: '',
+        contactEmail: '',
+        logoUrl: '',
+      );
     }
   }
   
   // İlçe detayını getir
-  Future<District?> getDistrictById(dynamic districtId) async {
+  Future<District> getDistrictById(dynamic districtId) async {
     // ID'yi string formatına dönüştür
     final districtIdStr = districtId.toString();
     try {
@@ -744,22 +784,47 @@ class ApiService {
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=districts&id=$districtId');
       final uri = Uri.parse(uriString);
       
+      print('Fetching district from: $uri');
       final response = await http.get(
         uri,
         headers: await _getHeaders(),
       );
       
+      print('District API response status: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['data'] == null) return null;
-        return District.fromJson(data['data']);
+        print('District API response data: $data');
+        
+        if (data['data'] != null) {
+          return District.fromJson(data['data']);
+        } else if (data is Map<String, dynamic>) {
+          return District.fromJson(data);
+        } else {
+          // Varsayılan ilçe nesnesi dön
+          return District(
+            id: districtIdStr,
+            name: 'Bilinmeyen İlçe',
+            cityId: '0',
+          );
+        }
       } else {
         print('Error in getDistrictById: ${response.statusCode} - ${response.body}');
-        return null;
+        // Varsayılan ilçe nesnesi dön
+        return District(
+          id: districtIdStr,
+          name: 'İlçe Bulunamadı',
+          cityId: '0',
+        );
       }
     } catch (e) {
       print('Exception in getDistrictById: $e');
-      return null;
+      // Hata durumunda varsayılan ilçe nesnesi dön
+      return District(
+        id: districtIdStr,
+        name: 'Hata',
+        cityId: '0',
+      );
     }
   }
   
@@ -1530,138 +1595,6 @@ class ApiService {
     } catch (e) {
       print('Exception in submitSatisfaction: $e');
       return false;
-    }
-  }
-  
-  // ID'ye göre şehir bilgilerini getir
-  Future<City> getCityById(String cityId) async {
-    try {
-      // API anahtarını URL'ye ekle
-      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=cities&action=getById&id=$cityId');
-      final uri = Uri.parse(uriString);
-      
-      print('Fetching city from: $uri');
-      final response = await http.get(
-        uri,
-        headers: await _getHeaders(),
-      );
-      
-      print('City API response status: ${response.statusCode}');
-      
-      if (response.statusCode == 200) {
-        final data = _decodeResponse(response);
-        print('City API response data: $data');
-        
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          return City.fromJson(data['data']);
-        } else if (data is Map<String, dynamic>) {
-          return City.fromJson(data);
-        } else {
-          // Geçici olarak boş bir City nesnesi dön
-          return City(
-            id: cityId,
-            name: 'Bilinmeyen Şehir',
-            plateCode: '0',
-            description: '',
-            region: '',
-            population: 0,
-            latitude: 0,
-            longitude: 0,
-            logoUrl: '',
-            contactPhone: '',
-            contactEmail: '',
-          );
-        }
-      } else {
-        print('Error in getCityById: ${response.statusCode} - ${response.body}');
-        // Geçici olarak boş bir City nesnesi dön
-        return City(
-          id: cityId,
-          name: 'Şehir Bulunamadı',
-          plateCode: '0',
-          description: '',
-          region: '',
-          population: 0,
-          latitude: 0,
-          longitude: 0,
-          logoUrl: '',
-          contactPhone: '',
-          contactEmail: '',
-        );
-      }
-    } catch (e) {
-      print('Exception in getCityById: $e');
-      // Geçici olarak boş bir City nesnesi dön
-      return City(
-        id: cityId,
-        name: 'Hata',
-        plateCode: '0',
-        description: '',
-        region: '',
-        population: 0,
-        latitude: 0,
-        longitude: 0,
-        logoUrl: '',
-        contactPhone: '',
-        contactEmail: '',
-      );
-    }
-  }
-  
-  // ID'ye göre ilçe bilgilerini getir
-  Future<District> getDistrictById(String districtId) async {
-    try {
-      // API anahtarını URL'ye ekle
-      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=districts&action=getById&id=$districtId');
-      final uri = Uri.parse(uriString);
-      
-      print('Fetching district from: $uri');
-      final response = await http.get(
-        uri,
-        headers: await _getHeaders(),
-      );
-      
-      print('District API response status: ${response.statusCode}');
-      
-      if (response.statusCode == 200) {
-        final data = _decodeResponse(response);
-        print('District API response data: $data');
-        
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          return District.fromJson(data['data']);
-        } else if (data is Map<String, dynamic>) {
-          return District.fromJson(data);
-        } else {
-          // Geçici olarak boş bir District nesnesi dön
-          return District(
-            id: districtId,
-            cityId: '0',
-            name: 'Bilinmeyen İlçe',
-            population: 0,
-            postalCode: '0',
-          );
-        }
-      } else {
-        print('Error in getDistrictById: ${response.statusCode} - ${response.body}');
-        // Geçici olarak boş bir District nesnesi dön
-        return District(
-          id: districtId,
-          cityId: '0',
-          name: 'İlçe Bulunamadı',
-          population: 0,
-          postalCode: '0',
-        );
-      }
-    } catch (e) {
-      print('Exception in getDistrictById: $e');
-      // Geçici olarak boş bir District nesnesi dön
-      return District(
-        id: districtId,
-        cityId: '0',
-        name: 'Hata',
-        population: 0,
-        postalCode: '0',
-      );
     }
   }
 }

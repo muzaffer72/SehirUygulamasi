@@ -1,0 +1,57 @@
+Performing hot restart...
+Syncing files to device SM S918B...
+lib/services/api_service.dart:1537:16: Error: 'getCityById' is already declared in this scope.
+  Future<City> getCityById(String cityId) async {
+               ^^^^^^^^^^^
+lib/services/api_service.dart:717:17: Context: Previous declaration of 'getCityById'.
+  Future<City?> getCityById(dynamic cityId) async {
+                ^^^^^^^^^^^
+lib/services/api_service.dart:1612:20: Error: 'getDistrictById' is already declared in this scope.
+  Future<District> getDistrictById(String districtId) async {
+                   ^^^^^^^^^^^^^^^
+lib/services/api_service.dart:739:21: Context: Previous declaration of 'getDistrictById'.
+  Future<District?> getDistrictById(dynamic districtId) async {
+                    ^^^^^^^^^^^^^^^
+lib/services/api_service.dart:708:26: Error: Can't use 'getCityById' because it is declared more than once.
+      final city = await getCityById(cityId);
+                         ^
+lib/services/api_service.dart:952:28: Error: Can't use 'getCityById' because it is declared more than once.
+        final city = await getCityById(cityId);
+                           ^
+lib/services/api_service.dart:1564:13: Error: No named parameter with the name 'plateCode'.
+            plateCode: '0',
+            ^^^^^^^^^
+lib/models/city.dart:12:3: Context: Found this candidate, but the arguments don't match.
+  City({
+  ^^^^
+lib/services/api_service.dart:1581:11: Error: No named parameter with the name 'plateCode'.
+          plateCode: '0',
+          ^^^^^^^^^
+lib/models/city.dart:12:3: Context: Found this candidate, but the arguments don't match.
+  City({
+  ^^^^
+lib/services/api_service.dart:1598:9: Error: No named parameter with the name 'plateCode'.
+        plateCode: '0',
+        ^^^^^^^^^
+lib/models/city.dart:12:3: Context: Found this candidate, but the arguments don't match.
+  City({
+  ^^^^
+lib/services/api_service.dart:1640:13: Error: No named parameter with the name 'population'.
+            population: 0,
+            ^^^^^^^^^^
+lib/models/district.dart:6:3: Context: Found this candidate, but the arguments don't match.
+  District({
+  ^^^^^^^^
+lib/services/api_service.dart:1651:11: Error: No named parameter with the name 'population'.
+          population: 0,
+          ^^^^^^^^^^
+lib/models/district.dart:6:3: Context: Found this candidate, but the arguments don't match.
+  District({
+  ^^^^^^^^
+lib/services/api_service.dart:1662:9: Error: No named parameter with the name 'population'.
+        population: 0,
+        ^^^^^^^^^^
+lib/models/district.dart:6:3: Context: Found this candidate, but the arguments don't match.
+  District({
+  ^^^^^^^^
+Restarted application in 2.851ms.
