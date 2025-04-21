@@ -37,16 +37,14 @@ $pathParts = array_filter(explode('/', $path));
 $partyId = $pathParts[1] ?? null;
 
 try {
-    // Veritabanı bağlantısını kontrol et
-    if (!isset($pdo) || !$pdo) {
-        // Admin panel içinden çağrılıyorsa $conn kullan
-        global $conn;
-        if (isset($conn)) {
-            $pdo = $conn;
-        } else {
-            throw new Exception("Veritabanı bağlantısı kurulamadı");
-        }
+    // Veritabanı bağlantısını kullan
+    global $db;
+    if (!isset($db)) {
+        throw new Exception("Veritabanı bağlantısı kurulamadı");
     }
+    // PDO bağlantısı için adaptörü yükle
+    require_once '../includes/pg_pdo.php';
+    $pdo = get_pdo_connection();
 
     // Parti bilgilerini al
     if ($partyId !== null) {
@@ -59,8 +57,7 @@ try {
                 WHERE p.id = :id";
         
         $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':id', $partyId, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute([':id' => $partyId]);
         $party = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$party) {
@@ -76,8 +73,7 @@ try {
                 WHERE cpr.party_id = :party_id AND cpr.is_current = TRUE";
         
         $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':party_id', $partyId, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute([':party_id' => $partyId]);
         $party['cities'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Başarılı yanıt
@@ -94,10 +90,10 @@ try {
         
         $stmt = $pdo->query($sql);
         $parties = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Tablo yoksa veya veri yoksa, demo verileri döndür
+        
+        // Veri yoksa boş dizi döndür
         if (empty($parties)) {
-            $parties = getDemoParties();
+            $parties = [];
         }
         
         // Başarılı yanıt
@@ -107,90 +103,4 @@ try {
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['error' => 'Sunucu hatası', 'details' => $e->getMessage()]);
-}
-
-/**
- * Veritabanında parti verisi yoksa kullanılacak demo veriler
- */
-function getDemoParties() {
-    return [
-        [
-            'id' => 1,
-            'name' => 'Adalet ve Kalkınma Partisi',
-            'short_name' => 'AK Parti',
-            'color' => '#FFA500',
-            'logo_url' => 'assets/images/parties/akp.png',
-            'problem_solving_rate' => 68.5,
-            'city_count' => 45,
-            'district_count' => 562,
-            'complaint_count' => 12750,
-            'solved_count' => 8734,
-            'last_updated' => date('Y-m-d H:i:s')
-        ],
-        [
-            'id' => 2,
-            'name' => 'Cumhuriyet Halk Partisi',
-            'short_name' => 'CHP',
-            'color' => '#FF0000',
-            'logo_url' => 'assets/images/parties/chp.png',
-            'problem_solving_rate' => 71.2,
-            'city_count' => 22,
-            'district_count' => 234,
-            'complaint_count' => 8540,
-            'solved_count' => 6080,
-            'last_updated' => date('Y-m-d H:i:s')
-        ],
-        [
-            'id' => 3,
-            'name' => 'Milliyetçi Hareket Partisi',
-            'short_name' => 'MHP',
-            'color' => '#FF4500',
-            'logo_url' => 'assets/images/parties/mhp.png',
-            'problem_solving_rate' => 57.8,
-            'city_count' => 8,
-            'district_count' => 102,
-            'complaint_count' => 3240,
-            'solved_count' => 1872,
-            'last_updated' => date('Y-m-d H:i:s')
-        ],
-        [
-            'id' => 4,
-            'name' => 'İyi Parti',
-            'short_name' => 'İYİ Parti',
-            'color' => '#1E90FF',
-            'logo_url' => 'assets/images/parties/iyi.png',
-            'problem_solving_rate' => 63.4,
-            'city_count' => 3,
-            'district_count' => 25,
-            'complaint_count' => 980,
-            'solved_count' => 621,
-            'last_updated' => date('Y-m-d H:i:s')
-        ],
-        [
-            'id' => 5,
-            'name' => 'Demokratik Sol Parti',
-            'short_name' => 'DSP',
-            'color' => '#FF69B4',
-            'logo_url' => 'assets/images/parties/dsp.png',
-            'problem_solving_rate' => 52.1,
-            'city_count' => 1,
-            'district_count' => 5,
-            'complaint_count' => 320,
-            'solved_count' => 167,
-            'last_updated' => date('Y-m-d H:i:s')
-        ],
-        [
-            'id' => 6,
-            'name' => 'Yeniden Refah Partisi',
-            'short_name' => 'YRP',
-            'color' => '#006400',
-            'logo_url' => 'assets/images/parties/yrp.png',
-            'problem_solving_rate' => 44.3,
-            'city_count' => 0,
-            'district_count' => 3,
-            'complaint_count' => 85,
-            'solved_count' => 38,
-            'last_updated' => date('Y-m-d H:i:s')
-        ],
-    ];
 }
