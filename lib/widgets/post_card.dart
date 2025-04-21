@@ -353,24 +353,77 @@ class _PostCardState extends State<PostCard> {
                               ? '${district.name}, ${city.name}' 
                               : city.name;
                           
-                          return GestureDetector(
-                            onTap: () {
-                              // Şehir profil sayfasına yönlendirme
-                              Navigator.pushNamed(
-                                context,
-                                '/city_profile',
-                                arguments: int.parse(city.id),
-                              );
-                            },
-                            child: Text(
-                              locationText,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).colorScheme.primary,
-                                decoration: TextDecoration.underline,
+                          if (district != null) {
+                            // İlçe ve şehir bilgisi var, ikisine ayrı tıklama fonksiyonu ekle
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    // İlçe profil sayfasına yönlendirme
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/district_profile',
+                                      arguments: district.id.toString(),
+                                    );
+                                  },
+                                  child: Text(
+                                    district.name,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Theme.of(context).colorScheme.primary,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  ', ',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    // Şehir profil sayfasına yönlendirme
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/city_profile',
+                                      arguments: city.id.toString(),
+                                    );
+                                  },
+                                  child: Text(
+                                    city.name,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Theme.of(context).colorScheme.primary,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else {
+                            // Sadece şehir bilgisi var
+                            return GestureDetector(
+                              onTap: () {
+                                // Şehir profil sayfasına yönlendirme
+                                Navigator.pushNamed(
+                                  context,
+                                  '/city_profile',
+                                  arguments: city.id.toString(),
+                                );
+                              },
+                              child: Text(
+                                city.name,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  decoration: TextDecoration.underline,
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         },
                       ),
                     ],

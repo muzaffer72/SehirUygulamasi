@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/location/city_profile_screen.dart';
+import 'screens/location/district_profile_screen.dart';
 import 'utils/constants.dart';
 import 'utils/theme.dart';
 import 'services/firebase_notification_service.dart';

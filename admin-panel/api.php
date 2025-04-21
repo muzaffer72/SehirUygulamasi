@@ -179,23 +179,47 @@ function getDistricts($cityId = null) {
                 }
             }
             
-            // Eğer hiçbir ilçe bulunamazsa, LIKE sorgusu dene
-            if ($result && $result->num_rows == 0) {
-                error_log("Tam eşleşmede ilçe bulunamadı, LIKE sorgusu deneniyor...");
-                $likeSql = "SELECT * FROM districts WHERE city_id LIKE '%" . $db->real_escape_string($cityId) . "%' ORDER BY name";
-                error_log("LIKE sorgusu: $likeSql");
-                $result = $db->query($likeSql);
+            // Eğer hiçbir ilçe bulunamazsa, alternatif sorgular dene
+            if ($result && (is_object($result) && method_exists($result, 'num_rows') && $result->num_rows == 0) || 
+                (is_object($result) && !method_exists($result, 'num_rows')) || !$result) {
+                
+                error_log("Tam eşleşmede ilçe bulunamadı, PostgreSQL için alternatif sorgu deneniyor...");
+                
+                // PostgreSQL için int ve string tip dönüşümüne dikkat ederek sorgu yap
+                $alternativeSql = "SELECT * FROM districts WHERE city_id = " . intval($cityId) . " ORDER BY name";
+                error_log("Alternatif sorgu: $alternativeSql");
+                try {
+                    $result = $db->query($alternativeSql);
+                    if (!$result) {
+                        error_log("SQL Hatası: " . ($db->error ?? 'Bilinmeyen hata') . " - Sorgu: $alternativeSql");
+                    }
+                } catch (Exception $e) {
+                    error_log("Sorgu hatası: " . $e->getMessage());
+                }
             }
             
             // Yine de bulunamazsa, tüm ilçeleri getir
-            if ($result && $result->num_rows == 0) {
-                error_log("LIKE sorgusu ile de ilçe bulunamadı. Veritabanındaki tüm ilçeleri kontrol etme...");
-                $allDistrictsSQL = "SELECT id, name, city_id FROM districts ORDER BY id LIMIT 30";
+            if ($result && (
+                (is_object($result) && method_exists($result, 'num_rows') && $result->num_rows == 0) || 
+                (is_object($result) && !method_exists($result, 'num_rows'))
+               )) {
+                error_log("Alternatif sorgu ile de ilçe bulunamadı. Veritabanındaki tüm ilçeleri kontrol etme...");
+                $allDistrictsSQL = "SELECT id, name, city_id FROM districts WHERE city_id = " . intval($cityId) . " ORDER BY id LIMIT 30";
                 $allResult = $db->query($allDistrictsSQL);
                 if ($allResult) {
-                    error_log("Veritabanındaki ilk 30 ilçe:");
+                    $tempRows = [];
                     while ($row = $allResult->fetch_assoc()) {
+                        $tempRows[] = $row;
                         error_log("ID: {$row['id']}, Name: {$row['name']}, City ID: {$row['city_id']}");
+                    }
+                    error_log("Şehir ID: $cityId için ilçe sayısı: " . count($tempRows));
+                    
+                    // Eğer bu sorguda veriler bulunursa, bunları kullan
+                    if (count($tempRows) > 0) {
+                        $result = $allResult;
+                        // Sonucu başa sarmak için yeniden sorgu yapmak gerekebilir
+                        $allResult = $db->query($allDistrictsSQL);
+                        $result = $allResult;
                     }
                 }
             }
@@ -279,7 +303,23 @@ if (empty($endpoint) && isset($_SERVER['PATH_INFO'])) {
     $endpoint = $request[0] ?? null;
     $id = $request[1] ?? null;
 } else {
-    $id = $_GET['id'] ?? ($_GET['post_id'] ?? ($_GET['user_id'] ?? ($_GET['city_id'] ?? ($_GET['survey_id'] ?? null))));
+    // Burada parametre önceliklerini endpoint'e göre ayarla
+    if ($endpoint == 'districts' && isset($_GET['city_id'])) {
+        // districts endpoint'i için city_id parametresi varsa, id parametresini yoksay
+        $id = isset($_GET['id']) ? $_GET['id'] : null;
+        // city_id parametresi için özel mantık, bu durumda hata ayıkla ve id'yi NULL yap
+        error_log("districts için city_id={$_GET['city_id']} parametresi kullanılıyor, id parametresi: " . ($id ? $id : "NULL"));
+        
+        // Eğer hem id hem city_id varsa, id'yi özel olarak saklarız ve id'yi null yaparız
+        if ($id) {
+            $original_id = $id;
+            $id = null;
+            error_log("Hem id hem city_id var, öncelik city_id'ye verildi. Orijinal id: $original_id");
+        }
+    } else {
+        // Diğer endpoint'ler için normal parametre öncelikleri
+        $id = $_GET['id'] ?? ($_GET['post_id'] ?? ($_GET['user_id'] ?? ($_GET['city_id'] ?? ($_GET['survey_id'] ?? null))));
+    }
 }
 
 // Debug bilgisi ekle
