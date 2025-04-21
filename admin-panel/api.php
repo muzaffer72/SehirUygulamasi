@@ -180,8 +180,28 @@ function getDistricts($cityId = null) {
             }
             
             // Eğer hiçbir ilçe bulunamazsa, alternatif sorgular dene
-            if ($result && (is_object($result) && method_exists($result, 'num_rows') && $result->num_rows == 0) || 
-                (is_object($result) && !method_exists($result, 'num_rows')) || !$result) {
+            // PostgreSQL için güvenli kontrol: num_rows özelliği olmayabilir
+            $rowFound = false;
+            if ($result && is_object($result)) {
+                // Sonucu kaydetmeden bir satır okumayı dene
+                $testRow = $result->fetch_assoc();
+                // Eğer satır bulunamazsa, alternatif sorguları dene
+                if (!$testRow) {
+                    $rowFound = false;
+                    // Sonuçları başa sar (bazı sürücüler bu fonksiyonu desteklemiyor olabilir)
+                    if (method_exists($result, 'data_seek')) {
+                        @$result->data_seek(0);
+                    }
+                } else {
+                    $rowFound = true;
+                    // Sonuçları başa sar
+                    if (method_exists($result, 'data_seek')) {
+                        @$result->data_seek(0);
+                    }
+                }
+            }
+            
+            if (!$rowFound) {
                 
                 error_log("Tam eşleşmede ilçe bulunamadı, PostgreSQL için alternatif sorgu deneniyor...");
                 
@@ -199,10 +219,21 @@ function getDistricts($cityId = null) {
             }
             
             // Yine de bulunamazsa, tüm ilçeleri getir
-            if ($result && (
-                (is_object($result) && method_exists($result, 'num_rows') && $result->num_rows == 0) || 
-                (is_object($result) && !method_exists($result, 'num_rows'))
-               )) {
+            // PostgreSQL için güvenli kontrol: Sonuçları test et
+            $hasAnyRows = false;
+            if ($result && is_object($result)) {
+                // Bir satır okumayı dene
+                $testRow = $result->fetch_assoc();
+                if ($testRow) {
+                    $hasAnyRows = true;
+                    // Sonuçları başa sar (reset)
+                    if (method_exists($result, 'data_seek')) {
+                        @$result->data_seek(0);
+                    }
+                }
+            }
+            
+            if ($result && !$hasAnyRows) {
                 error_log("Alternatif sorgu ile de ilçe bulunamadı. Veritabanındaki tüm ilçeleri kontrol etme...");
                 $allDistrictsSQL = "SELECT id, name, city_id FROM districts WHERE city_id = " . intval($cityId) . " ORDER BY id LIMIT 30";
                 $allResult = $db->query($allDistrictsSQL);
@@ -238,15 +269,17 @@ function getDistricts($cityId = null) {
     $districts = array();
     if ($result) {
         // Sonuçları güvenli şekilde işle
+        $rowCount = 0;
         while ($row = $result->fetch_assoc()) {
             $districts[] = $row;
+            $rowCount++;
         }
         
         // İlçelerin sayısını debug için logla
-        error_log("Toplam " . count($districts) . " ilçe bulundu" . ($cityId ? " (Şehir ID: $cityId için)" : ""));
+        error_log("Toplam " . $rowCount . " ilçe bulundu" . ($cityId ? " (Şehir ID: $cityId için)" : ""));
     } else {
         // Hata durumunu logla
-        error_log("İlçe sorgusunda hata: " . $db->error);
+        error_log("İlçe sorgusunda hata: " . ($db->error ?? 'Bilinmeyen hata'));
     }
     
     return $districts;
