@@ -891,11 +891,11 @@ class ApiService {
         // Comment objesi oluşturamadıysan basit bir yorum objesi oluştur
         print('Creating basic comment object from API response');
         return Comment(
-          id: 0,
-          postId: int.parse(postIdStr),
-          userId: 0,
+          id: "0",
+          postId: postIdStr,
+          userId: "0",
           content: content,
-          createdAt: DateTime.now().toString(),
+          createdAt: DateTime.now(),
         );
       } catch (formatError) {
         print('Data format error in addComment: $formatError');
