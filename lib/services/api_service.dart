@@ -1677,7 +1677,7 @@ class ApiService {
     }
   }
   
-  // Bu metod artık yukarıda tanımlandı, buradaki tanımlama çıkarıldı
+  // Bu metod yukarida tanimlandi, buradaki tanim cikarildi
   
   // Districts
   Future<List<District>> getDistricts() async {
@@ -2175,14 +2175,14 @@ class ApiService {
     }
   }
   
-  // Gelişmiş memnuniyet derecesi gönderme metodu - V2
-  // İçeride kullanım için, istemcilerden submitSatisfactionResponse kullanmaları beklenir
+  // Gelismis memnuniyet derecesi gonderme metodu - V2
+  // Iceride kullanim icin, istemcilerden submitSatisfactionResponse kullanmalari beklenir
   Future<bool> submitSatisfactionRatingV2(dynamic postId, int rating) async {
-    print('submitSatisfactionRatingV2 - ideal olan submitSatisfactionResponse kullanımıdır');
+    print('submitSatisfactionRatingV2 - Use submitSatisfactionResponse instead');
     final token = await _getToken();
     
     try {
-      // postId'yi String'e dönüştür (int veya String olabilir)
+      // postId'yi String'e donustur (int veya String olabilir)
       final String postIdStr = postId.toString();
       
       final response = await _client.post(
@@ -2466,7 +2466,7 @@ class ApiService {
         return false;
       }
       
-      // postId ve userId'yi String'e dönüştür (int veya String olabilir)
+      // postId ve userId'yi String'e donustur (int veya String olabilir)
       final String postIdStr = postId.toString();
       final String userIdStr = userId.toString();
       
