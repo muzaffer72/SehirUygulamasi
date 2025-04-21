@@ -51,7 +51,6 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node api-connect.js"
-waitForPort = 9000
 
 [[workflows.workflow]]
 name = "Mobil Görünüm"

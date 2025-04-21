@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-  <circle cx="100" cy="100" r="90" fill="#00BFFF" />
-  <circle cx="100" cy="100" r="75" fill="white" />
-  <path d="M80,60 L80,140 M120,60 L120,140" stroke="#00BFFF" stroke-width="12" fill="none" stroke-linecap="round" />
-  <path d="M80,60 L120,60 M80,140 L120,140" stroke="#00BFFF" stroke-width="12" fill="none" stroke-linecap="round" />
-  <text x="100" y="100" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#00BFFF">İYİ</text>
-</svg>

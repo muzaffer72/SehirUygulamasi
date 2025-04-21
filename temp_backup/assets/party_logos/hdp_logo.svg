@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-  <circle cx="100" cy="100" r="90" fill="#800080" />
-  <circle cx="100" cy="100" r="75" fill="white" />
-  <text x="100" y="115" font-family="Arial, sans-serif" font-size="38" font-weight="bold" text-anchor="middle" fill="#800080">HDP</text>
-  <path d="M60,70 L140,70" stroke="#800080" stroke-width="8" fill="none" stroke-linecap="round" />
-  <path d="M60,130 L140,130" stroke="#800080" stroke-width="8" fill="none" stroke-linecap="round" />
-</svg>
