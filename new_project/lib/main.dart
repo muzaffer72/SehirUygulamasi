@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:async' show Zone;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -27,15 +28,21 @@ import 'providers/auth_provider.dart';
 // Yükleme durumu için provider
 final isLoadingProvider = StateProvider<bool>((ref) => false);
 
+// Zone uyumsuzluğu hatasını çözmek için bu değişken tanımlanıyor
+Zone? _initializationZone;
+
 void main() async {
-  // Flutter bağlamını başlat
-  WidgetsFlutterBinding.ensureInitialized();
+  // Önce mevcut zonu kaydet
+  _initializationZone = Zone.current;
+  
+  // Aynı zonda Flutter bağlamını başlat
+  _initializationZone!.run(() {
+    WidgetsFlutterBinding.ensureInitialized();
+  });
   
   // Timeago kütüphanesini Türkçe dil desteği ile yapılandır
   configureTimeAgo();
   
-  // Hata yakalama için global işleyici
-  // Zone mismatch hatasını önlemek için ensureInitialized ve runApp aynı zone'da olmalı
   // Firebase servislerini başlat
   await FirebaseService.initialize();
   
@@ -45,8 +52,8 @@ void main() async {
   // SharedPreferences instance oluştur
   final prefs = await SharedPreferences.getInstance();
   
-  // Zone hatası için: runZonedGuarded ve runApp aynı zonda olmalı
-  runZonedGuarded(() {
+  // Zone uyumsuzluğunu önlemek için aynı zonda runApp çağrısı yapılıyor
+  _initializationZone!.runGuarded(() {
     // Riverpod ile uygulamayı başlat
     runApp(
       ProviderScope(
