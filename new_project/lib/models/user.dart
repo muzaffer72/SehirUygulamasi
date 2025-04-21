@@ -7,7 +7,7 @@ class User {
   final String? phone;
   final String? profileImageUrl;
   final String? coverImageUrl;
-  final int? cityId;
+  final String? cityId; // String tipine dönüştürüldü, API tutarlılığı için
   final String? cityName;
   final String? districtId;
   final String? districtName;
@@ -53,7 +53,7 @@ class User {
       phone: json['phone'],
       profileImageUrl: json['profile_image_url'],
       coverImageUrl: json['cover_image_url'],
-      cityId: json['city_id'] is String ? int.parse(json['city_id']) : json['city_id'],
+      cityId: json['city_id']?.toString(),
       cityName: json['city_name'],
       districtId: json['district_id']?.toString(),
       districtName: json['district_name'],
@@ -102,7 +102,7 @@ class User {
     String? phone,
     String? profileImageUrl,
     String? coverImageUrl,
-    int? cityId,
+    String? cityId, // int -> String tipine dönüştürüldü
     String? cityName,
     String? districtId,
     String? districtName,
