@@ -423,7 +423,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SafeSingleTi
           name: name,
           email: email,
           password: password,
-          cityId: int.tryParse(_selectedCityId ?? "0") ?? 0,
+          cityId: _selectedCityId ?? "0",
           districtId: _selectedDistrictId ?? "",
         );
         

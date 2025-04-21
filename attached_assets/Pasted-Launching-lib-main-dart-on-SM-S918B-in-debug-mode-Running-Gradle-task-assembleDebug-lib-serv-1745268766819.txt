@@ -1,0 +1,45 @@
+Launching lib\main.dart on SM S918B in debug mode...
+Running Gradle task 'assembleDebug'...
+lib/services/api_service.dart:406:59: Error: The non-ASCII character '�' (U+011F) can't be used in identifiers, only in strings and comments.
+Try using an US-ASCII letter, a digit, '_' (an underscore), or '$' (a dollar sign).
+                    print('�l�e i�in �ehir ID'si uyumsuzlu�u: Beklenen $cityIdStr, API'den gelen ${jsonCityId.toString()}');
+                                                          ^
+lib/screens/profile/profile_screen.dart:426:56: Error: The argument type 'int' can't be assigned to the parameter type 'String'.
+          cityId: int.tryParse(_selectedCityId ?? "0") ?? 0,
+                                                       ^
+lib/services/api_service.dart:406:47: Error: Expected ',' before this.
+                    print('�l�e i�in �ehir ID'si uyumsuzlu�u: Beklenen $cityIdStr, API'den gelen ${jsonCityId.toString()}');
+                                              ^^
+lib/services/api_service.dart:406:50: Error: Expected ',' before this.
+                    print('�l�e i�in �ehir ID'si uyumsuzlu�u: Beklenen $cityIdStr, API'den gelen ${jsonCityId.toString()}');
+                                                 ^^^^^^^^^^^
+lib/services/api_service.dart:406:72: Error: Expected ',' before this.
+                    print('�l�e i�in �ehir ID'si uyumsuzlu�u: Beklenen $cityIdStr, API'den gelen ${jsonCityId.toString()}');
+                                                                       ^^^^^^^^^^
+lib/services/api_service.dart:406:87: Error: Expected ',' before this.
+                    print('�l�e i�in �ehir ID'si uyumsuzlu�u: Beklenen $cityIdStr, API'den gelen ${jsonCityId.toString()}');
+                                                                                      ^^^^^^^^^^^
+lib/services/api_service.dart:406:26: Error: Too many positional arguments: 1 allowed, but 5 found.
+Try removing the extra positional arguments.
+                    print('�l�e i�in �ehir ID'si uyumsuzlu�u: Beklenen $cityIdStr, API'den gelen ${jsonCityId.toString()}');
+                         ^
+org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/core/print.dart:19:6: Context: Found this candidate, but the arguments don't match.
+void print(Object? object) {
+     ^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter29\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BU�LD FAILED in 19s
+Error: Gradle task assembleDebug failed with exit code 1

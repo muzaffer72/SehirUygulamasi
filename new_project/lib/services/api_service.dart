@@ -403,7 +403,7 @@ class ApiService {
                 if (safeJson.containsKey('city_id')) {
                   var jsonCityId = safeJson['city_id'];
                   if (jsonCityId.toString() != cityIdStr) {
-                    print('İlçe için şehir ID'si uyumsuzluğu: Beklenen $cityIdStr, API'den gelen ${jsonCityId.toString()}');
+                    print('Ilce icin sehir ID uyumsuzlugu: Beklenen $cityIdStr, API gelen ${jsonCityId.toString()}');
                     // API'nin döndürdüğü şehir ID'sini kullanmak yerine bizim gönderdiğimiz ID'yi kullan
                     safeJson['city_id'] = cityIdStr;
                   }
