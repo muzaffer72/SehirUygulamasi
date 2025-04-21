@@ -39,7 +39,26 @@ function checkApiKey() {
     $stmt->execute();
     $result = $stmt->get_result();
     
-    if (pg_num_rows($result) === 0) {
+    // PostgreSQL veya MySQL uyumlu num_rows kontrolü
+    $rowCount = 0;
+    if (method_exists($result, 'num_rows')) {
+        $rowCount = $result->num_rows; // MySQL yöntemi
+    } else if (function_exists('pg_num_rows') && get_class($result) === 'PgSql\Result') {
+        $rowCount = pg_num_rows($result); // PostgreSQL yöntemi
+    } else {
+        // Manuel sayım yöntemi
+        $temp = [];
+        while ($row = $result->fetch_assoc()) {
+            $temp[] = $row;
+        }
+        $rowCount = count($temp);
+        // İmleci başa sar (eğer destekleniyorsa)
+        if (method_exists($result, 'data_seek')) {
+            $result->data_seek(0);
+        }
+    }
+    
+    if ($rowCount === 0) {
         // Statik anahtar kontrolü - geçiş dönemi için
         $staticValidKeys = [
             '440bf0009c749943b440f7f5c6c2fd26' // Kullanıcının sağladığı API anahtarı
@@ -73,7 +92,21 @@ if (!$testMode) {
 // Yardımcı fonksiyonlar
 function sendResponse($data, $statusCode = 200) {
     http_response_code($statusCode);
-    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    
+    // Çıktı arabelleğini temizle - önceki hata mesajları varsa kaldır
+    if (ob_get_length()) ob_clean();
+    
+    // JSON_UNESCAPED_UNICODE ile karakterler korunur, JSON_THROW_ON_ERROR hata kontrolü sağlar
+    try {
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        echo $json;
+    } catch (Exception $e) {
+        // JSON kodlama hatası durumunda
+        error_log('JSON kodlama hatası: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'Sunucu yanıtı işlenemedi'], JSON_UNESCAPED_UNICODE);
+    }
+    
     exit;
 }
 
