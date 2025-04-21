@@ -33,6 +33,12 @@ class Post {
   final String? username;
   final String? profileImageUrl;
   
+  // Ek bilgiler - şehir, ilçe, kategori adları
+  final String? cityName;     // Şehir adı
+  final String? districtName; // İlçe adı
+  final String? categoryName; // Kategori adı
+  final String? userEmail;    // Kullanıcı e-postası
+  
   // Widget'lar için getter'lar
   int get likeCount => likes;
   int get highlightCount => highlights;
@@ -48,6 +54,12 @@ class Post {
   
   // Memnuniyet puanı verilebilir mi
   bool get canRateSatisfaction => isSolved && !hasSatisfactionRating;
+  
+  // Konum bilgisi var mı kontrolü
+  bool get hasLocationInfo => cityId != null || cityName != null;
+  
+  // Kullanıcı bilgisi var mı kontrolü
+  bool get hasUserInfo => userId != "0" && (username != null || userEmail != null);
 
   Post({
     required this.id,
@@ -69,6 +81,10 @@ class Post {
     this.satisfactionRating,
     this.username,
     this.profileImageUrl,
+    this.cityName,
+    this.districtName,
+    this.categoryName,
+    this.userEmail,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -215,6 +231,24 @@ class Post {
     }
     
     try {
+      // Şehir ve ilçe adı bilgilerini kontrol et
+      final String? cityName = data['city_name'] as String?;
+      final String? districtName = data['district_name'] as String?;
+      final String? categoryName = data['category_name'] as String?;
+      
+      // Kullanıcı bilgilerini kontrol et
+      String? username = data['username'] as String?;
+      // Eğer username değeri null ise, user_name veya user_username alanlarını kontrol et
+      if (username == null) {
+        username = data['user_name'] as String?;
+        if (username == null) {
+          username = data['user_username'] as String?;
+        }
+      }
+      
+      // Kullanıcı e-posta bilgisini kontrol et
+      final String? userEmail = data['user_email'] as String?;
+      
       return Post(
         id: (data['id'] ?? '0').toString(),
         title: data['title'] ?? 'Başlıksız Gönderi',
@@ -242,8 +276,12 @@ class Post {
             : data['satisfaction_score'] != null
                 ? int.tryParse(data['satisfaction_score'].toString())
                 : null,
-        username: data['username'],
+        username: username,
         profileImageUrl: data['profile_image_url'],
+        cityName: cityName,
+        districtName: districtName,
+        categoryName: categoryName,
+        userEmail: userEmail,
       );
     } catch (e) {
       print('Error parsing Post from JSON: $e');
@@ -312,6 +350,12 @@ class Post {
       'image_urls': imageUrls,
       'video_url': videoUrl,
       'satisfaction_rating': satisfactionRating,
+      'username': username,
+      'profile_image_url': profileImageUrl,
+      'city_name': cityName,
+      'district_name': districtName,
+      'category_name': categoryName,
+      'user_email': userEmail,
     };
     
     // Admin panel formatı için ek alanlar ekle
@@ -352,6 +396,10 @@ class Post {
     int? satisfactionRating,
     String? username,
     String? profileImageUrl,
+    String? cityName,
+    String? districtName,
+    String? categoryName,
+    String? userEmail,
   }) {
     return Post(
       id: id ?? this.id,
@@ -373,6 +421,10 @@ class Post {
       satisfactionRating: satisfactionRating ?? this.satisfactionRating,
       username: username ?? this.username,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      cityName: cityName ?? this.cityName,
+      districtName: districtName ?? this.districtName,
+      categoryName: categoryName ?? this.categoryName,
+      userEmail: userEmail ?? this.userEmail,
     );
   }
 }
