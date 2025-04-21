@@ -1,0 +1,111 @@
+Syncing files to device SM S918B...
+lib/services/api_service.dart:1098:15: Error: The argument type 'int' can't be assigned to the parameter type 'String?'.
+      cityId: 0,
+              ^
+Restarted application in 2.770ms.
+
+======== Exception caught by widgets library =======================================================
+The following _TypeError was thrown building ProfileScreen(dirty, dependencies: [InheritedCupertinoTheme, UncontrolledProviderScope, _InheritedTheme, _LocalizationsScope-[GlobalKey#b217f]], state: _ProfileScreenState#45a8e(_tabController: null)):
+type 'int' is not a subtype of type 'String'
+
+The relevant error-causing widget was: 
+  ProfileScreen ProfileScreen:file:///C:/uygulamalar/SehirUygulamasison/new_project/lib/screens/home/home_screen.dart:195:63
+When the exception was thrown, this was the stack: 
+#0      _ProfileScreenState._buildProfileView (package:belediye_iletisim_merkezi/screens/profile/profile_screen.dart:537:79)
+#1      _ProfileScreenState._buildBody (package:belediye_iletisim_merkezi/screens/profile/profile_screen.dart:53:18)
+#2      _ProfileScreenState.build (package:belediye_iletisim_merkezi/screens/profile/profile_screen.dart:102:13)
+#3      StatefulElement.build (package:flutter/src/widgets/framework.dart:5841:27)
+#4      ConsumerStatefulElement.build (package:flutter_riverpod/src/consumer.dart:539:20)
+#5      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5733:15)
+#6      StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5892:11)
+#7      Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#8      ComponentElement._firstBuild (package:flutter/src/widgets/framework.dart:5715:5)
+#9      StatefulElement._firstBuild (package:flutter/src/widgets/framework.dart:5883:11)
+#10     ComponentElement.mount (package:flutter/src/widgets/framework.dart:5709:5)
+...     Normal element mounting (228 frames)
+#238    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4555:16)
+#239    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7178:36)
+#240    Element.updateChild (package:flutter/src/widgets/framework.dart:4020:18)
+#241    Element.updateChildren (package:flutter/src/widgets/framework.dart:4217:11)
+#242    MultiChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7211:17)
+#243    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#244    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5756:16)
+#245    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5892:11)
+#246    Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#247    StatefulElement.update (package:flutter/src/widgets/framework.dart:5917:5)
+#248    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#249    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5756:16)
+#250    Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#251    ProxyElement.update (package:flutter/src/widgets/framework.dart:6059:5)
+#252    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#253    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5756:16)
+#254    Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#255    ProxyElement.update (package:flutter/src/widgets/framework.dart:6059:5)
+#256    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#257    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#258    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5756:16)
+#259    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5892:11)
+#260    Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#261    StatefulElement.update (package:flutter/src/widgets/framework.dart:5917:5)
+#262    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#263    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5756:16)
+#264    Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#265    ProxyElement.update (package:flutter/src/widgets/framework.dart:6059:5)
+#266    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#267    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#268    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5756:16)
+#269    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5892:11)
+#270    Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#271    StatefulElement.update (package:flutter/src/widgets/framework.dart:5917:5)
+#272    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#273    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5756:16)
+#274    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5892:11)
+#275    Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#276    StatefulElement.update (package:flutter/src/widgets/framework.dart:5917:5)
+#277    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#278    SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7034:14)
+#279    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#280    SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7034:14)
+#281    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#282    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5756:16)
+#283    Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#284    ProxyElement.update (package:flutter/src/widgets/framework.dart:6059:5)
+#285    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#286    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5756:16)
+#287    Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#288    ProxyElement.update (package:flutter/src/widgets/framework.dart:6059:5)
+#289    Element.updateChild (package:flutter/src/widgets/framework.dart:3998:15)
+#290    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5756:16)
+#291    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5892:11)
+#292    Element.rebuild (package:flutter/src/widgets/framework.dart:5445:7)
+#293    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2704:15)
+#294    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2762:11)
+#295    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3066:18)
+#296    WidgetsBinding.drawFrame (package:flutter/src/widgets/binding.dart:1229:21)
+#297    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:482:5)
+#298    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1442:15)
+#299    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1355:9)
+#300    SchedulerBinding._handleDrawFrame (package:flutter/src/scheduler/binding.dart:1208:5)
+#301    _invoke (dart:ui/hooks.dart:316:13)
+#302    PlatformDispatcher._drawFrame (dart:ui/platform_dispatcher.dart:428:5)
+#303    _drawFrame (dart:ui/hooks.dart:288:31)
+====================================================================================================
+
+======== Exception caught by image resource service ================================================
+The following ArgumentError was thrown resolving an image codec:
+Invalid argument(s): No host specified in URI
+
+When the exception was thrown, this was the stack: 
+#0      _HttpClient._openUrl (dart:_http/http_impl.dart:3002:9)
+#1      _HttpClient.openUrl (dart:_http/http_impl.dart:2858:7)
+#2      IOClient.send (package:http/src/io_client.dart:117:38)
+#3      HttpFileService.get (package:flutter_cache_manager/src/web/file_service.dart:37:44)
+#4      WebHelper._download (package:flutter_cache_manager/src/web/web_helper.dart:115:24)
+#5      WebHelper._updateFile (package:flutter_cache_manager/src/web/web_helper.dart:96:28)
+<asynchronous suspension>
+#6      WebHelper._downloadOrAddToQueue (package:flutter_cache_manager/src/web/web_helper.dart:64:7)
+<asynchronous suspension>
+Image provider: CachedNetworkImageProvider("", scale: 1.0)
+Image key: CachedNetworkImageProvider("", scale: 1.0)
+====================================================================================================
+W/WindowOnBackDispatcher(16804): sendCancelIfRunning: isInProgress=falsecallback=io.flutter.embedding.android.FlutterActivity$1@dcce3b6
