@@ -10,6 +10,9 @@ header('Content-Type: application/json; charset=UTF-8');
 
 // Veritabanı bağlantısı
 require_once '../db_connection.php';
+// PDO bağlantısı için pg_pdo.php içeren adapteri kullanalım
+require_once '../includes/pg_pdo.php';
+$pdo = get_pdo_connection(); // PostgreSQL PDO bağlantısını al
 
 // Şehir ID'sini kontrol et
 if (!isset($_GET['city_id']) || empty($_GET['city_id'])) {

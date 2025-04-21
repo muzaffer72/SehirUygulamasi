@@ -23,7 +23,7 @@ try {
             $query = "DELETE FROM user_likes WHERE post_id = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$post_id]);
-            $rowCount = $stmt->rowCount();
+            $rowCount = $stmt->affected_rows();
             
             if ($rowCount > 0) {
                 // Paylaşımın beğeni sayacını sıfırla
@@ -58,7 +58,7 @@ try {
             $query = "DELETE FROM user_likes WHERE id = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$like_id]);
-            $rowCount = $stmt->rowCount();
+            $rowCount = $stmt->affected_rows();
             
             if ($rowCount > 0) {
                 // Paylaşımın beğeni sayacını güncelle
@@ -114,7 +114,7 @@ try {
             $query = "INSERT INTO user_likes (user_id, post_id) VALUES (?, ?)";
             $stmt = $db->prepare($query);
             $stmt->execute([$user_id, $post_id]);
-            $rowCount = $stmt->rowCount();
+            $rowCount = $stmt->affected_rows();
             
             if ($rowCount > 0) {
                 // Paylaşımın beğeni sayacını güncelle
