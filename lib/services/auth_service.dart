@@ -11,22 +11,23 @@ class AuthService {
   // Giriş işlemi
   Future<User> login(String email, String password) async {
     try {
-      print('Logging in with: $email');
+      print('Giriş denemesi: $email');
       
       // Admin panel ile uyumlu giriş isteği yapıyoruz
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.login}'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'username': email,  // Laravel admin panel username olarak bekliyor (burada email kullanılabilir)
+          'username': email,  // Email veya kullanıcı adı olarak kullanılabilir
           'password': password,
         }),
       );
 
-      print('Login response: ${response.statusCode}, ${response.body}');
+      print('Giriş yanıtı: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
+        print('Giriş yanıt verisi: $responseData');
         
         // Admin panel yanıt formatı kontrol
         if (responseData.containsKey('success') && responseData['success'] == true) {
@@ -38,8 +39,7 @@ class AuthService {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(_userKey, jsonEncode(user.toJson()));
           
-          // Set-Cookie header'ı kullanarak token'ı kaydedin
-          // Veya token doğrudan yanıtta geliyorsa onu kullanın
+          // Token işleme
           String token = '';
           if (response.headers.containsKey('set-cookie')) {
             token = response.headers['set-cookie'] ?? '';
@@ -48,27 +48,61 @@ class AuthService {
           }
           
           await prefs.setString(_tokenKey, token);
+          print('Giriş başarılı. Token: ${token.length > 10 ? token.substring(0, 10) + '...' : token}');
           
           return user;
-        } else {
-          // Doğrudan yanıtın kendisi kullanıcı verisi olabilir
-          final user = User.fromJson(responseData);
+        } else if (responseData.containsKey('user')) {
+          // Direkt user objesi içeren yanıt
+          final user = User.fromJson(responseData['user']);
           
           // Save user data to local storage
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(_userKey, jsonEncode(user.toJson()));
           
-          // Set-Cookie header'ı kullanarak token'ı kaydedin
-          final token = response.headers['set-cookie'] ?? '';
+          // Token işleme
+          String token = '';
+          if (response.headers.containsKey('set-cookie')) {
+            token = response.headers['set-cookie'] ?? '';
+          } else if (responseData.containsKey('token')) {
+            token = responseData['token'];
+          }
+          
           await prefs.setString(_tokenKey, token);
+          print('Giriş başarılı. Token: ${token.length > 10 ? token.substring(0, 10) + '...' : token}');
           
           return user;
+        } else {
+          // Doğrudan yanıtın kendisi kullanıcı verisi olabilir
+          try {
+            final user = User.fromJson(responseData);
+            
+            // Save user data to local storage
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(_userKey, jsonEncode(user.toJson()));
+            
+            // Token işleme
+            String token = '';
+            if (response.headers.containsKey('set-cookie')) {
+              token = response.headers['set-cookie'] ?? '';
+            } else if (responseData.containsKey('token')) {
+              token = responseData['token'];
+            }
+            
+            await prefs.setString(_tokenKey, token);
+            print('Giriş başarılı. Token: ${token.length > 10 ? token.substring(0, 10) + '...' : token}');
+            
+            return user;
+          } catch (e) {
+            print('Kullanıcı verisi işlenirken hata: $e');
+            throw Exception('Geçersiz kullanıcı verisi formatı: $responseData');
+          }
         }
       } else {
+        print('Giriş başarısız yanıt: ${response.body}');
         throw Exception('Giriş başarısız: ${response.body}');
       }
     } catch (e) {
-      print('Login error: $e');
+      print('Giriş hatası: $e');
       throw Exception('Giriş işlemi sırasında bir hata oluştu: $e');
     }
   }
