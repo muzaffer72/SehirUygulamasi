@@ -220,7 +220,7 @@ try {
     $query = "SELECT * FROM settings WHERE id = 1";
     $result = $db->query($query);
     
-    if ($result && $result->num_rows() > 0) {
+    if ($result && $result->num_rows > 0) {
         $settings = $result->fetch_assoc();
     } else {
         // Varsayılan ayarlar
