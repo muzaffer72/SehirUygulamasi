@@ -1,0 +1,35 @@
+W/letisim.merkezi(23977): ApkAssets: Deleting an ApkAssets object '<empty> and /data/app/~~s5lPWItD54PsV_b8vbRDpw==/com.samsung.android.samsungpass-g7IRekyWGzHPYwjqzvHsJg==/base.apk' with 1 weak references
+
+======== Exception caught by Flutter framework =====================================================
+The following assertion was thrown during runApp:
+Zone mismatch.
+
+The Flutter bindings were initialized in a different zone than is now being used. This will likely cause confusion and bugs as any zone-specific configuration will inconsistently use the configuration of the original binding initialization zone or this zone based on hard-to-predict factors such as which zone was active when a particular callback was set.
+It is important to use the same zone when calling `ensureInitialized` on the binding as when calling `runApp` later.
+To make this warning fatal, set BindingBase.debugZoneErrorsAreFatal to true before the bindings are initialized (i.e. as the first statement in `void main() { }`).
+When the exception was thrown, this was the stack: 
+#0      BindingBase.debugCheckZone.<anonymous closure> (package:flutter/src/foundation/binding.dart:519:31)
+#1      BindingBase.debugCheckZone (package:flutter/src/foundation/binding.dart:525:6)
+#2      _runWidget (package:flutter/src/widgets/binding.dart:1544:18)
+#3      runApp (package:flutter/src/widgets/binding.dart:1480:3)
+#4      main.<anonymous closure> (package:belediye_iletisim_merkezi/main.dart:51:5)
+#9      main (package:belediye_iletisim_merkezi/main.dart:49:3)
+<asynchronous suspension>
+(elided 4 frames from dart:async)
+====================================================================================================
+I/flutter (23977): API response status: 200
+I/flutter (23977): API response body: [{"id":"85","title":"OtobÃ¼s hatlarÄ±nÄ±n yetersizliÄi","content":"BazÄ± sokaklar yeterince aydÄ±nl...
+I/flutter (23977): Parsed 10 posts successfully
+I/flutter (23977): Loaded 10 posts
+I/flutter (23977): Fetching user from: https://sehir.muzaffersanli.com/api.php?endpoint=user&id=142&api_key=440bf0009c749943b440f7f5c6c2fd26
+I/flutter (23977): Fetching user from: https://sehir.muzaffersanli.com/api.php?endpoint=user&id=136&api_key=440bf0009c749943b440f7f5c6c2fd26
+I/flutter (23977): Fetching user from: https://sehir.muzaffersanli.com/api.php?endpoint=user&id=138&api_key=440bf0009c749943b440f7f5c6c2fd26
+I/flutter (23977): User API response status: 404
+I/flutter (23977): Error in getUserById: 404 - {"error":"GeÃ§ersiz endpoint"}
+I/flutter (23977): User not found, creating default user
+I/flutter (23977): User API response status: 404
+I/flutter (23977): Error in getUserById: 404 - {"error":"GeÃ§ersiz endpoint"}
+I/flutter (23977): User not found, creating default user
+I/flutter (23977): User API response status: 404
+I/flutter (23977): Error in getUserById: 404 - {"error":"GeÃ§ersiz endpoint"}
+I/flutter (23977): User not found, creating default user

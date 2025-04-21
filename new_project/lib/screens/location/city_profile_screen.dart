@@ -98,34 +98,101 @@ class CityProfileScreen extends ConsumerWidget {
       ];
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Belediye Hizmetleri',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.business_center,
+                        color: Theme.of(context).primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Belediye Hizmetleri',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    // Tüm hizmetleri göster (ileride eklenecek)
+                  },
+                  icon: const Icon(Icons.arrow_forward, size: 16),
+                  label: const Text('Tümünü Gör'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    backgroundColor: Colors.grey[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.0),
+              child: Divider(),
+            ),
+            // Hizmet kartları
+            ListView.separated(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: services.length > 3 ? 3 : services.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) => _buildServiceCard(services[index]),
+            ),
+            if (services.length > 3)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Center(
+                  child: TextButton.icon(
+                    onPressed: () {
+                      // Daha fazla göster
+                    },
+                    icon: const Icon(Icons.add, size: 16),
+                    label: Text('${services.length - 3} hizmet daha'),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      backgroundColor: Colors.grey[100],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  // Tüm hizmetleri göster (ileride eklenecek)
-                },
-                child: const Text('Tümünü Gör'),
-              ),
-            ],
-          ),
-          const Divider(),
-          const SizedBox(height: 8),
-          // Hizmet kartları
-          ...services.map((service) => _buildServiceCard(service)).toList(),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -190,34 +257,101 @@ class CityProfileScreen extends ConsumerWidget {
       ];
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Belediye Projeleri',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.engineering,
+                        color: Colors.green,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Belediye Projeleri',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    // Tüm projeleri göster (ileride eklenecek)
+                  },
+                  icon: const Icon(Icons.arrow_forward, size: 16),
+                  label: const Text('Tümünü Gör'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    backgroundColor: Colors.grey[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.0),
+              child: Divider(),
+            ),
+            // Proje kartları
+            ListView.separated(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: projects.length > 2 ? 2 : projects.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) => _buildProjectCard(projects[index]),
+            ),
+            if (projects.length > 2)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Center(
+                  child: TextButton.icon(
+                    onPressed: () {
+                      // Daha fazla göster
+                    },
+                    icon: const Icon(Icons.add, size: 16),
+                    label: Text('${projects.length - 2} proje daha'),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      backgroundColor: Colors.grey[100],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  // Tüm projeleri göster (ileride eklenecek)
-                },
-                child: const Text('Tümünü Gör'),
-              ),
-            ],
-          ),
-          const Divider(),
-          const SizedBox(height: 8),
-          // Proje kartları
-          ...projects.map((project) => _buildProjectCard(project)).toList(),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -528,64 +662,119 @@ class CityProfileScreen extends ConsumerWidget {
   
   // Hizmet kartı widget
   Widget _buildServiceCard(CityService service) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    _getServiceIcon(service.category ?? ''),
-                    color: Colors.blue,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              // Hizmet detayına git (ileride eklenecek)
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        service.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: (service.type?.toLowerCase() == 'active' ? Colors.blue : Colors.grey).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          _getServiceIcon(service.category ?? ''),
+                          color: service.type?.toLowerCase() == 'active' ? Colors.blue : Colors.grey,
+                          size: 24,
                         ),
                       ),
-                      if (service.category != null)
-                        Text(
-                          _formatCategory(service.category!),
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              service.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            if (service.category != null)
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.folder_outlined,
+                                    size: 14,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _formatCategory(service.category!),
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
+                      ),
+                      if (service.type != null)
+                        _buildServiceStatusChip(service.type!),
                     ],
                   ),
-                ),
-                if (service.type != null)
-                  _buildServiceStatusChip(service.type!),
-              ],
-            ),
-            if (service.description != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  service.description!,
-                  style: const TextStyle(fontSize: 14),
-                ),
+                  if (service.description != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12.0, left: 2),
+                      child: Text(
+                        service.description!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                          height: 1.3,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          // Detaya git
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          foregroundColor: Colors.blue,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: const Text('Detaylar'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-          ],
+            ),
+          ),
         ),
       ),
     );
@@ -593,116 +782,227 @@ class CityProfileScreen extends ConsumerWidget {
 
   // Proje kartı widget
   Widget _buildProjectCard(CityProject project) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Proje görseli (varsa)
-          if (project.imageUrl != null)
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-              child: Image.network(
-                project.imageUrl!,
-                width: double.infinity,
-                height: 150,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: double.infinity,
-                  height: 120,
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: Icon(Icons.image_not_supported, size: 30, color: Colors.grey),
-                  ),
-                ),
-              ),
-            ),
-          
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              // Proje detayına git (ileride eklenecek)
+            },
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Durum ve bütçe
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Proje görseli mock
+                Stack(
                   children: [
-                    if (project.status != null)
-                      _buildProjectStatusChip(project.status!),
-                    if (project.budget != null)
-                      Text(
-                        _formatCurrency(project.budget!),
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.bold,
+                    Container(
+                      height: 160,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: _getProjectColor(project.status ?? '').withOpacity(0.1),
+                        image: project.imageUrl != null 
+                          ? DecorationImage(
+                              image: NetworkImage(project.imageUrl!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                      ),
+                      child: project.imageUrl == null ? Center(
+                        child: Icon(
+                          Icons.engineering,
+                          size: 50,
+                          color: _getProjectColor(project.status ?? '').withOpacity(0.3),
                         ),
+                      ) : null,
+                    ),
+                    // Bütçe badge
+                    if (project.budget != null)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.attach_money, size: 16, color: Colors.green),
+                              const SizedBox(width: 2),
+                              Text(
+                                _formatCurrency(project.budget!),
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // Durum badge
+                    if (project.status != null)
+                      Positioned(
+                        top: 12,
+                        left: 12,
+                        child: _buildProjectStatusChip(project.status!),
                       ),
                   ],
                 ),
                 
-                // Proje adı
-                const SizedBox(height: 8),
-                Text(
-                  project.name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                
-                // Proje açıklaması
-                if (project.description != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      project.description!,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-                
-                // Başlangıç ve bitiş tarihleri
-                if (project.startDate != null || project.endDate != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12.0),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${project.startDate ?? 'N/A'} - ${project.endDate ?? 'Devam ediyor'}',
-                          style: const TextStyle(color: Colors.grey, fontSize: 12),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Proje adı
+                      Text(
+                        project.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                  ),
-                
-                // Tamamlanma oranı
-                if (project.completionRate != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tamamlanma: %${(project.completionRate! * 100).toStringAsFixed(0)}',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        LinearProgressIndicator(
-                          value: project.completionRate!,
-                          minHeight: 8,
-                          backgroundColor: Colors.grey[300],
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            _getCompletionColor(project.completionRate!),
+                      ),
+                      
+                      // Proje açıklaması
+                      if (project.description != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            project.description!,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                              height: 1.3,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ],
-                    ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Başlangıç ve bitiş tarihleri
+                      if (project.startDate != null || project.endDate != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${project.startDate ?? 'N/A'} - ${project.endDate ?? 'Devam ediyor'}',
+                                style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Tamamlanma oranı
+                      if (project.completionRate != null)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Proje Durumu',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: _getCompletionColor(project.completionRate!).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '%${(project.completionRate! * 100).toStringAsFixed(0)}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: _getCompletionColor(project.completionRate!),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: LinearProgressIndicator(
+                                value: project.completionRate!,
+                                minHeight: 10,
+                                backgroundColor: Colors.grey[200],
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  _getCompletionColor(project.completionRate!),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                      const SizedBox(height: 16),
+                      
+                      // Detaylar butonu
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            // Detaylara git
+                          },
+                          icon: const Icon(Icons.visibility, size: 16),
+                          label: const Text('Detayları Görüntüle'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _getProjectColor(project.status ?? ''),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -863,5 +1163,28 @@ class CityProfileScreen extends ConsumerWidget {
     if (rate >= 0.5) return Colors.lightGreen;
     if (rate >= 0.25) return Colors.orange;
     return Colors.red;
+  }
+  
+  // Proje durumuna göre renk seçimi
+  Color _getProjectColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+      case 'tamamlandı':
+        return Colors.green;
+      case 'inprogress':
+      case 'in_progress':
+      case 'in-progress':
+      case 'devam ediyor':
+        return Colors.blue;
+      case 'planned':
+      case 'planning':
+      case 'planlanan':
+        return Colors.orange;
+      case 'cancelled':
+      case 'iptal':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }
