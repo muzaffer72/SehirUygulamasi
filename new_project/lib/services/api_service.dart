@@ -950,7 +950,8 @@ class ApiService {
     final userIdInt = userId is int ? userId : int.tryParse(userId.toString()) ?? 0;
     try {
       // API anahtarını URL'ye ekle
-      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=user&id=$userId');
+      // Yeni API yapısına göre endpoint'i güncelleyelim
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=users&action=getById&id=$userId');
       final uri = Uri.parse(uriString);
       
       print('Fetching user from: $uri');
