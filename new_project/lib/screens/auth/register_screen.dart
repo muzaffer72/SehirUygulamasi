@@ -16,6 +16,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController(); // Kullanıcı adı alanı eklendi
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -41,6 +42,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose(); // Kullanıcı adı controller'ını da temizle
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -109,10 +111,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     try {
       await ref.read(authProvider.notifier).register(
         name: _nameController.text.trim(),
+        username: _usernameController.text.trim().isEmpty ? null : _usernameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
         phone: _phoneController.text.isEmpty ? null : _phoneController.text.trim(),
-        cityId: _selectedCityId!,
+        cityId: _selectedCityId!.toString(), // String olarak dönüştür
         districtId: _selectedDistrictId ?? "",
       );
       
@@ -217,6 +220,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) => Validators.validateName(value),
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Kullanıcı adı alanı
+                      TextFormField(
+                        controller: _usernameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Kullanıcı Adı',
+                          hintText: 'ahmet_yilmaz',
+                          prefixIcon: Icon(Icons.alternate_email),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return null; // Kullanıcı adı opsiyonel
+                          }
+                          if (value.length < 3) {
+                            return 'Kullanıcı adı en az 3 karakter olmalı';
+                          }
+                          // Sadece harf, rakam, alt çizgi ve nokta içerebilir
+                          if (!RegExp(r'^[a-zA-Z0-9._]+$').hasMatch(value)) {
+                            return 'Kullanıcı adı sadece harf, rakam, alt çizgi ve nokta içerebilir';
+                          }
+                          return null;
+                        },
                         textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: 16),
