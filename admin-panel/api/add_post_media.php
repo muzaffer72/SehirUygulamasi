@@ -32,8 +32,7 @@ try {
     // Postu getir
     $post_query = "SELECT * FROM posts WHERE id = ?";
     $post_stmt = $db->prepare($post_query);
-    $post_stmt->bind_param("i", $post_id);
-    $post_stmt->execute();
+    $post_stmt->execute([$post_id]);
     $post_result = $post_stmt->get_result();
     $post = $post_result->fetch_assoc();
     
@@ -56,12 +55,11 @@ try {
         // Caption alanı veritabanında bulunmadığı için kaldırılıyor
         $media_query = "INSERT INTO media (post_id, type, url) VALUES (?, ?, ?)";
         $media_stmt = $db->prepare($media_query);
-        $media_stmt->bind_param("iss", $post_id, $type, $url);
-        $media_result = $media_stmt->execute();
+        $media_result = $media_stmt->execute([$post_id, $type, $url]);
         
         if ($media_result) {
             $added_items[] = [
-                'id' => $db->lastInsertId ?? $db->insert_id ?? 0,
+                'id' => $db->insert_id(),
                 'post_id' => $post_id,
                 'type' => $type,
                 'url' => $url

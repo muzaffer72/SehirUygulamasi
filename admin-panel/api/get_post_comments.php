@@ -25,8 +25,7 @@ try {
     ";
     
     $stmt = $db->prepare($query);
-    $stmt->bind_param("i", $post_id);
-    $stmt->execute();
+    $stmt->execute([$post_id]);
     $result = $stmt->get_result();
     $comments = [];
     while ($row = $result->fetch_assoc()) {

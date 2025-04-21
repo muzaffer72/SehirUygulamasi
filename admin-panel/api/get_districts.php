@@ -10,9 +10,7 @@ header('Content-Type: application/json; charset=UTF-8');
 
 // Veritabanı bağlantısı
 require_once '../db_connection.php';
-// PDO bağlantısı için pg_pdo.php içeren adapteri kullanalım
-require_once '../includes/pg_pdo.php';
-$pdo = get_pdo_connection(); // PostgreSQL PDO bağlantısını al
+// $db değişkeni db_connection.php dosyasında tanımlanmış durumda
 
 // Şehir ID'sini kontrol et
 if (!isset($_GET['city_id']) || empty($_GET['city_id'])) {
@@ -27,15 +25,21 @@ $city_id = intval($_GET['city_id']);
 
 try {
     // İlçeleri getir
-    $stmt = $pdo->prepare("
+    $query = "
         SELECT id, name
         FROM districts
         WHERE city_id = ?
         ORDER BY name ASC
-    ");
+    ";
     
+    $stmt = $db->prepare($query);
     $stmt->execute([$city_id]);
-    $districts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $result = $stmt->get_result();
+    
+    $districts = [];
+    while ($row = $result->fetch_assoc()) {
+        $districts[] = $row;
+    }
     
     echo json_encode([
         'success' => true,
