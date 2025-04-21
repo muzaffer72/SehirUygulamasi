@@ -39,7 +39,7 @@ function checkApiKey() {
     $stmt->execute();
     $result = $stmt->get_result();
     
-    if ($result->num_rows() === 0) {
+    if ($result->num_rows === 0) {
         // Statik anahtar kontrolü - geçiş dönemi için
         $staticValidKeys = [
             '440bf0009c749943b440f7f5c6c2fd26' // Kullanıcının sağladığı API anahtarı
