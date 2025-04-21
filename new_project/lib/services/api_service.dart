@@ -347,31 +347,26 @@ class ApiService {
           print('İlçe yanıtı: $data');
           List<dynamic> districtsJson = [];
           
-          if (data is Map && data.containsKey('data')) {
-            final districtData = data['data'];
-            if (districtData is List) {
-              districtsJson = districtData;
-            } else if (districtData is Map) {
-              // Harita formatındaysa liste dönüştürme
-              final List<dynamic> convertedList = [];
-              districtData.forEach((key, value) {
-                if (value is Map) {
-                  convertedList.add(value);
-                }
-              });
-              districtsJson = convertedList;
+          // Yeni API yanıt yapısını destekle - tek obje olarak geldiyse listeye ekle
+          if (data is Map) {
+            if (data.containsKey('data')) {
+              final districtData = data['data'];
+              if (districtData is List) {
+                districtsJson = districtData;
+              } else if (districtData is Map) {
+                // Tek bir district objesi
+                districtsJson = [districtData];
+              } else {
+                // district değeri bir değer ise dönüştür
+                districtsJson = [data]; // Kök objeyi kullan
+              }
+            } else {
+              // data anahtarı yoksa, tüm objeyi kullan
+              districtsJson = [data];
             }
           } else if (data is List) {
+            // Zaten liste ise kullan
             districtsJson = data;
-          } else if (data is Map) {
-            // Üst seviye harita ise liste dönüştürme
-            final List<dynamic> convertedList = [];
-            data.forEach((key, value) {
-              if (value is Map) {
-                convertedList.add(value);
-              }
-            });
-            districtsJson = convertedList;
           }
           
           print('İlçe sayısı: ${districtsJson.length}');
