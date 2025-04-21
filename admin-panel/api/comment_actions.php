@@ -1,5 +1,6 @@
 <?php
 require_once '../db_connection.php';
+// $db değişkeni db_connection.php içinden geliyor
 
 header('Content-Type: application/json');
 
@@ -13,16 +14,16 @@ if (empty($action) || $comment_id <= 0) {
 }
 
 try {
-    global $pdo;
+    // MySQLiCompatWrapper sınıfını kullan ($db değişkeni)
     $response = ['success' => false];
     
     switch ($action) {
         case 'delete_comment':
             // Yorum silmeden önce post_id'yi al
             $query = "SELECT post_id FROM comments WHERE id = ?";
-            $stmt = $pdo->prepare($query);
+            $stmt = $db->prepare($query);
             $stmt->execute([$comment_id]);
-            $comment = $stmt->fetch(PDO::FETCH_ASSOC);
+            $comment = $stmt->get_result()->fetch_assoc();
             
             if (!$comment) {
                 $response = [
@@ -36,14 +37,14 @@ try {
             
             // Yorumu sil
             $query = "DELETE FROM comments WHERE id = ?";
-            $stmt = $pdo->prepare($query);
+            $stmt = $db->prepare($query);
             $stmt->execute([$comment_id]);
-            $rowCount = $stmt->rowCount();
+            $rowCount = $stmt->affected_rows();
             
             if ($rowCount > 0) {
                 // İlgili paylaşımın yorum sayacını güncelle
                 $updateQuery = "UPDATE posts SET comment_count = comment_count - 1 WHERE id = ? AND comment_count > 0";
-                $updateStmt = $pdo->prepare($updateQuery);
+                $updateStmt = $db->prepare($updateQuery);
                 $updateStmt->execute([$post_id]);
                 
                 $response = [
@@ -62,9 +63,9 @@ try {
         case 'ban_user':
             // Kullanıcı ID'sini al
             $query = "SELECT user_id FROM comments WHERE id = ?";
-            $stmt = $pdo->prepare($query);
+            $stmt = $db->prepare($query);
             $stmt->execute([$comment_id]);
-            $comment = $stmt->fetch(PDO::FETCH_ASSOC);
+            $comment = $stmt->get_result()->fetch_assoc();
             
             if (!$comment || !$comment['user_id']) {
                 $response = [
@@ -79,9 +80,9 @@ try {
             // Kullanıcıyı banla
             $banQuery = "UPDATE users SET is_banned = TRUE, banned_reason = ? WHERE id = ?";
             $banReason = isset($_POST['ban_reason']) ? $_POST['ban_reason'] : 'Topluluk kurallarını ihlal etme';
-            $banStmt = $pdo->prepare($banQuery);
+            $banStmt = $db->prepare($banQuery);
             $banStmt->execute([$banReason, $user_id]);
-            $rowCount = $banStmt->rowCount();
+            $rowCount = $banStmt->affected_rows();
             
             if ($rowCount > 0) {
                 $response = [
@@ -101,9 +102,9 @@ try {
             // Yorumu raporla / işaretle
             $query = "UPDATE comments SET is_reported = TRUE, report_reason = ? WHERE id = ?";
             $reportReason = isset($_POST['report_reason']) ? $_POST['report_reason'] : 'Uygunsuz içerik';
-            $stmt = $pdo->prepare($query);
+            $stmt = $db->prepare($query);
             $stmt->execute([$reportReason, $comment_id]);
-            $rowCount = $stmt->rowCount();
+            $rowCount = $stmt->affected_rows();
             
             if ($rowCount > 0) {
                 $response = [

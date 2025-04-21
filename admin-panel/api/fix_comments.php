@@ -18,7 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Veritabanı bağlantısı
 require_once '../db_connection.php';
-$pdo = $GLOBALS['pdo']; // Doğrudan PDO nesnesine eriş
+// $db değişkeni db_connection.php dosyasında tanımlanmış durumda
+// PDO bağlantısı için pg_pdo.php içeren adapteri kullanalım
+require_once '../includes/pg_pdo.php';
+$pdo = get_pdo_connection(); // PostgreSQL PDO bağlantısını al
 
 // Yardımcı fonksiyonlar
 function sendResponse($data, $statusCode = 200) {
