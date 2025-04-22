@@ -97,11 +97,14 @@ try {
 try {
     $query = "SELECT * FROM users ORDER BY id DESC LIMIT 50";
     $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
     $users = [];
-    while ($row = $result->fetch_assoc()) {
-        $users[] = $row;
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $users[] = $row;
+            }
+        }
     }
 } catch (Exception $e) {
     echo '<div class="alert alert-danger">Kullanıcı verilerini alma hatası: ' . $e->getMessage() . '</div>';
@@ -112,11 +115,14 @@ try {
 try {
     $query = "SELECT id, name FROM cities ORDER BY name ASC";
     $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
     $cities = [];
-    while ($row = $result->fetch_assoc()) {
-        $cities[] = $row;
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $cities[] = $row;
+            }
+        }
     }
 } catch (Exception $e) {
     echo '<div class="alert alert-danger">Şehir verilerini alma hatası: ' . $e->getMessage() . '</div>';
@@ -127,11 +133,14 @@ try {
 try {
     $query = "SELECT * FROM districts ORDER BY name ASC";
     $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
     $districts = [];
-    while ($row = $result->fetch_assoc()) {
-        $districts[] = $row;
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $districts[] = $row;
+            }
+        }
     }
 } catch (Exception $e) {
     echo '<div class="alert alert-danger">İlçe verilerini alma hatası: ' . $e->getMessage() . '</div>';
@@ -142,11 +151,14 @@ try {
 try {
     $query = "SELECT * FROM categories ORDER BY name ASC";
     $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
     $categories = [];
-    while ($row = $result->fetch_assoc()) {
-        $categories[] = $row;
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $categories[] = $row;
+            }
+        }
     }
 } catch (Exception $e) {
     echo '<div class="alert alert-danger">Kategori verilerini alma hatası: ' . $e->getMessage() . '</div>';
@@ -168,11 +180,14 @@ try {
     ";
     
     $stmt = $db->prepare($query);
-    $stmt->execute();
-    $result = $stmt->get_result();
     $surveys = [];
-    while ($row = $result->fetch_assoc()) {
-        $surveys[] = $row;
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $surveys[] = $row;
+            }
+        }
     }
     
     // Her anket için oy seçeneklerini ve toplam oyları getir
@@ -187,11 +202,14 @@ try {
         $options_stmt = $db->prepare($options_query);
         $survey_id = isset($survey['id']) ? $survey['id'] : 0;
         $options_stmt->bind_param("i", $survey_id);
-        $options_stmt->execute();
-        $options_result = $options_stmt->get_result();
         $options = [];
-        while ($row = $options_result->fetch_assoc()) {
-            $options[] = $row;
+        if ($options_stmt->execute()) {
+            $options_result = $options_stmt->get_result();
+            if ($options_result) {
+                while ($row = $options_result->fetch_assoc()) {
+                    $options[] = $row;
+                }
+            }
         }
         
         // Toplam oy sayısını hesapla
