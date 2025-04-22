@@ -16,10 +16,10 @@ if (file_exists($env_file)) {
 }
 
 // PGHOST ve diğer Postgres değişkenlerini kullan (Replit için daha güvenilir)
-$hostname = getenv('PGHOST') ?: 'ep-cold-voice-a42vfzgh.us-east-1.aws.neon.tech';
-$dbname = getenv('PGDATABASE') ?: 'neondb';
-$username = getenv('PGUSER') ?: 'neondb_owner';
-$password = getenv('PGPASSWORD') ?: '';
+$hostname = getenv('PGHOST');
+$dbname = getenv('PGDATABASE');
+$username = getenv('PGUSER');
+$password = getenv('PGPASSWORD');
 $port = getenv('PGPORT') ?: 5432;
 
 // PostgreSQL sürücüsünün yüklenip yüklenmediğini kontrol et
