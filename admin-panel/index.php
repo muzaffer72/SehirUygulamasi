@@ -63,11 +63,14 @@ try {
     $limit = $posts_per_page;
     
     $stmt->bind_param("ii", $limit, $offset);
-    $stmt->execute();
-    $result = $stmt->get_result();
     $posts = [];
-    while ($row = $result->fetch_assoc()) {
-        $posts[] = $row;
+    if ($stmt->execute()) {
+        $result = $stmt->get_result();
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $posts[] = $row;
+            }
+        }
     }
     
     // Toplam kayıt sayısını al
@@ -77,9 +80,13 @@ try {
         WHERE 1=1
     ";
     $count_stmt = $db->prepare($count_query);
-    $count_stmt->execute();
-    $count_result = $count_stmt->get_result();
-    $total_posts = $count_result->fetch_assoc()['total'];
+    $total_posts = 0;
+    if ($count_stmt->execute()) {
+        $count_result = $count_stmt->get_result();
+        if ($count_result && $row = $count_result->fetch_assoc()) {
+            $total_posts = $row['total'];
+        }
+    }
 } catch (Exception $e) {
     echo '<div class="alert alert-danger">Veritabanı hatası: ' . $e->getMessage() . '</div>';
     $posts = [];
