@@ -58,16 +58,16 @@ class User {
       cityId: json['city_id']?.toString(),
       districtId: json['district_id']?.toString(),
       createdAt: json['created_at'],
-      userLevel: json['user_level'] ?? 'newUser',
+      userLevel: json['user_level'] ?? json['level'] ?? 'newUser',
       points: json['points'] is String 
               ? int.tryParse(json['points']) ?? 0 
               : json['points'] ?? 0,
       totalPosts: json['total_posts'] is String 
                   ? int.tryParse(json['total_posts']) ?? 0 
-                  : json['total_posts'] ?? 0,
+                  : (json['total_posts'] ?? json['post_count'] ?? 0),
       totalComments: json['total_comments'] is String 
                     ? int.tryParse(json['total_comments']) ?? 0 
-                    : json['total_comments'] ?? 0,
+                    : (json['total_comments'] ?? json['comment_count'] ?? 0),
       profilePhotoUrl: profileImage,
       solvedIssues: json['solved_issues'] is String 
                     ? int.tryParse(json['solved_issues']) ?? 0 
