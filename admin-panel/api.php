@@ -802,7 +802,12 @@ function handlePost($endpoint) {
             $insertStmt->bind_param('ssssss', $name, $username, $email, $hashedPassword, $cityId, $districtId);
             
             if ($insertStmt->execute()) {
-                $userId = $insertStmt->insert_id;
+                // PostgreSQL'de insert_id sonradan alınmak zorunda
+                $lastIdStmt = $db->prepare("SELECT currval('users_id_seq') as last_id");
+                $lastIdStmt->execute();
+                $lastIdResult = $lastIdStmt->get_result();
+                $lastIdRow = $lastIdResult->fetch_assoc();
+                $userId = $lastIdRow['last_id'];
                 
                 // Yeni kullanıcı verilerini getir
                 $userStmt = $db->prepare("SELECT * FROM users WHERE id = ?");
