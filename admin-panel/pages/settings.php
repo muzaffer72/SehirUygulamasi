@@ -42,28 +42,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newUserNotifications = isset($_POST['new_user_notifications']) ? 1 : 0;
         
         try {
-            // settings tablosunda mevcut kayıt var mı diye kontrol et
-            $query = "SELECT COUNT(*) as count FROM settings WHERE id = 1";
-            $result = $db->query($query);
-            $row = $result->fetch_assoc();
-            
-            if ($row['count'] > 0) {
-                // Mevcut ayarları güncelle
-                $query = "UPDATE settings SET 
-                    email_notifications = ?, 
-                    push_notifications = ?, 
-                    new_post_notifications = ?, 
-                    new_user_notifications = ? 
-                    WHERE id = 1";
-                $stmt = $db->prepare($query);
-                $stmt->bind_param("iiii", $emailNotifications, $pushNotifications, $newPostNotifications, $newUserNotifications);
-            } else {
-                // Yeni ayar kaydı oluştur
-                $query = "INSERT INTO settings (email_notifications, push_notifications, new_post_notifications, new_user_notifications) 
-                    VALUES (?, ?, ?, ?)";
-                $stmt = $db->prepare($query);
-                $stmt->bind_param("iiii", $emailNotifications, $pushNotifications, $newPostNotifications, $newUserNotifications);
-            }
+            // PostgreSQL'de varsa güncelle, yoksa oluştur mantığı kullan (upsert)
+            $query = "
+                INSERT INTO settings (id, email_notifications, push_notifications, new_post_notifications, new_user_notifications) 
+                VALUES (1, ?, ?, ?, ?) 
+                ON CONFLICT (id) DO UPDATE 
+                SET email_notifications = EXCLUDED.email_notifications,
+                    push_notifications = EXCLUDED.push_notifications,
+                    new_post_notifications = EXCLUDED.new_post_notifications,
+                    new_user_notifications = EXCLUDED.new_user_notifications
+            ";
+            $stmt = $db->prepare($query);
+            $stmt->bind_param("iiii", $emailNotifications, $pushNotifications, $newPostNotifications, $newUserNotifications);
             
             $result = $stmt->execute();
             

@@ -20,7 +20,7 @@ function checkApiKey() {
     // 1. Önce URL'de API anahtarı var mı diye kontrol et
     $apiKey = $_GET['api_key'] ?? null;
     
-    // 2. URL'de yoksa, header'larda kontrol et (geriye uyumluluk için)
+    // 2. URL'de yoksa, header'larda kontrol et
     if (!$apiKey) {
         $headers = getallheaders();
         $apiKey = $headers['X-API-KEY'] ?? null;
@@ -34,45 +34,30 @@ function checkApiKey() {
     
     // Veritabanında API anahtarını kontrol et
     global $db;
-    $stmt = $db->prepare("SELECT * FROM api_keys WHERE api_key = ? AND active = TRUE LIMIT 1");
+    
+    // API anahtarları için duruma göre birden fazla kontrolü sırayla dene
+    $isValid = false;
+    
+    // 1. Settings tablosunda kontrol et (ana yöntem)
+    $stmt = $db->prepare("SELECT * FROM settings WHERE api_key = ? LIMIT 1");
     $stmt->bind_param('s', $apiKey);
     $stmt->execute();
     $result = $stmt->get_result();
     
-    // PostgreSQL veya MySQL uyumlu num_rows kontrolü - Güvenli yöntem
-    $rowCount = 0;
-    
-    // PgSQLResult için özel kontrol
-    if (is_object($result)) {
-        $resultClass = get_class($result);
-        // PostgreSQL için ayrı kontrol yapalım
-        if (strpos($resultClass, 'PgSQL') !== false || strpos($resultClass, 'Pg') !== false) {
-            // PostgreSQL için güvenli yaklaşım: Bir sorgu ile sayı al
-            $resource = $db->query("SELECT COUNT(*) as total FROM api_keys WHERE api_key = '" . $db->real_escape_string($apiKey) . "'");
-            if ($resource && $countRow = $resource->fetch_assoc()) {
-                $rowCount = intval($countRow['total']);
-            }
-        } else if (method_exists($result, 'num_rows')) {
-            // MySQL için standart yaklaşım
-            $rowCount = $result->num_rows;
-        } else {
-            // Fallback: Manuel sayım
-            $temp = [];
-            while ($row = $result->fetch_assoc()) {
-                $temp[] = $row;
-            }
-            $rowCount = count($temp);
-            // İmleci başa sar (eğer destekleniyorsa)
-            if (method_exists($result, 'data_seek')) {
-                @$result->data_seek(0);
-            }
+    // PostgreSQL uyumlu döngü ile kontrol
+    while ($row = $result->fetch_assoc()) {
+        if (isset($row['api_key']) && $row['api_key'] === $apiKey) {
+            $isValid = true;
+            break;
         }
     }
     
-    if ($rowCount === 0) {
-        // Statik anahtar kontrolü - geçiş dönemi için
+    // 2. Eski geçiş sistemi - statik anahtarlar ile kontrol (geçici)
+    if (!$isValid) {
+        // Eski statik anahtar kontrolü - sadece geçiş dönemi için
         $staticValidKeys = [
-            '440bf0009c749943b440f7f5c6c2fd26' // Kullanıcının sağladığı API anahtarı
+            '440bf0009c749943b440f7f5c6c2fd26', // Test API key
+            '0207bd1af1bc89dade1b82ff9d0f4753'  // Veritabanındaki yeni API anahtarı (ek güvenlik)
         ];
         
         // Ortam değişkeninden API anahtarı
@@ -81,17 +66,20 @@ function checkApiKey() {
             $staticValidKeys[] = $envApiKey;
         }
         
-        if (!in_array($apiKey, $staticValidKeys)) {
-            sendResponse(['error' => 'Geçersiz API anahtarı'], 401);
-            exit;
+        if (in_array($apiKey, $staticValidKeys)) {
+            $isValid = true;
         }
-    } else {
-        // API anahtarı geçerli, kullanım sayısını artır
-        $apiKeyData = $result->fetch_assoc();
-        $updateStmt = $db->prepare("UPDATE api_keys SET usage_count = usage_count + 1, last_used = NOW() WHERE id = ?");
-        $updateStmt->bind_param('i', $apiKeyData['id']);
-        $updateStmt->execute();
     }
+    
+    // API anahtarı geçerli değilse hata ver
+    if (!$isValid) {
+        error_log("Geçersiz API anahtarı: " . $apiKey);
+        sendResponse(['error' => 'Geçersiz API anahtarı'], 401);
+        exit;
+    }
+    
+    // Buraya kadar gelindi ise API anahtarı geçerlidir
+    error_log("Geçerli API anahtarı ile istek alındı: " . $apiKey);
 }
 
 // Test modu değilse API anahtarı kontrolü yap
