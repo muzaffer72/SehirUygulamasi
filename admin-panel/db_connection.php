@@ -96,6 +96,19 @@ class MySQLiCompatWrapper {
         return pg_close($this->conn);
     }
     
+    // Transaction metotları
+    public function begin_transaction() {
+        return pg_query($this->conn, "BEGIN");
+    }
+    
+    public function commit() {
+        return pg_query($this->conn, "COMMIT");
+    }
+    
+    public function rollback() {
+        return pg_query($this->conn, "ROLLBACK");
+    }
+    
     private function convertMySQLtoPgSQL($sql) {
         // MySQL özel fonksiyonları PostgreSQL'e çevir
         $replacements = [
