@@ -395,25 +395,51 @@ function handleGet($endpoint, $id) {
         case 'user':
             // Kullanıcı bilgilerini almak için kullanılacak
             // Bu endpoint, token ile gelen kullanıcı bilgilerini döndürmek için.
-            // Gelecekte oturum yönetimi eklenince düzenlenecek
             
-            // Şimdilik ID ile kullanıcı bilgisi dönelim
+            // ID ile kullanıcı bilgisi dönelim
             if ($id) {
-                $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+                $stmt = $db->prepare("SELECT id, name, username, email, city_id, district_id, created_at, 
+                                      user_level, points, total_posts, total_comments, 
+                                      profile_image_url, solved_issues FROM users WHERE id = ?");
                 $stmt->bind_param('i', $id);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 $user = $result->fetch_assoc();
                 
                 if ($user) {
-                    // Güvenlik için şifreyi kaldır
-                    unset($user['password']);
                     sendResponse(['success' => true, 'user' => $user]);
                 } else {
                     sendResponse(['error' => 'Kullanıcı bulunamadı'], 404);
                 }
             } else {
-                sendResponse(['error' => 'Kullanıcı ID gerekli'], 400);
+                // ID gönderilmemişse parametre olarak email veya username ile de kontrol edelim
+                $email = $_GET['email'] ?? null;
+                $username = $_GET['username'] ?? null;
+                
+                if ($email) {
+                    $stmt = $db->prepare("SELECT id, name, username, email, city_id, district_id, created_at, 
+                                          user_level, points, total_posts, total_comments, 
+                                          profile_image_url, solved_issues FROM users WHERE email = ? LIMIT 1");
+                    $stmt->bind_param('s', $email);
+                } elseif ($username) {
+                    $stmt = $db->prepare("SELECT id, name, username, email, city_id, district_id, created_at, 
+                                          user_level, points, total_posts, total_comments, 
+                                          profile_image_url, solved_issues FROM users WHERE username = ? LIMIT 1");
+                    $stmt->bind_param('s', $username);
+                } else {
+                    sendResponse(['error' => 'Kullanıcı ID, email veya username gerekli'], 400);
+                    return;
+                }
+                
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $user = $result->fetch_assoc();
+                
+                if ($user) {
+                    sendResponse(['success' => true, 'user' => $user]);
+                } else {
+                    sendResponse(['error' => 'Kullanıcı bulunamadı'], 404);
+                }
             }
             break;
         case 'posts':

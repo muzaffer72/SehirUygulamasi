@@ -2,6 +2,7 @@ class User {
   final int id;
   final String name;
   final String email;
+  final String? username;
   final bool isVerified;
   final String? cityId;
   final String? districtId;
@@ -18,6 +19,7 @@ class User {
     required this.id,
     required this.name,
     required this.email,
+    this.username,
     this.isVerified = false,
     this.cityId,
     this.districtId,
@@ -33,20 +35,43 @@ class User {
 
   // Factory constructor to create a User from a JSON map
   factory User.fromJson(Map<String, dynamic> json) {
+    // ID değerini düzgün şekilde alalım
+    int userId;
+    if (json['id'] is String) {
+      userId = int.tryParse(json['id']) ?? 0;
+    } else {
+      userId = json['id'] ?? 0;
+    }
+    
+    // Profile image URL için farklı alan isimlerini kontrol edelim
+    String? profileImage = json['profile_photo_url'] ?? 
+                          json['profile_image_url'] ?? 
+                          json['profile_image'] ?? 
+                          json['avatar'];
+    
     return User(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      isVerified: json['is_verified'] ?? false,
-      cityId: json['city_id'],
-      districtId: json['district_id'],
+      id: userId,
+      name: json['name'] ?? 'Kullanıcı',
+      email: json['email'] ?? '',
+      username: json['username'],
+      isVerified: json['is_verified'] == true || json['is_verified'] == 1,
+      cityId: json['city_id']?.toString(),
+      districtId: json['district_id']?.toString(),
       createdAt: json['created_at'],
       userLevel: json['user_level'] ?? 'newUser',
-      points: json['points'] ?? 0,
-      totalPosts: json['total_posts'] ?? 0,
-      totalComments: json['total_comments'] ?? 0,
-      profilePhotoUrl: json['profile_photo_url'],
-      solvedIssues: json['solved_issues'] ?? 0,
+      points: json['points'] is String 
+              ? int.tryParse(json['points']) ?? 0 
+              : json['points'] ?? 0,
+      totalPosts: json['total_posts'] is String 
+                  ? int.tryParse(json['total_posts']) ?? 0 
+                  : json['total_posts'] ?? 0,
+      totalComments: json['total_comments'] is String 
+                    ? int.tryParse(json['total_comments']) ?? 0 
+                    : json['total_comments'] ?? 0,
+      profilePhotoUrl: profileImage,
+      solvedIssues: json['solved_issues'] is String 
+                    ? int.tryParse(json['solved_issues']) ?? 0 
+                    : json['solved_issues'] ?? 0,
       badge: json['badge'],
     );
   }
@@ -57,6 +82,7 @@ class User {
       'id': id,
       'name': name,
       'email': email,
+      'username': username,
       'is_verified': isVerified,
       'city_id': cityId,
       'district_id': districtId,
@@ -76,6 +102,7 @@ class User {
     int? id,
     String? name,
     String? email,
+    String? username,
     bool? isVerified,
     String? cityId,
     String? districtId,
@@ -92,6 +119,7 @@ class User {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
+      username: username ?? this.username,
       isVerified: isVerified ?? this.isVerified,
       cityId: cityId ?? this.cityId,
       districtId: districtId ?? this.districtId,
