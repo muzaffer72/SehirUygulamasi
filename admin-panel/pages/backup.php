@@ -1402,7 +1402,7 @@ function import_single_file($file_path, $replace_data = false) {
             // Tablo zaten var mı kontrol et
             $check_query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '$table_name'";
             $check_result = $db->query($check_query);
-            $table_exists = $check_result->num_rows > 0;
+            $table_exists = $check_result->num_rows() > 0;
             error_log("JSON tablo kontrolü: " . ($table_exists ? "Tablo var" : "Tablo yok"));
             
             if (!$table_exists) {
@@ -1496,7 +1496,7 @@ function import_single_file($file_path, $replace_data = false) {
             error_log("CSV için tablo varlığı kontrol ediliyor: $table_name");
             $check_query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '$table_name'";
             $check_result = $db->query($check_query);
-            $table_exists = $check_result->num_rows > 0;
+            $table_exists = $check_result->num_rows() > 0;
             error_log("CSV tablo kontrolü: " . ($table_exists ? "Tablo var" : "Tablo yok"));
             
             if (!$table_exists) {
