@@ -399,8 +399,8 @@ function handleGet($endpoint, $id) {
             // ID ile kullanıcı bilgisi dönelim
             if ($id) {
                 $stmt = $db->prepare("SELECT id, name, username, email, city_id, district_id, created_at, 
-                                      user_level, points, total_posts, total_comments, 
-                                      profile_image_url, solved_issues FROM users WHERE id = ?");
+                                      level as user_level, points, post_count as total_posts, comment_count as total_comments, 
+                                      profile_image_url FROM users WHERE id = ?");
                 $stmt->bind_param('i', $id);
                 $stmt->execute();
                 $result = $stmt->get_result();
@@ -418,13 +418,13 @@ function handleGet($endpoint, $id) {
                 
                 if ($email) {
                     $stmt = $db->prepare("SELECT id, name, username, email, city_id, district_id, created_at, 
-                                          user_level, points, total_posts, total_comments, 
-                                          profile_image_url, solved_issues FROM users WHERE email = ? LIMIT 1");
+                                          level as user_level, points, post_count as total_posts, comment_count as total_comments, 
+                                          profile_image_url FROM users WHERE email = ? LIMIT 1");
                     $stmt->bind_param('s', $email);
                 } elseif ($username) {
                     $stmt = $db->prepare("SELECT id, name, username, email, city_id, district_id, created_at, 
-                                          user_level, points, total_posts, total_comments, 
-                                          profile_image_url, solved_issues FROM users WHERE username = ? LIMIT 1");
+                                          level as user_level, points, post_count as total_posts, comment_count as total_comments, 
+                                          profile_image_url FROM users WHERE username = ? LIMIT 1");
                     $stmt->bind_param('s', $username);
                 } else {
                     sendResponse(['error' => 'Kullanıcı ID, email veya username gerekli'], 400);
@@ -796,8 +796,9 @@ function handlePost($endpoint) {
             // Şifreyi hashleme
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             
-            // Kullanıcı oluşturma
-            $insertStmt = $db->prepare("INSERT INTO users (name, username, email, password, city_id, district_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+            // Kullanıcı oluşturma - ID alanı sequence ile otomatik atanır
+            $insertStmt = $db->prepare("INSERT INTO users (name, username, email, password, city_id, district_id, created_at, level, points, post_count, comment_count, is_verified) 
+                VALUES (?, ?, ?, ?, ?, ?, NOW(), 'newUser', 0, 0, 0, FALSE)");
             $insertStmt->bind_param('ssssss', $name, $username, $email, $hashedPassword, $cityId, $districtId);
             
             if ($insertStmt->execute()) {
