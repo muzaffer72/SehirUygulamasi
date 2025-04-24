@@ -1,5 +1,6 @@
 <?php
 require_once '../db_connection.php';
+// $conn değişkenini doğrudan db_connection.php'den alıyoruz (global değişken)
 
 header('Content-Type: application/json');
 
@@ -26,10 +27,22 @@ try {
     
     $stmt = $db->prepare($query);
     $stmt->execute([$post_id]);
-    $result = $stmt->get_result();
     $comments = [];
-    while ($row = $result->fetch_assoc()) {
-        $comments[] = $row;
+    
+    $result = $stmt->get_result();
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $comments[] = $row;
+        }
+    } else {
+        // Alternatif yöntem - manuel veri çekme
+        $pgQuery = str_replace('?', '$1', $query);
+        $pgResult = pg_query_params($conn, $pgQuery, [$post_id]);
+        if ($pgResult) {
+            while ($row = pg_fetch_assoc($pgResult)) {
+                $comments[] = $row;
+            }
+        }
     }
     
     // Yorumları JSON olarak döndür
