@@ -11,10 +11,10 @@ class ApiHelper {
       // window.location.protocol ve window.location.hostname değerleri JS tarafında alınacak
       
       // Bu web için fallback değeri - normalde kullanılmaz çünkü JS kodu çalışır
-      return 'https://workspace.guzelimbatmanli.repl.co/api';
+      return 'https://workspace.mail852.repl.co/api';
     } else {
-      // Mobilde sabit URL kullanıyoruz (api yolsuz)
-      return 'https://workspace.guzelimbatmanli.repl.co/api';
+      // Mobilde yeni API proxy'sini kullanıyoruz
+      return 'https://workspace.mail852.repl.co/api';
     }
   }
 }

@@ -392,6 +392,30 @@ function handleGet($endpoint, $id) {
     global $db;
     
     switch ($endpoint) {
+        case 'user':
+            // Kullanıcı bilgilerini almak için kullanılacak
+            // Bu endpoint, token ile gelen kullanıcı bilgilerini döndürmek için.
+            // Gelecekte oturum yönetimi eklenince düzenlenecek
+            
+            // Şimdilik ID ile kullanıcı bilgisi dönelim
+            if ($id) {
+                $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $user = $result->fetch_assoc();
+                
+                if ($user) {
+                    // Güvenlik için şifreyi kaldır
+                    unset($user['password']);
+                    sendResponse(['success' => true, 'user' => $user]);
+                } else {
+                    sendResponse(['error' => 'Kullanıcı bulunamadı'], 404);
+                }
+            } else {
+                sendResponse(['error' => 'Kullanıcı ID gerekli'], 400);
+            }
+            break;
         case 'posts':
             // POST listesini veritabanından getir
             if ($id) {
@@ -664,13 +688,114 @@ function handlePost($endpoint) {
     
     switch ($endpoint) {
         case 'login':
-            // TODO: Veritabanından kullanıcı doğrulama
-            sendResponse(['error' => 'Bu özellik henüz uygulanmadı'], 501);
+            // Gelen verileri kontrol et
+            $username = $data['username'] ?? null;
+            $password = $data['password'] ?? null;
+            
+            if (!$username || !$password) {
+                sendResponse(['error' => 'Kullanıcı adı ve şifre gereklidir'], 400);
+                return;
+            }
+            
+            // Kullanıcı adı veya e-posta ile giriş
+            $isEmail = filter_var($username, FILTER_VALIDATE_EMAIL);
+            
+            if ($isEmail) {
+                $stmt = $db->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
+            } else {
+                $stmt = $db->prepare("SELECT * FROM users WHERE username = ? LIMIT 1");
+            }
+            
+            $stmt->bind_param('s', $username);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $user = $result->fetch_assoc();
+            
+            if (!$user) {
+                sendResponse(['error' => 'Kullanıcı bulunamadı'], 401);
+                return;
+            }
+            
+            // Şifre kontrolü
+            if (password_verify($password, $user['password'])) {
+                // Güvenlik için şifreyi response'dan kaldır
+                unset($user['password']);
+                
+                // Başarılı giriş
+                sendResponse([
+                    'success' => true,
+                    'message' => 'Giriş başarılı',
+                    'user' => $user
+                ]);
+            } else {
+                sendResponse(['error' => 'Geçersiz şifre'], 401);
+            }
             break;
             
         case 'register':
-            // TODO: Veritabanına kullanıcı kaydetme
-            sendResponse(['error' => 'Bu özellik henüz uygulanmadı'], 501);
+            // Gelen verileri kontrol et
+            $name = $data['name'] ?? null;
+            $username = $data['username'] ?? null;
+            $email = $data['email'] ?? null;
+            $password = $data['password'] ?? null;
+            $cityId = $data['city_id'] ?? null;
+            $districtId = $data['district_id'] ?? null;
+            
+            if (!$name || !$username || !$email || !$password) {
+                sendResponse(['error' => 'Ad, kullanıcı adı, e-posta ve şifre gereklidir'], 400);
+                return;
+            }
+            
+            // Email ve username kontrolleri
+            $emailStmt = $db->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+            $emailStmt->bind_param('s', $email);
+            $emailStmt->execute();
+            $emailResult = $emailStmt->get_result();
+            
+            if ($emailResult->num_rows > 0) {
+                sendResponse(['error' => 'Bu e-posta adresi zaten kullanılıyor'], 400);
+                return;
+            }
+            
+            $usernameStmt = $db->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
+            $usernameStmt->bind_param('s', $username);
+            $usernameStmt->execute();
+            $usernameResult = $usernameStmt->get_result();
+            
+            if ($usernameResult->num_rows > 0) {
+                sendResponse(['error' => 'Bu kullanıcı adı zaten kullanılıyor'], 400);
+                return;
+            }
+            
+            // Şifreyi hashleme
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            
+            // Kullanıcı oluşturma
+            $insertStmt = $db->prepare("INSERT INTO users (name, username, email, password, city_id, district_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+            $insertStmt->bind_param('ssssss', $name, $username, $email, $hashedPassword, $cityId, $districtId);
+            
+            if ($insertStmt->execute()) {
+                $userId = $insertStmt->insert_id;
+                
+                // Yeni kullanıcı verilerini getir
+                $userStmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+                $userStmt->bind_param('i', $userId);
+                $userStmt->execute();
+                $userResult = $userStmt->get_result();
+                $user = $userResult->fetch_assoc();
+                
+                // Güvenlik için şifreyi response'dan kaldır
+                unset($user['password']);
+                
+                // Başarılı kayıt
+                sendResponse([
+                    'success' => true,
+                    'message' => 'Kayıt başarılı',
+                    'user' => $user
+                ], 201);
+            } else {
+                sendResponse(['error' => 'Kullanıcı kaydedilemedi: ' . $db->error], 500);
+            }
             break;
             
         case 'posts':
