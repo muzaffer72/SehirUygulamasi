@@ -1341,6 +1341,22 @@ function import_single_file($file_path, $replace_data = false) {
                                 }
                             } else if (stripos($query, 'CREATE TABLE') !== false) {
                                 error_log("CREATE TABLE komutu tespit edildi");
+                                
+                                // Tablo adını bul
+                                if (preg_match('/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?["\']?([^\s"\']+)["\']?/i', $query, $matches)) {
+                                    $table_name = $matches[1];
+                                    error_log("Tablo adı: " . $table_name);
+                                    
+                                    // Tablo var mı kontrol et
+                                    $check_query = "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '$table_name'";
+                                    $check_result = $db->query($check_query);
+                                    
+                                    if ($check_result && $check_result->num_rows() > 0) {
+                                        error_log("Tablo zaten var, CREATE TABLE atlanıyor: " . $table_name);
+                                        // Bu sorguyu atla
+                                        continue;
+                                    }
+                                }
                             }
                             
                             $result = $db->query($query);

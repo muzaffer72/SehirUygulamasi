@@ -36,7 +36,7 @@ $params = $input['params'] ?? [];
 
 try {
     // Sorguyu çalıştır
-    $stmt = $pdo->prepare($query);
+    $stmt = $db->prepare($query);
     $stmt->execute($params);
     
     // Sorgu bilgisini logla
@@ -49,14 +49,19 @@ try {
         stripos($query, 'DESCRIBE') === 0 || 
         stripos($query, 'EXPLAIN') === 0 ||
         strpos($query, 'RETURNING') !== false) {
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $pgres = $stmt->get_result();
+        if ($pgres) {
+            while ($row = $pgres->fetch_assoc()) {
+                $result[] = $row;
+            }
+        }
     }
     
     // Yanıt hazırla
     $response = [
         'success' => true,
         'rows' => $result,
-        'rowCount' => $stmt->rowCount()
+        'rowCount' => count($result)
     ];
     
     echo json_encode($response);
