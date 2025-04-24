@@ -1346,8 +1346,13 @@ function import_single_file($file_path, $replace_data = false) {
                             $result = $db->query($query);
                             
                             if ($result === false) {
-                                error_log("SQL sorgu hatası [" . ($i+1) . "]: " . $db->error);
-                                throw new Exception($db->error);
+                                $error_message = $db->error();
+                                error_log("SQL sorgu hatası [" . ($i+1) . "]: " . $error_message);
+                                if (!empty($error_message)) {
+                                    throw new Exception($error_message);
+                                } else {
+                                    throw new Exception("SQL sorgusu hata verdi ama detay alınamadı");
+                                }
                             }
                         } catch (Exception $e) {
                             error_log("SQL sorgu exception [" . ($i+1) . "]: " . $e->getMessage());
