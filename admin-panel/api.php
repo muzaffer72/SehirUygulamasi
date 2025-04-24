@@ -778,7 +778,13 @@ function handlePost($endpoint) {
             $emailStmt->execute();
             $emailResult = $emailStmt->get_result();
             
-            if ($emailResult->num_rows > 0) {
+            // PostgreSQL uyumlu kontrol
+            $emailCount = 0;
+            while ($row = $emailResult->fetch_assoc()) {
+                $emailCount++;
+            }
+            
+            if ($emailCount > 0) {
                 sendResponse(['error' => 'Bu e-posta adresi zaten kullanılıyor'], 400);
                 return;
             }
@@ -788,7 +794,13 @@ function handlePost($endpoint) {
             $usernameStmt->execute();
             $usernameResult = $usernameStmt->get_result();
             
-            if ($usernameResult->num_rows > 0) {
+            // PostgreSQL uyumlu kontrol
+            $usernameCount = 0;
+            while ($row = $usernameResult->fetch_assoc()) {
+                $usernameCount++;
+            }
+            
+            if ($usernameCount > 0) {
                 sendResponse(['error' => 'Bu kullanıcı adı zaten kullanılıyor'], 400);
                 return;
             }
@@ -826,7 +838,9 @@ function handlePost($endpoint) {
                     'user' => $user
                 ], 201);
             } else {
-                sendResponse(['error' => 'Kullanıcı kaydedilemedi: ' . $db->error], 500);
+                // PostgreSQL'de hata mesajını almak için pg_last_error() kullanılabilir
+                $errorMessage = $db->error ?? pg_last_error();
+                sendResponse(['error' => 'Kullanıcı kaydedilemedi: ' . $errorMessage], 500);
             }
             break;
             

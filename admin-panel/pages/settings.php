@@ -220,9 +220,21 @@ try {
     $query = "SELECT * FROM settings WHERE id = 1";
     $result = $db->query($query);
     
-    if ($result && $result->num_rows > 0) {
-        $settings = $result->fetch_assoc();
-    } else {
+    // PostgreSQL uyumlu num_rows kontrolü
+    $hasRows = false;
+    if ($result) {
+        $temp = [];
+        while ($row = $result->fetch_assoc()) {
+            $temp[] = $row;
+        }
+        $hasRows = count($temp) > 0;
+        // Eğer satır varsa, ilk satırı al
+        if ($hasRows) {
+            $settings = $temp[0];
+        }
+    }
+    
+    if (!$hasRows) {
         // Varsayılan ayarlar
         $settings = [
             'site_name' => 'ŞikayetVar',
