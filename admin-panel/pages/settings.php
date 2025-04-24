@@ -11,28 +11,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $maintenanceMode = isset($_POST['maintenance_mode']) ? 1 : 0;
         
         try {
-            // settings tablosunda mevcut kayıt var mı diye kontrol et
-            $query = "SELECT COUNT(*) as count FROM settings WHERE id = 1";
-            $result = $db->query($query);
-            $row = $result->fetch_assoc();
-            
-            if ($row['count'] > 0) {
-                // Mevcut ayarları güncelle
-                $query = "UPDATE settings SET 
-                    site_name = ?, 
-                    site_description = ?, 
-                    admin_email = ?, 
-                    maintenance_mode = ? 
-                    WHERE id = 1";
-                $stmt = $db->prepare($query);
-                $stmt->bind_param("sssi", $siteName, $siteDescription, $adminEmail, $maintenanceMode);
-            } else {
-                // Yeni ayar kaydı oluştur
-                $query = "INSERT INTO settings (site_name, site_description, admin_email, maintenance_mode) 
-                    VALUES (?, ?, ?, ?)";
-                $stmt = $db->prepare($query);
-                $stmt->bind_param("sssi", $siteName, $siteDescription, $adminEmail, $maintenanceMode);
-            }
+            // PostgreSQL'de varsa güncelle, yoksa oluştur mantığı kullan (upsert)
+            $query = "
+                INSERT INTO settings (id, site_name, site_description, admin_email, maintenance_mode) 
+                VALUES (1, ?, ?, ?, ?) 
+                ON CONFLICT (id) DO UPDATE 
+                SET site_name = EXCLUDED.site_name,
+                    site_description = EXCLUDED.site_description,
+                    admin_email = EXCLUDED.admin_email,
+                    maintenance_mode = EXCLUDED.maintenance_mode
+            ";
+            $stmt = $db->prepare($query);
+            $stmt->bind_param("sssi", $siteName, $siteDescription, $adminEmail, $maintenanceMode);
             
             $result = $stmt->execute();
             
@@ -107,22 +97,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $webhookUrl = isset($_POST['webhook_url']) ? $_POST['webhook_url'] : '';
         
         try {
-            // settings tablosunda mevcut kayıt var mı diye kontrol et
-            $query = "SELECT COUNT(*) as count FROM settings WHERE id = 1";
-            $result = $db->query($query);
-            $row = $result->fetch_assoc();
-            
-            if ($row['count'] > 0) {
-                // Mevcut ayarları güncelle
-                $query = "UPDATE settings SET webhook_url = ? WHERE id = 1";
-                $stmt = $db->prepare($query);
-                $stmt->bind_param("s", $webhookUrl);
-            } else {
-                // Yeni ayar kaydı oluştur
-                $query = "INSERT INTO settings (webhook_url) VALUES (?)";
-                $stmt = $db->prepare($query);
-                $stmt->bind_param("s", $webhookUrl);
-            }
+            // PostgreSQL'de varsa güncelle, yoksa oluştur mantığı kullan (upsert)
+            $query = "
+                INSERT INTO settings (id, webhook_url) 
+                VALUES (1, ?) 
+                ON CONFLICT (id) DO UPDATE 
+                SET webhook_url = EXCLUDED.webhook_url
+            ";
+            $stmt = $db->prepare($query);
+            $stmt->bind_param("s", $webhookUrl);
             
             $result = $stmt->execute();
             
@@ -139,22 +122,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $apiKey = bin2hex(random_bytes(16)); // 32 karakterlik güvenli bir anahtar
         
         try {
-            // settings tablosunda mevcut kayıt var mı diye kontrol et
-            $query = "SELECT COUNT(*) as count FROM settings WHERE id = 1";
-            $result = $db->query($query);
-            $row = $result->fetch_assoc();
+            // Hata izleme
+            error_log('API Anahtarı Oluşturulma İsteği - Başladı');
             
-            if ($row['count'] > 0) {
-                // Mevcut ayarları güncelle
-                $query = "UPDATE settings SET api_key = ? WHERE id = 1";
-                $stmt = $db->prepare($query);
-                $stmt->bind_param("s", $apiKey);
-            } else {
-                // Yeni ayar kaydı oluştur
-                $query = "INSERT INTO settings (api_key) VALUES (?)";
-                $stmt = $db->prepare($query);
-                $stmt->bind_param("s", $apiKey);
-            }
+            // Önce mevcut ayarları temizle
+            $cleanUpQuery = "DELETE FROM settings WHERE id IS NULL OR id != 1";
+            $db->query($cleanUpQuery);
+            error_log('Null satırlar temizlendi');
+            
+            // PostgreSQL'de varsa güncelle, yoksa oluştur mantığı kullan (upsert)
+            $query = "
+                INSERT INTO settings (id, api_key) 
+                VALUES (1, ?) 
+                ON CONFLICT (id) DO UPDATE 
+                SET api_key = EXCLUDED.api_key
+            ";
+            $stmt = $db->prepare($query);
+            $stmt->bind_param("s", $apiKey);
+            error_log('API Anahtarı: ' . $apiKey);
             
             $result = $stmt->execute();
             
