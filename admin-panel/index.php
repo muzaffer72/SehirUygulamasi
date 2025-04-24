@@ -10,6 +10,12 @@ require_once 'db_connection.php';
 // Başarı mesajı varsa
 $success_message = isset($_GET['success']) ? urldecode($_GET['success']) : null;
 
+// Başarılı giriş mesajını göster
+if (isset($_SESSION['login_success'])) {
+    $success_message = $_SESSION['login_success'];
+    unset($_SESSION['login_success']);
+}
+
 // Admin yetki kontrolü fonksiyonu
 function requireAdmin() {
     if (!isset($_SESSION['user'])) {
@@ -230,11 +236,86 @@ if (isset($_POST['login'])) {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
     
+    // Önce sabit admin kullanıcısını kontrol et
     if ($username === $config['admin_user'] && $password === $config['admin_pass']) {
         $_SESSION['user'] = $config['admin_user'];
+        $_SESSION['user_id'] = 0; // Özel admin ID'si
+        $_SESSION['is_admin'] = true;
         $_SESSION['login_time'] = time();
     } else {
-        $login_error = 'Geçersiz kullanıcı adı veya şifre.';
+        // Veritabanından kullanıcı sorgula
+        try {
+            $query = "SELECT * FROM users WHERE username = ?";
+            $stmt = $db->prepare($query);
+            $stmt->bind_param("s", $username);
+            
+            if ($stmt->execute()) {
+                $result = $stmt->get_result();
+                if ($result && $user = $result->fetch_assoc()) {
+                    // Basit şifre kontrolü (gerçekte password_verify kullanılmalı)
+                    // Laravel'de bcrypt kullanıldığı için $2y$ ile başlayan şifreler var
+                    if (password_verify($password, $user['password'])) {
+                        $_SESSION['user'] = $user['username'];
+                        $_SESSION['user_id'] = $user['id'];
+                        $_SESSION['is_admin'] = ($user['level'] === 'master');
+                        $_SESSION['login_time'] = time();
+                    } else {
+                        $login_error = 'Geçersiz kullanıcı adı veya şifre.';
+                    }
+                } else {
+                    $login_error = 'Geçersiz kullanıcı adı veya şifre.';
+                }
+            } else {
+                $login_error = 'Giriş yapılırken bir hata oluştu.';
+            }
+        } catch (Exception $e) {
+            $login_error = 'Veritabanı hatası: ' . $e->getMessage();
+        }
+    }
+}
+
+// Kayıt işlemi
+if (isset($_POST['register'])) {
+    $name = $_POST['reg_name'] ?? '';
+    $username = $_POST['reg_username'] ?? '';
+    $email = $_POST['reg_email'] ?? '';
+    $password = $_POST['reg_password'] ?? '';
+    $city_id = $_POST['reg_city'] ?? '';
+    $district_id = $_POST['reg_district'] ?? '';
+    
+    // Kullanıcı adı veya e-posta kullanılmış mı kontrol et
+    try {
+        $check_query = "SELECT * FROM users WHERE username = ? OR email = ?";
+        $check_stmt = $db->prepare($check_query);
+        $check_stmt->bind_param("ss", $username, $email);
+        
+        if ($check_stmt->execute()) {
+            $check_result = $check_stmt->get_result();
+            if ($check_result && $check_result->num_rows > 0) {
+                $register_error = 'Bu kullanıcı adı veya e-posta adresi zaten kullanılıyor.';
+            } else {
+                // Şifreyi şifrele
+                $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+                
+                // Kullanıcıyı ekle
+                $insert_query = "INSERT INTO users (name, username, email, password, city_id, district_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+                $insert_stmt = $db->prepare($insert_query);
+                $insert_stmt->bind_param("ssssii", $name, $username, $email, $hashed_password, $city_id, $district_id);
+                
+                if ($insert_stmt->execute()) {
+                    $register_success = 'Hesabınız başarıyla oluşturuldu. Şimdi giriş yapabilirsiniz.';
+                    // Başarılı kayıt sonrası ana giriş sayfasına yönlendir
+                    header('Location: index.php?success=' . urlencode('Hesabınız başarıyla oluşturuldu.'));
+                    exit;
+                } else {
+                    $register_error = 'Hesap oluşturulurken bir hata oluştu: ' . $db->error();
+                }
+            }
+        } else {
+            $register_error = 'Kayıt sırasında bir hata oluştu.';
+        }
+    } catch (Exception $e) {
+        $register_error = 'Veritabanı hatası: ' . $e->getMessage();
     }
 }
 
@@ -532,6 +613,11 @@ $page_file = "pages/{$page}.php";
         <!-- Login Form -->
         <div class="login-container">
             <h2 class="text-center mb-4">ŞikayetVar Admin Panel</h2>
+            <?php if (isset($success_message)): ?>
+                <div class="alert alert-success" role="alert">
+                    <?= $success_message ?>
+                </div>
+            <?php endif; ?>
             <?php if (isset($login_error)): ?>
                 <div class="alert alert-danger" role="alert">
                     <?= $login_error ?>
@@ -547,11 +633,94 @@ $page_file = "pages/{$page}.php";
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
                 <button type="submit" name="login" class="btn btn-primary w-100">Giriş Yap</button>
+                <div class="mt-3 text-center">
+                    <a href="?page=register" class="text-decoration-none">Hesabınız yok mu? Kayıt Olun</a>
+                </div>
             </form>
             <div class="mt-3 text-center text-muted">
                 <small>Demo Kullanıcı: admin / Şifre: admin123</small>
             </div>
         </div>
+        
+        <?php if (isset($_GET['page']) && $_GET['page'] === 'register'): ?>
+        <!-- Register Form -->
+        <div class="login-container mt-4">
+            <h2 class="text-center mb-4">Hesap Oluştur</h2>
+            <?php if (isset($register_error)): ?>
+                <div class="alert alert-danger" role="alert">
+                    <?= $register_error ?>
+                </div>
+            <?php endif; ?>
+            <?php if (isset($register_success)): ?>
+                <div class="alert alert-success" role="alert">
+                    <?= $register_success ?>
+                </div>
+            <?php endif; ?>
+            <form method="post" action="?page=register">
+                <div class="mb-3">
+                    <label for="reg_name" class="form-label">Ad Soyad</label>
+                    <input type="text" class="form-control" id="reg_name" name="reg_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reg_username" class="form-label">Kullanıcı Adı</label>
+                    <input type="text" class="form-control" id="reg_username" name="reg_username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reg_email" class="form-label">E-posta</label>
+                    <input type="email" class="form-control" id="reg_email" name="reg_email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reg_password" class="form-label">Şifre</label>
+                    <input type="password" class="form-control" id="reg_password" name="reg_password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reg_city" class="form-label">Şehir</label>
+                    <select class="form-select" id="reg_city" name="reg_city" required>
+                        <option value="">Seçiniz</option>
+                        <?php foreach ($cities as $city): ?>
+                        <option value="<?= $city['id'] ?>"><?= $city['name'] ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="reg_district" class="form-label">İlçe</label>
+                    <select class="form-select" id="reg_district" name="reg_district" required>
+                        <option value="">Önce şehir seçiniz</option>
+                    </select>
+                </div>
+                <button type="submit" name="register" class="btn btn-success w-100">Kayıt Ol</button>
+                <div class="mt-3 text-center">
+                    <a href="index.php" class="text-decoration-none">Zaten hesabınız var mı? Giriş yapın</a>
+                </div>
+            </form>
+        </div>
+        
+        <script>
+        // Şehir seçildiğinde ilçeleri getir
+        document.getElementById('reg_city').addEventListener('change', function() {
+            const cityId = this.value;
+            const districtSelect = document.getElementById('reg_district');
+            
+            // Tüm ilçeleri temizle
+            districtSelect.innerHTML = '<option value="">Seçiniz</option>';
+            
+            if (!cityId) return;
+            
+            // İlgili şehrin ilçelerini filtrele
+            <?php echo "const allDistricts = " . json_encode($districts) . ";\n"; ?>
+            
+            const filteredDistricts = allDistricts.filter(district => district.city_id == cityId);
+            
+            // İlçeleri ekle
+            filteredDistricts.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district.id;
+                option.textContent = district.name;
+                districtSelect.appendChild(option);
+            });
+        });
+        </script>
+        <?php endif; ?>
     <?php else: ?>
         <!-- Admin Dashboard -->
         <div class="container-fluid">
