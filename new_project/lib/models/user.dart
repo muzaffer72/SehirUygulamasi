@@ -44,24 +44,64 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // ID her zaman tam sayıdır, ancak API'den string veya int olarak gelebilir
+    int userId = 0;
+    try {
+      if (json['id'] is String) {
+        userId = int.parse(json['id']);
+      } else if (json['id'] is int) {
+        userId = json['id'];
+      }
+    } catch (e) {
+      print('User ID parse hatası: $e');
+    }
+    
+    // Profil fotoğrafı için alternatif alanları kontrol et
+    String? profileImage = json['profile_image_url'] ?? json['profile_photo_url'] ?? json['avatar'];
+    
+    // PostgreSQL veritabanı uyumu için post_count veya total_posts kullan
+    int? postCountVal;
+    try {
+      if (json['post_count'] != null) {
+        postCountVal = json['post_count'] is String ? int.parse(json['post_count']) : json['post_count'];
+      } else if (json['total_posts'] != null) {
+        postCountVal = json['total_posts'] is String ? int.parse(json['total_posts']) : json['total_posts'];
+      }
+    } catch (e) {
+      print('Post count parse hatası: $e');
+    }
+    
+    // Puan için alternatif alanları kontrol et
+    int? pointsVal;
+    try {
+      if (json['points'] != null) {
+        pointsVal = json['points'] is String ? int.parse(json['points']) : json['points'];
+      }
+    } catch (e) {
+      print('Points parse hatası: $e');
+    }
+    
+    // Kullanıcı rolü için user_level veya level kullan
+    String? roleVal = json['role'] ?? json['user_level'] ?? json['level'];
+    
     return User(
-      id: json['id'] is String ? int.parse(json['id']) : json['id'],
+      id: userId,
       email: json['email'] ?? '',
       name: json['name'] ?? '',
       username: json['username'],
       bio: json['bio'],
       phone: json['phone'],
-      profileImageUrl: json['profile_image_url'],
+      profileImageUrl: profileImage,
       coverImageUrl: json['cover_image_url'],
       cityId: json['city_id']?.toString(),
       cityName: json['city_name'],
       districtId: json['district_id']?.toString(),
       districtName: json['district_name'],
-      postCount: json['post_count'] is String ? int.parse(json['post_count']) : json['post_count'],
-      followersCount: json['followers_count'] is String ? int.parse(json['followers_count']) : json['followers_count'],
-      followingCount: json['following_count'] is String ? int.parse(json['following_count']) : json['following_count'],
-      points: json['points'] is String ? int.parse(json['points']) : json['points'],
-      role: json['role'],
+      postCount: postCountVal,
+      followersCount: json['followers_count'] is String ? int.parse(json['followers_count'] ?? '0') : json['followers_count'],
+      followingCount: json['following_count'] is String ? int.parse(json['following_count'] ?? '0') : json['following_count'],
+      points: pointsVal,
+      role: roleVal,
       isVerified: json['is_verified'] == 1 || json['is_verified'] == '1' || json['is_verified'] == true,
       lastActivity: json['last_activity'],
       createdAt: json['created_at'],

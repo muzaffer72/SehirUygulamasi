@@ -32,14 +32,14 @@ class ApiHelper {
   
   // Android platformu için API URL'i
   static String _getAndroidApiBaseUrl() {
-    // Gerçek cihazlar için yeni API URL
-    return 'https://sehir.muzaffersanli.com';
+    // Replit API proxy adresi kullanılıyor
+    return 'https://workspace.mail852.repl.co/api';
   }
   
   // iOS platformu için API URL'i
   static String _getIOSApiBaseUrl() {
-    // Gerçek cihazlar için yeni API URL 
-    return 'https://sehir.muzaffersanli.com';
+    // Replit API proxy adresi kullanılıyor
+    return 'https://workspace.mail852.repl.co/api';
   }
   
   // API yolunu standart hale getir

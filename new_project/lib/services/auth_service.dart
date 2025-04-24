@@ -16,9 +16,12 @@ class AuthService {
       // Admin panel ile uyumlu giriş isteği yapıyoruz
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.login}'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-KEY': '440bf0009c749943b440f7f5c6c2fd26'
+        },
         body: jsonEncode({
-          'username': email,  // Laravel admin panel username olarak bekliyor
+          'username': email,  // Email veya kullanıcı adı olarak kullanılabilir
           'password': password,
         }),
       );
@@ -87,10 +90,13 @@ class AuthService {
       // Admin panel ile uyumlu kayıt isteği yapıyoruz
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.register}'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-KEY': '440bf0009c749943b440f7f5c6c2fd26'
+        },
         body: jsonEncode({
           'name': name,
-          'username': email,  // Laravel admin panelde username olarak bekliyor
+          'username': email.split('@')[0],  // Email'in @ işaretinden önceki kısmını username olarak kullan
           'email': email,
           'password': password,
           'city_id': cityId, // Zaten string
@@ -149,6 +155,7 @@ class AuthService {
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.logout}'),
         headers: {
           'Content-Type': 'application/json',
+          'X-API-KEY': '440bf0009c749943b440f7f5c6c2fd26',
           'Cookie': token ?? '',
         },
       );
@@ -188,6 +195,7 @@ class AuthService {
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.currentUser}'),
         headers: {
           'Content-Type': 'application/json',
+          'X-API-KEY': '440bf0009c749943b440f7f5c6c2fd26',
           'Cookie': token,
           'Authorization': token.startsWith('Bearer ') ? token : 'Bearer $token',
         },
@@ -247,6 +255,7 @@ class AuthService {
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.users}/$userId'),
         headers: {
           'Content-Type': 'application/json',
+          'X-API-KEY': '440bf0009c749943b440f7f5c6c2fd26',
           'Cookie': token,
         },
         body: jsonEncode(userData),
