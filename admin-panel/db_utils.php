@@ -14,6 +14,13 @@
  * @return bool Tablo zaten vardı mı yoksa yeni mi oluşturuldu
  */
 function ensureTableExists($db, $tableName, $createSQL, $initSQL = null) {
+    // GÜVENLK KONTROLÜ: Asla DROP TABLE işlemi yapılmayacak
+    if (stripos($createSQL, 'DROP TABLE') !== false || 
+        ($initSQL !== null && stripos($initSQL, 'DROP TABLE') !== false)) {
+        error_log("GÜVENLİK UYARISI: '$tableName' için DROP TABLE komutu tespit edildi, işlem engellendi!");
+        return false;
+    }
+    
     // Tablo var mı diye kontrol et (PostgreSQL uyumlu)
     $checkTableSQL = "SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -21,43 +28,49 @@ function ensureTableExists($db, $tableName, $createSQL, $initSQL = null) {
         AND table_name = ?
     )";
     
-    $stmt = $db->prepare($checkTableSQL);
-    $stmt->bind_param('s', $tableName);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $tableExists = $result->fetch_assoc()['exists'] ?? false;
-    
-    // Tablo yoksa oluştur
-    if (!$tableExists) {
-        error_log("Tablo kontrol: '$tableName' tablosu bulunamadı, oluşturuluyor...");
+    try {
+        $stmt = $db->prepare($checkTableSQL);
+        $stmt->bind_param('s', $tableName);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $tableExists = $result->fetch_assoc()['exists'] ?? false;
         
-        try {
-            // Tabloyu oluştur
-            $success = $db->query($createSQL);
+        // Tablo YOKSA oluştur, VARSA DOKUNMA
+        if (!$tableExists) {
+            error_log("Tablo kontrol: '$tableName' tablosu bulunamadı, oluşturuluyor...");
             
-            if (!$success) {
-                error_log("HATA: '$tableName' tablosu oluşturulamadı: " . $db->error);
+            try {
+                // Tabloyu oluştur
+                $success = $db->query($createSQL);
+                
+                if (!$success) {
+                    error_log("HATA: '$tableName' tablosu oluşturulamadı: " . $db->error);
+                    return false;
+                }
+                
+                // Başlangıç verilerini ekle (varsa ve tablo yeni oluşturulduysa)
+                if ($initSQL && $success) {
+                    $success = $db->query($initSQL);
+                    if (!$success) {
+                        error_log("UYARI: '$tableName' için başlangıç verileri eklenemedi: " . $db->error);
+                    }
+                }
+                
+                error_log("BAŞARILI: '$tableName' tablosu oluşturuldu");
+                return true;
+            } catch (Exception $e) {
+                error_log("HATA: Tablo oluşturma hatası: " . $e->getMessage());
                 return false;
             }
-            
-            // Başlangıç verilerini ekle (varsa)
-            if ($initSQL && $success) {
-                $success = $db->query($initSQL);
-                if (!$success) {
-                    error_log("UYARI: '$tableName' için başlangıç verileri eklenemedi: " . $db->error);
-                }
-            }
-            
-            error_log("BAŞARILI: '$tableName' tablosu oluşturuldu");
-            return true;
-        } catch (Exception $e) {
-            error_log("HATA: Tablo oluşturma hatası: " . $e->getMessage());
+        } else {
+            // Tablo zaten var - sessizce devam et, hata verme
+            error_log("Tablo kontrol: '$tableName' tablosu mevcut, dokunulmadı.");
             return false;
         }
+    } catch (Exception $e) {
+        error_log("HATA: Tablo varlık kontrolünde hata: " . $e->getMessage());
+        return false;
     }
-    
-    // Tablo zaten var
-    return false;
 }
 
 /**
@@ -370,6 +383,166 @@ function ensureCoreTables($db) {
     
     $results['survey_regional_results'] = ensureTableExists($db, 'survey_regional_results', $surveyRegionalResultsSQL);
     
+    // 15. City Services (Şehir Hizmetleri) tablosu kontrol/oluşturma
+    $cityServicesSQL = "CREATE TABLE city_services (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        service_type VARCHAR(100),
+        icon_name VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['city_services'] = ensureTableExists($db, 'city_services', $cityServicesSQL);
+    
+    // 16. City Projects (Şehir Projeleri) tablosu kontrol/oluşturma
+    $cityProjectsSQL = "CREATE TABLE city_projects (
+        id SERIAL PRIMARY KEY,
+        city_id INTEGER NOT NULL,
+        district_id INTEGER,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        status VARCHAR(50) DEFAULT 'ongoing',
+        start_date DATE,
+        estimated_end_date DATE,
+        completion_percentage INTEGER DEFAULT 0,
+        budget DECIMAL(16,2),
+        image_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['city_projects'] = ensureTableExists($db, 'city_projects', $cityProjectsSQL);
+    
+    // 17. City Events (Şehir Etkinlikleri) tablosu kontrol/oluşturma
+    $cityEventsSQL = "CREATE TABLE city_events (
+        id SERIAL PRIMARY KEY,
+        city_id INTEGER NOT NULL,
+        district_id INTEGER,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        event_type VARCHAR(50),
+        start_date TIMESTAMP,
+        end_date TIMESTAMP,
+        location TEXT,
+        image_url TEXT,
+        is_free BOOLEAN DEFAULT TRUE,
+        ticket_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['city_events'] = ensureTableExists($db, 'city_events', $cityEventsSQL);
+    
+    // 18. City Stats (Şehir İstatistikleri) tablosu kontrol/oluşturma
+    $cityStatsSQL = "CREATE TABLE city_stats (
+        id SERIAL PRIMARY KEY,
+        city_id INTEGER NOT NULL,
+        district_id INTEGER,
+        stat_type VARCHAR(100) NOT NULL,
+        stat_value DECIMAL(16,2) NOT NULL,
+        stat_period VARCHAR(50),
+        year INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['city_stats'] = ensureTableExists($db, 'city_stats', $cityStatsSQL);
+    
+    // 19. Before After Records (Öncesi-Sonrası Kayıtları) tablosu kontrol/oluşturma
+    $beforeAfterRecordsSQL = "CREATE TABLE before_after_records (
+        id SERIAL PRIMARY KEY,
+        city_id INTEGER NOT NULL,
+        district_id INTEGER,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        before_image_url TEXT NOT NULL,
+        after_image_url TEXT NOT NULL,
+        before_date DATE,
+        after_date DATE,
+        location TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['before_after_records'] = ensureTableExists($db, 'before_after_records', $beforeAfterRecordsSQL);
+    
+    // 20. Award Types (Ödül Türleri) tablosu kontrol/oluşturma
+    $awardTypesSQL = "CREATE TABLE award_types (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        icon_name VARCHAR(100),
+        points INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['award_types'] = ensureTableExists($db, 'award_types', $awardTypesSQL);
+    
+    // 21. City Awards (Şehir Ödülleri) tablosu kontrol/oluşturma
+    $cityAwardsSQL = "CREATE TABLE city_awards (
+        id SERIAL PRIMARY KEY,
+        city_id INTEGER NOT NULL,
+        award_type_id INTEGER NOT NULL,
+        year INTEGER,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        image_url TEXT,
+        awarded_by VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['city_awards'] = ensureTableExists($db, 'city_awards', $cityAwardsSQL);
+    
+    // 22. Political Parties (Siyasi Partiler) tablosu kontrol/oluşturma
+    $politicalPartiesSQL = "CREATE TABLE political_parties (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        short_name VARCHAR(50),
+        logo_url TEXT,
+        color VARCHAR(20),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['political_parties'] = ensureTableExists($db, 'political_parties', $politicalPartiesSQL);
+    
+    // 23. Party Performance (Parti Performansı) tablosu kontrol/oluşturma
+    $partyPerformanceSQL = "CREATE TABLE party_performance (
+        id SERIAL PRIMARY KEY,
+        party_id INTEGER NOT NULL,
+        city_id INTEGER,
+        district_id INTEGER,
+        rating DECIMAL(3,1),
+        rating_count INTEGER DEFAULT 0,
+        year INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['party_performance'] = ensureTableExists($db, 'party_performance', $partyPerformanceSQL);
+    
+    // 24. Search Suggestions (Arama Önerileri) tablosu kontrol/oluşturma
+    $searchSuggestionsSQL = "CREATE TABLE search_suggestions (
+        id SERIAL PRIMARY KEY,
+        query TEXT NOT NULL,
+        frequency INTEGER DEFAULT 1,
+        last_searched TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['search_suggestions'] = ensureTableExists($db, 'search_suggestions', $searchSuggestionsSQL);
+    
+    // 25. Cities Services (Şehirlerin Hizmetleri) tablosu kontrol/oluşturma
+    $citiesServicesSQL = "CREATE TABLE cities_services (
+        id SERIAL PRIMARY KEY,
+        city_id INTEGER NOT NULL,
+        service_id INTEGER NOT NULL,
+        rating DECIMAL(3,1),
+        active BOOLEAN DEFAULT TRUE,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_city_service UNIQUE (city_id, service_id)
+    )";
+    
+    $results['cities_services'] = ensureTableExists($db, 'cities_services', $citiesServicesSQL);
+    
     // Anket örnek verilerini ekleyelim (eğer hiç anket yoksa)
     $checkSurveysSQL = "SELECT COUNT(*) as count FROM surveys";
     $checkResult = $db->query($checkSurveysSQL);
@@ -419,6 +592,19 @@ function ensureCoreTables($db) {
             error_log("Örnek anket verileri eklenirken hata: " . $e->getMessage());
         }
     }
+    
+    // Son olarak LOG TABLOSU ekleme - Sistem günlüğü
+    $logsSQL = "CREATE TABLE system_logs (
+        id SERIAL PRIMARY KEY,
+        log_type VARCHAR(50) NOT NULL,
+        message TEXT NOT NULL,
+        user_id INTEGER,
+        ip_address VARCHAR(50),
+        user_agent TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+    
+    $results['system_logs'] = ensureTableExists($db, 'system_logs', $logsSQL);
     
     return $results;
 }

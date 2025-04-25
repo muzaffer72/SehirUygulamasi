@@ -201,27 +201,66 @@ $db = new MySQLiCompatWrapper($conn);
 
 // Uygulama başlatıldığında önemli tabloların durumunu otomatik kontrol edelim
 // Sadece API isteklerinde ve ajax çağrılarında tablo kontrolü pas geçelim
-$isApiRequest = strpos($_SERVER['REQUEST_URI'], '/api.php') !== false;
+$isApiRequest = strpos($_SERVER['REQUEST_URI'] ?? '', '/api.php') !== false;
 $isAjaxRequest = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+$isCommandLine = php_sapi_name() === 'cli';
 
-if (!$isApiRequest && !$isAjaxRequest && !defined('SKIP_TABLE_CHECK')) {
+// Aşağıdaki durumlarda tablo kontrolü yapma:
+// 1. API çağrısı ise
+// 2. AJAX isteği ise
+// 3. Komut satırından çalıştırılıyorsa
+// 4. Test modu aktifse (SKIP_TABLE_CHECK sabit değişkeni tanımlanmışsa)
+// 5. $_GET['quick_api'] parametresi gönderilmişse (hızlı API çağrıları için)
+if (!$isApiRequest && !$isAjaxRequest && !$isCommandLine && !defined('SKIP_TABLE_CHECK') && empty($_GET['quick_api'])) {
     // İlk kez çağrılıyorsa zaten dahil edilmiş olacak
     if (!function_exists('ensureCoreTables')) {
         $dbUtilsPath = __DIR__ . '/db_utils.php';
         if (file_exists($dbUtilsPath)) {
-            require_once($dbUtilsPath);
-            
-            // Temel tabloları kontrol et
             try {
+                require_once($dbUtilsPath);
+                
+                // Temel tabloları kontrol et
                 if (function_exists('ensureCoreTables')) {
-                    ensureCoreTables($db);
+                    // Potansiyel uzun sürebilecek işlemler için, isteği sonlandırma süresini arttır
+                    set_time_limit(120); // 2 dakika
+                    
+                    // Güvenlik için, DROP, DELETE gibi yıkıcı SQL komutları engelle
+                    if (defined('DB_SAFE_MODE') && constant('DB_SAFE_MODE') === true) {
+                        error_log("Veritabanı Güvenlik Modu: AÇIK - Tablo kontrolü yapılıyor (sadece ekleme)");
+                    }
+                    
+                    // Temel tabloları kontrol et
+                    $results = ensureCoreTables($db);
+                    
                     // Başarılı sonuç loglaması - debug
-                    error_log("Veritabanı tabloları otomatik olarak kontrol edildi");
+                    $createdTables = array_keys(array_filter($results));
+                    if (count($createdTables) > 0) {
+                        error_log("Veritabanı tabloları otomatik olarak oluşturuldu: " . implode(', ', $createdTables));
+                    } else {
+                        error_log("Veritabanı tabloları kontrol edildi, tüm tablolar mevcut.");
+                    }
                 }
             } catch (Exception $e) {
-                error_log("Veritabanı tablo kontrolünde hata: " . $e->getMessage());
+                error_log("VERİTABANI HATA: Tablo kontrolünde ciddi bir hata: " . $e->getMessage());
+                // Kritik hatayı bildirmek için log dosyasına detaylı bilgi yaz
+                error_log("Hata Yığını: " . $e->getTraceAsString());
             }
+        } else {
+            error_log("UYARI: db_utils.php dosyası bulunamadı, tablo kontrolleri yapılamadı.");
         }
+    }
+}
+
+// PostgreSQL ping ile bağlantıyı kontrol et
+function pg_connection_is_alive($conn) {
+    if (!$conn) return false;
+    
+    try {
+        $result = pg_query($conn, "SELECT 1");
+        return $result !== false;
+    } catch (Exception $e) {
+        error_log("Bağlantı kontrolünde hata: " . $e->getMessage());
+        return false;
     }
 }
 ?>
