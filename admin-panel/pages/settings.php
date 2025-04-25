@@ -144,50 +144,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Settings tablosunun varlığını kontrol et ve yoksa oluştur
+// Veritabanı yardımcı fonksiyonlarını dahil et
+require_once(__DIR__ . '/../db_utils.php');
+
+// Gerekli tüm tabloları kontrol et ve yoksa oluştur
 try {
-    $checkTableSQL = "SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'settings'
-    )";
-    $result = $db->query($checkTableSQL);
-    $tableExists = $result->fetch_assoc()['exists'] ?? false;
+    // Kritik ana tabloları kontrol et (settings, users, categories, cities, districts...)
+    $tableResults = ensureCoreTables($db);
     
-    if (!$tableExists) {
-        // Tablo yoksa oluştur
-        $createTableSQL = "CREATE TABLE settings (
-            id INT PRIMARY KEY,
-            site_name VARCHAR(100) NOT NULL DEFAULT 'ŞikayetVar',
-            site_description TEXT,
-            admin_email VARCHAR(255),
-            maintenance_mode BOOLEAN DEFAULT FALSE,
-            email_notifications BOOLEAN DEFAULT TRUE,
-            push_notifications BOOLEAN DEFAULT TRUE,
-            new_post_notifications BOOLEAN DEFAULT TRUE,
-            new_user_notifications BOOLEAN DEFAULT TRUE,
-            api_key VARCHAR(100),
-            webhook_url VARCHAR(255),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )";
-        $db->query($createTableSQL);
-        
-        // Varsayılan ayarları ekle
-        $insertSettingsSQL = "INSERT INTO settings (
-            id, site_name, site_description, admin_email, 
-            maintenance_mode, email_notifications, push_notifications, 
-            new_post_notifications, new_user_notifications, 
-            api_key, webhook_url
-        ) VALUES (
-            1, 'ŞikayetVar', 'Belediye ve Valilik''e yönelik şikayet ve öneri paylaşım platformu', 
-            'admin@sikayetvar.com', FALSE, TRUE, TRUE, TRUE, TRUE, 
-            'henüz oluşturulmadı', 'https://sikayetvar.com/api/webhook'
-        )";
-        $db->query($insertSettingsSQL);
+    // Sonuçları kontrol et ve gerekirse bilgilendirme mesajları göster
+    if (!empty(array_filter($tableResults))) {
+        // En az bir tablo oluşturulmuşsa admin'i bilgilendir
+        $createdTables = array_keys(array_filter($tableResults));
+        $infoMessage = 'Veritabanında eksik tablolar tespit edildi ve otomatik olarak oluşturuldu: ' 
+            . implode(', ', $createdTables);
+        error_log($infoMessage);
+        // Kullanıcıya mesaj göstermeye gerek yok, işlemi arka planda yapıyoruz
     }
+    
+    // Settings tablosu için ek sütun kontrolü yapalım
+    $additionalColumns = [
+        ['analytics_code', 'TEXT DEFAULT NULL'],
+        ['default_lang', 'VARCHAR(10) DEFAULT \'tr\''],
+        ['allow_comments', 'BOOLEAN DEFAULT TRUE'],
+        ['allow_ratings', 'BOOLEAN DEFAULT TRUE'],
+        ['logo_url', 'TEXT DEFAULT NULL']
+    ];
+    
+    foreach ($additionalColumns as $colInfo) {
+        addColumnIfNotExists($db, 'settings', $colInfo[0], $colInfo[1]);
+    }
+    
 } catch (Exception $e) {
-    $error_message = 'Settings tablosu oluşturulurken bir hata oluştu: ' . $e->getMessage();
+    $error_message = 'Veritabanı tabloları kontrol edilirken bir hata oluştu: ' . $e->getMessage();
+    error_log('DB Kontrol Hatası: ' . $e->getMessage());
 }
 
 // Mevcut ayarları veritabanından çek

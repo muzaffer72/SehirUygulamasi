@@ -198,4 +198,30 @@ class PgSQLStatement {
 
 // MySQLi uyumlu sınıfımızı oluştur
 $db = new MySQLiCompatWrapper($conn);
+
+// Uygulama başlatıldığında önemli tabloların durumunu otomatik kontrol edelim
+// Sadece API isteklerinde ve ajax çağrılarında tablo kontrolü pas geçelim
+$isApiRequest = strpos($_SERVER['REQUEST_URI'], '/api.php') !== false;
+$isAjaxRequest = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
+if (!$isApiRequest && !$isAjaxRequest && !defined('SKIP_TABLE_CHECK')) {
+    // İlk kez çağrılıyorsa zaten dahil edilmiş olacak
+    if (!function_exists('ensureCoreTables')) {
+        $dbUtilsPath = __DIR__ . '/db_utils.php';
+        if (file_exists($dbUtilsPath)) {
+            require_once($dbUtilsPath);
+            
+            // Temel tabloları kontrol et
+            try {
+                if (function_exists('ensureCoreTables')) {
+                    ensureCoreTables($db);
+                    // Başarılı sonuç loglaması - debug
+                    error_log("Veritabanı tabloları otomatik olarak kontrol edildi");
+                }
+            } catch (Exception $e) {
+                error_log("Veritabanı tablo kontrolünde hata: " . $e->getMessage());
+            }
+        }
+    }
+}
 ?>
