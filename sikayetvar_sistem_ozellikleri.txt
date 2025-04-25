@@ -1,0 +1,405 @@
+# ŞİKAYETVAR PLATFORMU ÖZELLİK LİSTESİ
+
+## 1. Veritabanı Yapısı ve Veritabanı Yönetimi
+
+### 1.1. Veritabanı Otomatik Tablo Yönetimi
+- **Otomatik Tablo Kontrolü**: Sistem başlatıldığında tüm tabloların varlığını kontrol eder
+- **Eksik Tablo Oluşturma**: Eksik tablolar otomatik olarak oluşturulur, var olanlar korunur
+- **Güvenli Tablo Oluşturma**: DROP TABLE gibi tehlikeli SQL komutları için güvenlik kontrolü
+- **Tablo Varlık Kontrolü**: PostgreSQL uyumlu tablo varlık kontrolü (information_schema kullanımı)
+- **Yük Optimizasyonu**: API çağrıları ve AJAX istekleri için otomatik tablo kontrolünü bypass etme
+- **Hata Yakalama**: Tüm veritabanı işlemlerinde kapsamlı hata yakalama ve loglama
+- **Performans Ayarları**: Uzun sürebilecek veritabanı işlemleri için zaman aşımı ayarları (120 saniye)
+- **Log Sistemi**: Ayrıntılı veritabanı işlem kayıtları (oluşturma, güncelleme, hata durumları)
+
+### 1.2. Desteklenen Veritabanı Tabloları
+1. **settings**: Site ayarları ve API anahtarları
+2. **categories**: İçerik kategorileri
+3. **users**: Kullanıcı hesapları ve profil verileri
+4. **cities**: Şehir kayıtları
+5. **districts**: İlçe kayıtları
+6. **posts**: Paylaşımlar (şikayetler, öneriler)
+7. **comments**: Yorumlar
+8. **media**: Medya dosyaları (resimler, dökümanlar)
+9. **user_likes**: Kullanıcı beğenileri
+10. **banned_words**: Yasaklı kelimeler
+11. **notifications**: Bildirimler
+12. **surveys**: Anketler
+13. **survey_options**: Anket seçenekleri
+14. **survey_regional_results**: Bölgesel anket sonuçları
+15. **city_services**: Şehir hizmetleri
+16. **city_projects**: Şehir projeleri
+17. **city_events**: Şehir etkinlikleri
+18. **city_stats**: Şehir istatistikleri
+19. **before_after_records**: Öncesi-sonrası kayıtları
+20. **award_types**: Ödül türleri
+21. **city_awards**: Şehir ödülleri
+22. **political_parties**: Siyasi partiler
+23. **party_performance**: Parti performansı değerlendirmeleri
+24. **search_suggestions**: Arama önerileri
+25. **cities_services**: Şehirlerin sunduğu hizmetler
+26. **system_logs**: Sistem günlükleri
+
+### 1.3. Veritabanı Sütun Yönetimi
+- **Sütun Varlık Kontrolü**: Tablolardaki sütunların varlığını kontrol etme
+- **Otomatik Sütun Ekleme**: Eksik sütunları otomatik ekleme (addColumnIfNotExists)
+- **Güvenli Sütun Ekleme**: ALTER TABLE işlemleri için hata kontrolü
+
+### 1.4. PostgreSQL Adaptasyon Katmanı
+- **PostgreSQL Wrapper**: MySQL/PostgreSQL uyumluluğu için sarmalayıcı sınıf
+- **Parametre Biçimi Dönüşümü**: MySQL soru işareti parametrelerinden PostgreSQL $1 stili numaralı parametrelere dönüşüm
+- **Sonuç İşleme**: PostgreSQL sonuçlarını MySQL uyumlu formata dönüştürme
+- **SERIAL/AUTO_INCREMENT**: ID alanları için PostgreSQL SERIAL tipi kullanımı
+- **Bağlantı Sağlık Kontrolü**: Veritabanı bağlantı durumu için ping mekanizması
+
+## 2. Admin Paneli
+
+### 2.1. Kullanıcı Yönetimi
+- **Kullanıcı Listesi**: Tüm kullanıcıları görüntüleme ve filtreleme
+- **Kullanıcı Ekleme/Düzenleme**: Yeni kullanıcı oluşturma ve mevcut kullanıcıları düzenleme
+- **Kullanıcı Silme**: Kullanıcı kayıtlarını silme (soft delete)
+- **Kullanıcı Rolleri**: Admin, moderatör, normal kullanıcı rolleri
+- **Profil Yönetimi**: Kullanıcı profil bilgilerini düzenleme
+- **Şifre Sıfırlama**: Kullanıcı şifrelerini sıfırlama
+
+### 2.2. İçerik Yönetimi
+- **Paylaşım Listesi**: Tüm paylaşımları görüntüleme, filtreleme ve sıralama
+- **Paylaşım Detayları**: Paylaşım ayrıntılarını görüntüleme
+- **Paylaşım Düzenleme**: Paylaşımları düzenleme ve güncelleme
+- **Paylaşım Silme**: Paylaşımları silme
+- **Paylaşım Onaylama/Reddetme**: Paylaşımları onaylama veya reddetme
+- **Kategori Ataması**: Paylaşımlara kategori atama
+- **Durum Güncelleme**: Paylaşımların durumunu güncelleme (çözüm bekliyor, çözüldü, reddedildi vb.)
+
+### 2.3. Yorum Yönetimi
+- **Yorum Listesi**: Tüm yorumları görüntüleme ve filtreleme
+- **Yorum Onaylama/Reddetme**: Yorumları onaylama veya reddetme
+- **Yorum Düzenleme**: Yorum içeriğini düzenleme
+- **Yorum Silme**: Yorumları silme
+- **Resmi Cevap Ekleme**: Resmi yetkili cevapları ekleme
+
+### 2.4. Kategori Yönetimi
+- **Kategori Listesi**: Tüm kategorileri görüntüleme
+- **Kategori Ekleme/Düzenleme**: Yeni kategoriler ekleme ve mevcut kategorileri düzenleme
+- **Kategori Silme**: Kategorileri silme
+- **Alt Kategori Yönetimi**: Ana kategoriler ve alt kategorileri hiyerarşik olarak yönetme
+- **Kategori İkon Ataması**: Kategorilere ikonlar atama
+
+### 2.5. Şehir ve İlçe Yönetimi
+- **Şehir Listesi**: Tüm şehirleri görüntüleme
+- **Şehir Ekleme/Düzenleme**: Yeni şehirler ekleme ve mevcut şehirleri düzenleme
+- **İlçe Listesi**: Şehirlere bağlı ilçeleri görüntüleme
+- **İlçe Ekleme/Düzenleme**: Yeni ilçeler ekleme ve mevcut ilçeleri düzenleme
+- **Şehir Profil Sayfası**: Her şehir için detaylı profil sayfası
+- **Şehir İstatistikleri**: Şehir bazlı istatistikler ve grafikler
+
+### 2.6. Anket Yönetimi
+- **Anket Listesi**: Tüm anketleri görüntüleme
+- **Anket Oluşturma/Düzenleme**: Yeni anketler oluşturma ve mevcut anketleri düzenleme
+- **Anket Seçenekleri**: Anket seçeneklerini yönetme
+- **Anket Sonuçları**: Anket sonuçlarını görüntüleme ve analiz etme
+- **Bölgesel Anket Sonuçları**: Şehir ve ilçe bazlı anket sonuçları
+
+### 2.7. Medya Yönetimi
+- **Medya Kütüphanesi**: Yüklenen tüm medya dosyalarını görüntüleme
+- **Medya Yükleme**: Yeni medya dosyaları yükleme
+- **Medya Silme**: Medya dosyalarını silme
+- **Medya Filtreleme**: Dosya türüne göre filtreleme
+
+### 2.8. Site Ayarları
+- **Genel Ayarlar**: Site adı, açıklama, iletişim bilgileri gibi genel ayarlar
+- **API Anahtarı Yönetimi**: API anahtarları oluşturma ve yönetme
+- **Bildirim Ayarları**: E-posta ve push bildirim ayarları
+- **Bakım Modu**: Site bakım modunu etkinleştirme/devre dışı bırakma
+
+### 2.9. Yasaklı Kelime Yönetimi
+- **Yasaklı Kelime Listesi**: Tüm yasaklı kelimeleri görüntüleme
+- **Yasaklı Kelime Ekleme/Silme**: Yeni yasaklı kelimeler ekleme ve mevcut kelimeleri silme
+
+### 2.10. Ödül ve Rozet Yönetimi
+- **Ödül Türleri**: Ödül türlerini yönetme
+- **Şehir Ödülleri**: Şehirlere verilen ödülleri yönetme
+- **Ödül Dağıtım**: Ödüllerin otomatik veya manuel dağıtımı
+
+### 2.11. İstatistikler ve Raporlar
+- **Genel İstatistikler**: Kullanıcı, paylaşım, yorum sayıları gibi genel istatistikler
+- **Şehir Bazlı Raporlar**: Şehir bazında istatistikler ve raporlar
+- **Kategori Bazlı Raporlar**: Kategori bazında istatistikler
+- **Zaman Bazlı Raporlar**: Günlük, haftalık, aylık ve yıllık raporlar
+- **Çözüm Oranları**: Şikayetlerin çözülme oranları
+- **Cevap Süreleri**: Ortalama cevap süreleri
+
+### 2.12. Önbellekleme Yönetimi
+- **Önbellek Temizleme**: Önbelleği temizleme seçenekleri
+- **Önbellek Ayarları**: Önbellek süreleri ve tiplerini ayarlama
+
+### 2.13. Güvenlik ve Erişim Kontrolü
+- **Kullanıcı Girişi**: Güvenli kullanıcı girişi
+- **Oturum Yönetimi**: Oturum süresi ve güvenlik ayarları
+- **Erişim Kısıtlamaları**: Sayfa ve fonksiyon bazlı erişim kontrolü
+- **IP Kısıtlamaları**: IP bazlı erişim kontrolü
+
+## 3. API Servisleri
+
+### 3.1. Kimlik Doğrulama ve Yetkilendirme
+- **API Anahtar Doğrulama**: API anahtarı ile kimlik doğrulama
+- **Oturum Bazlı Kimlik Doğrulama**: Kullanıcı oturumu ile kimlik doğrulama
+- **Yetki Kontrolü**: API fonksiyonları için yetki kontrolü
+
+### 3.2. Kullanıcı API Endpointleri
+- **Kullanıcı Kaydı**: Yeni kullanıcı kaydı
+- **Kullanıcı Girişi**: Kullanıcı girişi
+- **Kullanıcı Çıkışı**: Kullanıcı çıkışı
+- **Profil Getirme**: Kullanıcı profil bilgilerini getirme
+- **Profil Güncelleme**: Kullanıcı profil bilgilerini güncelleme
+- **Şifre Değiştirme**: Kullanıcı şifresini değiştirme
+- **Şifre Sıfırlama**: Kullanıcı şifresini sıfırlama
+
+### 3.3. Paylaşım API Endpointleri
+- **Paylaşım Listesi**: Tüm paylaşımları getirme (filtreleme ve sayfalama ile)
+- **Paylaşım Detayı**: Belirli bir paylaşımın detaylarını getirme
+- **Paylaşım Oluşturma**: Yeni paylaşım oluşturma
+- **Paylaşım Güncelleme**: Mevcut paylaşımı güncelleme
+- **Paylaşım Silme**: Paylaşımı silme
+- **Paylaşım Beğenme/Beğenmekten Vazgeçme**: Paylaşımı beğenme veya beğenmekten vazgeçme
+
+### 3.4. Yorum API Endpointleri
+- **Yorum Listesi**: Bir paylaşıma ait tüm yorumları getirme
+- **Yorum Ekleme**: Bir paylaşıma yorum ekleme
+- **Yorum Güncelleme**: Mevcut yorumu güncelleme
+- **Yorum Silme**: Yorumu silme
+- **Yorum Beğenme/Beğenmekten Vazgeçme**: Yorumu beğenme veya beğenmekten vazgeçme
+
+### 3.5. Kategori API Endpointleri
+- **Kategori Listesi**: Tüm kategorileri getirme
+- **Kategori Detayı**: Belirli bir kategorinin detaylarını getirme
+
+### 3.6. Şehir ve İlçe API Endpointleri
+- **Şehir Listesi**: Tüm şehirleri getirme
+- **Şehir Detayı**: Belirli bir şehrin detaylarını getirme
+- **İlçe Listesi**: Bir şehre ait tüm ilçeleri getirme
+- **İlçe Detayı**: Belirli bir ilçenin detaylarını getirme
+
+### 3.7. Anket API Endpointleri
+- **Anket Listesi**: Tüm anketleri getirme
+- **Anket Detayı**: Belirli bir anketin detaylarını getirme
+- **Anket Oylama**: Bir ankete oy verme
+- **Anket Sonuçları**: Anket sonuçlarını getirme
+
+### 3.8. Medya API Endpointleri
+- **Medya Yükleme**: Medya dosyası yükleme
+- **Medya Getirme**: Medya dosyası getirme
+
+### 3.9. Bildirim API Endpointleri
+- **Bildirim Listesi**: Kullanıcının bildirimlerini getirme
+- **Bildirim İşaretleme**: Bildirimi okundu olarak işaretleme
+- **Bildirim Ayarları**: Bildirim ayarlarını güncelleme
+
+### 3.10. Arama API Endpointleri
+- **Genel Arama**: Tüm içeriklerde arama yapma
+- **Filtrelenmiş Arama**: Belirli kriterlere göre filtreleme ile arama yapma
+
+## 4. Mobil Uygulama (Flutter)
+
+### 4.1. Kullanıcı Arayüzü ve Deneyimi
+- **Responsive Tasarım**: Farklı ekran boyutlarına uyumlu tasarım
+- **Tema Desteği**: Açık/koyu tema desteği
+- **Dil Desteği**: Çoklu dil desteği
+- **Kolay Gezinme**: Sezgisel ve kolay gezinme menüleri
+- **Pull-to-Refresh**: İçeriği güncellemek için aşağı çekme
+- **Sonsuz Kaydırma**: Sayfalandırma için sonsuz kaydırma
+- **Animasyonlar**: Geçiş animasyonları ve yükleme animasyonları
+
+### 4.2. Kullanıcı Hesabı ve Profil
+- **Kayıt ve Giriş**: Kolay kayıt ve giriş ekranları
+- **Profil Düzenleme**: Profil bilgilerini düzenleme
+- **Şifre Değiştirme**: Şifre değiştirme
+- **Profil Resmi**: Profil resmi yükleme ve düzenleme
+- **Kullanıcı İstatistikleri**: Kullanıcı etkinlik istatistikleri
+
+### 4.3. Paylaşım ve İçerik Yönetimi
+- **Paylaşım Oluşturma**: Yeni paylaşım oluşturma formu
+- **Fotoğraf Ekleme**: Paylaşımlara fotoğraf ekleme
+- **Konum Ekleme**: Paylaşımlara konum bilgisi ekleme
+- **Kategori Seçimi**: Paylaşımlar için kategori seçimi
+- **Paylaşım Düzenleme**: Kendi paylaşımlarını düzenleme
+- **Paylaşım Silme**: Kendi paylaşımlarını silme
+
+### 4.4. Sosyal Etkileşim
+- **Yorum Yapma**: Paylaşımlara yorum yapma
+- **Beğenme**: Paylaşımları ve yorumları beğenme
+- **Bildirimler**: Gerçek zamanlı bildirimler
+- **Paylaşma**: İçerikleri sosyal medyada paylaşma
+
+### 4.5. Keşif ve Arama
+- **Arama**: İçerik ve kullanıcı arama
+- **Filtreleme**: Kategori, tarih, durum gibi kriterlere göre filtreleme
+- **Keşfet Sayfası**: Öne çıkan ve popüler içerikler
+- **Yakındaki İçerikler**: Konum bazlı yakındaki içerikler
+
+### 4.6. Harita Entegrasyonu
+- **İçerik Haritası**: Paylaşımları harita üzerinde görüntüleme
+- **Konum Seçme**: Harita üzerinden konum seçme
+- **Rota Planlama**: Paylaşım konumuna rota planlama
+- **Kümeleme**: Yakın paylaşımları harita üzerinde kümeleme
+
+### 4.7. Bildirim Sistemi
+- **Push Bildirimler**: Firebase Cloud Messaging ile push bildirimler
+- **Bildirim Ayarları**: Bildirim tiplerini özelleştirme
+- **Bildirim Merkezi**: Tüm bildirimleri görüntüleme
+- **Gerçek Zamanlı Güncellemeler**: WebSocket ile gerçek zamanlı güncellemeler
+
+### 4.8. Anket Katılımı
+- **Anket Listeleme**: Mevcut anketleri listeleme
+- **Anket Katılımı**: Anketlere oy verme
+- **Anket Sonuçları**: Anket sonuçlarını görüntüleme
+- **Anket Bildirimleri**: Yeni anketler için bildirimler
+
+### 4.9. Şehir ve İlçe Profilleri
+- **Şehir Sayfaları**: Her şehir için özel sayfa
+- **İlçe Sayfaları**: Her ilçe için özel sayfa
+- **Yerel Etkinlikler**: Şehir ve ilçe bazlı etkinlikler
+- **Yerel Projeler**: Şehir ve ilçe bazlı projeler
+- **Yerel İstatistikler**: Şehir ve ilçe bazlı istatistikler
+
+### 4.10. Çevrimdışı Mod
+- **Çevrimdışı İçerik**: İnternet bağlantısı olmadan önceden yüklenmiş içerikleri görüntüleme
+- **Çevrimdışı Paylaşım**: İnternet bağlantısı geldiğinde gönderilmek üzere paylaşım kaydetme
+
+### 4.11. Performans Optimizasyonu
+- **Hızlı Yükleme**: Hızlı uygulama yükleme süresi
+- **Verimli Resim Yükleme**: Verimli resim yükleme ve önbellekleme
+- **Düşük Veri Kullanımı**: Veri kullanımını minimize etme seçenekleri
+
+## 5. Web Sunucusu ve Proxy
+
+### 5.1. Web Sunucusu
+- **Statik İçerik Sunumu**: HTML, CSS, JS dosyaları sunma
+- **Dinamik İçerik**: Mobil uygulama web sürümü
+- **SEO Optimizasyonu**: Arama motoru dostu URL yapısı
+- **Sıkıştırma**: İçerik sıkıştırma (gzip, Brotli)
+- **SSL/TLS**: Güvenli bağlantı (HTTPS)
+
+### 5.2. API Proxy
+- **İstek Yönlendirme**: API isteklerini yönlendirme
+- **İstek Önbellekleme**: API yanıtlarını önbellekleme
+- **İstek Limitleme**: API istek sınırlama (rate limiting)
+- **İstek Loglama**: API isteklerini loglama
+- **CORS Yönetimi**: Cross-Origin Resource Sharing kontrolleri
+
+## 6. Sistem Güvenliği
+
+### 6.1. Kimlik Doğrulama ve Yetkilendirme
+- **Güvenli Şifre Depolama**: Şifreleri güvenli şekilde hash olarak depolama
+- **Oturum Yönetimi**: Güvenli oturum yönetimi
+- **API Güvenliği**: API anahtarları ve yetkilendirme
+- **İki Faktörlü Kimlik Doğrulama**: 2FA desteği
+
+### 6.2. Veri Güvenliği
+- **Veritabanı Güvenliği**: Güvenli veritabanı erişimi
+- **Veri Şifreleme**: Hassas verilerin şifrelenmesi
+- **Veri Yedekleme**: Otomatik veri yedekleme
+- **Veri Kurtarma**: Veri kurtarma mekanizmaları
+
+### 6.3. Uygulama Güvenliği
+- **Giriş Doğrulama**: Tüm girdilerin doğrulanması
+- **XSS Koruması**: Cross-site scripting koruması
+- **CSRF Koruması**: Cross-site request forgery koruması
+- **SQL Enjeksiyon Koruması**: SQL enjeksiyon koruması
+- **İçerik Güvenliği Politikası**: Content Security Policy uygulaması
+
+### 6.4. Sistem ve Altyapı Güvenliği
+- **Sunucu Güvenliği**: Sunucu güvenlik ayarları
+- **Firewall Koruması**: Güvenlik duvarı koruması
+- **DDoS Koruması**: Dağıtılmış hizmet engelleme saldırılarına karşı koruma
+- **Güncellemeler**: Güvenlik güncellemeleri
+
+## 7. Performans ve Ölçeklenebilirlik
+
+### 7.1. Önbellekleme
+- **Veritabanı Önbellekleme**: Veritabanı sorgularını önbellekleme
+- **API Önbellekleme**: API yanıtlarını önbellekleme
+- **Statik İçerik Önbellekleme**: Statik içerikleri önbellekleme
+- **Sorgu Optimizasyonu**: Veritabanı sorgu optimizasyonu
+
+### 7.2. Yük Dengeleme
+- **İstek Dağıtımı**: İstekleri birden fazla sunucuya dağıtma
+- **Otomatik Ölçeklendirme**: Trafik arttıkça otomatik ölçeklendirme
+- **Sağlık Kontrolleri**: Sunucu sağlık kontrolleri
+
+### 7.3. Veri Optimizasyonu
+- **Veritabanı İndeksleme**: Veritabanı indeksleri
+- **Sorgu Optimizasyonu**: Veritabanı sorgu optimizasyonu
+- **Veri Sayfalandırma**: Büyük veri kümelerini sayfalandırma
+- **Veri Sıkıştırma**: Veri transferinde sıkıştırma
+
+## 8. İzleme ve Analiz
+
+### 8.1. Sistem İzleme
+- **Performans İzleme**: Sistem performansını izleme
+- **Hata İzleme**: Hataları izleme ve raporlama
+- **Kaynak Kullanımı**: CPU, bellek, disk kullanımını izleme
+- **Uptime İzleme**: Sistem çalışma süresini izleme
+
+### 8.2. Kullanıcı Analizi
+- **Kullanıcı Davranışı**: Kullanıcı davranışlarını analiz etme
+- **İçerik Popülaritesi**: İçerik popülaritesini izleme
+- **Dönüşüm Oranları**: Kayıt ve katılım dönüşüm oranlarını izleme
+- **A/B Testleri**: Farklı özellikler için A/B testleri
+
+### 8.3. Raporlama
+- **Otomatik Raporlar**: Periyodik otomatik raporlar
+- **Özel Raporlar**: Özel raporlar oluşturma
+- **Veri Görselleştirme**: Veri görselleştirme araçları
+- **Raporları Dışa Aktarma**: Raporları CSV, PDF formatlarında dışa aktarma
+
+## 9. Entegrasyonlar
+
+### 9.1. Sosyal Medya Entegrasyonu
+- **Sosyal Medya Girişi**: Sosyal medya hesaplarıyla giriş
+- **Sosyal Medya Paylaşımı**: İçerikleri sosyal medyada paylaşma
+- **Sosyal Medya Butonları**: Sosyal medya paylaşım butonları
+
+### 9.2. Harita Servisleri
+- **Google Maps Entegrasyonu**: Google Maps ile konum gösterimi
+- **OpenStreetMap Entegrasyonu**: OpenStreetMap ile konum gösterimi
+- **Konum Tabanlı Arama**: Konum bazlı içerik arama
+
+### 9.3. Ödeme Sistemleri
+- **Ödeme Altyapısı**: Premium özellikler için ödeme altyapısı
+- **Abonelik Yönetimi**: Abonelik planları ve yönetimi
+
+### 9.4. E-posta Servisleri
+- **Otomatik E-postalar**: Kayıt, şifre sıfırlama gibi otomatik e-postalar
+- **E-posta Bildirimleri**: Etkinlik ve bildirim e-postaları
+- **Toplu E-posta**: Kampanya ve duyurular için toplu e-posta
+
+### 9.5. SMS ve Push Bildirim Servisleri
+- **SMS Doğrulama**: SMS ile telefon doğrulama
+- **SMS Bildirimleri**: Önemli bildirimler için SMS
+- **Push Bildirimler**: Mobil uygulama push bildirimleri
+
+### 9.6. Analitik Platformları
+- **Google Analytics Entegrasyonu**: Web ve uygulama kullanımını izleme
+- **Firebase Analytics**: Mobil uygulama analitiği
+- **Özel Analitik**: Özel analitik metrikleri izleme
+
+## 10. Geliştirme ve Test Altyapısı
+
+### 10.1. Geliştirme Ortamı
+- **Geliştirme Sunucusu**: Geliştirme için ayrı sunucu ortamı
+- **Test Veritabanı**: Test için ayrı veritabanı
+- **Kod Versiyonlama**: Git tabanlı kod versiyonlama
+
+### 10.2. Test Araçları
+- **Birim Testleri**: Bileşen ve fonksiyonların birim testleri
+- **Entegrasyon Testleri**: Bileşenler arası entegrasyon testleri
+- **Kullanıcı Arayüzü Testleri**: UI/UX testleri
+- **Performans Testleri**: Yük ve performans testleri
+- **Güvenlik Testleri**: Güvenlik açığı testleri
+
+### 10.3. Dağıtım ve Yayınlama
+- **Sürekli Entegrasyon**: Sürekli entegrasyon (CI) pipeline'ları
+- **Sürekli Dağıtım**: Sürekli dağıtım (CD) pipeline'ları
+- **Sürüm Yönetimi**: Uygulama sürüm yönetimi
+- **Dağıtım Otomasyonu**: Otomatik dağıtım süreçleri
