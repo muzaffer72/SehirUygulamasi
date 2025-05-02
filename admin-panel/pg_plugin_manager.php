@@ -1,6 +1,6 @@
 <?php
 /**
- * ŞikayetVar Eklenti Yönetim Sistemi
+ * ŞikayetVar Eklenti Yönetim Sistemi - PostgreSQL Sürümü
  * 
  * Bu sınıf, eklentilerin kurulumu, etkinleştirilmesi, devre dışı bırakılması
  * ve kaldırılmasından sorumludur. Ayrıca eklenti ayarlarını da yönetir.
@@ -31,9 +31,12 @@ class PluginManager {
         try {
             $result = $this->db->query("SELECT slug FROM plugins WHERE is_active = TRUE");
             
-            if ($result && pg_num_rows($result) > 0) {
-                while ($row = pg_fetch_assoc($result)) {
-                    $this->active_plugins[] = $row['slug'];
+            if ($result) {
+                $rows = pg_fetch_all($result);
+                if (is_array($rows)) {
+                    foreach ($rows as $row) {
+                        $this->active_plugins[] = $row['slug'];
+                    }
                 }
             }
         } catch (Exception $e) {
@@ -125,23 +128,19 @@ class PluginManager {
         $plugin_data = $this->installed_plugins[$slug];
         
         // Eklenti tablosuna ekle
-        $stmt = $this->db->prepare("INSERT INTO plugins (name, slug, description, version, author, is_active) VALUES (?, ?, ?, ?, ?, FALSE)");
-        
-        if (!$stmt) {
-            return "Hazırlama hatası: " . $this->db->error;
-        }
-        
-        $stmt->bind_param(
-            'sssss',
+        $query = "INSERT INTO plugins (name, slug, description, version, author, is_active) VALUES ($1, $2, $3, $4, $5, FALSE)";
+        $params = [
             $plugin_data['name'],
             $slug,
             $plugin_data['description'] ?? '',
             $plugin_data['version'] ?? '1.0.0',
             $plugin_data['author'] ?? 'ŞikayetVar'
-        );
+        ];
         
-        if (!$stmt->execute()) {
-            return "Yükleme hatası: " . $stmt->error;
+        $result = pg_query_params($this->db->connection, $query, $params);
+        
+        if (!$result) {
+            return "Yükleme hatası: " . pg_last_error($this->db->connection);
         }
         
         return true;
@@ -161,7 +160,7 @@ class PluginManager {
         // Eklenti yüklü mü kontrol et
         $result = $this->db->query("SELECT * FROM plugins WHERE slug = '" . $this->db->escape_string($slug) . "'");
         
-        if ($result && $result->num_rows === 0) {
+        if ($result && pg_num_rows($result) === 0) {
             // Yüklü değilse, önce yükle
             $install_result = $this->install_plugin($slug);
             if ($install_result !== true) {
@@ -170,10 +169,19 @@ class PluginManager {
         }
         
         // Eklentiyi etkinleştir
-        $this->db->query("UPDATE plugins SET is_active = TRUE WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        $query = "UPDATE plugins SET is_active = TRUE WHERE slug = $1";
+        $params = [$slug];
+        
+        $result = pg_query_params($this->db->connection, $query, $params);
+        
+        if (!$result) {
+            return "Etkinleştirme hatası: " . pg_last_error($this->db->connection);
+        }
+        
+        $affected = pg_affected_rows($result);
         
         // Etkinleştirme işlemi başarılı mı kontrol et
-        if ($this->db->affected_rows > 0) {
+        if ($affected > 0) {
             // Aktif eklentiler listesine ekle
             if (!in_array($slug, $this->active_plugins)) {
                 $this->active_plugins[] = $slug;
@@ -206,10 +214,19 @@ class PluginManager {
         }
         
         // Eklentiyi devre dışı bırak
-        $this->db->query("UPDATE plugins SET is_active = FALSE WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        $query = "UPDATE plugins SET is_active = FALSE WHERE slug = $1";
+        $params = [$slug];
+        
+        $result = pg_query_params($this->db->connection, $query, $params);
+        
+        if (!$result) {
+            return "Devre dışı bırakma hatası: " . pg_last_error($this->db->connection);
+        }
+        
+        $affected = pg_affected_rows($result);
         
         // Devre dışı bırakma işlemi başarılı mı kontrol et
-        if ($this->db->affected_rows > 0) {
+        if ($affected > 0) {
             // Aktif eklentiler listesinden çıkar
             $key = array_search($slug, $this->active_plugins);
             if ($key !== false) {
@@ -251,10 +268,19 @@ class PluginManager {
         }
         
         // Eklentiyi kaldır
-        $this->db->query("DELETE FROM plugins WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        $query = "DELETE FROM plugins WHERE slug = $1";
+        $params = [$slug];
+        
+        $result = pg_query_params($this->db->connection, $query, $params);
+        
+        if (!$result) {
+            return "Kaldırma hatası: " . pg_last_error($this->db->connection);
+        }
+        
+        $affected = pg_affected_rows($result);
         
         // Kaldırma işlemi başarılı mı kontrol et
-        if ($this->db->affected_rows > 0) {
+        if ($affected > 0) {
             // Eklentinin kaldırma fonksiyonunu çağır
             $uninstall_file = $this->plugins_dir . '/' . $slug . '/uninstall.php';
             if (file_exists($uninstall_file)) {
@@ -281,10 +307,13 @@ class PluginManager {
             return null;
         }
         
-        $result = $this->db->query("SELECT config FROM plugins WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        $query = "SELECT config FROM plugins WHERE slug = $1";
+        $params = [$slug];
         
-        if ($result && $result->num_rows > 0) {
-            $row = $result->fetch_assoc();
+        $result = pg_query_params($this->db->connection, $query, $params);
+        
+        if ($result && pg_num_rows($result) > 0) {
+            $row = pg_fetch_assoc($result);
             return json_decode($row['config'], true) ?? [];
         }
         
@@ -304,9 +333,17 @@ class PluginManager {
         }
         
         $json_settings = json_encode($settings);
-        $this->db->query("UPDATE plugins SET config = '" . $this->db->escape_string($json_settings) . "' WHERE slug = '" . $this->db->escape_string($slug) . "'");
         
-        return $this->db->affected_rows > 0;
+        $query = "UPDATE plugins SET config = $1 WHERE slug = $2";
+        $params = [$json_settings, $slug];
+        
+        $result = pg_query_params($this->db->connection, $query, $params);
+        
+        if (!$result) {
+            return false;
+        }
+        
+        return pg_affected_rows($result) > 0;
     }
     
     /**
@@ -332,8 +369,12 @@ class PluginManager {
  * @return bool Eklenti aktif mi?
  */
 function isPluginActive($db, $slug) {
-    $result = $db->query("SELECT name, slug, version FROM plugins WHERE is_active = TRUE AND slug = '" . $db->escape_string($slug) . "'");
-    return ($result && $result->num_rows > 0);
+    $query = "SELECT name, slug, version FROM plugins WHERE is_active = TRUE AND slug = $1";
+    $params = [$slug];
+    
+    $result = pg_query_params($db->connection, $query, $params);
+    
+    return ($result && pg_num_rows($result) > 0);
 }
 
 /**
@@ -344,10 +385,12 @@ function isPluginActive($db, $slug) {
  */
 function getActivePlugins($db) {
     $active_plugins = [];
-    $result = $db->query("SELECT name, slug, version FROM plugins WHERE is_active = TRUE");
     
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
+    $query = "SELECT name, slug, version FROM plugins WHERE is_active = TRUE";
+    $result = pg_query($db->connection, $query);
+    
+    if ($result && pg_num_rows($result) > 0) {
+        while ($row = pg_fetch_assoc($result)) {
             $active_plugins[] = $row;
         }
     }
