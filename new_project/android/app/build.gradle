@@ -25,18 +25,18 @@ if (flutterVersionName == null) {
 
 android {
     namespace "belediye.iletisim.merkezi"
-    compileSdkVersion flutter.compileSdkVersion
+    compileSdkVersion 33  // Uyumluluk için 33'e sabitlendi
     ndkVersion "25.1.8937393"
 
     compileOptions {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '1.8'
     }
 
     sourceSets {
@@ -48,8 +48,8 @@ android {
         applicationId "belediye.iletisim.merkezi"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
-        targetSdkVersion flutter.targetSdkVersion
+        minSdkVersion 21  // En düşük SDK sürümü 21 olarak sabitlendi
+        targetSdkVersion 33  // Hedef SDK sürümü 33 olarak sabitlendi
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
