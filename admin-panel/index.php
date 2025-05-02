@@ -888,6 +888,14 @@ $page_file = "pages/{$page}.php";
                             <a href="?page=user_likes" class="<?= $page === 'user_likes' ? 'active' : '' ?>">
                                 <i class="bi bi-heart"></i> Beğeniler
                             </a>
+                        </div>
+                        
+                        <!-- Eklenti Yönetimi -->
+                        <div class="menu-group">
+                            <div class="menu-title">Eklenti Yönetimi</div>
+                            <a href="?page=plugins" class="<?= $page === 'plugins' ? 'active' : '' ?>">
+                                <i class="bi bi-puzzle"></i> Eklentiler
+                            </a>
                             <a href="?page=duty_pharmacies" class="<?= $page === 'duty_pharmacies' ? 'active' : '' ?>">
                                 <i class="bi bi-capsule"></i> Nöbetçi Eczaneler
                             </a>
