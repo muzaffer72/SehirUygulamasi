@@ -3,7 +3,7 @@
 // Eklenti sistemi olmadan çalışacak şekilde düzenlendi
 
 // Sadece yöneticilerin erişmesini sağla
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+if (!isset($_SESSION['user'])) {
     header('Location: index.php');
     exit;
 }

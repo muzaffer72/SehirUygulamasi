@@ -41,8 +41,8 @@ if (isset($_GET['action']) && isset($_GET['plugin'])) {
     }
 }
 
-// Yüklü eklentileri al
-$plugins = $plugin_manager->get_all_plugins();
+// Yüklü eklentileri al (stub plugin system için boş liste döndür)
+$plugins = [];
 ?>
 
 <div class="container-fluid py-4">
