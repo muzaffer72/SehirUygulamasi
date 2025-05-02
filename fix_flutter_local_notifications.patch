@@ -1,0 +1,23 @@
+diff --git a/.pub-cache/hosted/pub.dev/flutter_local_notifications-9.9.1/android/build.gradle b/.pub-cache/hosted/pub.dev/flutter_local_notifications-9.9.1/android/build.gradle
+index 520b690..d0d6ba3 100644
+--- a/.pub-cache/hosted/pub.dev/flutter_local_notifications-9.9.1/android/build.gradle
++++ b/.pub-cache/hosted/pub.dev/flutter_local_notifications-9.9.1/android/build.gradle
+@@ -34,6 +34,7 @@ android {
+     compileSdkVersion 33
+
+     defaultConfig {
++        namespace "com.dexterous.flutterlocalnotifications"
+         minSdkVersion 16
+         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+     }
+diff --git a/.pub-cache/hosted/pub.dev/flutter_local_notifications-9.9.1/android/src/main/AndroidManifest.xml b/.pub-cache/hosted/pub.dev/flutter_local_notifications-9.9.1/android/src/main/AndroidManifest.xml
+index 24fab30..9b3e8be 100644
+--- a/.pub-cache/hosted/pub.dev/flutter_local_notifications-9.9.1/android/src/main/AndroidManifest.xml
++++ b/.pub-cache/hosted/pub.dev/flutter_local_notifications-9.9.1/android/src/main/AndroidManifest.xml
+@@ -1,5 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     package="com.dexterous.flutterlocalnotifications">
+ 
+     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>

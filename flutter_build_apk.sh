@@ -1,28 +1,37 @@
 #!/bin/bash
 
-# Bu script, tüm Gradle ayarlarını düzenleyerek APK build eder
-# Çalıştırma: bash flutter_build_apk.sh
+# Flutter APK yapılandırma ve build script'i
+echo "Flutter APK oluşturma başlatılıyor..."
+echo "=====================================\n"
 
-echo "Flutter APK Build Script"
-echo "======================="
-
-# Önce Flutter projesini düzelt
-bash flutter_fix.sh
-
-# APK'yı build et
-echo "APK derleniyor..."
+# Proje dizinine git
 cd new_project
-flutter build apk --release
 
-if [ $? -eq 0 ]; then
-  echo "APK başarıyla derlendi!"
-  echo "APK dosyası: new_project/build/app/outputs/flutter-apk/app-release.apk"
-  
-  # APK'yı ana dizine kopyala
-  mkdir -p ../build/apk
-  cp build/app/outputs/flutter-apk/app-release.apk ../build/apk/belediye_iletisim.apk
-  
-  echo "APK ana dizine kopyalandı: build/apk/belediye_iletisim.apk"
+# Flutter paketlerini güncelle
+echo "Flutter paketleri yükleniyor..."
+flutter pub get
+
+# Temiz build için önce eski build dosyalarını temizle
+echo "Eski build dosyaları temizleniyor..."
+flutter clean
+
+# Debug APK oluştur
+echo "Debug APK oluşturuluyor..."
+flutter build apk --debug
+
+# APK'nın oluşturulup oluşturulmadığını kontrol et
+APK_PATH="./build/app/outputs/flutter-apk/app-debug.apk"
+if [ -f "$APK_PATH" ]; then
+    echo "\n✅ APK başarıyla oluşturuldu: $APK_PATH"
+    echo "APK Dosya Boyutu: $(du -h $APK_PATH | cut -f1)"
+    echo "\nUYGULAMA BİLGİLERİ:"
+    echo "===================="
+    echo "Paket adı: belediye.iletisim.merkezi"
+    echo "Versiyon: $(grep "version:" pubspec.yaml | head -1 | awk '{print $2}')"
+    echo "Min SDK: 21 (Android 5.0 Lollipop)"
+    echo "Target SDK: 33 (Android 13)"
 else
-  echo "APK derlenirken hata oluştu!"
+    echo "\n❌ APK oluşturulamadı. Hata mesajlarını kontrol edin."
 fi
+
+echo "\nİşlem tamamlandı."
