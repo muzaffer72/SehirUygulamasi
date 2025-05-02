@@ -1,333 +1,449 @@
 <?php
 /**
- * ŞikayetVar Platform - Eklenti Yönetim Sistemi
+ * ŞikayetVar Eklenti Yönetim Sistemi
  * 
- * Bu dosya, modüler eklenti sistemini yönetir.
- * Eklentiler admin panelden açılıp kapatılabilir.
+ * Bu sınıf, eklentilerin kurulumu, etkinleştirilmesi, devre dışı bırakılması
+ * ve kaldırılmasından sorumludur. Ayrıca eklenti ayarlarını da yönetir.
  */
 
-// Eklenti durumlarını saklayacak tablonun adı
-define('PLUGINS_TABLE', 'plugins');
-
-/**
- * Eklenti tablosunun varlığını kontrol eder ve gerekirse oluşturur
- * 
- * @param mysqli $db Veritabanı bağlantısı
- * @return bool İşlem başarılı mı
- */
-function ensurePluginsTable($db) {
-    // Eklenti tablosu için SQL
-    $pluginsSQL = "CREATE TABLE " . PLUGINS_TABLE . " (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        slug VARCHAR(50) NOT NULL UNIQUE,
-        description TEXT,
-        version VARCHAR(20) NOT NULL,
-        author VARCHAR(100),
-        is_active BOOLEAN DEFAULT FALSE,
-        config TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
+class PluginManager {
+    private $db;
+    private $plugins_dir;
+    private $active_plugins = [];
+    private $installed_plugins = [];
     
-    // Tablo var mı diye kontrol et
-    $checkTableSQL = "SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = ?
-    )";
-    
-    try {
-        $stmt = $db->prepare($checkTableSQL);
-        $tableName = PLUGINS_TABLE;
-        $stmt->bind_param('s', $tableName);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $tableExists = $result->fetch_assoc()['exists'] ?? false;
-        
-        if (!$tableExists) {
-            error_log("Eklenti tablosu bulunamadı, oluşturuluyor...");
-            
-            $success = $db->query($pluginsSQL);
-            
-            if (!$success) {
-                error_log("HATA: Eklenti tablosu oluşturulamadı: " . $db->error);
-                return false;
-            }
-            
-            error_log("BAŞARILI: Eklenti tablosu oluşturuldu");
-            return true;
-        } else {
-            error_log("Eklenti tablosu mevcut.");
-            return true;
-        }
-    } catch (Exception $e) {
-        error_log("HATA: Eklenti tablosu varlık kontrolünde hata: " . $e->getMessage());
-        return false;
-    }
-}
-
-/**
- * Sistemdeki tüm eklentileri tarar ve veritabanında kayıtlı olmayan yeni
- * eklentileri ekler
- * 
- * @param mysqli $db Veritabanı bağlantısı
- * @return array İşlem sonuçları
- */
-function scanAndRegisterPlugins($db) {
-    $results = [];
-    $pluginsDir = __DIR__ . '/plugins';
-    
-    // Eklenti klasörü var mı kontrol et
-    if (!is_dir($pluginsDir)) {
-        mkdir($pluginsDir, 0755, true);
+    /**
+     * Eklenti yöneticisini başlatır
+     * 
+     * @param object $db Veritabanı bağlantısı
+     */
+    public function __construct($db) {
+        $this->db = $db;
+        $this->plugins_dir = __DIR__ . '/plugins';
+        $this->load_active_plugins();
+        $this->scan_plugins_directory();
     }
     
-    // Eklenti klasöründeki tüm alt klasörleri bul
-    $pluginFolders = array_filter(glob($pluginsDir . '/*'), 'is_dir');
-    
-    // Veritabanındaki mevcut eklentileri al
-    $existingPlugins = [];
-    $query = "SELECT slug FROM " . PLUGINS_TABLE;
-    $result = $db->query($query);
-    
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $existingPlugins[] = $row['slug'];
-        }
-    }
-    
-    // Her eklenti klasörü için info.php dosyasını kontrol et
-    foreach ($pluginFolders as $pluginFolder) {
-        $pluginInfoFile = $pluginFolder . '/info.php';
-        
-        if (file_exists($pluginInfoFile)) {
-            include $pluginInfoFile;
+    /**
+     * Aktif eklentileri veritabanından yükler
+     */
+    private function load_active_plugins() {
+        try {
+            $result = $this->db->query("SELECT slug FROM plugins WHERE is_active = TRUE");
             
-            if (isset($plugin_info) && is_array($plugin_info)) {
-                // Eklenti bilgilerini al
-                $name = $plugin_info['name'] ?? '';
-                $slug = $plugin_info['slug'] ?? basename($pluginFolder);
-                $description = $plugin_info['description'] ?? '';
-                $version = $plugin_info['version'] ?? '1.0.0';
-                $author = $plugin_info['author'] ?? '';
-                
-                // Eklenti veritabanında kayıtlı değilse ekle
-                if (!in_array($slug, $existingPlugins)) {
-                    $insertQuery = "INSERT INTO " . PLUGINS_TABLE . " 
-                                  (name, slug, description, version, author, is_active) 
-                                  VALUES (?, ?, ?, ?, ?, FALSE)";
-                    
-                    $stmt = $db->prepare($insertQuery);
-                    $stmt->bind_param('sssss', $name, $slug, $description, $version, $author);
-                    
-                    if ($stmt->execute()) {
-                        $results[$slug] = "Yeni eklenti kaydedildi: $name";
-                        error_log("Eklenti sistemi: Yeni eklenti kaydedildi: $name ($slug)");
-                    } else {
-                        $results[$slug] = "Eklenti kayıt hatası: " . $db->error;
-                        error_log("Eklenti sistemi: Kayıt hatası: $slug, " . $db->error);
-                    }
-                } else {
-                    // Eklenti zaten kayıtlı, gerekirse versiyonu güncelle
-                    $updateQuery = "UPDATE " . PLUGINS_TABLE . " SET version = ?, updated_at = NOW() WHERE slug = ?";
-                    $stmt = $db->prepare($updateQuery);
-                    $stmt->bind_param('ss', $version, $slug);
-                    $stmt->execute();
+            if ($result && $result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    $this->active_plugins[] = $row['slug'];
                 }
-                
-                // global $plugin_info değişkenini temizle
-                unset($plugin_info);
-            } else {
-                $results[basename($pluginFolder)] = "Hatalı eklenti bilgi dosyası";
-                error_log("Eklenti sistemi: Hatalı eklenti bilgi dosyası: $pluginInfoFile");
             }
-        } else {
-            $results[basename($pluginFolder)] = "Eklenti bilgi dosyası bulunamadı";
-            error_log("Eklenti sistemi: Eklenti bilgi dosyası bulunamadı: $pluginInfoFile");
+        } catch (Exception $e) {
+            // Muhtemelen tablo henüz oluşturulmadı
         }
     }
     
-    // Veritabanında kayıtlı olup klasörde bulunmayan eklentileri işaretle
-    $missingPlugins = array_diff($existingPlugins, array_map('basename', $pluginFolders));
-    
-    foreach ($missingPlugins as $missingSlug) {
-        $updateQuery = "UPDATE " . PLUGINS_TABLE . " SET is_active = FALSE WHERE slug = ?";
-        $stmt = $db->prepare($updateQuery);
-        $stmt->bind_param('s', $missingSlug);
-        $stmt->execute();
+    /**
+     * Eklenti dizinini tarar ve yüklü eklentileri bulur
+     */
+    private function scan_plugins_directory() {
+        if (!file_exists($this->plugins_dir)) {
+            mkdir($this->plugins_dir, 0755, true);
+            return;
+        }
         
-        $results[$missingSlug] = "Eklenti klasörü eksik, devre dışı bırakıldı";
-        error_log("Eklenti sistemi: Eksik eklenti klasörü: $missingSlug, devre dışı bırakıldı");
-    }
-    
-    return $results;
-}
-
-/**
- * Tüm aktif eklentileri yükler
- * 
- * @param mysqli $db Veritabanı bağlantısı
- * @return array Yüklenen eklentiler
- */
-function loadActivePlugins($db) {
-    $loadedPlugins = [];
-    
-    // Aktif eklentileri veritabanından al
-    $query = "SELECT name, slug, version FROM " . PLUGINS_TABLE . " WHERE is_active = TRUE";
-    $result = $db->query($query);
-    
-    if ($result) {
-        while ($plugin = $result->fetch_assoc()) {
-            $pluginMainFile = __DIR__ . '/plugins/' . $plugin['slug'] . '/main.php';
+        $plugin_folders = array_filter(glob($this->plugins_dir . '/*'), 'is_dir');
+        
+        foreach ($plugin_folders as $plugin_folder) {
+            $plugin_slug = basename($plugin_folder);
+            $plugin_file = $plugin_folder . '/info.php';
             
-            if (file_exists($pluginMainFile)) {
-                include_once $pluginMainFile;
-                $loadedPlugins[] = $plugin;
-                error_log("Eklenti yüklendi: " . $plugin['name'] . " (" . $plugin['version'] . ")");
-            } else {
-                error_log("HATA: Eklenti ana dosyası bulunamadı: " . $pluginMainFile);
+            if (file_exists($plugin_file)) {
+                $plugin_data = include($plugin_file);
+                if (is_array($plugin_data) && isset($plugin_data['name'])) {
+                    $this->installed_plugins[$plugin_slug] = $plugin_data;
+                }
             }
         }
     }
     
-    return $loadedPlugins;
-}
-
-/**
- * Eklenti durumunu değiştirir (etkinleştir/devre dışı bırak)
- * 
- * @param mysqli $db Veritabanı bağlantısı
- * @param string $slug Eklenti slug'ı
- * @param bool $status Eklenti durumu
- * @return bool İşlem başarılı mı
- */
-function updatePluginStatus($db, $slug, $status) {
-    $query = "UPDATE " . PLUGINS_TABLE . " SET is_active = ?, updated_at = NOW() WHERE slug = ?";
-    $stmt = $db->prepare($query);
-    $isActive = $status ? 1 : 0;
-    $stmt->bind_param('is', $isActive, $slug);
-    
-    if ($stmt->execute()) {
-        $actionText = $status ? "etkinleştirildi" : "devre dışı bırakıldı";
-        error_log("Eklenti $slug $actionText");
-        return true;
-    } else {
-        error_log("Eklenti durum güncelleme hatası: " . $db->error);
-        return false;
+    /**
+     * Eklenti var mı diye kontrol eder
+     * 
+     * @param string $slug Eklenti slug
+     * @return bool Eklenti var mı?
+     */
+    public function plugin_exists($slug) {
+        return isset($this->installed_plugins[$slug]);
     }
-}
-
-/**
- * Tüm kayıtlı eklentileri döndürür
- * 
- * @param mysqli $db Veritabanı bağlantısı
- * @return array Eklenti listesi
- */
-function getAllPlugins($db) {
-    $plugins = [];
     
-    $query = "SELECT * FROM " . PLUGINS_TABLE . " ORDER BY name ASC";
-    $result = $db->query($query);
+    /**
+     * Eklenti aktif mi diye kontrol eder
+     * 
+     * @param string $slug Eklenti slug
+     * @return bool Eklenti aktif mi?
+     */
+    public function is_plugin_active($slug) {
+        return in_array($slug, $this->active_plugins);
+    }
     
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $plugins[] = $row;
+    /**
+     * Tüm yüklü eklentileri döndürür
+     * 
+     * @return array Yüklü eklentiler
+     */
+    public function get_all_plugins() {
+        $plugins = [];
+        
+        foreach ($this->installed_plugins as $slug => $data) {
+            $plugins[$slug] = array_merge($data, [
+                'slug' => $slug,
+                'is_active' => $this->is_plugin_active($slug)
+            ]);
+        }
+        
+        return $plugins;
+    }
+    
+    /**
+     * Eklentiyi kurar
+     * 
+     * @param string $slug Eklenti slug
+     * @return bool|string Başarılı mı? Hata durumunda hata mesajı döner
+     */
+    public function install_plugin($slug) {
+        if (!$this->plugin_exists($slug)) {
+            return "Eklenti bulunamadı: $slug";
+        }
+        
+        // Eklenti zaten yüklü mü kontrol et
+        $result = $this->db->query("SELECT * FROM plugins WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        
+        if ($result && $result->num_rows > 0) {
+            return "Eklenti zaten kurulu: $slug";
+        }
+        
+        // Eklenti bilgilerini al
+        $plugin_data = $this->installed_plugins[$slug];
+        
+        // Eklenti tablosuna ekle
+        $stmt = $this->db->prepare("INSERT INTO plugins (name, slug, description, version, author, is_active) VALUES (?, ?, ?, ?, ?, FALSE)");
+        
+        if (!$stmt) {
+            return "Hazırlama hatası: " . $this->db->error;
+        }
+        
+        $stmt->bind_param(
+            'sssss',
+            $plugin_data['name'],
+            $slug,
+            $plugin_data['description'] ?? '',
+            $plugin_data['version'] ?? '1.0.0',
+            $plugin_data['author'] ?? 'ŞikayetVar'
+        );
+        
+        if (!$stmt->execute()) {
+            return "Yükleme hatası: " . $stmt->error;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Eklentiyi etkinleştirir
+     * 
+     * @param string $slug Eklenti slug
+     * @return bool|string Başarılı mı? Hata durumunda hata mesajı döner
+     */
+    public function activate_plugin($slug) {
+        if (!$this->plugin_exists($slug)) {
+            return "Eklenti bulunamadı: $slug";
+        }
+        
+        // Eklenti yüklü mü kontrol et
+        $result = $this->db->query("SELECT * FROM plugins WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        
+        if ($result && $result->num_rows === 0) {
+            // Yüklü değilse, önce yükle
+            $install_result = $this->install_plugin($slug);
+            if ($install_result !== true) {
+                return $install_result;
+            }
+        }
+        
+        // Eklentiyi etkinleştir
+        $this->db->query("UPDATE plugins SET is_active = TRUE WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        
+        // Etkinleştirme işlemi başarılı mı kontrol et
+        if ($this->db->affected_rows > 0) {
+            // Aktif eklentiler listesine ekle
+            if (!in_array($slug, $this->active_plugins)) {
+                $this->active_plugins[] = $slug;
+            }
+            
+            // Eklentinin etkinleştirme fonksiyonunu çağır
+            $activate_file = $this->plugins_dir . '/' . $slug . '/activate.php';
+            if (file_exists($activate_file)) {
+                include($activate_file);
+                if (function_exists($slug . '_activate')) {
+                    call_user_func($slug . '_activate', $this->db);
+                }
+            }
+            
+            return true;
+        } else {
+            return "Eklenti etkinleştirilemedi: $slug";
         }
     }
     
-    return $plugins;
+    /**
+     * Eklentiyi devre dışı bırakır
+     * 
+     * @param string $slug Eklenti slug
+     * @return bool|string Başarılı mı? Hata durumunda hata mesajı döner
+     */
+    public function deactivate_plugin($slug) {
+        if (!$this->plugin_exists($slug)) {
+            return "Eklenti bulunamadı: $slug";
+        }
+        
+        // Eklentiyi devre dışı bırak
+        $this->db->query("UPDATE plugins SET is_active = FALSE WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        
+        // Devre dışı bırakma işlemi başarılı mı kontrol et
+        if ($this->db->affected_rows > 0) {
+            // Aktif eklentiler listesinden çıkar
+            $key = array_search($slug, $this->active_plugins);
+            if ($key !== false) {
+                unset($this->active_plugins[$key]);
+            }
+            
+            // Eklentinin devre dışı bırakma fonksiyonunu çağır
+            $deactivate_file = $this->plugins_dir . '/' . $slug . '/deactivate.php';
+            if (file_exists($deactivate_file)) {
+                include($deactivate_file);
+                if (function_exists($slug . '_deactivate')) {
+                    call_user_func($slug . '_deactivate', $this->db);
+                }
+            }
+            
+            return true;
+        } else {
+            return "Eklenti devre dışı bırakılamadı: $slug";
+        }
+    }
+    
+    /**
+     * Eklentiyi kaldırır
+     * 
+     * @param string $slug Eklenti slug
+     * @return bool|string Başarılı mı? Hata durumunda hata mesajı döner
+     */
+    public function uninstall_plugin($slug) {
+        if (!$this->plugin_exists($slug)) {
+            return "Eklenti bulunamadı: $slug";
+        }
+        
+        // Eklenti aktifse, önce devre dışı bırak
+        if ($this->is_plugin_active($slug)) {
+            $deactivate_result = $this->deactivate_plugin($slug);
+            if ($deactivate_result !== true) {
+                return $deactivate_result;
+            }
+        }
+        
+        // Eklentiyi kaldır
+        $this->db->query("DELETE FROM plugins WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        
+        // Kaldırma işlemi başarılı mı kontrol et
+        if ($this->db->affected_rows > 0) {
+            // Eklentinin kaldırma fonksiyonunu çağır
+            $uninstall_file = $this->plugins_dir . '/' . $slug . '/uninstall.php';
+            if (file_exists($uninstall_file)) {
+                include($uninstall_file);
+                if (function_exists($slug . '_uninstall')) {
+                    call_user_func($slug . '_uninstall', $this->db);
+                }
+            }
+            
+            return true;
+        } else {
+            return "Eklenti kaldırılamadı: $slug";
+        }
+    }
+    
+    /**
+     * Eklenti ayarlarını getirir
+     * 
+     * @param string $slug Eklenti slug
+     * @return array|null Eklenti ayarları
+     */
+    public function get_plugin_settings($slug) {
+        if (!$this->plugin_exists($slug)) {
+            return null;
+        }
+        
+        $result = $this->db->query("SELECT config FROM plugins WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        
+        if ($result && $result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            return json_decode($row['config'], true) ?? [];
+        }
+        
+        return [];
+    }
+    
+    /**
+     * Eklenti ayarlarını kaydeder
+     * 
+     * @param string $slug Eklenti slug
+     * @param array $settings Ayarlar
+     * @return bool Başarılı mı?
+     */
+    public function save_plugin_settings($slug, $settings) {
+        if (!$this->plugin_exists($slug)) {
+            return false;
+        }
+        
+        $json_settings = json_encode($settings);
+        $this->db->query("UPDATE plugins SET config = '" . $this->db->escape_string($json_settings) . "' WHERE slug = '" . $this->db->escape_string($slug) . "'");
+        
+        return $this->db->affected_rows > 0;
+    }
+    
+    /**
+     * Aktif eklentileri yükler
+     */
+    public function load_active_plugins_files() {
+        foreach ($this->active_plugins as $slug) {
+            $main_file = $this->plugins_dir . '/' . $slug . '/main.php';
+            if (file_exists($main_file)) {
+                include_once($main_file);
+            }
+        }
+    }
 }
 
+// Yardımcı fonksiyonlar
+
 /**
- * Bir eklentinin aktif olup olmadığını kontrol eder
+ * Eklentinin aktif olup olmadığını kontrol eder
  * 
- * @param mysqli $db Veritabanı bağlantısı
- * @param string $slug Eklenti slug'ı
- * @return bool Eklenti aktif mi
+ * @param object $db Veritabanı bağlantısı
+ * @param string $slug Eklenti slug
+ * @return bool Eklenti aktif mi?
  */
 function isPluginActive($db, $slug) {
-    $query = "SELECT is_active FROM " . PLUGINS_TABLE . " WHERE slug = ?";
-    $stmt = $db->prepare($query);
-    $stmt->bind_param('s', $slug);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result && $row = $result->fetch_assoc()) {
-        return (bool)$row['is_active'];
-    }
-    
-    return false;
+    $result = $db->query("SELECT name, slug, version FROM plugins WHERE is_active = TRUE AND slug = '" . $db->escape_string($slug) . "'");
+    return ($result && $result->num_rows > 0);
 }
 
 /**
- * Bir eklentinin ayarlarını kaydeder
+ * Aktif eklenti listesini döndürür
  * 
- * @param mysqli $db Veritabanı bağlantısı
- * @param string $slug Eklenti slug'ı
- * @param array $config Eklenti ayarları
- * @return bool İşlem başarılı mı
+ * @param object $db Veritabanı bağlantısı
+ * @return array Aktif eklentiler
  */
-function savePluginConfig($db, $slug, $config) {
-    $configJson = json_encode($config);
-    $query = "UPDATE " . PLUGINS_TABLE . " SET config = ?, updated_at = NOW() WHERE slug = ?";
-    $stmt = $db->prepare($query);
-    $stmt->bind_param('ss', $configJson, $slug);
+function getActivePlugins($db) {
+    $active_plugins = [];
+    $result = $db->query("SELECT name, slug, version FROM plugins WHERE is_active = TRUE");
     
-    if ($stmt->execute()) {
-        error_log("Eklenti $slug ayarları kaydedildi");
-        return true;
-    } else {
-        error_log("Eklenti ayarları kaydedilirken hata: " . $db->error);
-        return false;
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $active_plugins[] = $row;
+        }
     }
+    
+    return $active_plugins;
+}
+
+// Menü ve sayfa yönetimi için fonksiyonlar
+$menu_items = [];
+$page_routes = [];
+$api_route_actions = [];
+
+/**
+ * Menüye öğe ekler
+ * 
+ * @param array $item Menü öğesi bilgileri (page, title, icon, order)
+ */
+function add_menu_item($item) {
+    global $menu_items;
+    $menu_items[] = $item;
 }
 
 /**
- * Bir eklentinin ayarlarını döndürür
+ * Menü öğelerini döndürür
  * 
- * @param mysqli $db Veritabanı bağlantısı
- * @param string $slug Eklenti slug'ı
- * @return array Eklenti ayarları
+ * @return array Menü öğeleri
  */
-function getPluginConfig($db, $slug) {
-    $query = "SELECT config FROM " . PLUGINS_TABLE . " WHERE slug = ?";
-    $stmt = $db->prepare($query);
-    $stmt->bind_param('s', $slug);
-    $stmt->execute();
-    $result = $stmt->get_result();
+function get_menu_items() {
+    global $menu_items;
     
-    if ($result && $row = $result->fetch_assoc()) {
-        return json_decode($row['config'], true) ?? [];
-    }
+    // Sıralama
+    usort($menu_items, function($a, $b) {
+        return ($a['order'] ?? 99) - ($b['order'] ?? 99);
+    });
     
-    return [];
+    return $menu_items;
 }
 
-// Eklenti sisteminin başlatılması
-function initPluginSystem($db) {
-    // Eklenti tablosunu kontrol et
-    if (!ensurePluginsTable($db)) {
-        error_log("Eklenti sistemi başlatılamadı: Tablo oluşturma hatası");
-        return false;
-    }
-    
-    // Eklentileri tara ve kaydet
-    scanAndRegisterPlugins($db);
-    
-    // Aktif eklentileri yükle
-    loadActivePlugins($db);
-    
-    return true;
+/**
+ * Sayfa rotası ekler
+ * 
+ * @param string $page Sayfa adı
+ * @param callable $callback Çağrılacak fonksiyon
+ */
+function add_page_route($page, $callback) {
+    global $page_routes;
+    $page_routes[$page] = $callback;
 }
 
-// Admin menüsüne eklenti yönetim sayfası ekler
-function addPluginManagementToMenu() {
-    // Bu fonksiyon index.php'de sidebar menüsü oluşturulurken çağrılır
-    return '
-    <div class="menu-group">
-        <div class="menu-title ps-3 pt-2">Eklentiler</div>
-        <div><a href="index.php?page=plugins" class="' . ($_GET['page'] ?? '' === 'plugins' ? 'active' : '') . '"><i class="bi bi-puzzle me-2"></i> Eklenti Yönetimi</a></div>
-    </div>';
+/**
+ * Sayfa rotasını döndürür
+ * 
+ * @param string $page Sayfa adı
+ * @return callable|null Çağrılacak fonksiyon
+ */
+function get_page_route($page) {
+    global $page_routes;
+    return $page_routes[$page] ?? null;
 }
-?>
+
+/**
+ * API rotası için eylem ekler
+ * 
+ * @param string $hook Kanca adı
+ * @param callable $callback Çağrılacak fonksiyon
+ */
+function add_action($hook, $callback) {
+    global $api_route_actions;
+    if (!isset($api_route_actions[$hook])) {
+        $api_route_actions[$hook] = [];
+    }
+    $api_route_actions[$hook][] = $callback;
+}
+
+/**
+ * API rotası eylemlerini çalıştırır
+ * 
+ * @param string $hook Kanca adı
+ */
+function do_action($hook) {
+    global $api_route_actions;
+    if (isset($api_route_actions[$hook])) {
+        foreach ($api_route_actions[$hook] as $callback) {
+            call_user_func($callback);
+        }
+    }
+}
+
+// Eklenti dizinini oluştur
+$plugins_dir = __DIR__ . '/plugins';
+if (!file_exists($plugins_dir)) {
+    mkdir($plugins_dir, 0755, true);
+}
+
+// Eklenti yöneticisini başlat
+$plugin_manager = new PluginManager($db);
+
+// Aktif eklentileri yükle
+$plugin_manager->load_active_plugins_files();
