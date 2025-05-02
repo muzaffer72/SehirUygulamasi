@@ -922,6 +922,9 @@ $page_file = "pages/{$page}.php";
                             <a href="?page=profanity_filter" class="<?= $page === 'profanity_filter' ? 'active' : '' ?>">
                                 <i class="bi bi-shield-exclamation"></i> Küfür Filtresi
                             </a>
+                            <a href="?page=database_maintenance" class="<?= $page === 'database_maintenance' ? 'active' : '' ?>">
+                                <i class="bi bi-database-gear"></i> Veritabanı Bakımı
+                            </a>
                             <a href="?page=backup" class="<?= $page === 'backup' ? 'active' : '' ?>">
                                 <i class="bi bi-cloud-arrow-down"></i> Yedekleme
                             </a>
@@ -947,7 +950,7 @@ $page_file = "pages/{$page}.php";
 
                     <?php if ($page === 'dashboard'): ?>
                         <?php include($page_file); ?>
-                    <?php elseif (in_array($page, ['profanity_filter', 'backup', 'surveys', 'categories'])): ?>
+                    <?php elseif (in_array($page, ['profanity_filter', 'backup', 'surveys', 'categories', 'database_maintenance'])): ?>
                         <?php include($page_file); ?>
                     <?php elseif (isset($_SESSION['user']) && file_exists($page_file)): ?>
                         <?php include($page_file); ?>
