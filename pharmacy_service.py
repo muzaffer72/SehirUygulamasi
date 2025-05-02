@@ -55,11 +55,12 @@ def get_closest_pharmacies(lat, lng, city, district=None, limit=10):
     for pharmacy in pharmacies:
         if 'latitude' in pharmacy and 'longitude' in pharmacy and pharmacy['latitude'] and pharmacy['longitude']:
             # Mesafeyi hesapla
-            pharmacy['distance'] = calculate_distance(
+            distance = calculate_distance(
                 lat, lng,
                 float(pharmacy['latitude']),
                 float(pharmacy['longitude'])
             )
+            pharmacy['distance'] = distance
             pharmacies_with_location.append(pharmacy)
     
     # Mesafeye göre sırala

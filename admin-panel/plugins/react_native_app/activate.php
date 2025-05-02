@@ -28,5 +28,8 @@ function react_native_app_activate($db) {
     $db->query("INSERT INTO settings (name, value) VALUES ('react_native_app_settings', '" . $db->escape_string($settings_json) . "') ON CONFLICT (name) DO UPDATE SET value = '" . $db->escape_string($settings_json) . "'");
     
     // React Native proje klasörünü oluştur
-    ensure_react_native_project_folder();
+    // ensure_react_native_project_folder();
+    
+    // Bu fonksiyon, gerçek uygulamada React Native proje klasörünün oluşturulmasını sağlar
+    // Şimdilik bu işlemi atla, proje manuel olarak oluşturulacak
 }

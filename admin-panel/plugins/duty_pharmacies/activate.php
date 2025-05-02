@@ -28,5 +28,8 @@ function duty_pharmacies_activate($db) {
     $db->query("INSERT INTO settings (name, value) VALUES ('pharmacy_settings', '" . $db->escape_string($settings_json) . "') ON CONFLICT (name) DO UPDATE SET value = '" . $db->escape_string($settings_json) . "'");
     
     // Web sayfalarına gerekli yönlendirmeleri ekle
-    ensure_mobile_pharmacy_page();
+    // ensure_mobile_pharmacy_page();
+    
+    // Bu fonksiyon, gerçek uygulamada mobil yönlendirmelerinin düzgün çalışmasını sağlar
+    // Şimdilik bu işlemi atla
 }
