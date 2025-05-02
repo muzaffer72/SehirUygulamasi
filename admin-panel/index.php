@@ -824,6 +824,13 @@ $page_file = "pages/{$page}.php";
                                     </a>
                                 </li>
                                 
+                                <!-- Mobil Uygulama -->
+                                <li class="nav-item">
+                                    <a class="nav-link <?= $page === 'react_native_app' ? 'active' : '' ?>" href="?page=react_native_app">
+                                        <i class="bi bi-phone"></i> Mobil Uygulama
+                                    </a>
+                                </li>
+                                
                                 <!-- Sistem -->
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -934,6 +941,14 @@ $page_file = "pages/{$page}.php";
                             </a>
                             <a href="?page=search_suggestions" class="<?= $page === 'search_suggestions' ? 'active' : '' ?>">
                                 <i class="bi bi-search"></i> Arama Önerileri
+                            </a>
+                        </div>
+                        
+                        <!-- Mobil Uygulama -->
+                        <div class="menu-group">
+                            <div class="menu-title">Mobil Uygulama</div>
+                            <a href="?page=react_native_app" class="<?= $page === 'react_native_app' ? 'active' : '' ?>">
+                                <i class="bi bi-phone"></i> React Native Uygulama
                             </a>
                         </div>
                         
