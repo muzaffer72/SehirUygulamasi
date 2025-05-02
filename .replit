@@ -1,4 +1,4 @@
-modules = ["flutter", "php", "nodejs-20", "python-3.11"]
+modules = ["flutter", "php", "nodejs-20", "python-3.11", "python3"]
 
 [nix]
 channel = "stable-24_05"
