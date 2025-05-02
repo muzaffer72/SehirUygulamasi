@@ -1,0 +1,60 @@
+diff --git a/android/app/build.gradle b/android/app/build.gradle
+index 4bfce24..68fe22c 100644
+--- a/android/app/build.gradle
++++ b/android/app/build.gradle
+@@ -27,8 +27,8 @@ apply plugin: 'kotlin-android'
+ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+ 
+ android {
+-    compileSdkVersion flutter.compileSdkVersion
+-    ndkVersion flutter.ndkVersion
++    compileSdkVersion 33
++    ndkVersion '25.1.8937393'
+ 
+     compileOptions {
+         sourceCompatibility JavaVersion.VERSION_1_8
+@@ -48,7 +48,7 @@ android {
+         applicationId "com.sikayetvar.app"
+         // You can update the following values to match your application needs.
+         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
+-        minSdkVersion flutter.minSdkVersion
++        minSdkVersion 21
+         targetSdkVersion flutter.targetSdkVersion
+         versionCode flutterVersionCode.toInteger()
+         versionName flutterVersionName
+@@ -69,3 +69,10 @@ flutter {
+ dependencies {
+     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+ }
++
++// Flutter bildirim paketi sorununu çözmek için eklenen yapılandırma
++subprojects {
++    afterEvaluate {project ->
++        project.tasks.withType(JavaCompile).configureEach { javaCompile -> javaCompile.options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation" }
++    }
++}
+diff --git a/android/build.gradle b/android/build.gradle
+index 0bd5c3b..4256f91 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -6,7 +6,7 @@ buildscript {
+     }
+ 
+     dependencies {
+-        classpath 'com.android.tools.build:gradle:7.1.2'
++        classpath 'com.android.tools.build:gradle:7.3.0'
+         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+     }
+ }
+diff --git a/pubspec.yaml b/pubspec.yaml
+index 79b42d5..a33f6a9 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -33,7 +33,7 @@ dependencies:
+   cached_network_image: ^3.2.3
+   dio: ^5.0.0
+   firebase_messaging: ^14.6.5
+-  flutter_local_notifications: ^14.1.5
++  flutter_local_notifications: ^13.0.0
+   flutter_native_splash: ^2.3.1
+   http: ^0.13.6
