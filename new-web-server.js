@@ -375,6 +375,7 @@ app.get('/', (req, res) => {
       <div class="view-options">
         <a href="/" class="btn">Platform Bilgileri</a>
         <a href="/mobile" class="btn secondary">Mobil Görünüm</a>
+        <a href="/pharmacies" class="btn secondary">Nöbetçi Eczaneler</a>
       </div>
       
       <div class="card">
