@@ -1,0 +1,12 @@
+diff --git a/pubspec.yaml b/pubspec.yaml
+index xxxx..xxxx 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -10,7 +10,7 @@ dependencies:
+   cached_network_image: ^3.2.3
+   dio: ^5.0.0
+   firebase_messaging: ^14.6.5
+-  flutter_local_notifications: ^14.1.5
++  flutter_local_notifications: ^9.9.1
+   flutter_native_splash: ^2.3.1
+   http: ^0.13.6
