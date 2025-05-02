@@ -306,7 +306,9 @@ app.get('/', (req, res) => {
       '/api/posts',
       '/api/users',
       '/api/parties',
-      '/api/search_suggestions'
+      '/api/search_suggestions',
+      '/api/pharmacies',
+      '/api/pharmacies/closest'
     ],
     database: {
       type: 'PostgreSQL',

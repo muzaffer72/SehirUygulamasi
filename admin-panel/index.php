@@ -777,6 +777,9 @@ $page_file = "pages/{$page}.php";
                                         <li><a class="dropdown-item <?= $page === 'user_likes' ? 'active' : '' ?>" href="?page=user_likes">
                                             <i class="bi bi-heart"></i> Beğeniler
                                         </a></li>
+                                        <li><a class="dropdown-item <?= $page === 'duty_pharmacies' ? 'active' : '' ?>" href="?page=duty_pharmacies">
+                                            <i class="bi bi-capsule"></i> Nöbetçi Eczaneler
+                                        </a></li>
                                     </ul>
                                 </li>
                                 
@@ -880,6 +883,9 @@ $page_file = "pages/{$page}.php";
                             </a>
                             <a href="?page=user_likes" class="<?= $page === 'user_likes' ? 'active' : '' ?>">
                                 <i class="bi bi-heart"></i> Beğeniler
+                            </a>
+                            <a href="?page=duty_pharmacies" class="<?= $page === 'duty_pharmacies' ? 'active' : '' ?>">
+                                <i class="bi bi-capsule"></i> Nöbetçi Eczaneler
                             </a>
                         </div>
                         

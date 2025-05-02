@@ -23,6 +23,10 @@ args = "API Proxy"
 task = "workflow.run"
 args = "Mobil Görünüm"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Eczane Servisi"
+
 [[workflows.workflow]]
 name = "Admin Panel"
 author = "agent"
@@ -66,6 +70,15 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "kill $(lsof -t -i:5000) 2>/dev/null || true && node new-web-server.js"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Eczane Servisi"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python pharmacy_api.py"
+waitForPort = 5001
 
 [deployment]
 run = ["sh", "-c", "cd . && flutter run -d web-server --web-port=5001 --web-hostname=0.0.0.0"]
