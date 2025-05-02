@@ -1,0 +1,36 @@
+diff --git a/android/app/build.gradle b/android/app/build.gradle
+index abc1234..def5678 100644
+--- a/android/app/build.gradle
++++ b/android/app/build.gradle
+@@ -26,8 +26,8 @@ apply plugin: 'kotlin-android'
+ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+ 
+ android {
+-    compileSdkVersion flutter.compileSdkVersion
+-    ndkVersion flutter.ndkVersion
++    compileSdkVersion 33
++    ndkVersion "25.1.8937393"
+ 
+     compileOptions {
+         sourceCompatibility JavaVersion.VERSION_1_8
+@@ -47,7 +47,7 @@ android {
+         applicationId "com.sikayetvar.app"
+         // You can update the following values to match your application needs.
+         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
+-        minSdkVersion flutter.minSdkVersion
++        minSdkVersion 21
+         targetSdkVersion flutter.targetSdkVersion
+         versionCode flutterVersionCode.toInteger()
+         versionName flutterVersionName
+@@ -66,4 +66,11 @@ flutter {
+ 
+ dependencies {
+     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
++}
++
++// Eklenen çözüm - bildirim paketi sorunu için
++subprojects {
++    afterEvaluate {project ->
++        project.tasks.withType(JavaCompile).configureEach { javaCompile -> javaCompile.options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation" }
++    }
+ }
