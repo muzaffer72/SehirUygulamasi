@@ -430,6 +430,10 @@ foreach ($users as $user) {
     }
 }
 
+// Eklenti sistemini başlat
+require_once 'plugin_manager.php';
+initPluginSystem($db);
+
 // Get current page
 $page = $_GET['page'] ?? 'dashboard';
 
