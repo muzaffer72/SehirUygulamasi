@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nöbetçi Eczaneler - ŞikayetVar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .pharmacy-card {
+            transition: transform 0.3s;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border-left: 4px solid #198754;
+        }
+        .pharmacy-card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+            font-weight: bold;
+        }
+        .distance-badge {
+            font-size: 0.9rem;
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 0.35em 0.65em;
+            border-radius: 0.5rem;
+        }
+        .pharmacy-address {
+            margin-bottom: 0.5rem;
+            color: #495057;
+        }
+        .pharmacy-phone {
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        @media (max-width: 768px) {
+            .location-controls {
+                flex-direction: column;
+            }
+            .location-controls .btn {
+                margin-top: 10px;
+                width: 100%;
+            }
+        }
+        header {
+            background-color: #343a40;
+            color: white;
+            padding: 1rem 0;
+        }
+        .header-logo {
+            width: 140px;
+        }
+        .pharmacy-filter-card {
+            position: sticky;
+            top: 20px;
+        }
+        .map-container {
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .no-pharmacy-message {
+            padding: 40px 20px;
+            text-align: center;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+        .no-pharmacy-icon {
+            font-size: 3rem;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        #loading-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 0;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <a href="/">
+                        <img src="/assets/images/logo-white.png" alt="ŞikayetVar Logo" class="header-logo">
+                    </a>
+                </div>
+                <div class="col">
+                    <h1 class="h4 mb-0">Nöbetçi Eczaneler</h1>
+                </div>
+                <div class="col-auto">
+                    <a href="javascript:history.back()" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-arrow-left"></i> Geri
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mt-4 mb-5">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card pharmacy-filter-card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-funnel"></i> Eczane Ara</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="pharmacy-filter-form">
+                            <div class="mb-3">
+                                <label for="city" class="form-label">Şehir</label>
+                                <select class="form-select" id="city" required>
+                                    <option value="">Şehir Seçiniz</option>
+                                    <!-- Şehirler JavaScript ile yüklenecek -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="district" class="form-label">İlçe (Opsiyonel)</label>
+                                <select class="form-select" id="district">
+                                    <option value="">Tüm İlçeler</option>
+                                    <!-- İlçeler JavaScript ile yüklenecek -->
+                                </select>
+                            </div>
+                            <hr>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="use-location" checked>
+                                    <label class="form-check-label" for="use-location">
+                                        Konumumu kullan
+                                    </label>
+                                </div>
+                                <div class="form-text small text-muted">
+                                    Etkinleştirirseniz, size en yakın nöbetçi eczaneler listenin en üstünde gösterilir.
+                                </div>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary" id="search-button">
+                                    <i class="bi bi-search"></i> Nöbetçi Eczaneleri Bul
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-8">
+                <div class="alert alert-info mb-4">
+                    <i class="bi bi-info-circle"></i> Nöbetçi eczaneler günlük olarak değişmektedir. Veriler anlık olarak güncellenmektedir.
+                </div>
+
+                <!-- Harita bölümü -->
+                <div class="map-container" id="map-container">
+                    <div id="map" style="width: 100%; height: 100%;"></div>
+                </div>
+
+                <!-- Yükleniyor göstergesi -->
+                <div id="loading-indicator" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                </div>
+
+                <!-- Eczane listesi -->
+                <div id="pharmacy-list">
+                    <!-- Eczaneler JS ile doldurulacak -->
+                </div>
+
+                <!-- Sonuç bulunamadı mesajı -->
+                <div class="no-pharmacy-message" id="no-pharmacy-message" style="display: none;">
+                    <div class="no-pharmacy-icon">
+                        <i class="bi bi-exclamation-circle"></i>
+                    </div>
+                    <h3>Nöbetçi Eczane Bulunamadı</h3>
+                    <p class="text-muted">Seçtiğiniz şehir ve ilçede nöbetçi eczane verisi bulunamadı. Lütfen farklı bir şehir/ilçe seçin veya daha sonra tekrar deneyin.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>ŞikayetVar</h5>
+                    <p class="small">Yerel yönetimlerle iletişim kurmak ve şehir sorunlarını bildirmek için en iyi platform.</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>Hızlı Erişim</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="text-white text-decoration-none">Ana Sayfa</a></li>
+                        <li><a href="/cities" class="text-white text-decoration-none">Şehirler</a></li>
+                        <li><a href="/complaints" class="text-white text-decoration-none">Şikayetler</a></li>
+                        <li><a href="/about" class="text-white text-decoration-none">Hakkımızda</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>İletişim</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="mailto:info@sikayetvar.com" class="text-white text-decoration-none">info@sikayetvar.com</a></li>
+                        <li><a href="tel:+902124567890" class="text-white text-decoration-none">+90 (212) 456 78 90</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p class="small mb-0">&copy; 2025 ŞikayetVar. Tüm hakları saklıdır.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+    <script>
+        // Globals
+        let map;
+        let markers = [];
+        let currentPosition = null;
+        let pharmacies = [];
+
+        // Maps API'si yüklendiğinde çalışacak
+        function initMap() {
+            // Türkiye'nin orta noktasını başlangıç olarak al
+            const turkeyCenter = { lat: 39.0, lng: 35.0 };
+            
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 6,
+                center: turkeyCenter,
+            });
+            
+            // İlk yüklemede konum izni iste
+            if (document.getElementById('use-location').checked) {
+                getCurrentLocation();
+            }
+        }
+
+        // Kullanıcı konumunu al
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        currentPosition = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        // Haritayı kullanıcı konumuna odakla
+                        if (map) {
+                            map.setCenter(currentPosition);
+                            map.setZoom(12);
+                            
+                            // Kullanıcı konumunu işaretle
+                            new google.maps.Marker({
+                                position: currentPosition,
+                                map: map,
+                                icon: {
+                                    path: google.maps.SymbolPath.CIRCLE,
+                                    scale: 10,
+                                    fillColor: "#4285F4",
+                                    fillOpacity: 1,
+                                    strokeColor: "#ffffff",
+                                    strokeWeight: 2,
+                                },
+                                title: "Konumunuz"
+                            });
+                        }
+                    },
+                    (error) => {
+                        console.error("Konum alınamadı:", error);
+                        document.getElementById('use-location').checked = false;
+                    }
+                );
+            } else {
+                console.error("Tarayıcınız konum hizmetini desteklemiyor.");
+                document.getElementById('use-location').checked = false;
+            }
+        }
+
+        // Şehirleri getir
+        async function loadCities() {
+            try {
+                const response = await fetch('/api/cities');
+                const data = await response.json();
+                
+                if (data && Array.isArray(data)) {
+                    const citySelect = document.getElementById('city');
+                    citySelect.innerHTML = '<option value="">Şehir Seçiniz</option>';
+                    
+                    data.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.name;
+                        citySelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Şehirler yüklenemedi:', error);
+            }
+        }
+
+        // İlçeleri getir
+        async function loadDistricts(cityId) {
+            try {
+                const response = await fetch(`/api/districts?city_id=${cityId}`);
+                const data = await response.json();
+                
+                const districtSelect = document.getElementById('district');
+                districtSelect.innerHTML = '<option value="">Tüm İlçeler</option>';
+                
+                if (data && Array.isArray(data)) {
+                    data.forEach(district => {
+                        const option = document.createElement('option');
+                        option.value = district.id;
+                        option.textContent = district.name;
+                        districtSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('İlçeler yüklenemedi:', error);
+            }
+        }
+
+        // Nöbetçi eczaneleri getir
+        async function loadPharmacies(cityName, districtName = null) {
+            showLoading(true);
+            
+            try {
+                let url = `/api/pharmacies?city=${encodeURIComponent(cityName)}`;
+                if (districtName) {
+                    url += `&district=${encodeURIComponent(districtName)}`;
+                }
+                
+                // Konum bazlı istek
+                if (document.getElementById('use-location').checked && currentPosition) {
+                    url = `/api/pharmacies/closest?city=${encodeURIComponent(cityName)}&lat=${currentPosition.lat}&lng=${currentPosition.lng}`;
+                    if (districtName) {
+                        url += `&district=${encodeURIComponent(districtName)}`;
+                    }
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.pharmacies && data.pharmacies.length > 0) {
+                    pharmacies = data.pharmacies;
+                    displayPharmacies(pharmacies);
+                    updateMap(pharmacies);
+                    document.getElementById('no-pharmacy-message').style.display = 'none';
+                } else {
+                    document.getElementById('pharmacy-list').innerHTML = '';
+                    document.getElementById('no-pharmacy-message').style.display = 'block';
+                    clearMarkers();
+                }
+            } catch (error) {
+                console.error('Eczane bilgileri yüklenemedi:', error);
+                document.getElementById('pharmacy-list').innerHTML = '';
+                document.getElementById('no-pharmacy-message').style.display = 'block';
+                clearMarkers();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Eczaneleri listele
+        function displayPharmacies(pharmacies) {
+            const container = document.getElementById('pharmacy-list');
+            container.innerHTML = '';
+            
+            pharmacies.forEach(pharmacy => {
+                const card = document.createElement('div');
+                card.className = 'card pharmacy-card';
+                
+                let distanceBadge = '';
+                if (pharmacy.distance !== undefined) {
+                    distanceBadge = `<span class="distance-badge"><i class="bi bi-geo-alt"></i> ${pharmacy.distance} km</span>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>${pharmacy.name}</span>
+                        ${distanceBadge}
+                    </div>
+                    <div class="card-body">
+                        <p class="pharmacy-address"><i class="bi bi-geo-alt"></i> ${pharmacy.address}</p>
+                        <p class="pharmacy-phone"><i class="bi bi-telephone"></i> ${pharmacy.phone}</p>
+                        <div class="d-flex location-controls">
+                            ${pharmacy.location.maps_url ? 
+                                `<a href="${pharmacy.location.maps_url}" target="_blank" class="btn btn-outline-primary me-2">
+                                    <i class="bi bi-map"></i> Haritada Göster
+                                </a>
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${pharmacy.location.latitude},${pharmacy.location.longitude}" target="_blank" class="btn btn-outline-success">
+                                    <i class="bi bi-signpost-2"></i> Yol Tarifi Al
+                                </a>` : 
+                                `<span class="text-muted">Konum bilgisi mevcut değil</span>`
+                            }
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Haritayı güncelle
+        function updateMap(pharmacies) {
+            clearMarkers();
+            
+            if (!map) return;
+            
+            const bounds = new google.maps.LatLngBounds();
+            
+            // Kullanıcı konumu varsa ekle
+            if (currentPosition) {
+                bounds.extend(currentPosition);
+            }
+            
+            // Eczane konumlarını ekle
+            pharmacies.forEach((pharmacy, index) => {
+                if (pharmacy.location && pharmacy.location.latitude && pharmacy.location.longitude) {
+                    const position = { 
+                        lat: pharmacy.location.latitude, 
+                        lng: pharmacy.location.longitude 
+                    };
+                    
+                    const marker = new google.maps.Marker({
+                        position: position,
+                        map: map,
+                        title: pharmacy.name,
+                        label: {
+                            text: (index + 1).toString(),
+                            color: "white"
+                        },
+                        animation: google.maps.Animation.DROP
+                    });
+                    
+                    const infowindow = new google.maps.InfoWindow({
+                        content: `
+                            <div style="max-width: 300px;">
+                                <h5>${pharmacy.name}</h5>
+                                <p>${pharmacy.address}</p>
+                                <p><strong>Telefon:</strong> ${pharmacy.phone}</p>
+                                <div>
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination=${position.lat},${position.lng}" target="_blank" style="color: #198754; text-decoration: none;">
+                                        <i class="bi bi-signpost-2"></i> Yol Tarifi Al
+                                    </a>
+                                </div>
+                            </div>
+                        `
+                    });
+                    
+                    marker.addListener("click", () => {
+                        infowindow.open(map, marker);
+                    });
+                    
+                    markers.push(marker);
+                    bounds.extend(position);
+                }
+            });
+            
+            // Haritayı sınırlara göre ayarla
+            if (!bounds.isEmpty()) {
+                map.fitBounds(bounds);
+                // Çok fazla yakınlaşmasını önle
+                const listener = google.maps.event.addListener(map, "idle", function() {
+                    if (map.getZoom() > 15) map.setZoom(15);
+                    google.maps.event.removeListener(listener);
+                });
+            }
+        }
+
+        // Harita işaretçilerini temizle
+        function clearMarkers() {
+            for (let marker of markers) {
+                marker.setMap(null);
+            }
+            markers = [];
+        }
+
+        // Yükleniyor göstergesini kontrol et
+        function showLoading(show) {
+            document.getElementById('loading-indicator').style.display = show ? 'flex' : 'none';
+            document.getElementById('pharmacy-list').style.display = show ? 'none' : 'block';
+        }
+
+        // Sayfa yüklendiğinde çalış
+        document.addEventListener('DOMContentLoaded', function() {
+            // Şehirleri yükle
+            loadCities();
+            
+            // Şehir değiştiğinde ilçeleri yükle
+            document.getElementById('city').addEventListener('change', function() {
+                const cityId = this.value;
+                if (cityId) {
+                    loadDistricts(cityId);
+                } else {
+                    document.getElementById('district').innerHTML = '<option value="">Tüm İlçeler</option>';
+                }
+            });
+            
+            // Arama formunu dinle
+            document.getElementById('pharmacy-filter-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const citySelect = document.getElementById('city');
+                const districtSelect = document.getElementById('district');
+                
+                const cityId = citySelect.value;
+                const districtId = districtSelect.value;
+                
+                if (!cityId) {
+                    alert('Lütfen bir şehir seçin');
+                    return;
+                }
+                
+                const cityName = citySelect.options[citySelect.selectedIndex].text;
+                const districtName = districtId ? districtSelect.options[districtSelect.selectedIndex].text : null;
+                
+                loadPharmacies(cityName, districtName);
+            });
+            
+            // Konum checkbox'ını dinle
+            document.getElementById('use-location').addEventListener('change', function() {
+                if (this.checked) {
+                    getCurrentLocation();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

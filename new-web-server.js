@@ -5,6 +5,9 @@ const fs = require('fs');
 const http = require('http');
 const https = require('https');
 const app = express();
+
+// Assets klasörü için statik içerik sunumu
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 // Replit sadece 5000 portuna dışarıdan erişime izin veriyor
 const PORT = 5000;
 
@@ -448,6 +451,15 @@ app.get('/', (req, res) => {
 });
 
 // Mobil görünüm - Admin panel API entegrasyonlu
+// Statik sayfalar için klasör tanımla
+app.use('/web/pages', express.static(path.join(__dirname, 'web/pages')));
+
+// Nöbetçi eczane sayfası
+app.get('/pharmacies', (req, res) => {
+  // Statik HTML sayfasını gönder
+  res.sendFile(path.join(__dirname, 'web/pages/pharmacies.html'));
+});
+
 app.get('/mobile', async (req, res) => {
   let postsHtml = '';
   
