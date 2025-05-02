@@ -430,9 +430,9 @@ foreach ($users as $user) {
     }
 }
 
-// Eklenti sistemini başlat
-require_once 'plugin_manager.php';
-initPluginSystem($db);
+// Eklenti sistemini başlat (geçici olarak stub versiyonu kullan)
+require_once 'stub_plugin_system.php';
+initPluginSystem();
 
 // Get current page
 $page = $_GET['page'] ?? 'dashboard';
