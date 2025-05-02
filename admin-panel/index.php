@@ -430,10 +430,6 @@ foreach ($users as $user) {
     }
 }
 
-// Eklenti sistemini başlat (geçici olarak stub versiyonu kullan)
-require_once 'stub_plugin_system.php';
-initPluginSystem();
-
 // Get current page
 $page = $_GET['page'] ?? 'dashboard';
 
@@ -824,13 +820,6 @@ $page_file = "pages/{$page}.php";
                                     </a>
                                 </li>
                                 
-                                <!-- Mobil Uygulama -->
-                                <li class="nav-item">
-                                    <a class="nav-link <?= $page === 'react_native_app' ? 'active' : '' ?>" href="?page=react_native_app">
-                                        <i class="bi bi-phone"></i> Mobil Uygulama
-                                    </a>
-                                </li>
-                                
                                 <!-- Sistem -->
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -895,14 +884,6 @@ $page_file = "pages/{$page}.php";
                             <a href="?page=user_likes" class="<?= $page === 'user_likes' ? 'active' : '' ?>">
                                 <i class="bi bi-heart"></i> Beğeniler
                             </a>
-                        </div>
-                        
-                        <!-- Eklenti Yönetimi -->
-                        <div class="menu-group">
-                            <div class="menu-title">Eklenti Yönetimi</div>
-                            <a href="?page=plugins" class="<?= $page === 'plugins' ? 'active' : '' ?>">
-                                <i class="bi bi-puzzle"></i> Eklentiler
-                            </a>
                             <a href="?page=duty_pharmacies" class="<?= $page === 'duty_pharmacies' ? 'active' : '' ?>">
                                 <i class="bi bi-capsule"></i> Nöbetçi Eczaneler
                             </a>
@@ -941,14 +922,6 @@ $page_file = "pages/{$page}.php";
                             </a>
                             <a href="?page=search_suggestions" class="<?= $page === 'search_suggestions' ? 'active' : '' ?>">
                                 <i class="bi bi-search"></i> Arama Önerileri
-                            </a>
-                        </div>
-                        
-                        <!-- Mobil Uygulama -->
-                        <div class="menu-group">
-                            <div class="menu-title">Mobil Uygulama</div>
-                            <a href="?page=react_native_app" class="<?= $page === 'react_native_app' ? 'active' : '' ?>">
-                                <i class="bi bi-phone"></i> React Native Uygulama
                             </a>
                         </div>
                         
