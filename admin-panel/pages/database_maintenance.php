@@ -1,10 +1,6 @@
 <?php
-// Oturum kontrolü
-session_start();
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php?page=login');
-    exit;
-}
+// Ana index.php içinde oturum zaten başlatıldığı için burada tekrar başlatmıyoruz
+// Oturum kontrolü index.php içinde yapıldığı için burada tekrar yapmamıza gerek yok
 
 // Veritabanı bağlantısı ve gerekli fonksiyonları içe aktar
 require_once 'db_connection.php';
