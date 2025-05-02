@@ -1,16 +1,14 @@
 <?php
 /**
- * Nöbetçi Eczaneler Eklentisi - Bilgi Dosyası
+ * Eklenti meta bilgileri
+ * 
+ * Bu dosya eklentinin bilgilerini içerir ve eklenti yöneticisi tarafından okunur.
  */
 
-$plugin_info = [
+return [
     'name' => 'Nöbetçi Eczaneler',
-    'slug' => 'duty_pharmacies',
-    'description' => 'Şehir ve ilçe bazlı nöbetçi eczane bilgilerini gösterir. 
-                     Harita entegrasyonu ile eczanelere yol tarifi ve mesafeye göre sıralama sunar.',
+    'description' => 'Belediye sayfaları için nöbetçi eczane özelliği. Şehir/ilçe bazında nöbetçi eczaneleri listeler ve harita üzerinde gösterir.',
     'version' => '1.0.0',
-    'author' => 'ŞikayetVar Sistem',
-    'requires_api' => true,
-    'mobile_support' => true,
+    'author' => 'ŞikayetVar Ekibi',
+    'settings_page' => 'duty_pharmacies'
 ];
-?>

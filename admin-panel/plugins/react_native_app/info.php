@@ -1,16 +1,14 @@
 <?php
 /**
- * React Native Mobil Uygulama Eklentisi - Bilgi Dosyası
+ * Eklenti meta bilgileri
+ * 
+ * Bu dosya eklentinin bilgilerini içerir ve eklenti yöneticisi tarafından okunur.
  */
 
-$plugin_info = [
+return [
     'name' => 'React Native Mobil Uygulama',
-    'slug' => 'react_native_app',
-    'description' => 'ŞikayetVar sistemi için React Native tabanlı mobil uygulama entegrasyonu. 
-                     Flutter yerine daha hızlı geliştirme imkanı sunar.',
+    'description' => 'ŞikayetVar platformu için React Native tabanlı mobil uygulama oluşturma desteği ekler. Flutter yerine daha kolay ve daha yaygın React Native teknolojisini kullanır.',
     'version' => '1.0.0',
-    'author' => 'ŞikayetVar Sistem',
-    'requires_api' => true,
-    'mobile_support' => true,
+    'author' => 'ŞikayetVar Ekibi',
+    'settings_page' => 'react_native_app'
 ];
-?>
