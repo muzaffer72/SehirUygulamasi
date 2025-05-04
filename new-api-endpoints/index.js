@@ -14,7 +14,7 @@ const pool = new Pool({
 
 // Express uygulaması oluştur
 const app = express();
-const PORT = process.env.PORT || 9000;
+const PORT = process.env.PORT || 9500;
 
 // Middleware'ler
 app.use(cors());
