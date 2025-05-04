@@ -1,104 +1,106 @@
-# Flutter Bildirim Hatası Çözümü - Adım Adım Talimatlar
+# Android Uygulama Bildirimleri Sorun Çözümü
 
-Flutter uygulaması derleme sırasında `flutter_local_notifications` paketinden kaynaklanan hata alıyorsunuz. Sorunu çözmek için aşağıdaki adımları sırasıyla izleyin.
+Flutter Local Notifications paketinden kaynaklı hatayı çözmek için yapılan değişiklikler aşağıda adım adım detaylandırılmıştır.
 
-## 1. Adım: pubspec.yaml Dosyasını Değiştirme
+## 1. Yapılan Değişiklikler
 
-1. Projenizin kök dizinindeki `pubspec.yaml` dosyasını açın
-2. `flutter_local_notifications` bağımlılığını bulun:
-   ```yaml
-   flutter_local_notifications: ^14.1.5
-   ```
-3. Bunu değiştirip sürümü düşürün:
-   ```yaml
-   flutter_local_notifications: ^12.0.0
-   ```
-4. Dosyayı kaydedin
+### 1.1. Paket Sürümü Değişikliği
 
-## 2. Adım: Temizlik ve Bağımlılıkları Yenileme
+`new_project/pubspec.yaml` dosyasında flutter_local_notifications paketi sürümü düşürüldü:
 
-Terminalde, projenizin kök dizininde aşağıdaki komutları çalıştırın:
-
-```bash
-flutter clean
-flutter pub get
+```yaml
+flutter_local_notifications: 9.9.1  # 14.1.1'den düşürüldü
 ```
 
-## 3. Adım: Uygulamayı Yeniden Derleme
+### 1.2. Android Gradle Ayarları Değişikliği
 
-```bash
-flutter build apk --debug
+`new_project/android/app/build.gradle` dosyasında:
+
+```gradle
+android {
+    namespace "belediye.iletisim.merkezi"
+    compileSdkVersion 33  // Eski: flutter.compileSdkVersion
+    ndkVersion "25.1.8937393"
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_1_8  // Eski: VERSION_17
+        targetCompatibility JavaVersion.VERSION_1_8  // Eski: VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'  // Eski: '17'
+    }
+    
+    defaultConfig {
+        applicationId "belediye.iletisim.merkezi"
+        minSdkVersion 21  // Eski: flutter.minSdkVersion
+        targetSdkVersion 33  // Eski: flutter.targetSdkVersion
+        // Diğer ayarlar aynı kaldı
+    }
+}
 ```
 
-## 4. Adım: Alternatif 1 (1. adım işe yaramazsa)
+### 1.3. Android Gradle Plugin Sürümü Değişikliği
 
-Eğer hata devam ederse, doğrudan Java kaynak kodunu düzeltin:
+`new_project/android/build.gradle` dosyasında:
 
-1. Şu dosyayı metin editöründe açın:
-   ```
-   C:\Users\guzel\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_local_notifications-14.1.5\android\src\main\java\com\dexterous\flutterlocalnotifications\FlutterLocalNotificationsPlugin.java
-   ```
+```gradle
+buildscript {
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.0.4'  // Eski: 8.2.2
+        classpath 'com.google.gms:google-services:4.3.15'  // Eski: 4.4.0
+    }
+}
+```
 
-2. Dosyayı açtıktan sonra, şu kodu bulun (yaklaşık 1019. satır):
-   ```java
-   bigPictureStyle.bigLargeIcon(null);
-   ```
+### 1.4. Gradle Wrapper Sürümü Değişikliği
 
-3. Bu satırı şu şekilde değiştirin:
-   ```java
-   bigPictureStyle.bigLargeIcon((Bitmap) null);
-   ```
+`new_project/android/gradle/wrapper/gradle-wrapper.properties` dosyasında:
 
-4. Dosyayı kaydedin ve tekrar derleyin:
-   ```bash
-   flutter clean
-   flutter pub get
-   flutter build apk --debug
-   ```
+```properties
+distributionUrl=https\://services.gradle.org/distributions/gradle-7.0.2-all.zip  # Eski: 8.3-all.zip
+```
 
-## 5. Adım: Alternatif 2 (Sorun hala devam ediyorsa)
+## 2. Sorunlar ve Çözümleri
 
-Android Gradle yapılandırmasını güncelleyin:
+### 2.1. "Namespace not specified" Hatası
 
-1. `android/app/build.gradle` dosyasını açın
+**Sorun**: Flutter Local Notifications paketi Android kodunda namespace belirtilmemiş, bu yüzden derleme hatası veriyordu.
 
-2. `android` bloğunda şu değişiklikleri yapın:
-   ```gradle
-   android {
-     compileSdkVersion 33  // Flutter'ın değerini 33 ile değiştirin
-     
-     defaultConfig {
-       minSdkVersion 21    // Flutter'ın değerini 21 ile değiştirin
-       // Diğer ayarlar aynı kalabilir
-     }
-     
-     // Diğer Android ayarları
-   }
-   
-   // Dosyanın EN SONUNA aşağıdaki bloğu ekleyin:
-   subprojects {
-     afterEvaluate {project ->
-       project.tasks.withType(JavaCompile).configureEach { 
-         javaCompile -> javaCompile.options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation" 
-       }
-     }
-   }
-   ```
+**Çözüm**: Flutter Local Notifications paketinin build.gradle dosyasına namespace eklemek gerekiyor. Bu değişiklik `flutter_fix.sh` ve `fix_flutter_local_notifications.sh` script'leri ile otomatik olarak yapılabilir.
 
-3. Tekrar temizleyip derleyin.
+Alternatif olarak, Android Gradle Plugin sürümünü 7.0.4'e düşürerek namespace zorunluluğu kaldırıldı.
 
-## 6. Adım: Bildirim Paketini Alternatifiyle Değiştirme
+### 2.2. Java Sürüm Uyumsuzluğu
 
-Eğer yukarıdaki adımlar hala sorunu çözmediyse, alternatif bir bildirim paketi kullanın:
+**Sorun**: Daha yeni Java sürümleri (17) ile bazı eski paketlerde uyumsuzluk yaşanıyordu.
 
-1. `pubspec.yaml` dosyasını açın
-2. `flutter_local_notifications` satırını kaldırın
-3. Yerine şunu ekleyin:
-   ```yaml
-   awesome_notifications: ^0.7.4+1
-   ```
-4. Temizleyip yeniden derleyin.
+**Çözüm**: Java ve Kotlin uyumluluklarını 1.8'e düşürerek sorun çözüldü.
 
-## Not
+### 2.3. SDK Sürüm Uyumsuzluğu
 
-Bu sorun, Android Gradle ve Java sürümleri arasındaki uyumsuzluktan kaynaklanıyor. Flutter 3.x ve üzerindeki sürümlerde, Java 8 dili özellikleri kullanımı artık önerilmiyor, bu yüzden yeni SDK'lar ve eski yazılmış paketler arasında bazen uyumsuzluklar yaşanabiliyor.
+**Sorun**: Flutter'ın otomatik SDK sürüm atamaları bazı paketlerle çakışıyordu.
+
+**Çözüm**: compileSdkVersion, minSdkVersion ve targetSdkVersion değerleri sabit değerlerle (sırasıyla 33, 21, 33) değiştirildi.
+
+## 3. Bildirim Sistemi Geliştirmeleri
+
+Flutter Local Notifications'ın yeni sürümü ile daha uyumlu çalışmak için, `new_project/lib/services/local_notification_fixed.dart` dosyası oluşturuldu. Bu sınıf, Android bildirimlerini daha güvenli bir şekilde yönetmeye olanak tanır.
+
+## 4. APK Oluşturma
+
+APK oluşturmak için iki yöntem sunuldu:
+
+1. Ayrıntılı APK oluşturma: `./flutter_build_apk.sh`
+2. Basitleştirilmiş APK oluşturma: `./flutter_build_simplified.sh`
+
+Her iki script de APK'yı `new_project/build/app/outputs/flutter-apk/app-debug.apk` konumunda oluşturur.
+
+## 5. Daha Fazla Bilgi
+
+Daha detaylı bilgi ve alternatif çözümler şu dosyalarda bulunabilir:
+
+- [Bildirim Hatası Kesin Çözümü](bildirim_hatasi_kesin_cozum.md)
+- [Android Fix Talimatları](android_fix_instructions.md)
+- [Doğrudan Bildirim Düzeltmesi](direct_fix_flutter_notifications.java)
