@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:belediye_iletisim_merkezi/models/post.dart';
 import 'package:belediye_iletisim_merkezi/models/user.dart';
@@ -1615,8 +1616,95 @@ class ApiService {
     }
   }
   
+  // Arama sonuçlarını getirme
+  Future<List<Post>> searchPosts({
+    required String query,
+    String? filter,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      // URL parametrelerini oluştur
+      String urlParams = 'endpoint=search&q=${Uri.encodeComponent(query)}&page=$page&limit=$limit';
+      
+      // Filtre varsa ekle
+      if (filter != null && filter.isNotEmpty) {
+        urlParams += '&filter=$filter';
+      }
+      
+      // API anahtarını URL'ye ekle
+      final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?$urlParams');
+      final uri = Uri.parse(uriString);
+      
+      print('Arama yapılıyor: $uri');
+      
+      final response = await http.get(
+        uri,
+        headers: await _getHeaders(),
+      );
+      
+      print('Arama API yanıtı: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = _decodeResponse(response);
+        print('Arama sonuçları: $data');
+        
+        List<dynamic> postsJson = [];
+        
+        // API yanıt yapısını kontrol et
+        if (data is Map) {
+          if (data.containsKey('data')) {
+            if (data['data'] is List) {
+              postsJson = data['data'];
+            } else if (data['data'] is Map && data['data'].containsKey('posts')) {
+              postsJson = data['data']['posts'];
+            } else {
+              postsJson = [data['data']];
+            }
+          } else if (data.containsKey('posts')) {
+            postsJson = data['posts'];
+          } else if (data.containsKey('results')) {
+            postsJson = data['results'];
+          } else {
+            postsJson = [data];
+          }
+        } else if (data is List) {
+          postsJson = data;
+        }
+        
+        // API sonuç yoksa boş liste döndür
+        if (postsJson.isEmpty) {
+          return [];
+        }
+        
+        return postsJson.map((json) => Post.fromJson(json)).toList();
+      } else {
+        print('Arama hatası: ${response.body}');
+        
+        // Eğer API geçici olarak kullanılamıyorsa (test amaçlı), getPosts kullanarak bir alternatif sağla
+        if (response.statusCode == 404 || response.statusCode == 501) {
+          print('API arama desteği yok, getPosts ile arama yapılıyor');
+          final allPosts = await getPosts(limit: 50);
+          
+          // Yerel filtreleme yap
+          return allPosts.where((post) {
+            return post.title.toLowerCase().contains(query.toLowerCase()) ||
+                  post.content.toLowerCase().contains(query.toLowerCase());
+          }).toList();
+        }
+        
+        throw Exception(_handleErrorResponse(response));
+      }
+    } catch (e) {
+      print('Arama işlemi sırasında hata: $e');
+      
+      // Hata durumunda boş liste döndür
+      return [];
+    }
+  }
+
   // Post'u beğen
-  Future<void> likePost(dynamic postId) async {
+  Future<bool> likePost(dynamic postId) async {
     // ID'yi string formatına dönüştür
     final postIdStr = postId.toString();
     try {
@@ -1624,23 +1712,31 @@ class ApiService {
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=like_post&post_id=$postId');
       final uri = Uri.parse(uriString);
       
+      print('Gönderi beğeniliyor: $uri');
+      
       final response = await http.post(
         uri,
         headers: await _getHeaders(),
       );
       
-      if (response.statusCode != 200) {
+      print('Beğeni API yanıtı: ${response.statusCode}');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      } else {
         print('Beğeni API hatası: ${response.statusCode} - ${response.body}');
         // Uygulamanın çalışmaya devam etmesi için hata fırlatmıyoruz
+        return false;
       }
     } catch (e) {
       // Hata için log tutuyoruz ama uygulamanın çalışmasını engellemiyoruz
       print('Post beğenme hatası: $e');
+      return false;
     }
   }
   
   // Post beğeniyi kaldır
-  Future<void> unlikePost(dynamic postId) async {
+  Future<bool> unlikePost(dynamic postId) async {
     // ID'yi string formatına dönüştür
     final postIdStr = postId.toString();
     try {
@@ -1648,18 +1744,26 @@ class ApiService {
       final uriString = await _appendApiKeyToUrl('$baseUrl$apiPath?endpoint=unlike_post&post_id=$postId');
       final uri = Uri.parse(uriString);
       
+      print('Gönderi beğenisi kaldırılıyor: $uri');
+      
       final response = await http.post(
         uri,
         headers: await _getHeaders(),
       );
       
-      if (response.statusCode != 200) {
+      print('Beğeni kaldırma API yanıtı: ${response.statusCode}');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      } else {
         print('Beğeni kaldırma API hatası: ${response.statusCode} - ${response.body}');
         // Uygulamanın çalışmaya devam etmesi için hata fırlatmıyoruz
+        return false;
       }
     } catch (e) {
       // Hata için log tutuyoruz ama uygulamanın çalışmasını engellemiyoruz
       print('Post beğeni kaldırma hatası: $e');
+      return false;
     }
   }
   

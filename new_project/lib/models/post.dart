@@ -405,6 +405,7 @@ class Post {
     String? districtName,
     String? categoryName,
     String? userEmail,
+    bool? isLiked,
   }) {
     return Post(
       id: id ?? this.id,
@@ -430,6 +431,7 @@ class Post {
       districtName: districtName ?? this.districtName,
       categoryName: categoryName ?? this.categoryName,
       userEmail: userEmail ?? this.userEmail,
+      isLiked: isLiked ?? this.isLiked,
     );
   }
 }
