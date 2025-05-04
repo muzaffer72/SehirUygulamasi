@@ -32,6 +32,7 @@ class Post {
   final int? satisfactionRating;
   final String? username;
   final String? profileImageUrl;
+  final bool isLiked; // Kullanıcı tarafından beğenilip beğenilmediği
   
   // Ek bilgiler - şehir, ilçe, kategori adları
   final String? cityName;     // Şehir adı
@@ -87,6 +88,7 @@ class Post {
     this.districtName,
     this.categoryName,
     this.userEmail,
+    this.isLiked = false,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -284,6 +286,7 @@ class Post {
         districtName: districtName,
         categoryName: categoryName,
         userEmail: userEmail,
+        isLiked: data['is_liked'] == true || data['liked_by_user'] == true || data['liked'] == true,
       );
     } catch (e) {
       print('Error parsing Post from JSON: $e');
