@@ -6,7 +6,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.4'  // Düşürüldü: 8.2.2 -> 7.0.4 (namespace hatası için)
+        classpath 'com.android.tools.build:gradle:8.1.0'  // Gradle 8.4 ile uyumlu
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.15'  // Uyumlu sürüm
     }
