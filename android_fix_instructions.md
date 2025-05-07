@@ -1,93 +1,70 @@
-# Android Uygulama Sorunları ve Çözümleri
+# Android Studio Java 21 Uyumluluk Güncellemesi
 
-Bu belge, Android uygulamasının derlenmesi ve çalıştırılması sırasında karşılaşılan sorunlar ve bu sorunların çözümlerini anlatmaktadır.
+Gradle sürümü ve Java uyumluluk sorununu çözmek için aşağıdaki değişiklikler yapıldı:
 
-## 1. Flutter Local Notifications Sorunu
+## 1. Gradle Wrapper Sürümü
 
-**Sorun**: Flutter Local Notifications paketindeki `bigLargeIcon` metodu, null parametresiyle çağrıldığında hangi metodun kullanılacağı konusunda bir belirsizlik oluşturuyor. Bu, aşağıdaki hata mesajına yol açıyor:
+`new_project/android/gradle/wrapper/gradle-wrapper.properties` dosyasında:
 
+```properties
+# ESKİ sürüm
+distributionUrl=https\://services.gradle.org/distributions/gradle-7.0.2-all.zip
+
+# YENİ sürüm - Java 21 ile uyumlu
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-all.zip
 ```
-error: reference to 'bigLargeIcon' is ambiguous
-        bigPictureStyle.bigLargeIcon(null);
-                       ^
+
+## 2. Android Gradle Plugin Sürümü
+
+`new_project/android/build.gradle` dosyasında:
+
+```gradle
+# ESKİ sürüm
+classpath 'com.android.tools.build:gradle:7.0.4'
+
+# YENİ sürüm - Gradle 8.4 ile uyumlu
+classpath 'com.android.tools.build:gradle:8.1.0'
 ```
 
-**Çözüm 1: Paket Sürümünü Düşürmek**
-- `flutter_local_notifications` paketinin sürümünü 9.9.1'e düşürdük. Bu sürüm Android API 33 ile tamamen uyumludur.
-- Bu değişiklik `pubspec.yaml` dosyasında yapıldı:
-  ```yaml
-  flutter_local_notifications: 9.9.1
-  ```
+## 3. Java/Kotlin Uyumluluk Ayarları
 
-**Çözüm 2: Android Gradle Ayarlarını Güncellemek**
-- Android uyumluluğu için `build.gradle` dosyasında aşağıdaki değişiklikler yapıldı:
-  ```gradle
-  compileSdkVersion 33  // Flutter değişkeni yerine sabit değer
-  minSdkVersion 21      // En düşük Android 5.0 sürümü
-  targetSdkVersion 33   // Hedef Android 13 sürümü
-  ```
-- Java ve Kotlin uyumluluğu için:
-  ```gradle
-  compileOptions {
+`new_project/android/app/build.gradle` dosyasında:
+
+```gradle
+# ESKİ ayarlar
+compileOptions {
+    coreLibraryDesugaringEnabled true
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
-  }
-  kotlinOptions {
+}
+
+kotlinOptions {
     jvmTarget = '1.8'
-  }
-  ```
+}
 
-**Çözüm 3: Java Kodunu Doğrudan Düzeltmek**
-Bu, lokal geliştirme ortamı için geçerlidir ve Replit üzerinde uygulanması gerekmez.
+# YENİ ayarlar - Java 21 ile uyumlu
+compileOptions {
+    coreLibraryDesugaringEnabled true
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+}
 
-Flutter Local Notifications paketinin Java kodunda, Android API 33 için tip dönüşümü eklenmesi gerekmektedir:
-
-**Orijinal Kod:**
-```java
-if (bigPictureStyleInformation.hideExpandedLargeIcon) {
-    bigPictureStyle.bigLargeIcon(null);  // BURADA HATA VAR
+kotlinOptions {
+    jvmTarget = '17'
 }
 ```
 
-**Düzeltilmiş Kod:**
-```java
-if (bigPictureStyleInformation.hideExpandedLargeIcon) {
-    bigPictureStyle.bigLargeIcon((android.graphics.Bitmap) null);  // TİP DÖNÜŞÜMÜ EKLENDİ
-}
-```
+## 4. Yeniden Derleme
 
-## 2. APK Oluşturma
+Değişikliklerden sonra şu adımları takip edin:
 
-APK oluşturmak için `flutter_build_apk.sh` script'ini kullanabilirsiniz:
+1. Android Studio'yu tamamen kapatıp yeniden açın
+2. Proje kök dizininde şu komutları çalıştırın:
+   ```bash
+   flutter clean
+   flutter pub get
+   ```
+3. Android Studio'da "File > Invalidate Caches / Restart" seçeneğini kullanın
+4. Projeyi yeniden çalıştırın veya derleyin
 
-```bash
-./flutter_build_apk.sh
-```
-
-Bu script aşağıdakileri gerçekleştirecektir:
-1. Flutter paketlerini günceller (`flutter pub get`)
-2. Eski build dosyalarını temizler (`flutter clean`)
-3. Debug APK oluşturur (`flutter build apk --debug`)
-4. APK'nın başarıyla oluşturulup oluşturulmadığını kontrol eder ve bilgi verir
-
-## 3. Android API Sürümü Uyumluluğu
-
-- **Minimum SDK**: 21 (Android 5.0 Lollipop)
-- **Target SDK**: 33 (Android 13)
-- **Compile SDK**: 33 (Android 13)
-
-Bu ayarlar, uygulamanın Android 5.0 ve üstü sürümlerde çalışacağı ve Android 13 için optimize edildiği anlamına gelir.
-
-## 4. Firebase Bildirimleri
-
-Firebase bildirimlerinin Android'de çalışması için:
-
-1. `build.gradle` dosyasında Firebase bağımlılıkları ekledik ve güncelledik.
-2. `NotificationService` sınıfının doğru şekilde çalıştığından emin olduk.
-3. Flutter Local Notifications paketinin uyumluluk sorunlarını çözdük.
-
-## Önemli Notlar
-
-- Android projenizi farklı bir ortamda (Android Studio gibi) açtığınızda, Gradle senkronizasyonunu yapmanız gerekir.
-- APK oluşturma sırasında bir hata alırsanız, loglarda tam hata mesajını kontrol edin. Sorun genellikle paket uyumsuzluğu veya eksik bağımlılıklardan kaynaklanır.
-- Üretim sürümü (release) APK için imzalama ayarlarını yapılandırmanız gerekir.
+Bu değişiklikler, Java 21 ile Gradle arasındaki sürüm uyumsuzluğunu giderecektir.
